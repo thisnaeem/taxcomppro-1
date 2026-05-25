@@ -15,15 +15,38 @@ export async function GET() {
   return NextResponse.json(spaces);
 }
 
-// POST /api/spaces — admin creates a new space
+// POST /api/spaces — admin or marketplace plus or paid host creates a new space
 export async function POST(req: NextRequest) {
   const session = await auth.api.getSession({ headers: req.headers });
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (session.user.role !== "ADMIN")
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const { name, description } = await req.json();
+  const dbUser = await prisma.user.findUnique({ where: { id: session.user.id }, select: { role: true, tier: true } });
+  const canHost = dbUser?.role === "ADMIN" || dbUser?.tier === "MARKETPLACE_PLUS";
+
+  // Also allow if they passed a valid one-time stripe session (verified server-side)
+  const body = await req.json();
+  const { name, description, hostSessionId } = body;
+
+  let hostVerified = canHost;
+  if (!hostVerified && hostSessionId) {
+    try {
+      const Stripe = (await import("stripe")).default;
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+      const stripeSession = await stripe.checkout.sessions.retrieve(hostSessionId);
+      if (
+        stripeSession.payment_status === "paid" &&
+        stripeSession.metadata?.userId === session.user.id &&
+        stripeSession.metadata?.type === "pro_talk_host"
+      ) {
+        hostVerified = true;
+      }
+    } catch { /* ignore */ }
+  }
+
+  if (!hostVerified) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
   if (!name?.trim()) return NextResponse.json({ error: "Name required" }, { status: 400 });
+
 
   const roomName = `space-${nanoid(10)}`;
 

@@ -124,6 +124,7 @@ model User {
   stripeCustomerId   String?
   stripeAccountId    String?  // Stripe Connect Express account ID
   stripeOnboarded    Boolean  @default(false)
+  voiceMemoUrl       String?  // Cloudinary URL of voice memo (max 4 min)
   createdAt          DateTime @default(now())
   updatedAt        DateTime         @updatedAt
 

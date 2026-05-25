@@ -100,6 +100,19 @@ export async function POST(req: NextRequest) {
     }
 
 
+    // ── Pro Talk Host purchase (one-time $99.99) ──────────────────────
+    if (type === "pro_talk_host" && userId) {
+      await prisma.notification.create({
+        data: {
+          userId,
+          type: "SYSTEM",
+          title: "🎙️ Pro Talk Hosting Unlocked!",
+          message: "Your $99.99 payment is confirmed. You can now host a Pro Talk audio room. Go to Pro Talks to start your session.",
+          link: "/pro-talks",
+        },
+      });
+    }
+
     // ── Course one-time purchase ───────────────────────────
     if (type === "course" && userId) {
       const { courseId, slug } = session.metadata ?? {};

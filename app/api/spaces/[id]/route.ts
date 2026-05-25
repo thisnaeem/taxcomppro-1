@@ -18,16 +18,19 @@ export async function GET(_req: NextRequest, { params }: Params) {
   return NextResponse.json(space);
 }
 
-// DELETE /api/spaces/[id] — admin ends a space
+// DELETE /api/spaces/[id] — host or admin ends a space
 export async function DELETE(req: NextRequest, { params }: Params) {
   const session = await auth.api.getSession({ headers: req.headers });
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (session.user.role !== "ADMIN")
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const { id } = await params;
   const space = await prisma.space.findUnique({ where: { id } });
   if (!space) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  const isAdmin = session.user.role === "ADMIN";
+  const isHost  = space.hostId === session.user.id;
+  if (!isAdmin && !isHost)
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   // Mark ended in DB
   await prisma.space.update({

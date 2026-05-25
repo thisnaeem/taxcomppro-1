@@ -10,6 +10,7 @@ import ImageUpload from "@/components/profile/ImageUpload";
 import MediaGallery from "@/components/profile/MediaGallery";
 import ServiceEditor from "@/components/profile/ServiceEditor";
 import DueDiligenceBadge from "@/components/badges/DueDiligenceBadge";
+import { VoiceMemoEditor } from "@/components/profile/VoiceMemo";
 
 interface Service { id: string; title: string; description: string | null; price: string | null; emoji: string; }
 
@@ -54,6 +55,7 @@ export default function ProProfileEditor() {
   const [languages,      setLanguages]      = useState<string[]>([]);
   const [mediaPhotos,    setMediaPhotos]    = useState<string[]>([]);
   const [services,       setServices]       = useState<Service[]>([]);
+  const [voiceMemoUrl,   setVoiceMemoUrl]   = useState<string | null>(null);
 
   const field = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement|HTMLTextAreaElement>) => setF(p => ({...p, [k]: e.target.value}));
 
@@ -71,6 +73,7 @@ export default function ProProfileEditor() {
     setCertifications((u.certifications as string[])??[]);
     setLanguages((u.languages as string[])??[]);
     setMediaPhotos((u.mediaPhotos as string[])??[]);
+    setVoiceMemoUrl((u.voiceMemoUrl as string | null) ?? null);
     if (user?.id) {
       const svcs = await fetch(`/api/pros/${user.id}/services`).then(r => r.json()) as Service[];
       setServices(Array.isArray(svcs) ? svcs : []);
@@ -133,6 +136,12 @@ export default function ProProfileEditor() {
                 <div><label className={lbl}>Email (locked)</label><div className="relative"><Mail01Icon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300"/><input value={user?.email??""} disabled className={`${inp} pl-10 bg-slate-50 text-slate-400 cursor-not-allowed`}/></div></div>
                 <div><label className={lbl}>Headline</label><div className="relative"><Briefcase01Icon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"/><input value={f.headline} onChange={field("headline")} placeholder="e.g. Enrolled Agent | Tax Resolution Expert" className={`${inp} pl-10`} maxLength={100}/></div></div>
                 <div><label className={lbl}>Bio</label><div className="relative"><NoteIcon className="absolute left-3.5 top-3.5 w-4 h-4 text-slate-400"/><textarea value={f.bio} onChange={field("bio")} rows={4} placeholder="About yourself…" className={`${inp} pl-10 resize-none`} maxLength={600}/></div></div>
+                {/* Voice Memo */}
+                <div>
+                  <label className={lbl}>Voice Intro</label>
+                  <p className="text-xs text-slate-400 mb-3">Record a short voice intro (max 4 min) that plays directly on your public profile.</p>
+                  <VoiceMemoEditor currentUrl={voiceMemoUrl} onSaved={setVoiceMemoUrl} />
+                </div>
               </div>
             )}
 

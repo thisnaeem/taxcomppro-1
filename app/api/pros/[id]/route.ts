@@ -13,7 +13,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
       mission: true, location: true, yearsExperience: true,
       website: true, linkedIn: true, twitter: true, facebook: true,
       specialties: true, certifications: true, languages: true,
-      mediaPhotos: true, createdAt: true,
+      mediaPhotos: true, voiceMemoUrl: true, createdAt: true,
       instructorCourses: {
         where: { status: "PUBLISHED" },
         select: { id: true, slug: true, title: true, thumbnail: true, level: true, price: true, isFree: true },

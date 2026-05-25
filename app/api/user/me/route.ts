@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
   const [user, completedCourse, toolkitPurchase] = await Promise.all([
     prisma.user.findUnique({
       where: { id: session.user.id },
-      select: { id: true, email: true, name: true, role: true, tier: true, image: true, coverImage: true, bio: true, headline: true },
+      select: { id: true, email: true, name: true, role: true, tier: true, image: true, coverImage: true, bio: true, headline: true, voiceMemoUrl: true },
     }),
     prisma.enrollment.count({
       where: { userId: session.user.id, completedAt: { not: null } },

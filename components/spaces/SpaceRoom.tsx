@@ -13,7 +13,7 @@ import {
 } from "@livekit/components-react";
 import { RoomEvent, Track } from "livekit-client";
 import { Mic01Icon, MicOff02Icon, PhoneOff01Icon, Radio01Icon, Message01Icon } from "hugeicons-react";
-import { Loader2, X, Hand, Send, Users, Monitor, MonitorOff, Maximize2, Minimize2 } from "lucide-react";
+import { Loader2, X, Hand, Send, Users, Monitor, MonitorOff, Maximize2, Minimize2, Link2, Check } from "lucide-react";
 
 interface SpaceHost { id: string; name: string; image: string | null; headline: string | null; }
 interface Space { id: string; name: string; description: string | null; roomName: string; hostId: string; host: SpaceHost; }
@@ -66,11 +66,12 @@ function getParticipantImage(metadata?: string): string | null {
   catch { return null; }
 }
 
-function RoomInner({ space, isAdmin, onEnd, ending }: Omit<Props, "token" | "userId">) {
+function RoomInner({ space, isAdmin, userId, onEnd, ending }: Omit<Props, "token">) {
   const router = useRouter();
   const room = useRoomContext();
   const participants = useParticipants();
   const { localParticipant, isMicrophoneEnabled } = useLocalParticipant();
+  const isHost = isAdmin || localParticipant?.identity === space.hostId || userId === space.hostId;
 
   const [chat, setChat]           = useState<ChatMsg[]>([]);
   const [chatOpen, setChatOpen]   = useState(false);
@@ -82,6 +83,25 @@ function RoomInner({ space, isAdmin, onEnd, ending }: Omit<Props, "token" | "use
   const [isFullscreen, setIsFullscreen] = useState(false);
   const screenContainerRef = useRef<HTMLDivElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const [copied, setCopied] = useState(false);
+
+  const copyShareLink = useCallback(() => {
+    const url = window.location.href;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    }).catch(() => {
+      // Fallback for non-HTTPS or old browsers
+      const el = document.createElement("textarea");
+      el.value = url;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand("copy");
+      document.body.removeChild(el);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    });
+  }, []);
 
   const audioTracks  = useTracks([Track.Source.Microphone], { onlySubscribed: false });
   const screenTracks = useTracks([Track.Source.ScreenShare], { onlySubscribed: false });
@@ -171,9 +191,24 @@ function RoomInner({ space, isAdmin, onEnd, ending }: Omit<Props, "token" | "use
             </div>
             {space.description && <p className="text-white/35 text-xs truncate mt-0.5">{space.description}</p>}
           </div>
-          <div className="flex items-center gap-1.5 bg-white/6 rounded-full px-3 py-1.5 shrink-0">
-            <Users className="w-3.5 h-3.5 text-white/40" />
-            <span className="text-white/50 text-xs font-medium">{participants.length}</span>
+          {/* Share link + participant count */}
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              id="pro-talk-share-btn"
+              onClick={copyShareLink}
+              title="Share this Pro Talk"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                copied
+                  ? "bg-emerald-500/20 border border-emerald-500/40 text-emerald-300"
+                  : "bg-white/8 border border-white/15 text-white/60 hover:text-white hover:bg-white/15"
+              }`}
+            >
+              {copied ? <><Check className="w-3.5 h-3.5" /> Copied!</> : <><Link2 className="w-3.5 h-3.5" /> Share Link</>}
+            </button>
+            <div className="flex items-center gap-1.5 bg-white/6 rounded-full px-3 py-1.5">
+              <Users className="w-3.5 h-3.5 text-white/40" />
+              <span className="text-white/50 text-xs font-medium">{participants.length}</span>
+            </div>
           </div>
         </div>
 
@@ -288,7 +323,7 @@ function RoomInner({ space, isAdmin, onEnd, ending }: Omit<Props, "token" | "use
               <PhoneOff01Icon className="w-4 h-4" /> Leave
             </button>
 
-            {isAdmin && (
+            {(isAdmin || isHost) && (
               <button onClick={onEnd} disabled={ending}
                 className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-red-600 hover:bg-red-500 text-white font-bold text-sm transition-all shadow-lg shadow-red-500/20 disabled:opacity-40">
                 {ending ? <Loader2 className="w-4 h-4 animate-spin" /> : <PhoneOff01Icon className="w-4 h-4" />} End Room
@@ -386,7 +421,7 @@ export default function SpaceRoom({ space, token, isAdmin, userId, onEnd, ending
           <p className="text-white/40 text-sm">Connecting to <span className="text-white/70 font-medium">{space.name}</span>…</p>
         </div>
       ) : (
-        <RoomInner space={space} isAdmin={isAdmin} onEnd={onEnd} ending={ending} />
+        <RoomInner space={space} isAdmin={isAdmin} userId={userId} onEnd={onEnd} ending={ending} />
       )}
     </LiveKitRoom>
   );

@@ -14,6 +14,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
       yearsExperience: true, website: true, linkedIn: true,
       twitter: true, facebook: true, specialties: true,
       certifications: true, languages: true, mediaPhotos: true,
+      voiceMemoUrl: true,
       role: true, tier: true, createdAt: true,
       instructorCourses: {
         where: { status: "PUBLISHED" },

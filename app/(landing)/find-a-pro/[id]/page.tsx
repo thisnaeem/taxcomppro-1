@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { MapPin, Briefcase, Globe, ArrowLeft, Loader2, MessageSquare, Users, BadgeCheck, Star, ExternalLink, ChevronRight } from "lucide-react";
 import { Linkedin02Icon, NewTwitterIcon } from "hugeicons-react";
+import { VoiceMemoPlayer } from "@/components/profile/VoiceMemo";
 
 interface Course { id: string; slug: string; title: string; thumbnail: string|null; level: string; price: number; isFree: boolean; }
 interface Service { id: string; title: string; description: string|null; price: string|null; emoji: string; }
@@ -14,6 +15,7 @@ interface Pro {
   bio: string|null; mission: string|null; location: string|null; yearsExperience: number|null;
   website: string|null; linkedIn: string|null; twitter: string|null; facebook: string|null;
   specialties: string[]; certifications: string[]; languages: string[]; mediaPhotos: string[];
+  voiceMemoUrl: string | null;
   createdAt: string; instructorCourses: Course[];
 }
 
@@ -117,6 +119,10 @@ export default function ProProfilePage() {
         <div className="grid lg:grid-cols-3 gap-6 pb-20">
           {/* LEFT */}
           <div className="lg:col-span-2 space-y-5">
+            {/* Voice Memo */}
+            {pro.voiceMemoUrl && (
+              <VoiceMemoPlayer url={pro.voiceMemoUrl} name={pro.name} />
+            )}
             {pro.bio && (
               <div className="bg-white rounded-2xl border border-slate-100 p-6">
                 <h2 className="text-sm font-black text-[#0a1628] uppercase tracking-widest mb-4 flex items-center gap-2"><span className="w-1 h-4 bg-[#0a1628] rounded-full"/>About</h2>

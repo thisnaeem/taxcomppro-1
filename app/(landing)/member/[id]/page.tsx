@@ -8,6 +8,7 @@ import {
   Loader2, Globe, ExternalLink,
   MapPin, Briefcase, MessageSquare, UserPlus, BadgeCheck, ChevronLeft,
 } from "lucide-react";
+import { VoiceMemoPlayer } from "@/components/profile/VoiceMemo";
 
 interface PublicUser {
   id: string; name: string; image: string | null; coverImage: string | null;
@@ -16,6 +17,7 @@ interface PublicUser {
   website: string | null; linkedIn: string | null; twitter: string | null; facebook: string | null;
   specialties: string[]; certifications: string[]; languages: string[];
   mediaPhotos: string[]; role: string; tier: string; createdAt: string;
+  voiceMemoUrl: string | null;
   instructorCourses: { id: string; slug: string; title: string; thumbnail: string | null; level: string; price: number; isFree: boolean }[];
   listings: { id: string; slug: string | null; title: string; description: string; price: number | null; category: string; images: string[] }[];
 }
@@ -223,6 +225,12 @@ export default function MemberProfilePage() {
 
           {/* Right main content */}
           <div className="sm:col-span-2 space-y-6">
+
+            {/* Voice Memo */}
+            {profile.voiceMemoUrl && (
+              <VoiceMemoPlayer url={profile.voiceMemoUrl} name={profile.name} />
+            )}
+
             {/* Courses */}
             {profile.instructorCourses?.length > 0 && (
               <div>

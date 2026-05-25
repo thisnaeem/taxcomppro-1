@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Loader2, BadgeCheck, Clock, X, CreditCard, Camera, Download } from "lucide-react";
 import { UserCircleIcon, Mail01Icon, Briefcase01Icon, NoteIcon, Tick02Icon, BookOpen01Icon, UserGroupIcon, Rocket01Icon, ShoppingBag01Icon, Add01Icon } from "hugeicons-react";
 import DueDiligenceBadge from "@/components/badges/DueDiligenceBadge";
+import { VoiceMemoEditor } from "@/components/profile/VoiceMemo";
 
 interface Purchase {
   id: string; toolkitId: string; name: string; emoji: string;
@@ -42,6 +43,7 @@ export default function MemberProfile() {
   const [activeTab, setActiveTab] = useState<"profile" | "badges" | "purchases">("profile");
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [purchasesLoading, setPurchasesLoading] = useState(false);
+  const [voiceMemoUrl, setVoiceMemoUrl] = useState<string | null>(null);
 
   const openPortal = async () => {
     setPortalLoading(true);
@@ -55,6 +57,7 @@ export default function MemberProfile() {
     fetch("/api/user/me").then(r => r.json()).then((u: Record<string,unknown>) => {
       setName((u.name as string) ?? ""); setHeadline((u.headline as string) ?? ""); setBio((u.bio as string) ?? "");
       setCoverImage((u.coverImage as string|null) ?? null);
+      setVoiceMemoUrl((u.voiceMemoUrl as string|null) ?? null);
     });
     fetch("/api/professional-application").then(r => r.json()).then(setApp);
   }, []);
@@ -397,6 +400,12 @@ export default function MemberProfile() {
                   </div>
                   <div><label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5">Bio</label>
                     <div className="relative"><NoteIcon className="absolute left-3.5 top-3.5 w-4 h-4 text-slate-400"/><textarea value={bio} onChange={e=>setBio(e.target.value)} rows={4} placeholder="Tell the community about yourself…" className={`${inp} pl-10 resize-none`} maxLength={500}/></div>
+                  </div>
+                  {/* Voice Memo */}
+                  <div>
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Voice Intro</label>
+                    <p className="text-xs text-slate-400 mb-3">Record a short voice intro (max 4 minutes). It plays on your public profile so others can hear from you directly.</p>
+                    <VoiceMemoEditor currentUrl={voiceMemoUrl} onSaved={setVoiceMemoUrl} />
                   </div>
                   <button onClick={save} disabled={saving} className="flex items-center gap-2 bg-[#0a1628] text-white font-bold text-sm px-6 py-2.5 rounded-full hover:bg-[#1a3a6b] transition-all disabled:opacity-40">
                     {saving?<><Loader2 className="w-4 h-4 animate-spin"/>Saving…</>:<><Tick02Icon className="w-4 h-4"/>Save Changes</>}
