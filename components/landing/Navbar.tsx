@@ -173,8 +173,8 @@ export default function Navbar() {
 
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 relative z-50">
-          <img src="/logo.png"      alt="TaxComPro" className="h-16 w-auto dark:hidden" />
-          <img src="/logo_dark.png" alt="TaxComPro" className="h-16 w-auto hidden dark:block" />
+          <img src="/logo.webp"      alt="TaxComPro" className="h-16 w-auto dark:hidden" />
+          <img src="/logo_dark.webp" alt="TaxComPro" className="h-16 w-auto hidden dark:block" />
         </Link>
 
         {/* Search bar (expanded) */}
@@ -259,7 +259,7 @@ export default function Navbar() {
               rel="noopener noreferrer"
               className="atlas-btn hidden md:flex items-center gap-2 text-[#0a1628] font-black text-xs px-4 py-2 rounded-xl transition-all hover:scale-105 active:scale-95 shrink-0 ml-2"
             >
-              <img src="/icon.png" alt="Atlas AI" className="w-5 h-5 rounded-sm object-contain" />
+              <img src="/icon.webp" alt="Atlas AI" className="w-5 h-5 rounded-sm object-contain" />
               <span>Try Atlas AI</span>
             </a>
 

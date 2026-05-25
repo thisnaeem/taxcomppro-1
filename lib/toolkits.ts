@@ -43,7 +43,7 @@ export const TOOLKITS: Toolkit[] = [
     membershipTier: "VIP",
     membershipMonths: 2,
     downloadEnvKey: "TOOLKIT_DOWNLOAD_IRS_FINE_DEFENSE",
-    badgeImage: "/toolkits-badge/irs-fine-defense.jpg",
+    badgeImage: "/toolkits-badge/irs-fine-defense.webp",
     features: [
       "Penalty Risk Reduction Tools",
       "Practice Protection Resources",
@@ -68,7 +68,7 @@ export const TOOLKITS: Toolkit[] = [
     membershipTier: "VIP",
     membershipMonths: 2,
     downloadEnvKey: "TOOLKIT_DOWNLOAD_30_DAY_TAX_OFFICE",
-    badgeImage: "/toolkits-badge/30 DAY TAX OFFICE LAUNCH.png",
+    badgeImage: "/toolkits-badge/30 DAY TAX OFFICE LAUNCH.webp",
     features: [
       "Legal Setup Guide",
       "Business Banking Setup",
@@ -93,7 +93,7 @@ export const TOOLKITS: Toolkit[] = [
     membershipTier: "VIP",
     membershipMonths: 2,
     downloadEnvKey: "TOOLKIT_DOWNLOAD_AUDIT_PLAYBOOK",
-    badgeImage: "/toolkits-badge/audit-playbok.png",
+    badgeImage: "/toolkits-badge/audit-playbok.webp",
     features: [
       "First 48-Hour Action Plan",
       "Revenue Agent Interview",
@@ -117,7 +117,7 @@ export const TOOLKITS: Toolkit[] = [
     membershipTier: "VIP",
     membershipMonths: 2,
     downloadEnvKey: "TOOLKIT_DOWNLOAD_SCHEDULE_C",
-    badgeImage: "/toolkits-badge/SCHEDULE C RECONSTRUCTION.png",
+    badgeImage: "/toolkits-badge/SCHEDULE C RECONSTRUCTION.webp",
     features: [
       "Step-by-Step Reconstruction Framework",
       "Expense Categorization Blueprint",
@@ -141,7 +141,7 @@ export const TOOLKITS: Toolkit[] = [
     membershipTier: "VIP",
     membershipMonths: 0,
     downloadEnvKey: "TOOLKIT_DOWNLOAD_PENALTY_POSTERS",
-    badgeImage: "/toolkits-badge/irs-penalty-defense-posters-.png",
+    badgeImage: "/toolkits-badge/irs-penalty-defense-posters-.webp",
     features: [
       "Due Diligence Disclosures",
       "Preparer Protection Statements",

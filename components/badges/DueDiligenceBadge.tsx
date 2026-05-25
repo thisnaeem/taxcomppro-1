@@ -19,7 +19,7 @@ export default function DueDiligenceBadge({ size = 20, className = "", showToolt
       aria-label="Due Diligence Badge"
     >
       <Image
-        src="/due_dilligence_badge.png"
+        src="/due_dilligence_badge.webp"
         alt="Due Diligence Badge"
         width={size}
         height={size}

@@ -124,7 +124,7 @@ export default function AtlasWidget() {
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </div>
         ) : (
-          <img src="/icon.png" alt="Atlas AI" className="w-full h-full object-cover" />
+          <img src="/icon.webp" alt="Atlas AI" className="w-full h-full object-cover" />
         )}
         {unread && <span className="absolute top-0 right-0 w-3.5 h-3.5 bg-[#d4a017] rounded-full border-2 border-white" />}
       </button>
@@ -138,7 +138,7 @@ export default function AtlasWidget() {
           <div className="flex items-center gap-3 px-5 py-4 flex-shrink-0"
             style={{ background: "linear-gradient(135deg,#060d1a 0%,#0d1e4a 50%,#173473 100%)" }}>
             <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 ring-2 ring-white/20">
-              <img src="/icon.png" alt="Atlas" className="w-full h-full object-cover" />
+              <img src="/icon.webp" alt="Atlas" className="w-full h-full object-cover" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-bold text-sm text-white leading-tight">Atlas AI</p>

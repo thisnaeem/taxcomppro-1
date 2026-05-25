@@ -59,8 +59,8 @@ export default function RegisterPage() {
         {/* Logo */}
         <div className="flex justify-center mb-8">
           <Link href="/">
-            <Image src="/logo.png"      alt="TaxComPro" width={160} height={60} className="object-contain dark:hidden" />
-            <Image src="/logo_dark.png" alt="TaxComPro" width={160} height={60} className="object-contain hidden dark:block" />
+            <Image src="/logo.webp"      alt="TaxComPro" width={160} height={60} className="object-contain dark:hidden" />
+            <Image src="/logo_dark.webp" alt="TaxComPro" width={160} height={60} className="object-contain hidden dark:block" />
           </Link>
         </div>
 

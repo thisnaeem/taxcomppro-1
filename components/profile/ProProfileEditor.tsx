@@ -210,7 +210,7 @@ export default function ProProfileEditor() {
                         earned ? "border-amber-300 bg-amber-50/40" : "border-slate-100 bg-slate-50/50 opacity-60 grayscale"
                       }`}>
                         <div className={`w-16 h-16 rounded-xl flex items-center justify-center shrink-0 ${earned ? "bg-amber-100" : "bg-slate-100"}`}>
-                          <img src="/due_dilligence_badge.png" alt="Due Diligence Badge" className="w-12 h-12 object-contain" />
+                          <img src="/due_dilligence_badge.webp" alt="Due Diligence Badge" className="w-12 h-12 object-contain" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">

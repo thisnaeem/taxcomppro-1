@@ -131,7 +131,7 @@ function BundleCard({ bundle }: { bundle: Bundle }) {
       <div className="bg-white px-6 pt-8 pb-5 flex flex-col items-center border-b border-slate-100">
         <div className="w-48 h-48 mb-4 flex items-center justify-center overflow-hidden">
           {bundle.id === "atlas-elite-bundle"
-            ? <img src="/icon.png" alt="Atlas Elite" className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-110" />
+            ? <img src="/icon.webp" alt="Atlas Elite" className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-110" />
             : <span className="text-7xl transition-transform duration-300 group-hover:scale-110 inline-block">{bundle.icon}</span>}
         </div>
         <h3 className="font-black text-sm text-[#0a1628] uppercase tracking-wide text-center leading-tight mb-1">
@@ -256,7 +256,7 @@ export default function ToolkitsPage() {
             <div className="absolute inset-0 bg-amber-400/20 rounded-3xl blur-2xl scale-110 pointer-events-none" />
             <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-black/40 border border-white/10 rotate-1 hover:rotate-0 transition-transform duration-500">
               <img
-                src="/irs-toolkit-audit-review-hero.png"
+                src="/irs-toolkit-audit-review-hero.webp"
                 alt="IRS Toolkit Audit Review"
                 className="w-full object-cover"
               />

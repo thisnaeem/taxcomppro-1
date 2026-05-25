@@ -19,38 +19,38 @@ const navLinks = [
 ];
 
 const features = [
-  { img: "/features/professional_network.png", title: "Professional Network",   desc: "Connect with business experts and tax professionals nationwide" },
-  { img: "/features/markeplace.png",           title: "Marketplace",             desc: "Buy and sell services, products, trainings, and courses" },
-  { img: "/features/communitues.png",          title: "Communities",             desc: "Join or create communities around your niche" },
-  { img: "/icon.png",               title: "ATLAS AI Tax Assistant",        desc: "AI-powered tax assistant for real-time tax guidance and compliance" },
-  { img: "/features/Live Sessions.png",        title: "Live Sessions",           
+  { img: "/features/professional_network.webp", title: "Professional Network",   desc: "Connect with business experts and tax professionals nationwide" },
+  { img: "/features/markeplace.webp",           title: "Marketplace",             desc: "Buy and sell services, products, trainings, and courses" },
+  { img: "/features/communitues.webp",          title: "Communities",             desc: "Join or create communities around your niche" },
+  { img: "/icon.webp",               title: "ATLAS AI Tax Assistant",        desc: "AI-powered tax assistant for real-time tax guidance and compliance" },
+  { img: "/features/Live Sessions.webp",        title: "Live Sessions",           
     desc: (<>
       Host and attend live audio/video sessions with verified professionals. 
     </>) },
-  { img: "/features/MembersOnly Access.png",   title: "Members-Only Access",     desc: "Secure, verified community with gated content and private forums" },
+  { img: "/features/MembersOnly Access.webp",   title: "Members-Only Access",     desc: "Secure, verified community with gated content and private forums" },
 ];
 
 const plans = [
   {
-    name: "Basic Members Only", price: "FREE", period: "", img: "/free.png",
+    name: "Basic Members Only", price: "FREE", period: "", img: "/free.webp",
     popular: false, badge: null, savings: null,
     features: ["Email Support","Marketplace Access (View)","Member Directory Access","Communities Access (View)","Marketplace Feed Access","Secure Members-Only Environment"],
     cta: "Join For Free", href: "/register",
   },
   {
-    name: "VIP Members Only", price: "$39.99", period: "/month", img: "/vip.png",
+    name: "VIP Members Only", price: "$39.99", period: "/month", img: "/vip.webp",
     popular: false, badge: "2 Months FREE", savings: null,
     features: ["Priority Email Support","Private Messaging & DMs","Training & Educational Support","Marketplace Feed Interaction","Communities Interaction","Private Discussion Forums","Ongoing Education & Training","Ability to Connect","Pro Training Access","ATLAS AI Tax Bot","Professional Networking"],
     cta: "Join Now", href: "/register?plan=VIP",
   },
   {
-    name: "VIP + Marketplace Bundle", price: "$79.99", period: "/month", img: "/vipplusmatplace.png",
+    name: "VIP + Marketplace Bundle", price: "$79.99", period: "/month", img: "/vipplusmatplace.webp",
     popular: true, badge: "Most Popular", savings: "Save $131.96/yr",
     features: ["Professional marketplace listing","Custom seller profile page","Ability to sell services","Private Discussion Forums","Fully Customizable Profile","Featured in Marketplace directory","Enhanced Visibility & Credibility","Stronger Brand Authority"],
     cta: "Join Now", href: "/register?plan=MARKETPLACE",
   },
   {
-    name: "VIP + Marketplace Plus", price: "$109.99", period: "/month", img: "/vipplusmarplaceplus.png",
+    name: "VIP + Marketplace Plus", price: "$109.99", period: "/month", img: "/vipplusmarplaceplus.webp",
     popular: true, badge: "Best Value", savings: "Save $131.96/yr",
     features: ["Professional marketplace listing","Custom seller profile","Ability to sell services","Private Discussion Forums","Fully Customizable Profile","Featured in directory","Enhanced Visibility","Live Audio Session Hosting","Live Video Session Hosting","Post ads/products/services"],
     cta: "Join Now", href: "/register?plan=MARKETPLACE_PLUS",
@@ -305,7 +305,7 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
             <div>
               <Link href="/" className="inline-flex items-center mb-4 bg-white rounded-xl px-3 py-2">
-                <Image src="/logo.png" alt="TaxComPro" width={130} height={38} className="object-contain" priority />
+                <Image src="/logo.webp" alt="TaxComPro" width={130} height={38} className="object-contain" priority />
               </Link>
               <p className="text-white/45 text-sm leading-relaxed">The professional community for tax experts across America.</p>
             </div>

@@ -286,7 +286,7 @@ export default function MemberProfile() {
                       earned ? "bg-amber-100" : "bg-slate-100"
                     }`}>
                       <img
-                        src="/due_dilligence_badge.png"
+                        src="/due_dilligence_badge.webp"
                         alt="Due Diligence Badge"
                         className="w-12 h-12 object-contain"
                       />

@@ -17,7 +17,7 @@ const TIER_RANK: Record<string, number> = {
 const plans = [
   {
     name: "Basic Members Only", price: 0, label: "FREE", period: "",
-    img: "/free.png", tier: "FREE", popular: false, badge: null, savings: null,
+    img: "/free.webp", tier: "FREE", popular: false, badge: null, savings: null,
     features: [
       "Email Support",
       "Marketplace Access (View)",
@@ -31,7 +31,7 @@ const plans = [
   },
   {
     name: "VIP Members Only", price: 39.99, label: "$39.99", period: "/month",
-    img: "/vip.png", tier: "VIP", popular: false, badge: "2 Months FREE", savings: null,
+    img: "/vip.webp", tier: "VIP", popular: false, badge: "2 Months FREE", savings: null,
     features: [
       "Priority Email Support",
       "Private Messaging & DMs",
@@ -50,7 +50,7 @@ const plans = [
   },
   {
     name: "VIP + Marketplace Bundle", price: 79.99, label: "$79.99", period: "/month",
-    img: "/vipplusmatplace.png", tier: "MARKETPLACE", popular: true, badge: "Most Popular", savings: "Save $131.96/yr",
+    img: "/vipplusmatplace.webp", tier: "MARKETPLACE", popular: true, badge: "Most Popular", savings: "Save $131.96/yr",
     features: [
       "Professional marketplace listing",
       "Custom seller profile",
@@ -66,7 +66,7 @@ const plans = [
   },
   {
     name: "VIP + Marketplace Plus", price: 109.99, label: "$109.99", period: "/month",
-    img: "/vipplusmarplaceplus.png", tier: "MARKETPLACE_PLUS", popular: true, badge: "Best Value", savings: "Save $131.96/yr",
+    img: "/vipplusmarplaceplus.webp", tier: "MARKETPLACE_PLUS", popular: true, badge: "Best Value", savings: "Save $131.96/yr",
     features: [
       "Professional marketplace listing",
       "Custom seller profile",

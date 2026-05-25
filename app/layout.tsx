@@ -18,6 +18,13 @@ export const metadata: Metadata = {
   description:
     "Join TaxComPro — the premier professional community for tax experts, CPAs, and taxpayers. Access the marketplace, Pro Hub communities, training, and expert networking.",
   keywords: "tax professionals, CPA community, tax marketplace, tax training, IRS help",
+  icons: {
+    icon: [
+      { url: "/fevicon.webp", type: "image/webp" },
+    ],
+    apple: "/fevicon.webp",
+    shortcut: "/fevicon.webp",
+  },
   openGraph: {
     title: "TaxComPro — Professional Tax Community",
     description: "The premier platform for tax professionals and taxpayers to connect, learn, and grow.",
