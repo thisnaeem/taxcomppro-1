@@ -19,13 +19,19 @@ const pageTitles: Record<string, string> = {
   "/upgrade":                "Upgrade Plan",
   "/courses":                "Courses",
   "/my-courses":             "My Courses",
-  "/admin":                  "Admin Dashboard",
-  "/admin/users":            "User Management",
-  "/admin/approvals":        "Listing Approvals",
-  "/admin/analytics":        "Analytics",
-  "/admin/settings":         "Settings",
-  "/admin/courses":          "Course Management",
-  "/admin/courses/create":   "Create Course",
+  "/admin":                      "Admin Dashboard",
+  "/admin/users":                "User Management",
+  "/admin/approvals":            "Listing Approvals",
+  "/admin/analytics":            "Analytics",
+  "/admin/settings":             "Settings",
+  "/admin/courses":              "Course Management",
+  "/admin/courses/create":       "Create Course",
+  "/admin/payments":             "Payments & Revenue",
+  "/admin/affiliate":            "Affiliate Program",
+  "/admin/media-gallery":        "Media Gallery",
+  "/admin/toolkit-assets":       "Toolkit Assets",
+  "/admin/content-calendar":     "Content Calendar",
+  "/admin/atlas":                "Atlas AI Settings",
 };
 
 export default function Topbar() {
@@ -57,16 +63,24 @@ export default function Topbar() {
     router.push("/");
   };
 
+  const isAdmin = pathname.startsWith("/admin");
+
   return (
-    <header className="h-16 flex items-center justify-between px-7 border-b border-slate-200 bg-white sticky top-0 z-50">
+    <header className={`h-16 flex items-center justify-between px-7 border-b sticky top-0 z-50 ${
+      isAdmin
+        ? "bg-[#0a1628]/80 backdrop-blur-md border-white/10"
+        : "bg-white border-slate-200"
+    }`}>
       <div className="flex items-center gap-4">
-        {title && <h1 className="text-xl font-bold text-[#0a1628]">{title}</h1>}
+        {title && <h1 className={`text-xl font-bold ${isAdmin ? "text-white" : "text-[#0a1628]"}`}>{title}</h1>}
       </div>
 
       <div className="flex items-center gap-1.5">
         {/* Notifications bell */}
         <Link href="/notifications"
-          className="relative w-9 h-9 flex items-center justify-center rounded-xl hover:bg-slate-100 transition-all text-slate-500"
+          className={`relative w-9 h-9 flex items-center justify-center rounded-xl transition-all ${
+            isAdmin ? "hover:bg-white/10 text-white/60" : "hover:bg-slate-100 text-slate-500"
+          }`}
           title="Notifications"
           onClick={() => dispatch(markAllRead())}>
           <Bell className="w-4 h-4" />
@@ -81,16 +95,22 @@ export default function Topbar() {
         <div className="relative ml-1" ref={dropdownRef}>
           <button
             onClick={() => setDropdownOpen((o) => !o)}
-            className="flex items-center gap-2 pl-1.5 pr-2.5 py-1.5 rounded-full border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-all">
-            <div className="w-7 h-7 rounded-full bg-[#0a1628] flex items-center justify-center overflow-hidden shrink-0">
+            className={`flex items-center gap-2 pl-1.5 pr-2.5 py-1.5 rounded-full border transition-all ${
+              isAdmin
+                ? "border-white/15 hover:border-white/30 hover:bg-white/8"
+                : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+            }`}>
+            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center overflow-hidden shrink-0">
               {user?.image
                 ? <img src={user.image} alt={user?.name ?? ""} className="w-full h-full object-cover" />
-                : <span className="text-white font-bold text-xs">{user?.name?.[0]?.toUpperCase()}</span>}
+                : <span className="text-[#0a1628] font-black text-xs">{user?.name?.[0]?.toUpperCase()}</span>}
             </div>
-            <span className="text-sm font-semibold text-[#0a1628] max-w-[100px] truncate hidden sm:block">
+            <span className={`text-sm font-semibold max-w-[100px] truncate hidden sm:block ${
+              isAdmin ? "text-white" : "text-[#0a1628]"
+            }`}>
               {user?.name?.split(" ")[0]}
             </span>
-            <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
+            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${dropdownOpen ? "rotate-180" : ""} ${isAdmin ? "text-white/40" : "text-slate-400"}`} />
           </button>
 
           {dropdownOpen && (

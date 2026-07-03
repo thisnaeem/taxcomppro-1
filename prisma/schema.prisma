@@ -149,6 +149,7 @@ model User {
   affiliateProfile    AffiliateProfile?
   referredBy          AffiliateReferral[]  @relation("ReferredUser")
   hostedSpaces        Space[]
+  spaceRsvps          SpaceRsvp[]
   proApplication      ProfessionalApplication?
   proServices         ProService[]
   reviewsReceived     ProReview[]  @relation("ReviewedPro")
@@ -653,12 +654,30 @@ model Space {
   hostId      String
   roomName    String    @unique
   isLive      Boolean   @default(true)
+  scheduledAt DateTime?           // null = started immediately; future = scheduled
+  shareToken  String?   @unique   // short token for shareable invite link
   createdAt   DateTime  @default(now())
   endedAt     DateTime?
 
-  host User @relation(fields: [hostId], references: [id], onDelete: Cascade)
+  host  User        @relation(fields: [hostId], references: [id], onDelete: Cascade)
+  rsvps SpaceRsvp[]
 
   @@map("spaces")
+}
+
+model SpaceRsvp {
+  id        String   @id @default(cuid())
+  spaceId   String
+  userId    String?
+  name      String
+  email     String?
+  createdAt DateTime @default(now())
+
+  space Space @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  user  User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([spaceId, userId])
+  @@map("space_rsvps")
 }
 
 model ProfessionalApplication {

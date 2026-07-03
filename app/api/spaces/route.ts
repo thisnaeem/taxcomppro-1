@@ -3,13 +3,22 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { nanoid } from "nanoid";
 
-// GET  /api/spaces — list all live spaces
+const HOST_SELECT = { id: true, name: true, image: true, headline: true };
+
+// GET /api/spaces — list live + upcoming spaces
 export async function GET() {
   const spaces = await prisma.space.findMany({
-    where: { isLive: true },
-    orderBy: { createdAt: "desc" },
+    where: {
+      OR: [
+        { isLive: true },
+        // Upcoming: not yet live and scheduled in the future
+        { isLive: false, endedAt: null, scheduledAt: { gt: new Date() } },
+      ],
+    },
+    orderBy: [{ isLive: "desc" }, { scheduledAt: "asc" }, { createdAt: "desc" }],
     include: {
-      host: { select: { id: true, name: true, image: true, headline: true } },
+      host: { select: HOST_SELECT },
+      _count: { select: { rsvps: true } },
     },
   });
   return NextResponse.json(spaces);
@@ -20,12 +29,14 @@ export async function POST(req: NextRequest) {
   const session = await auth.api.getSession({ headers: req.headers });
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const dbUser = await prisma.user.findUnique({ where: { id: session.user.id }, select: { role: true, tier: true } });
+  const dbUser = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { role: true, tier: true },
+  });
   const canHost = dbUser?.role === "ADMIN" || dbUser?.tier === "MARKETPLACE_PLUS";
 
-  // Also allow if they passed a valid one-time stripe session (verified server-side)
   const body = await req.json();
-  const { name, description, hostSessionId } = body;
+  const { name, description, hostSessionId, scheduledAt } = body;
 
   let hostVerified = canHost;
   if (!hostVerified && hostSessionId) {
@@ -44,11 +55,19 @@ export async function POST(req: NextRequest) {
   }
 
   if (!hostVerified) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-
   if (!name?.trim()) return NextResponse.json({ error: "Name required" }, { status: 400 });
 
+  // Parse scheduledAt if provided
+  let scheduledDate: Date | null = null;
+  if (scheduledAt) {
+    const parsed = new Date(scheduledAt);
+    if (!isNaN(parsed.getTime()) && parsed > new Date()) {
+      scheduledDate = parsed;
+    }
+  }
 
-  const roomName = `space-${nanoid(10)}`;
+  const roomName   = `space-${nanoid(10)}`;
+  const shareToken = nanoid(8);
 
   const space = await prisma.space.create({
     data: {
@@ -56,9 +75,14 @@ export async function POST(req: NextRequest) {
       description: description?.trim() ?? null,
       hostId:      session.user.id,
       roomName,
+      shareToken,
+      // If scheduled for later, mark not live yet
+      isLive:      scheduledDate ? false : true,
+      scheduledAt: scheduledDate,
     },
     include: {
-      host: { select: { id: true, name: true, image: true, headline: true } },
+      host:   { select: HOST_SELECT },
+      _count: { select: { rsvps: true } },
     },
   });
 

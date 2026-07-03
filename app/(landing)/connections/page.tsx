@@ -132,7 +132,7 @@ export default function ConnectionsPage() {
     </div>
   );
 
-  if (user.tier === "FREE") return (
+  if (user.tier === "FREE" && user.role !== "ADMIN") return (
     <UpgradeGate
       feature="Connections & Networking"
       description="Connect and build your professional network with other tax professionals. Available exclusively for VIP members."

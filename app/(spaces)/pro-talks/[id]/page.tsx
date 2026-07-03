@@ -1,62 +1,78 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import Link from "next/link";
+import { Loader2, Calendar, Clock, Users, Check, CheckCheck, Copy, Play } from "lucide-react";
 import { Radio01Icon, Mic01Icon } from "hugeicons-react";
 import SpaceRoom from "@/components/spaces/SpaceRoom";
+import RsvpPanel from "@/components/spaces/RsvpPanel";
 
 interface SpaceHost { id: string; name: string; image: string | null; headline: string | null; }
-interface Space { id: string; name: string; description: string | null; roomName: string; isLive: boolean; createdAt: string; host: SpaceHost; hostId: string; }
+interface Space {
+  id: string; name: string; description: string | null; roomName: string;
+  isLive: boolean; scheduledAt: string | null; shareToken: string | null;
+  endedAt: string | null;
+  createdAt: string; host: SpaceHost; hostId: string;
+  _count?: { rsvps: number };
+}
 
-// ── Guest Join Screen ────────────────────────────────────────────────────────
-function GuestJoinScreen({
-  space,
-  onJoin,
-}: {
-  space: Space;
-  onJoin: (displayName: string) => void;
-}) {
-  const [name, setName]     = useState("");
+function formatScheduled(d: string) {
+  return new Date(d).toLocaleString(undefined, {
+    weekday: "long", year: "numeric", month: "long", day: "numeric",
+    hour: "2-digit", minute: "2-digit",
+  });
+}
+
+function useCountdown(target: string | null) {
+  const [left, setLeft] = useState(0);
+  useEffect(() => {
+    if (!target) return;
+    const tick = () => setLeft(Math.max(0, new Date(target).getTime() - Date.now()));
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [target]);
+
+  const h = Math.floor(left / 3_600_000);
+  const m = Math.floor((left % 3_600_000) / 60_000);
+  const s = Math.floor((left % 60_000) / 1000);
+  return { h, m, s, expired: left === 0 };
+}
+
+// ── Countdown pad ──────────────────────────────────────────────────────────────
+function CountdownUnit({ value, label }: { value: number; label: string }) {
+  return (
+    <div className="flex flex-col items-center">
+      <div className="w-16 h-16 rounded-2xl bg-white/8 border border-white/12 flex items-center justify-center text-3xl font-black text-white">
+        {String(value).padStart(2, "0")}
+      </div>
+      <span className="text-white/35 text-xs mt-1.5 uppercase tracking-wide">{label}</span>
+    </div>
+  );
+}
+
+// ── Guest Join Screen ──────────────────────────────────────────────────────────
+function GuestJoinScreen({ space, onJoin }: { space: Space; onJoin: (displayName: string) => void; }) {
+  const [name, setName]       = useState("");
   const [joining, setJoining] = useState(false);
-
-  const handleJoin = () => {
-    if (!name.trim() || joining) return;
-    setJoining(true);
-    onJoin(name.trim());
-  };
-
+  const handleJoin = () => { if (!name.trim() || joining) return; setJoining(true); onJoin(name.trim()); };
   return (
     <div className="fixed inset-0 bg-gradient-to-br from-[#06091a] via-[#0d1635] to-[#0a0e26] flex items-center justify-center p-4">
-      {/* Ambient blobs */}
       <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-violet-700/10 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full bg-indigo-700/10 blur-[120px] pointer-events-none" />
-
       <div className="relative w-full max-w-sm text-center">
-        {/* Live badge */}
         <div className="inline-flex items-center gap-2 bg-rose-500/20 border border-rose-500/30 text-rose-300 text-xs font-bold px-4 py-1.5 rounded-full mb-6">
           <span className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse" /> Live Now
         </div>
-
-        {/* Room icon */}
         <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center mx-auto mb-5 shadow-2xl shadow-violet-500/30">
           <Radio01Icon className="w-9 h-9 text-white" />
         </div>
-
-        {/* Room info */}
         <h1 className="text-2xl font-black text-white mb-1 leading-tight">{space.name}</h1>
-        {space.description && (
-          <p className="text-white/40 text-sm mb-2 leading-relaxed">{space.description}</p>
-        )}
-        <p className="text-white/30 text-xs mb-8">
-          Hosted by <span className="text-white/60 font-semibold">{space.host.name}</span>
-        </p>
-
-        {/* Name entry */}
+        {space.description && <p className="text-white/40 text-sm mb-2 leading-relaxed">{space.description}</p>}
+        <p className="text-white/30 text-xs mb-8">Hosted by <span className="text-white/60 font-semibold">{space.host.name}</span></p>
         <div className="bg-white/6 border border-white/12 rounded-2xl p-5 text-left space-y-3">
-          <label className="block text-white/60 text-xs font-semibold uppercase tracking-wider mb-1">
-            Your display name
-          </label>
+          <label className="block text-white/60 text-xs font-semibold uppercase tracking-wider mb-1">Your display name</label>
           <input
             id="guest-name-input"
             value={name}
@@ -73,67 +89,221 @@ function GuestJoinScreen({
             disabled={!name.trim() || joining}
             className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-black text-sm hover:from-violet-500 hover:to-indigo-500 transition-all shadow-xl shadow-violet-500/25 disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            {joining
-              ? <><Loader2 className="w-4 h-4 animate-spin" /> Joining…</>
-              : <><Mic01Icon className="w-4 h-4" /> Join Pro Talk</>
-            }
+            {joining ? <><Loader2 className="w-4 h-4 animate-spin" /> Joining…</> : <><Mic01Icon className="w-4 h-4" /> Join Pro Talk</>}
           </button>
         </div>
-
         <p className="text-white/20 text-xs mt-4">No account needed · Audio only</p>
       </div>
     </div>
   );
 }
 
+// ── Scheduled (pre-live) Screen ────────────────────────────────────────────────
+function ScheduledScreen({
+  space,
+  isHost,
+  currentUserId,
+  onStartNow,
+  starting,
+}: {
+  space: Space;
+  isHost: boolean;
+  currentUserId: string;
+  onStartNow: () => void;
+  starting: boolean;
+}) {
+  const { h, m, s, expired } = useCountdown(space.scheduledAt);
+  const [rsvped,  setRsvped]  = useState(false);
+  const [rsvping, setRsvping] = useState(false);
+  const [rsvpCount, setRsvpCount] = useState(space._count?.rsvps ?? 0);
+  const [copied, setCopied] = useState(false);
+
+  const shareUrl = space.shareToken
+    ? (typeof window !== "undefined" ? `${window.location.origin}/pro-talks/invite/${space.shareToken}` : `/pro-talks/invite/${space.shareToken}`)
+    : null;
+
+  const copyLink = async () => {
+    if (!shareUrl) return;
+    await navigator.clipboard.writeText(shareUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const toggleRsvp = async () => {
+    if (rsvping || !currentUserId) return;
+    setRsvping(true);
+    if (rsvped) {
+      await fetch(`/api/spaces/${space.id}/rsvp`, { method: "DELETE" });
+      setRsvped(false);
+      setRsvpCount(c => Math.max(0, c - 1));
+    } else {
+      const res = await fetch(`/api/spaces/${space.id}/rsvp`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({}) });
+      if (res.ok) { setRsvped(true); setRsvpCount(c => c + 1); }
+    }
+    setRsvping(false);
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-[#06091a] via-[#0d1635] to-[#0a0e26] flex flex-col">
+      <div className="absolute -top-20 left-1/3 w-96 h-96 rounded-full bg-indigo-600/10 blur-3xl pointer-events-none" />
+
+      <div className="flex-1 flex flex-col items-center justify-center px-4 py-16 gap-8 relative">
+        {/* Badge */}
+        <div className="flex items-center gap-2 bg-indigo-500/20 border border-indigo-500/30 rounded-full px-4 py-1.5">
+          <Calendar className="w-3.5 h-3.5 text-indigo-300" />
+          <span className="text-indigo-200 text-xs font-bold uppercase tracking-widest">Scheduled</span>
+        </div>
+
+        {/* Room icon */}
+        <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-2xl shadow-indigo-500/30">
+          <Radio01Icon className="w-11 h-11 text-white" />
+        </div>
+
+        {/* Title */}
+        <div className="text-center max-w-lg">
+          <h1 className="text-3xl sm:text-4xl font-black text-white mb-2 leading-tight">{space.name}</h1>
+          {space.description && <p className="text-white/45 text-sm leading-relaxed mb-3">{space.description}</p>}
+          <div className="flex items-center justify-center gap-2 text-white/40 text-sm">
+            <Clock className="w-4 h-4 text-indigo-400" />
+            {space.scheduledAt ? formatScheduled(space.scheduledAt) : ""}
+          </div>
+        </div>
+
+        {/* Countdown */}
+        {!expired && (
+          <div className="flex items-center gap-3">
+            <CountdownUnit value={h} label="hrs" />
+            <span className="text-white/30 text-3xl font-black mb-3">:</span>
+            <CountdownUnit value={m} label="min" />
+            <span className="text-white/30 text-3xl font-black mb-3">:</span>
+            <CountdownUnit value={s} label="sec" />
+          </div>
+        )}
+        {expired && (
+          <div className="text-emerald-300 font-bold text-lg animate-pulse">Starting any moment…</div>
+        )}
+
+        {/* RSVP count */}
+        <div className="flex items-center gap-1.5 text-white/40 text-sm">
+          <Users className="w-4 h-4" />
+          <span>{rsvpCount} {rsvpCount === 1 ? "person" : "people"} RSVP'd</span>
+        </div>
+
+        {/* Actions */}
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          {/* RSVP button (non-host only) */}
+          {currentUserId && !isHost && (
+            <button
+              id="detail-rsvp-btn"
+              onClick={toggleRsvp}
+              disabled={rsvping}
+              className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-sm font-bold transition-all shadow-lg ${
+                rsvped
+                  ? "bg-indigo-500/30 border border-indigo-400/50 text-indigo-200 hover:bg-rose-500/20 hover:border-rose-400/40 hover:text-rose-300"
+                  : "bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:from-indigo-500 hover:to-violet-500 shadow-indigo-500/25"
+              }`}
+            >
+              {rsvping ? <Loader2 className="w-4 h-4 animate-spin" /> : rsvped ? <><CheckCheck className="w-4 h-4" /> You're in!</> : <><Check className="w-4 h-4" /> RSVP to Attend</>}
+            </button>
+          )}
+
+          {/* Copy invite link */}
+          {shareUrl && (
+            <button
+              onClick={copyLink}
+              className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-white/8 border border-white/12 hover:bg-white/14 text-white/60 hover:text-white text-sm font-semibold transition-all"
+            >
+              {copied ? <CheckCheck className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+              {copied ? "Copied!" : "Copy Invite Link"}
+            </button>
+          )}
+
+          {/* Host: Start Now */}
+          {isHost && (
+            <button
+              id="host-start-now-btn"
+              onClick={onStartNow}
+              disabled={starting}
+              className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-rose-500 to-pink-600 text-white text-sm font-black hover:from-rose-400 hover:to-pink-500 transition-all shadow-lg shadow-rose-500/25 disabled:opacity-50"
+            >
+              {starting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4 fill-white" />}
+              {starting ? "Starting…" : "Start Now"}
+            </button>
+          )}
+        </div>
+
+        {/* Back link */}
+        <Link href="/pro-talks" className="text-white/25 hover:text-white/50 text-sm transition-colors">
+          ← Back to Pro Talks
+        </Link>
+      </div>
+
+      {/* Host RSVP panel */}
+      {isHost && (
+        <div className="max-w-xl mx-auto w-full px-4 pb-12">
+          <p className="text-white/40 text-xs font-semibold uppercase tracking-wide mb-3">Host View · RSVP List</p>
+          <RsvpPanel spaceId={space.id} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Page ───────────────────────────────────────────────────────────────────────
 export default function ProTalkPage() {
   const { id }  = useParams<{ id: string }>();
   const router  = useRouter();
 
-  const [space,     setSpace]     = useState<Space | null>(null);
-  const [token,     setToken]     = useState<string | null>(null);
-  const [loading,   setLoading]   = useState(true);
-  const [error,     setError]     = useState<string | null>(null);
-  const [isAdmin,   setIsAdmin]   = useState(false);
-  const [userId,    setUserId]    = useState("");
-  const [ending,    setEnding]    = useState(false);
-
-  // Guest join state
+  const [space,         setSpace]         = useState<Space | null>(null);
+  const [token,         setToken]         = useState<string | null>(null);
+  const [loading,       setLoading]       = useState(true);
+  const [error,         setError]         = useState<string | null>(null);
+  const [isAdmin,       setIsAdmin]       = useState(false);
+  const [userId,        setUserId]        = useState("");
+  const [ending,        setEnding]        = useState(false);
+  const [starting,      setStarting]      = useState(false);
   const [isGuest,       setIsGuest]       = useState(false);
   const [showGuestForm, setShowGuestForm] = useState(false);
 
-  useEffect(() => {
+  const loadData = useCallback(async () => {
     if (!id) return;
+    try {
+      const [spaceData, tokenData, me] = await Promise.all([
+        fetch(`/api/spaces/${id}`).then(r => r.json()),
+        fetch(`/api/spaces/${id}/token`, { method: "POST" }).then(r => r.json()),
+        fetch("/api/user/me").then(r => r.json()).catch(() => null),
+      ]);
 
-    // Fetch space info + try to get a member token
-    Promise.all([
-      fetch(`/api/spaces/${id}`).then(r => r.json()),
-      fetch(`/api/spaces/${id}/token`, { method: "POST" }).then(r => r.json()),
-      fetch("/api/user/me").then(r => r.json()).catch(() => null),
-    ]).then(([spaceData, tokenData, me]) => {
       if (spaceData.error) { setError(spaceData.error); return; }
       setSpace(spaceData as Space);
 
+      // Always resolve identity from /api/user/me — even for scheduled (non-live) spaces
+      // where the token endpoint returns an error. This ensures userId is set so the
+      // RSVP button shows for non-host members on the countdown screen.
+      if (me?.id) { setUserId(me.id); setIsAdmin(me.role === "ADMIN"); }
+
       if (tokenData.error) {
-        // Not authenticated → guest flow
-        setIsGuest(true);
-        setShowGuestForm(true);
+        setIsGuest(!me?.id); // only truly a guest if not logged in
+        // Only show guest join form if the space is actually live
+        if (spaceData.isLive && !me?.id) setShowGuestForm(true);
       } else {
         setToken(tokenData.token as string);
-        if (me?.id) { setUserId(me.id); setIsAdmin(me.role === "ADMIN"); }
       }
-    }).catch(() => setError("Failed to load Pro Talk"))
-      .finally(() => setLoading(false));
+    } catch {
+      setError("Failed to load Pro Talk");
+    } finally {
+      setLoading(false);
+    }
   }, [id]);
 
-  // Guest submits their display name
+  useEffect(() => { loadData(); }, [loadData]);
+
   const handleGuestJoin = async (displayName: string) => {
     setShowGuestForm(false);
     setLoading(true);
     try {
       const res  = await fetch(`/api/spaces/${id}/guest-token`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ displayName }),
       });
       const data = await res.json();
@@ -153,7 +323,23 @@ export default function ProTalkPage() {
     router.push("/pro-talks");
   };
 
-  // Loading
+  const handleStartNow = async () => {
+    if (starting || !space) return;
+    setStarting(true);
+    const res = await fetch(`/api/spaces/${id}`, { method: "PATCH" });
+    if (res.ok) {
+      const updated = await res.json() as Space;
+      setSpace(updated);
+      // Now fetch a token since the space is live
+      const tokenRes = await fetch(`/api/spaces/${id}/token`, { method: "POST" });
+      if (tokenRes.ok) {
+        const tokenData = await tokenRes.json();
+        if (tokenData.token) setToken(tokenData.token);
+      }
+    }
+    setStarting(false);
+  };
+
   if (loading) return (
     <div className="fixed inset-0 z-50 bg-[#06091a] flex items-center justify-center">
       <div className="flex flex-col items-center gap-4">
@@ -161,17 +347,29 @@ export default function ProTalkPage() {
           <Radio01Icon className="w-7 h-7 text-white" />
         </div>
         <Loader2 className="w-6 h-6 animate-spin text-violet-400" />
-        <p className="text-white/40 text-sm">Joining Pro Talk…</p>
+        <p className="text-white/40 text-sm">Loading Pro Talk…</p>
       </div>
     </div>
   );
 
-  // Guest name form (space loaded, user not signed in)
-  if (showGuestForm && space) return (
-    <GuestJoinScreen space={space} onJoin={handleGuestJoin} />
-  );
+  // Guest name form (space loaded + live, user not signed in)
+  if (showGuestForm && space) return <GuestJoinScreen space={space} onJoin={handleGuestJoin} />;
 
-  // Error
+  // Scheduled (not yet live) screen
+  if (space && !space.isLive && !space.endedAt) {
+    const isHostUser = space.hostId === userId || isAdmin;
+    // If host is here and already has a token, we show the scheduled screen too (they can start)
+    return (
+      <ScheduledScreen
+        space={space}
+        isHost={isHostUser}
+        currentUserId={userId}
+        onStartNow={handleStartNow}
+        starting={starting}
+      />
+    );
+  }
+
   if (error || !space || !token) return (
     <div className="fixed inset-0 z-50 bg-[#06091a] flex flex-col items-center justify-center gap-5">
       <p className="text-white/50 text-lg">{error ?? "Pro Talk unavailable"}</p>

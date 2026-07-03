@@ -126,7 +126,7 @@ export default function LandingPage() {
             {features.map((f) => (
               <div key={f.title} className="bg-white border border-slate-200 rounded-2xl p-8 hover:border-[#d4a017] hover:-translate-y-1 hover:shadow-xl transition-all flex flex-col items-center text-center">
                 <div className="mb-5">
-                <Image src={f.img} alt={f.title} width={80} height={80} className="object-contain" />
+                <Image src={f.img} alt={f.title} width={80} height={80} className="object-contain" style={{ width: "auto", height: "auto" }} />
                 </div>
                 <h3 className="text-xl font-bold text-[#0a1628] mb-2">{f.title}</h3>
                 <p className="text-slate-500 text-base leading-relaxed">{f.desc}</p>
@@ -241,7 +241,7 @@ export default function LandingPage() {
                 <div className="p-7 flex flex-col flex-1">
                   {/* Plan image */}
                   <div className="flex justify-center mb-5">
-                  <Image src={plan.img} alt={plan.name} width={130} height={130} className="object-contain" />
+                  <Image src={plan.img} alt={plan.name} width={130} height={130} className="object-contain" style={{ width: "auto", height: "auto" }} />
                   </div>
 
                   {/* Name */}
@@ -305,7 +305,7 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
             <div>
               <Link href="/" className="inline-flex items-center mb-4 bg-white rounded-xl px-3 py-2">
-                <Image src="/logo.webp" alt="TaxComPro" width={130} height={38} className="object-contain" priority />
+                <Image src="/logo.webp" alt="TaxComPro" width={130} height={38} className="object-contain" style={{ width: "auto", height: "auto" }} priority />
               </Link>
               <p className="text-white/45 text-sm leading-relaxed">The professional community for tax experts across America.</p>
             </div>

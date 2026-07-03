@@ -44,7 +44,7 @@ const tierBadge: Record<string, string> = {
 
 export default function PostCard({ post, onUpdate, onDelete }: { post: FeedPost; onUpdate: (updated: FeedPost) => void; onDelete?: (id: string) => void }) {
   const user = useAppSelector(s => s.auth.user);
-  const isFree = user?.tier === "FREE";
+  const isFree = user?.tier === "FREE" && user?.role !== "ADMIN";
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [liked, setLiked]           = useState(post.likes.length > 0);
   const [likeCount, setLikeCount]   = useState(post._count.likes);

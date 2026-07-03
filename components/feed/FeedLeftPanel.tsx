@@ -15,12 +15,14 @@ import DueDiligenceBadge from "@/components/badges/DueDiligenceBadge";
 const tierLabel: Record<string, string> = {
   FREE: "Free Member", VIP: "VIP Member",
   MARKETPLACE: "Marketplace Pro", MARKETPLACE_PLUS: "Marketplace Plus",
+  ADMIN: "Admin",
 };
 const tierColor: Record<string, string> = {
   FREE: "bg-slate-100 text-slate-600",
   VIP: "bg-amber-100 text-amber-700",
   MARKETPLACE: "bg-indigo-100 text-indigo-700",
   MARKETPLACE_PLUS: "bg-emerald-100 text-emerald-700",
+  ADMIN: "bg-rose-100 text-rose-700",
 };
 
 export default function FeedLeftPanel() {
@@ -43,8 +45,10 @@ export default function FeedLeftPanel() {
 
   if (!user) return null;
 
-  const canSell = user.tier === "MARKETPLACE" || user.tier === "MARKETPLACE_PLUS" || user.role === "PROFESSIONAL";
-  const tier    = user.tier ?? "FREE";
+  const isAdmin = user.role === "ADMIN";
+  const canSell = isAdmin || user.tier === "MARKETPLACE" || user.tier === "MARKETPLACE_PLUS" || user.role === "PROFESSIONAL";
+  // Admins display as their own tier label, not "Free Member"
+  const tier = isAdmin ? "ADMIN" : (user.tier ?? "FREE");
 
   const handleSave = async () => {
     setSaving(true);

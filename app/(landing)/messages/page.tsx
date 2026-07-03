@@ -229,7 +229,7 @@ function MessagesContent() {
     </div>
   );
 
-  if (me.tier === "FREE") return (
+  if (me.tier === "FREE" && me.role !== "ADMIN") return (
     <UpgradeGate
       feature="Private Messaging"
       description="Send and receive private messages with your connections. Available exclusively for VIP members."
