@@ -7,7 +7,7 @@ import Image from "next/image";
 import {
   LayoutDashboard, Users, CheckSquare, BookOpen,
   BarChart2, Calendar, Images, Package, Gift, Bot,
-  CreditCard, ChevronRight,
+  CreditCard, ChevronRight, LifeBuoy,
 } from "lucide-react";
 
 type NavLink = { icon: React.ElementType; label: string; href: string; exact?: boolean };
@@ -38,7 +38,9 @@ const adminLinks: NavLink[] = [
   { icon: Package,         label: "Toolkit Downloads", href: "/admin/toolkit-assets" },
   { icon: Gift,            label: "Affiliate",         href: "/admin/affiliate" },
   { icon: Bot,             label: "Atlas AI",          href: "/admin/atlas" },
+  { icon: LifeBuoy,        label: "Support Tickets",   href: "/admin/support" },
 ];
+
 
 const navGroups = [
   { label: "Overview",   items: adminLinks.slice(0, 3) },
@@ -62,7 +64,7 @@ export default function Sidebar() {
           <div className="bg-white rounded-xl px-2 py-1.5">
             <Image
               src="/logo.webp"
-              alt="TaxComPro"
+              alt="TaxCompPro"
               width={110}
               height={32}
               className="object-contain"

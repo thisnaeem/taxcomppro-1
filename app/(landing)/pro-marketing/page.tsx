@@ -601,7 +601,7 @@ function ProMarketingContent() {
                 <div>
                   <label className="block text-sm font-bold text-[#0a1628] mb-1.5">Ad Title <span className="text-red-400">*</span></label>
                   <input value={adTitle} onChange={e => setAdTitle(e.target.value)} maxLength={80}
-                    placeholder="e.g. TaxComPro Premium Services"
+                    placeholder="e.g. TaxCompPro Premium Services"
                     className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0a1628]/20" />
                 </div>
 

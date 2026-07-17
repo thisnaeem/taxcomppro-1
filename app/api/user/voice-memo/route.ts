@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
   const dataUri     = `data:${file.type};base64,${b64}`;
 
   const result = await cloudinary.uploader.upload(dataUri, {
-    folder:        "taxcompro/voice-memos",
+    folder:        "taxcomppro/voice-memos",
     resource_type: "video", // Cloudinary uses "video" resource type for audio
     public_id:     `voice-memo-${session.user.id}`,
     overwrite:     true,

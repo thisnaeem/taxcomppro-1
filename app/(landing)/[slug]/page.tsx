@@ -258,7 +258,7 @@ export default function ListingDetailPage() {
                   <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
                     {listing.user.role === "ADMIN" && (
                       <span className="text-[10px] font-bold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full flex items-center gap-1">
-                        <CrownIcon className="w-3 h-3" /> TaxComPro Official
+                        <CrownIcon className="w-3 h-3" /> TaxCompPro Official
                       </span>
                     )}
                     {listing.user.role !== "ADMIN" && (

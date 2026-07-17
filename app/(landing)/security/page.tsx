@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { Shield, Lock, Eye, Server, AlertTriangle, CheckCircle } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Security | TaxComPro",
-  description: "How TaxComPro protects your data, accounts, and financial information.",
+  title: "Security | TaxCompPro",
+  description: "How TaxCompPro protects your data, accounts, and financial information.",
 };
 
 const measures = [
@@ -16,10 +16,10 @@ const measures = [
 ];
 
 const faqs = [
-  { q: "Can TaxComPro employees read my messages?", a: "Private messages are encrypted and access by staff is restricted to legal obligations and active abuse investigations, with full audit logging." },
+  { q: "Can TaxCompPro employees read my messages?", a: "Private messages are encrypted and access by staff is restricted to legal obligations and active abuse investigations, with full audit logging." },
   { q: "What happens if there's a data breach?", a: "We will notify all affected users within 72 hours, provide a detailed incident report, and work with authorities as required by law." },
-  { q: "How do I report a security vulnerability?", a: "Please email security@taxcompro.com with details. We have a responsible disclosure policy and will acknowledge reports within 24 hours." },
-  { q: "Is my financial data safe?", a: "Yes. All billing is handled by Stripe (PCI DSS Level 1). TaxComPro never stores card numbers, CVVs, or full account details." },
+  { q: "How do I report a security vulnerability?", a: "Please email security@taxcomppro.com with details. We have a responsible disclosure policy and will acknowledge reports within 24 hours." },
+  { q: "Is my financial data safe?", a: "Yes. All billing is handled by Stripe (PCI DSS Level 1). TaxCompPro never stores card numbers, CVVs, or full account details." },
 ];
 
 export default function SecurityPage() {
@@ -28,7 +28,7 @@ export default function SecurityPage() {
       {/* Hero */}
       <section className="bg-[#0a1628] pt-24 pb-16 px-6 text-center">
         <p className="text-[#d4a017] font-bold text-sm uppercase tracking-widest mb-4">Trust & Safety</p>
-        <h1 className="text-4xl md:text-5xl font-black text-white mb-4">Security at TaxComPro</h1>
+        <h1 className="text-4xl md:text-5xl font-black text-white mb-4">Security at TaxCompPro</h1>
         <p className="text-white/60 max-w-2xl mx-auto text-base leading-relaxed">
           Protecting your data, your clients' information, and your professional reputation is our highest priority.
         </p>
@@ -69,7 +69,7 @@ export default function SecurityPage() {
           <h2 className="text-2xl font-black text-[#0a1628] mb-6">Your Security Checklist</h2>
           <div className="space-y-3">
             {[
-              "Use a strong, unique password for your TaxComPro account",
+              "Use a strong, unique password for your TaxCompPro account",
               "Enable Google Sign-In for stronger authentication",
               "Never share your login credentials with anyone",
               "Log out from shared or public devices",
@@ -102,7 +102,7 @@ export default function SecurityPage() {
       <section className="bg-[#0a1628] py-16 px-6 text-center">
         <h2 className="text-2xl font-black text-white mb-3">Found a Vulnerability?</h2>
         <p className="text-white/60 text-sm mb-6 max-w-md mx-auto">We take all security reports seriously and have a responsible disclosure program. Report issues privately and we'll work with you quickly.</p>
-        <a href="mailto:security@taxcompro.com"
+        <a href="mailto:security@taxcomppro.com"
           className="inline-flex items-center gap-2 bg-[#d4a017] text-[#0a1628] font-bold px-6 py-3 rounded-full text-sm hover:bg-[#e6b420] transition-all">
           <Shield className="w-4 h-4" /> Report a Vulnerability
         </a>

@@ -13,7 +13,7 @@ import {
   UserGroupIcon, Message01Icon, UserAdd01Icon, BookOpen01Icon,
   Store01Icon, Rocket01Icon, Radio01Icon,
 } from "hugeicons-react";
-import { Gift, Shield, GraduationCap, ChevronDown, Megaphone, Sun, Moon } from "lucide-react";
+import { Gift, Shield, GraduationCap, ChevronDown, Megaphone, Sun, Moon, Wrench } from "lucide-react";
 import { useTheme } from "next-themes";
 
 type NavItem =
@@ -24,6 +24,7 @@ const navItems: NavItem[] = [
   { type: "link",     label: "Home",        href: "/feed",        icon: Home01Icon },
   { type: "link",     label: "Courses",     href: "/courses",    icon: BookOpen01Icon },
   { type: "link",     label: "Toolkits",    href: "/toolkits",   icon: GraduationCap },
+  { type: "link",     label: "Tools",       href: "/tools",      icon: Wrench },
   { type: "link",     label: "Marketplace", href: "/marketplace",icon: ShoppingBag01Icon },
   {
     type: "dropdown", label: "Pros", icon: UserGroupIcon,
@@ -173,8 +174,8 @@ export default function Navbar() {
 
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 relative z-50">
-          <img src="/logo.webp"      alt="TaxComPro" className="h-16 w-auto dark:hidden" />
-          <img src="/logo_dark.webp" alt="TaxComPro" className="h-16 w-auto hidden dark:block" />
+          <img src="/logo.webp"      alt="TaxCompPro" className="h-16 w-auto dark:hidden" />
+          <img src="/logo_dark.webp" alt="TaxCompPro" className="h-16 w-auto hidden dark:block" />
         </Link>
 
         {/* Search bar (expanded) */}
@@ -210,7 +211,7 @@ export default function Navbar() {
                   return (
                     <Link key={item.label} href={item.href}
                       data-nav-item
-                      className="flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-[#0a1628] hover:bg-slate-50 dark:hover:bg-white/10 px-3.5 py-2 rounded-lg transition-all">
+                      className="flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-[#0a1628] hover:bg-slate-50 dark:hover:bg-white/10 px-2.5 py-2 rounded-lg transition-all">
                       <Icon className="w-3.5 h-3.5" />{item.label}
                     </Link>
                   );
@@ -222,7 +223,7 @@ export default function Navbar() {
                   <div key={item.label} className="relative">
                     <button onClick={() => setOpenMenu(isOpen ? null : item.label)}
                       data-nav-item
-                      className={`flex items-center gap-1.5 text-sm font-semibold px-3.5 py-2 rounded-lg transition-all ${
+                      className={`flex items-center gap-1.5 text-sm font-semibold px-2.5 py-2 rounded-lg transition-all ${
                         isOpen
                           ? "bg-slate-100 dark:bg-white/10 text-[#0a1628]"
                           : "text-slate-500 hover:text-[#0a1628] hover:bg-slate-50 dark:hover:bg-white/10"
@@ -264,7 +265,7 @@ export default function Navbar() {
             </a>
 
             {/* Desktop right */}
-            <div className="hidden md:flex items-center gap-1 ml-auto">
+            <div className="hidden md:flex items-center gap-1 ml-auto shrink-0 flex-nowrap">
               {/* Theme toggle */}
               <button
                 onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
@@ -397,13 +398,13 @@ export default function Navbar() {
                   )}
                 </div>
               ) : (
-                <div className="flex items-center gap-2 ml-1">
+                <div className="flex items-center gap-2 ml-1 shrink-0 flex-nowrap">
                   <Link href="/login"
-                    className="text-sm font-semibold text-[#0a1628] hover:text-[#d4a017] px-4 py-2 rounded-full transition-all">
+                    className="text-sm font-semibold text-[#0a1628] hover:text-[#d4a017] px-4 py-2 rounded-full transition-all whitespace-nowrap">
                     Sign In
                   </Link>
                   <Link href="/register"
-                    className="text-sm font-bold bg-gradient-to-r from-[#f0c040] to-[#d4a017] text-[#0a1628] px-5 py-2.5 rounded-full hover:shadow-[0_0_20px_rgba(212,160,23,0.4)] transition-all">
+                    className="text-sm font-bold bg-gradient-to-r from-[#f0c040] to-[#d4a017] text-[#0a1628] px-5 py-2.5 rounded-full hover:shadow-[0_0_20px_rgba(212,160,23,0.4)] transition-all whitespace-nowrap">
                     Get Started Free
                   </Link>
                 </div>
@@ -411,104 +412,150 @@ export default function Navbar() {
             </div>
 
             {/* Mobile toggle */}
-            <button onClick={() => setMobileOpen(!mobileOpen)} className="lg:hidden text-[#0a1628] relative z-50 p-2 -mr-2">
+            <button onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden text-[#0a1628] dark:text-white relative z-50 p-2 -mr-2 ml-auto">
               {mobileOpen ? <Cancel01Icon className="w-6 h-6" /> : <Menu01Icon className="w-6 h-6" />}
             </button>
           </>
         )}
       </div>
 
-      {/* Mobile menu */}
+      {/* Mobile menu — full-width panel below header */}
       {mobileOpen && !searchOpen && (
-        <div className="border-t border-white/10 p-4 flex flex-col gap-1">
-          {/* Mobile search */}
-          <form onSubmit={handleSearch} className="flex items-center gap-2 bg-white/10 border border-white/20 rounded-xl px-3 py-2 mb-2">
-            <Search01Icon className="w-4 h-4 text-white/50 shrink-0" />
-            <input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Search…"
-              className="flex-1 bg-transparent text-sm text-white placeholder-white/40 outline-none font-[inherit]" />
-          </form>
+        <div className="md:hidden bg-white dark:bg-[#172135] border-t border-slate-200 dark:border-[#243550] shadow-lg">
+          <div className="px-4 pt-4 pb-2">
+            {/* Mobile search */}
+            <form onSubmit={handleSearch} className="flex items-center gap-2 bg-slate-100 dark:bg-white/10 border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2.5 mb-3">
+              <Search01Icon className="w-4 h-4 text-slate-400 dark:text-white/50 shrink-0" />
+              <input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+                placeholder="Search marketplace, communities…"
+                className="flex-1 bg-transparent text-sm text-[#0a1628] dark:text-white placeholder-slate-400 dark:placeholder-white/40 outline-none font-[inherit]" />
+              {searchQuery && (
+                <button type="submit" className="text-xs font-bold text-[#d4a017] shrink-0">Go</button>
+              )}
+            </form>
+          </div>
 
-          {navLinks.map(l => (
-            <Link key={l.label} href={l.href}
-              className="flex items-center gap-2 text-white/80 px-4 py-3 rounded-lg hover:bg-white/8 font-medium"
-              onClick={() => setMobileOpen(false)}>
-              <l.icon className="w-4 h-4" />
-              {l.label}
-            </Link>
-          ))}
-          <div className="pt-3 mt-1 border-t border-white/10">
+          {/* Nav links */}
+          <div className="px-3 pb-2">
+            {navLinks.map(l => (
+              <Link key={l.label} href={l.href}
+                className="flex items-center gap-3 text-slate-700 dark:text-white/85 px-3 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-white/8 font-semibold transition-colors"
+                onClick={() => setMobileOpen(false)}>
+                <span className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-white/10 flex items-center justify-center shrink-0">
+                  <l.icon className="w-4 h-4 text-[#0a1628] dark:text-white/80" />
+                </span>
+                {l.label}
+              </Link>
+            ))}
+          </div>
+
+          {/* Atlas AI button on mobile */}
+          <div className="px-4 pb-3">
+            <a
+              href="https://atlas-ai-iota.vercel.app"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="atlas-btn flex items-center justify-center gap-2 text-[#0a1628] font-black text-sm px-4 py-3 rounded-xl w-full"
+            >
+              <img src="/icon.webp" alt="Atlas AI" className="w-5 h-5 rounded-sm object-contain" />
+              Try Atlas AI
+            </a>
+          </div>
+
+          {/* Divider + auth section */}
+          <div className="border-t border-slate-200 dark:border-white/10 mx-4 pt-3 pb-4">
             {user ? (
-              <div className="flex flex-col gap-1">
-                <div className="flex items-center gap-3 px-4 py-2 mb-1">
-                  <div className="w-9 h-9 rounded-xl bg-[#1a3a6b] overflow-hidden flex items-center justify-center">
+              <div className="flex flex-col gap-0.5">
+                {/* User info header */}
+                <div className="flex items-center gap-3 px-3 py-2.5 mb-2 bg-slate-50 dark:bg-white/5 rounded-xl">
+                  <div className="w-10 h-10 rounded-xl bg-[#1a3a6b] overflow-hidden flex items-center justify-center shrink-0">
                     {user.image
                       ? <img src={user.image as string} alt={user.name ?? ""} className="w-full h-full object-cover" />
-                      : <span className="text-white font-bold">{user.name?.[0]?.toUpperCase()}</span>}
+                      : <span className="text-white font-bold text-sm">{user.name?.[0]?.toUpperCase()}</span>}
                   </div>
-                  <div>
-                    <div className="text-white font-semibold text-sm">{user.name}</div>
-                    <div className="text-white/40 text-xs truncate">{user.email}</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[#0a1628] dark:text-white font-bold text-sm truncate">{user.name}</div>
+                    <div className="text-slate-400 dark:text-white/40 text-xs truncate">{user.email}</div>
                   </div>
-                </div>
-                
-                <div className="flex justify-around items-center bg-white/5 py-3 rounded-xl">
-                  <button className="flex flex-col items-center gap-1.5 text-white/70 hover:text-white transition-colors">
-                    <Search01Icon className="w-5 h-5" />
-                    <span className="text-[10px] font-medium">Search</span>
-                  </button>
-                  <button className="flex flex-col items-center gap-1.5 text-white/70 hover:text-white transition-colors">
-                    <Notification01Icon className="w-5 h-5" />
-                    <span className="text-[10px] font-medium">Alerts</span>
-                  </button>
-                  <Link href="/messages" onClick={() => setMobileOpen(false)} className="flex flex-col items-center gap-1.5 text-white/70 hover:text-white transition-colors">
-                    <Message01Icon className="w-5 h-5" />
-                    <span className="text-[10px] font-medium">Chat</span>
-                  </Link>
+                  {/* Quick action icons */}
+                  <div className="flex items-center gap-1">
+                    <Link href="/notifications" onClick={() => setMobileOpen(false)}
+                      className="relative p-2 text-slate-500 dark:text-white/60 hover:text-[#0a1628] dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 rounded-lg transition-colors">
+                      <Notification01Icon className="w-4.5 h-4.5" />
+                      {unreadCount > 0 && (
+                        <span className="absolute top-1 right-1 min-w-[14px] h-3.5 bg-[#f0c040] text-[#0a1628] text-[9px] font-black rounded-full flex items-center justify-center px-0.5">
+                          {unreadCount > 9 ? "9+" : unreadCount}
+                        </span>
+                      )}
+                    </Link>
+                    <Link href="/messages" onClick={() => setMobileOpen(false)}
+                      className="relative p-2 text-slate-500 dark:text-white/60 hover:text-[#0a1628] dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 rounded-lg transition-colors">
+                      <Message01Icon className="w-4.5 h-4.5" />
+                      {unreadMessages > 0 && (
+                        <span className="absolute top-1 right-1 min-w-[14px] h-3.5 bg-blue-500 text-white text-[9px] font-black rounded-full flex items-center justify-center px-0.5">
+                          {unreadMessages > 9 ? "9+" : unreadMessages}
+                        </span>
+                      )}
+                    </Link>
+                  </div>
                 </div>
 
-                <Link href="/profile" onClick={() => setMobileOpen(false)}
-                  className="flex items-center gap-2 text-white/80 px-4 py-3 rounded-lg hover:bg-white/8 font-medium">
-                  <UserCircleIcon className="w-4 h-4" /> My Profile
-                </Link>
                 {storeUser?.role === "ADMIN" ? (
                   <Link href="/admin" onClick={() => setMobileOpen(false)}
-                    className="flex items-center gap-2 text-amber-300 px-4 py-3 rounded-lg hover:bg-white/8 font-medium">
+                    className="flex items-center gap-3 text-sm font-semibold text-amber-600 dark:text-amber-300 px-3 py-3 rounded-xl hover:bg-amber-50 dark:hover:bg-white/8 transition-colors">
                     <Shield className="w-4 h-4" /> Admin Panel
                   </Link>
                 ) : (
                   <>
+                    <Link href="/profile" onClick={() => setMobileOpen(false)}
+                      className="flex items-center gap-3 text-sm font-semibold text-slate-700 dark:text-white/80 px-3 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-white/8 transition-colors">
+                      <UserCircleIcon className="w-4 h-4 text-slate-400" /> My Profile
+                    </Link>
                     <Link href="/marketplace?mine=true" onClick={() => setMobileOpen(false)}
-                      className="flex items-center gap-2 text-white/80 px-4 py-3 rounded-lg hover:bg-white/8 font-medium">
-                      <Store01Icon className="w-4 h-4" /> My Listings
+                      className="flex items-center gap-3 text-sm font-semibold text-slate-700 dark:text-white/80 px-3 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-white/8 transition-colors">
+                      <Store01Icon className="w-4 h-4 text-slate-400" /> My Listings
                     </Link>
                     <Link href="/my-courses" onClick={() => setMobileOpen(false)}
-                      className="flex items-center gap-2 text-white/80 px-4 py-3 rounded-lg hover:bg-white/8 font-medium">
-                      <BookOpen01Icon className="w-4 h-4" /> My Courses
+                      className="flex items-center gap-3 text-sm font-semibold text-slate-700 dark:text-white/80 px-3 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-white/8 transition-colors">
+                      <BookOpen01Icon className="w-4 h-4 text-slate-400" /> My Courses
                     </Link>
                     <Link href="/connections" onClick={() => setMobileOpen(false)}
-                      className="flex items-center gap-2 text-white/80 px-4 py-3 rounded-lg hover:bg-white/8 font-medium">
-                      <UserAdd01Icon className="w-4 h-4" /> Connections
+                      className="flex items-center gap-3 text-sm font-semibold text-slate-700 dark:text-white/80 px-3 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-white/8 transition-colors">
+                      <UserAdd01Icon className="w-4 h-4 text-slate-400" /> Connections
                     </Link>
                     <Link href="/affiliate" onClick={() => setMobileOpen(false)}
-                      className="flex items-center gap-2 text-white/80 px-4 py-3 rounded-lg hover:bg-white/8 font-medium">
-                      <Gift className="w-4 h-4" /> Affiliate Program
+                      className="flex items-center gap-3 text-sm font-semibold text-slate-700 dark:text-white/80 px-3 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-white/8 transition-colors">
+                      <Gift className="w-4 h-4 text-slate-400" /> Affiliate Program
                     </Link>
+                    {(storeUser?.tier === "MARKETPLACE" || storeUser?.tier === "MARKETPLACE_PLUS") && (
+                      <Link href="/seller-dashboard" onClick={() => setMobileOpen(false)}
+                        className="flex items-center gap-3 text-sm font-semibold text-[#d4a017] px-3 py-3 rounded-xl hover:bg-amber-50 dark:hover:bg-white/8 transition-colors">
+                        <Rocket01Icon className="w-4 h-4" /> Seller Dashboard
+                      </Link>
+                    )}
                     <Link href="/upgrade" onClick={() => setMobileOpen(false)}
-                      className="flex items-center gap-2 text-amber-300 px-4 py-3 rounded-lg hover:bg-white/8 font-medium">
+                      className="flex items-center gap-3 text-sm font-semibold text-[#d4a017] px-3 py-3 rounded-xl hover:bg-amber-50 dark:hover:bg-white/8 transition-colors">
                       <Rocket01Icon className="w-4 h-4" /> Upgrade Plan
                     </Link>
                   </>
                 )}
+
+                <div className="h-px bg-slate-100 dark:bg-white/10 my-1" />
                 <button onClick={async () => { setMobileOpen(false); await signOut(); dispatch(clearUser()); window.location.href = "/"; }}
-                  className="flex items-center gap-2 text-red-400 px-4 py-3 rounded-lg hover:bg-red-400/10 font-medium text-left w-full">
+                  className="flex items-center gap-3 text-sm font-semibold text-red-500 px-3 py-3 rounded-xl hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors text-left w-full">
                   <Logout01Icon className="w-4 h-4" /> Sign Out
                 </button>
               </div>
             ) : (
-              <div className="flex gap-3">
-                <Link href="/login" className="flex-1 text-center text-sm font-semibold text-white border border-white/20 py-2.5 rounded-full">Sign In</Link>
-                <Link href="/register" className="flex-1 text-center text-sm font-bold bg-gradient-to-r from-[#f0c040] to-[#d4a017] text-[#0a1628] py-2.5 rounded-full">Get Started</Link>
+              <div className="flex flex-col gap-2.5">
+                <Link href="/login"
+                  className="text-center text-sm font-bold text-[#0a1628] dark:text-white border border-slate-300 dark:border-white/25 py-3 rounded-full hover:bg-slate-50 dark:hover:bg-white/10 transition-colors">
+                  Sign In
+                </Link>
+                <Link href="/register"
+                  className="text-center text-sm font-bold bg-gradient-to-r from-[#f0c040] to-[#d4a017] text-[#0a1628] py-3 rounded-full hover:shadow-[0_0_20px_rgba(212,160,23,0.4)] transition-all">
+                  Get Started Free
+                </Link>
               </div>
             )}
           </div>

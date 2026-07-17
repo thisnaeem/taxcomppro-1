@@ -3,8 +3,8 @@ import { Scale, Users, Shield, Zap, Globe, Award } from "lucide-react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "About Us | TaxComPro",
-  description: "TaxComPro is the premier professional community connecting tax experts, CPAs, and taxpayers across America.",
+  title: "About Us | TaxCompPro",
+  description: "TaxCompPro is the premier professional community connecting tax experts, CPAs, and taxpayers across America.",
 };
 
 const stats = [
@@ -28,12 +28,12 @@ export default function AboutPage() {
     <main className="min-h-screen bg-white">
       {/* Hero */}
       <section className="bg-[#0a1628] pt-24 pb-20 px-6 text-center">
-        <p className="text-[#d4a017] font-bold text-sm uppercase tracking-widest mb-4">About TaxComPro</p>
+        <p className="text-[#d4a017] font-bold text-sm uppercase tracking-widest mb-4">About TaxCompPro</p>
         <h1 className="text-4xl md:text-5xl font-black text-white mb-6 max-w-3xl mx-auto leading-tight">
           The Professional Community for <span className="text-[#d4a017]">Tax Excellence</span>
         </h1>
         <p className="text-white/60 text-lg max-w-2xl mx-auto leading-relaxed">
-          TaxComPro was founded with a single mission: to connect, educate, and empower every tax professional and taxpayer in America.
+          TaxCompPro was founded with a single mission: to connect, educate, and empower every tax professional and taxpayer in America.
         </p>
       </section>
 
@@ -54,7 +54,7 @@ export default function AboutPage() {
         <h2 className="text-3xl font-black text-[#0a1628] mb-6">Our Story</h2>
         <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed space-y-4 text-base">
           <p>
-            TaxComPro was born out of frustration — tax professionals were working in silos, taxpayers were getting poor advice from generic resources, and the gap between expert knowledge and everyday people kept growing. We set out to change that.
+            TaxCompPro was born out of frustration — tax professionals were working in silos, taxpayers were getting poor advice from generic resources, and the gap between expert knowledge and everyday people kept growing. We set out to change that.
           </p>
           <p>
             We built a platform where CPAs, enrolled agents, tax attorneys, and tax preparers can share knowledge, grow their practices, and connect directly with the clients who need them most. Our marketplace enables professionals to offer their services, while our Pro Hub communities foster ongoing learning and collaboration.
@@ -63,7 +63,7 @@ export default function AboutPage() {
             Atlas AI — our built-in tax intelligence assistant — makes expert-level guidance available 24/7, helping both professionals and taxpayers navigate complex questions with confidence backed by real IRS knowledge.
           </p>
           <p>
-            Today, TaxComPro is trusted by thousands of professionals across all 50 states. We&apos;re proud to be the platform where tax excellence meets community.
+            Today, TaxCompPro is trusted by thousands of professionals across all 50 states. We&apos;re proud to be the platform where tax excellence meets community.
           </p>
         </div>
       </section>
@@ -90,7 +90,7 @@ export default function AboutPage() {
       {/* CTA */}
       <section className="py-20 px-6 text-center">
         <h2 className="text-3xl font-black text-[#0a1628] mb-4">Ready to Join the Community?</h2>
-        <p className="text-slate-500 mb-8 max-w-xl mx-auto">Whether you&apos;re a tax professional looking to grow your practice or a taxpayer seeking expert guidance, TaxComPro has a place for you.</p>
+        <p className="text-slate-500 mb-8 max-w-xl mx-auto">Whether you&apos;re a tax professional looking to grow your practice or a taxpayer seeking expert guidance, TaxCompPro has a place for you.</p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link href="/register" className="inline-flex items-center justify-center px-8 py-3.5 bg-[#0a1628] text-white font-bold rounded-full hover:bg-[#1a3a6b] transition-all">
             Get Started Free

@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
   const dataUri     = `data:${file.type};base64,${b64}`;
 
   const result = await cloudinary.uploader.upload(dataUri, {
-    folder:        "taxcompro/listings",
+    folder:        "taxcomppro/listings",
     resource_type: "image",
     transformation: [{ width: 1400, height: 560, crop: "limit", quality: "auto:good", fetch_format: "auto" }],
   });

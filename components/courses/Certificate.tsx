@@ -81,7 +81,7 @@ export default function Certificate({
 
     ctx.font = "italic 11px Georgia, serif";
     ctx.fillStyle = "rgba(255,255,255,0.4)";
-    ctx.fillText("taxcompro.com", W / 2, 142);
+    ctx.fillText("taxcomppro.com", W / 2, 142);
 
     // ── "CERTIFICATE OF COMPLETION" title ───────────────────────────
     ctx.font = "bold 14px Georgia, serif";

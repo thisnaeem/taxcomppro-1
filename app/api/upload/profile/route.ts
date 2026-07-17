@@ -21,11 +21,11 @@ export async function POST(req: NextRequest) {
   if (files.length > 10) return NextResponse.json({ error: "Max 10 images" }, { status: 400 });
 
   const folderMap: Record<string, string> = {
-    avatar: "taxcompro/avatars",
-    cover:  "taxcompro/covers",
-    media:  "taxcompro/profile-media",
+    avatar: "taxcomppro/avatars",
+    cover:  "taxcomppro/covers",
+    media:  "taxcomppro/profile-media",
   };
-  const folder = folderMap[type] ?? "taxcompro/profile-media";
+  const folder = folderMap[type] ?? "taxcomppro/profile-media";
 
   const transformMap: Record<string, object[]> = {
     avatar: [{ width: 400, height: 400, crop: "fill", gravity: "face", quality: "auto:good" }],

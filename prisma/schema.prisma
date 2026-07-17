@@ -838,3 +838,19 @@ model ToolkitAsset {
 
   @@map("toolkit_assets")
 }
+
+model SupportTicket {
+  id          String   @id @default(cuid())
+  userId      String?
+  name        String
+  email       String
+  subject     String
+  description String
+  status      String   @default("OPEN")
+  feedback    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("support_tickets")
+}
+

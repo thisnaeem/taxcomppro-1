@@ -118,9 +118,9 @@ export default function LandingPage() {
       <section id="about" className="py-24 bg-slate-50">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-14">
-            <p className="text-sm font-bold uppercase tracking-widest text-[#d4a017] mb-3">Why TaxComPro</p>
+            <p className="text-sm font-bold uppercase tracking-widest text-[#d4a017] mb-3">Why TaxCompPro</p>
             <h2 className="text-4xl md:text-5xl font-black text-[#0a1628] mb-4">Everything You Need in One Platform</h2>
-            <p className="text-lg md:text-xl text-slate-500 max-w-xl mx-auto">Whether you&apos;re solo or multi-location, TaxComPro grows with you.</p>
+            <p className="text-lg md:text-xl text-slate-500 max-w-xl mx-auto">Whether you&apos;re solo or multi-location, TaxCompPro grows with you.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {features.map((f) => (
@@ -285,7 +285,7 @@ export default function LandingPage() {
       {/* ── CTA BANNER ── */}
       <section className="py-20 bg-gradient-to-br from-[#0a1628] via-[#1a3a6b] to-[#0d2445] text-center">
         <div className="max-w-3xl mx-auto px-6">
-          <h2 className="text-4xl md:text-5xl font-black text-white mb-4">Ready to Join TaxComPro?</h2>
+          <h2 className="text-4xl md:text-5xl font-black text-white mb-4">Ready to Join TaxCompPro?</h2>
           <p className="text-white/80 text-lg md:text-xl mb-10">Join a growing network of members building their future today.
 </p>
           <div className="flex gap-4 justify-center flex-wrap">
@@ -305,7 +305,7 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
             <div>
               <Link href="/" className="inline-flex items-center mb-4 bg-white rounded-xl px-3 py-2">
-                <Image src="/logo.webp" alt="TaxComPro" width={130} height={38} className="object-contain" style={{ width: "auto", height: "auto" }} priority />
+                <Image src="/logo.webp" alt="TaxCompPro" width={130} height={38} className="object-contain" style={{ width: "auto", height: "auto" }} priority />
               </Link>
               <p className="text-white/45 text-sm leading-relaxed">The professional community for tax experts across America.</p>
             </div>
@@ -323,7 +323,7 @@ export default function LandingPage() {
             ))}
           </div>
           <div className="border-t border-white/10 pt-6 flex flex-col md:flex-row justify-between items-center gap-3 text-white/30 text-xs">
-            <p>© {new Date().getFullYear()} TaxComPro. All rights reserved.</p>
+            <p>© {new Date().getFullYear()} TaxCompPro. All rights reserved.</p>
             <p>Built for tax professionals</p>
           </div>
         </div>

@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Mail, Phone, MapPin, Clock, Send, Loader2 } from "lucide-react";
 
 const contactInfo = [
-  { icon: Mail,    label: "Email",   value: "support@taxcompro.com",         href: "mailto:support@taxcompro.com" },
+  { icon: Mail,    label: "Email",   value: "support@taxcomppro.com",         href: "mailto:support@taxcomppro.com" },
   { icon: Phone,   label: "Phone",   value: "+1 (800) TAX-CPRO",             href: "tel:+18008292776" },
   { icon: MapPin,  label: "Address", value: "United States — Remote First",   href: null },
   { icon: Clock,   label: "Hours",   value: "Mon–Fri, 9AM–6PM EST",           href: null },

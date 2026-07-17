@@ -152,7 +152,7 @@ export default function ApplyProfessionalPage() {
             <div>
               <label className={labelCls}>Why do you want to become a Professional? *</label>
               <textarea value={reason} onChange={e => setReason(e.target.value)} rows={5}
-                placeholder="Describe your background, expertise, and what value you bring to the TaxComPro community…"
+                placeholder="Describe your background, expertise, and what value you bring to the TaxCompPro community…"
                 className={`${inputCls} resize-none`} maxLength={800} />
               <p className="text-[11px] text-slate-400 mt-1 text-right">{reason.length}/800</p>
             </div>

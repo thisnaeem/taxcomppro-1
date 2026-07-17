@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
   // Images → resource_type "image" (with optimization)
   // PDFs, docs, zips, etc. → resource_type "raw" → gets /raw/upload/ URL with correct content-type
   const result = await cloudinary.uploader.upload(dataUri, {
-    folder:        "taxcompro/messages",
+    folder:        "taxcomppro/messages",
     resource_type: isImage ? "image" : "raw",
     ...(isImage
       ? { transformation: [{ width: 1400, crop: "limit", quality: "auto:good" }] }

@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { Cookie, Settings, BarChart2, Shield } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Cookie Policy | TaxComPro",
-  description: "Learn how TaxComPro uses cookies and similar tracking technologies.",
+  title: "Cookie Policy | TaxCompPro",
+  description: "Learn how TaxCompPro uses cookies and similar tracking technologies.",
 };
 
 const cookieTypes = [
@@ -128,7 +128,7 @@ export default function CookiePolicyPage() {
         </div>
 
         <div className="text-center text-slate-400 text-xs border-t border-slate-100 pt-8">
-          Questions about our cookie use? <a href="mailto:privacy@taxcompro.com" className="hover:text-[#0a1628] transition-colors">privacy@taxcompro.com</a>
+          Questions about our cookie use? <a href="mailto:privacy@taxcomppro.com" className="hover:text-[#0a1628] transition-colors">privacy@taxcomppro.com</a>
         </div>
       </section>
     </main>

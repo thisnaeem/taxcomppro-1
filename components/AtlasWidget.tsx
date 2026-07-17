@@ -1,11 +1,26 @@
 "use client";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useAppSelector } from "@/store/hooks";
-import { Scale, ClipboardList } from "lucide-react";
+import { Scale, ClipboardList, MessageSquare, LifeBuoy, ArrowLeft, CheckCircle2, Loader2 } from "lucide-react";
 
 type Provider = "openai" | "claude";
 type Mode = "standard" | "compliance";
 interface Msg { id: string; role: "user" | "assistant"; content: string; streaming?: boolean; }
+
+interface SupportTicket {
+  id: string;
+  subject: string;
+  description: string;
+  status: "OPEN" | "IN_PROGRESS" | "RESOLVED";
+  feedback: string | null;
+  createdAt: string;
+}
+
+const statusConfig = {
+  OPEN: { label: "Open", className: "bg-rose-500/10 text-rose-500 border-rose-500/20" },
+  IN_PROGRESS: { label: "In Progress", className: "bg-sky-500/10 text-sky-500 border-sky-500/20" },
+  RESOLVED: { label: "Resolved", className: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" },
+};
 
 const HINTS = ["Schedule C Help", "IRS Audit Defense", "Max My Deductions", "W-2 Question"];
 
@@ -38,6 +53,9 @@ function MsgBubble({ m }: { m: Msg }) {
 export default function AtlasWidget() {
   const user = useAppSelector(s => s.auth.user);
   const [open, setOpen]           = useState(false);
+  const [view, setView]           = useState<"menu" | "chat" | "support" | "tickets" | "success">("menu");
+  
+  // Chat state
   const [msgs, setMsgs]           = useState<Msg[]>([]);
   const [input, setInput]         = useState("");
   const [loading, setLoading]     = useState(false);
@@ -45,8 +63,31 @@ export default function AtlasWidget() {
   const [mode, setMode]           = useState<Mode>("standard");
   const [unread, setUnread]       = useState(false);
   const [enabled, setEnabled]     = useState(true);
+  
+  // Support ticket form state
+  const [supportName, setSupportName] = useState("");
+  const [supportEmail, setSupportEmail] = useState("");
+  const [supportSubject, setSupportSubject] = useState("");
+  const [supportDesc, setSupportDesc] = useState("");
+  const [submittingSupport, setSubmittingSupport] = useState(false);
+  const [supportError, setSupportError] = useState("");
+
+  // User tickets list state
+  const [myTickets, setMyTickets] = useState<SupportTicket[]>([]);
+  const [loadingTickets, setLoadingTickets] = useState(false);
+  const [ticketError, setTicketError] = useState("");
+  const [expandedTicketId, setExpandedTicketId] = useState<string | null>(null);
+
   const bottomRef  = useRef<HTMLDivElement>(null);
   const inputRef   = useRef<HTMLInputElement>(null);
+
+  // Autofill name/email if user is loaded
+  useEffect(() => {
+    if (user) {
+      setSupportName(user.name || "");
+      setSupportEmail(user.email || "");
+    }
+  }, [user]);
 
   // Fetch admin settings on mount
   useEffect(() => {
@@ -61,8 +102,18 @@ export default function AtlasWidget() {
       .catch(() => {});
   }, []);
 
-  useEffect(() => { if (open) { setUnread(false); inputRef.current?.focus(); } }, [open]);
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs, loading]);
+  useEffect(() => {
+    if (open) {
+      setUnread(false);
+      if (view === "chat") {
+        inputRef.current?.focus();
+      }
+    }
+  }, [open, view]);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [msgs, loading]);
 
   const send = useCallback(async (text?: string) => {
     const content = (text ?? input).trim();
@@ -99,6 +150,55 @@ export default function AtlasWidget() {
     }
   }, [input, loading, msgs, provider, mode, open]);
 
+  const fetchMyTickets = async () => {
+    setLoadingTickets(true);
+    setTicketError("");
+    try {
+      const res = await fetch("/api/support");
+      if (!res.ok) throw new Error("Failed to load tickets");
+      const data = await res.json();
+      setMyTickets(Array.isArray(data) ? data : []);
+    } catch (err) {
+      setTicketError(err instanceof Error ? err.message : "Error fetching tickets");
+    } finally {
+      setLoadingTickets(false);
+    }
+  };
+
+  const submitTicket = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!supportName.trim() || !supportEmail.trim() || !supportSubject.trim() || !supportDesc.trim()) {
+      setSupportError("All fields are required");
+      return;
+    }
+    setSubmittingSupport(true);
+    setSupportError("");
+    try {
+      const res = await fetch("/api/support", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: supportName,
+          email: supportEmail,
+          subject: supportSubject,
+          description: supportDesc
+        })
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to submit ticket");
+      }
+      // Reset input fields but keep name/email
+      setSupportSubject("");
+      setSupportDesc("");
+      setView("success");
+    } catch (err) {
+      setSupportError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setSubmittingSupport(false);
+    }
+  };
+
   const isLastStreaming = loading && msgs.length > 0 && msgs[msgs.length - 1].content === "";
 
   if (!enabled) return null;
@@ -115,8 +215,11 @@ export default function AtlasWidget() {
 
       {/* ── Floating button ── */}
       <button
-        onClick={() => setOpen(o => !o)}
-        aria-label="Open Atlas AI"
+        onClick={() => {
+          setOpen(o => !o);
+          if (!open) setView("menu"); // Reset to menu when opening
+        }}
+        aria-label="Open Support & AI Assistant"
         className={`fixed bottom-6 right-6 z-50 rounded-full overflow-hidden shadow-2xl transition-all hover:scale-105 active:scale-95 ring-2 ring-white/20 ${unread ? "atlas-unread" : ""}`}
         style={{ background: "linear-gradient(135deg,#0a1628 0%,#173473 100%)", width: 88, height: 88 }}>
         {open ? (
@@ -134,97 +237,357 @@ export default function AtlasWidget() {
         <div className="atlas-panel fixed right-6 z-50 w-[380px] max-w-[calc(100vw-2rem)] h-[560px] max-h-[calc(100vh-8rem)] flex flex-col rounded-3xl overflow-hidden shadow-2xl"
           style={{ bottom: 128, background: "#fff", border: "1px solid rgba(10,22,40,0.1)", boxShadow: "0 32px 64px rgba(0,0,0,0.18),0 8px 20px rgba(23,52,115,0.1)" }}>
 
-          {/* Header */}
-          <div className="flex items-center gap-3 px-5 py-4 flex-shrink-0"
-            style={{ background: "linear-gradient(135deg,#060d1a 0%,#0d1e4a 50%,#173473 100%)" }}>
-            <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 ring-2 ring-white/20">
-              <img src="/icon.webp" alt="Atlas" className="w-full h-full object-cover" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-bold text-sm text-white leading-tight">Atlas AI</p>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                <p className="text-[10px] text-emerald-300 font-semibold">Tax Intelligence Assistant</p>
+          {/* ── VIEW: MENU ── */}
+          {view === "menu" && (
+            <div className="flex flex-col h-full bg-white">
+              {/* Header */}
+              <div className="flex items-center gap-3 px-5 py-5 flex-shrink-0"
+                style={{ background: "linear-gradient(135deg,#060d1a 0%,#0d1e4a 50%,#173473 100%)" }}>
+                <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 ring-2 ring-white/20 flex items-center justify-center bg-white/5">
+                  <MessageSquare className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-sm text-white leading-tight">TaxCompPro Support</p>
+                  <p className="text-[10px] text-slate-300 mt-0.5 font-medium">How can we help you today?</p>
+                </div>
+              </div>
+
+              {/* Menu Content */}
+              <div className="flex-1 overflow-y-auto p-5 space-y-4">
+                {/* Chat Option */}
+                <button onClick={() => setView("chat")}
+                  className="w-full text-left p-5 rounded-2xl border border-slate-100 bg-slate-50 hover:bg-slate-100/70 hover:border-slate-200 transition-all flex items-start gap-4 shadow-sm group">
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-[#0a1628] text-white flex-shrink-0 shadow-md group-hover:scale-105 transition-transform overflow-hidden">
+                    <img src="/icon.webp" alt="Atlas" className="w-full h-full object-cover" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-black text-sm text-[#0a1628] flex items-center gap-2">
+                      Chat with Atlas AI
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block animate-pulse" />
+                    </h3>
+                    <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                      Get instant, real-time tax guidance, compliance advice, and CPA intelligence.
+                    </p>
+                  </div>
+                </button>
+
+                {/* Ticket Option */}
+                <button onClick={() => { setView("support"); setSupportError(""); }}
+                  className="w-full text-left p-5 rounded-2xl border border-slate-100 bg-slate-50 hover:bg-slate-100/70 hover:border-slate-200 transition-all flex items-start gap-4 shadow-sm group">
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-amber-500 text-white flex-shrink-0 shadow-md group-hover:scale-105 transition-transform">
+                    <LifeBuoy className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-black text-sm text-[#0a1628]">
+                      Submit Support Ticket
+                    </h3>
+                    <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                      Report an issue, ask billing questions, or request human support directly.
+                    </p>
+                  </div>
+                </button>
+
+                {/* My Tickets Option (Only visible if logged in) */}
+                {user && (
+                  <button onClick={() => { setView("tickets"); fetchMyTickets(); }}
+                    className="w-full text-left p-5 rounded-2xl border border-slate-100 bg-slate-50 hover:bg-slate-100/70 hover:border-slate-200 transition-all flex items-start gap-4 shadow-sm group">
+                    <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-emerald-500 text-white flex-shrink-0 shadow-md group-hover:scale-105 transition-transform">
+                      <ClipboardList className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-black text-sm text-[#0a1628]">
+                        My Tickets
+                      </h3>
+                      <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                        Track your requests, check resolution status, and see replies from our admins.
+                      </p>
+                    </div>
+                  </button>
+                )}
+              </div>
+
+              {/* Footer */}
+              <div className="p-4 border-t border-slate-100 text-center flex-shrink-0">
+                <span className="text-[11px] text-slate-400 font-medium">Typically responds within 24 hours</span>
               </div>
             </div>
-            {msgs.length > 0 && (
-              <button onClick={() => setMsgs([])} title="Clear chat"
-                className="w-8 h-8 rounded-xl flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all flex-shrink-0">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6m4-6v6"/></svg>
-              </button>
-            )}
-          </div>
+          )}
 
-          {/* Mode bar */}
-          <div className="flex items-center justify-between px-5 py-2.5 border-b border-slate-100 flex-shrink-0">
-            <span className="text-xs text-slate-400 font-semibold">
-              {msgs.length === 0 ? "How can I help?" : `${msgs.filter(m=>m.role==="user").length} question${msgs.filter(m=>m.role==="user").length!==1?"s":""}`}
-            </span>
-            <button onClick={() => setMode(m => m === "standard" ? "compliance" : "standard")}
-              className="text-[11px] font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 transition-all"
-              style={mode === "compliance"
-                ? { background: "#fbbf24", color: "#78350f" }
-                : { background: "rgba(10,22,40,0.06)", color: "#64748b" }}>
-              {mode === "compliance"
-                ? <><Scale className="w-3 h-3" /> Compliance</>
-                : <><ClipboardList className="w-3 h-3" /> Standard</>}
-            </button>
-          </div>
+          {/* ── VIEW: CHAT WITH ATLAS AI ── */}
+          {view === "chat" && (
+            <div className="flex flex-col h-full bg-white">
+              {/* Header */}
+              <div className="flex items-center gap-3 px-5 py-4 flex-shrink-0"
+                style={{ background: "linear-gradient(135deg,#060d1a 0%,#0d1e4a 50%,#173473 100%)" }}>
+                <button onClick={() => setView("menu")}
+                  className="w-8 h-8 rounded-xl flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition-all flex-shrink-0">
+                  <ArrowLeft className="w-5 h-5" />
+                </button>
+                <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 ring-2 ring-white/20">
+                  <img src="/icon.webp" alt="Atlas" className="w-full h-full object-cover" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-sm text-white leading-tight">Atlas AI</p>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                    <p className="text-[10px] text-emerald-300 font-semibold">Tax Intelligence Assistant</p>
+                  </div>
+                </div>
+                {msgs.length > 0 && (
+                  <button onClick={() => setMsgs([])} title="Clear chat"
+                    className="w-8 h-8 rounded-xl flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all flex-shrink-0">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6m4-6v6"/></svg>
+                  </button>
+                )}
+              </div>
 
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 min-h-0">
-            {msgs.length === 0 && (
-              <div className="flex flex-col items-center justify-center h-full gap-5 text-center">
-                <div className="w-16 h-16 rounded-2xl flex items-center justify-center"
+              {/* Mode bar */}
+              <div className="flex items-center justify-between px-5 py-2.5 border-b border-slate-100 flex-shrink-0">
+                <span className="text-xs text-slate-400 font-semibold">
+                  {msgs.length === 0 ? "How can I help?" : `${msgs.filter(m=>m.role==="user").length} question${msgs.filter(m=>m.role==="user").length!==1?"s":""}`}
+                </span>
+                <button onClick={() => setMode(m => m === "standard" ? "compliance" : "standard")}
+                  className="text-[11px] font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 transition-all"
+                  style={mode === "compliance"
+                    ? { background: "#fbbf24", color: "#78350f" }
+                    : { background: "rgba(10,22,40,0.06)", color: "#64748b" }}>
+                  {mode === "compliance"
+                    ? <><Scale className="w-3 h-3" /> Compliance</>
+                    : <><ClipboardList className="w-3 h-3" /> Standard</>}
+                </button>
+              </div>
+
+              {/* Messages */}
+              <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 min-h-0">
+                {msgs.length === 0 && (
+                  <div className="flex flex-col items-center justify-center h-full gap-5 text-center">
+                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center"
+                      style={{ background: "linear-gradient(135deg,#0a1628,#173473)" }}>
+                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="font-black text-lg text-[#0a1628]">Ask Atlas AI</p>
+                      <p className="text-sm text-slate-400 mt-1 max-w-[220px] leading-relaxed">
+                        {user ? "Your always-on tax intelligence assistant." : "Sign in for personalized tax guidance."}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2 justify-center">
+                      {HINTS.map(h => (
+                        <button key={h} onClick={() => send(h)}
+                          className="text-xs font-semibold px-3 py-1.5 rounded-full border border-[#0a1628]/15 bg-[#0a1628]/5 text-[#0a1628] hover:bg-[#0a1628]/10 transition-all">
+                          {h}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {msgs.map(m => <MsgBubble key={m.id} m={m} />)}
+                {isLastStreaming && <TypingDots />}
+                <div ref={bottomRef} />
+              </div>
+
+              {/* Input */}
+              <div className="px-4 py-3 border-t border-slate-100 flex-shrink-0">
+                {mode === "compliance" && (
+                  <div className="h-0.5 mb-3 rounded-full" style={{ background: "linear-gradient(90deg,#f59e0b,#fcd34d,#f59e0b)" }} />
+                )}
+                <form onSubmit={e => { e.preventDefault(); send(); }} className="flex items-center gap-2">
+                  <input ref={inputRef} value={input} onChange={e => setInput(e.target.value)}
+                    placeholder={mode === "compliance" ? "Ask for compliance guidance…" : "Ask a tax question…"}
+                    disabled={loading}
+                    className="flex-1 bg-slate-50 border border-slate-200 rounded-full px-4 py-2.5 text-sm outline-none focus:border-[#0a1628]/30 transition-all disabled:opacity-50 font-[inherit]"
+                  />
+                  <button type="submit" disabled={!input.trim() || loading}
+                    className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-all active:scale-90 disabled:opacity-40"
+                    style={{ background: "linear-gradient(135deg,#0a1628,#173473)" }}>
+                    {loading
+                      ? <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
+                      : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>}
+                  </button>
+                </form>
+                <p className="text-center text-[10px] text-slate-300 mt-2">
+                  Atlas AI · Powered by {provider === "claude" ? "Claude" : "GPT-4o"}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* ── VIEW: SUBMIT SUPPORT TICKET ── */}
+          {view === "support" && (
+            <div className="flex flex-col h-full bg-white">
+              {/* Header */}
+              <div className="flex items-center gap-3 px-5 py-4 flex-shrink-0"
+                style={{ background: "linear-gradient(135deg,#060d1a 0%,#0d1e4a 50%,#173473 100%)" }}>
+                <button onClick={() => setView("menu")}
+                  className="w-8 h-8 rounded-xl flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition-all flex-shrink-0">
+                  <ArrowLeft className="w-5 h-5" />
+                </button>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-sm text-white leading-tight">Submit Support Ticket</p>
+                  <p className="text-[10px] text-slate-300 mt-0.5 font-medium">We're here to help</p>
+                </div>
+              </div>
+
+              {/* Form */}
+              <form onSubmit={submitTicket} className="flex-1 overflow-y-auto p-5 space-y-4 min-h-0">
+                {supportError && (
+                  <div className="p-3 text-xs bg-rose-50 text-rose-600 rounded-xl border border-rose-100">
+                    {supportError}
+                  </div>
+                )}
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-[#0a1628]">Full Name</label>
+                  <input type="text" value={supportName} onChange={e => setSupportName(e.target.value)}
+                    required placeholder="e.g. John Doe"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs outline-none focus:border-[#0a1628]/30 transition-all" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-[#0a1628]">Email Address</label>
+                  <input type="email" value={supportEmail} onChange={e => setSupportEmail(e.target.value)}
+                    required placeholder="e.g. john@example.com"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs outline-none focus:border-[#0a1628]/30 transition-all" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-[#0a1628]">Subject</label>
+                  <input type="text" value={supportSubject} onChange={e => setSupportSubject(e.target.value)}
+                    required placeholder="Brief summary of the issue"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs outline-none focus:border-[#0a1628]/30 transition-all" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-[#0a1628]">Description</label>
+                  <textarea value={supportDesc} onChange={e => setSupportDesc(e.target.value)}
+                    required placeholder="Provide details about your problem or request..."
+                    rows={3}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs outline-none focus:border-[#0a1628]/30 transition-all resize-none" />
+                </div>
+                <button type="submit" disabled={submittingSupport}
+                  className="w-full font-bold py-3 px-4 rounded-xl text-white text-xs transition-all active:scale-95 disabled:opacity-50 mt-2 flex items-center justify-center gap-2 border-0"
                   style={{ background: "linear-gradient(135deg,#0a1628,#173473)" }}>
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
-                  </svg>
+                  {submittingSupport ? (
+                    <>
+                      <svg className="animate-spin w-4 h-4 text-white" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                      Submitting...
+                    </>
+                  ) : "Submit Ticket"}
+                </button>
+              </form>
+            </div>
+          )}
+
+          {/* ── VIEW: MY TICKETS LIST ── */}
+          {view === "tickets" && (
+            <div className="flex flex-col h-full bg-white">
+              {/* Header */}
+              <div className="flex items-center gap-3 px-5 py-4 flex-shrink-0"
+                style={{ background: "linear-gradient(135deg,#060d1a 0%,#0d1e4a 50%,#173473 100%)" }}>
+                <button onClick={() => setView("menu")}
+                  className="w-8 h-8 rounded-xl flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition-all flex-shrink-0">
+                  <ArrowLeft className="w-5 h-5" />
+                </button>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-sm text-white leading-tight">My Support Tickets</p>
+                  <p className="text-[10px] text-slate-300 mt-0.5 font-medium">Track your requests</p>
+                </div>
+              </div>
+
+              {/* Tickets List Content */}
+              {loadingTickets ? (
+                <div className="flex-1 flex items-center justify-center">
+                  <Loader2 className="w-7 h-7 text-amber-500 animate-spin" />
+                </div>
+              ) : ticketError ? (
+                <div className="p-4 text-xs text-rose-600 bg-rose-50 border border-rose-100 rounded-xl m-4">
+                  {ticketError}
+                </div>
+              ) : myTickets.length === 0 ? (
+                <div className="flex-1 flex flex-col items-center justify-center p-6 text-center space-y-3">
+                  <LifeBuoy className="w-10 h-10 text-slate-300" />
+                  <p className="text-xs text-slate-400 font-medium">You haven't submitted any support tickets yet.</p>
+                </div>
+              ) : (
+                <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                  {myTickets.map(ticket => {
+                    const cfg = statusConfig[ticket.status] || statusConfig.OPEN;
+                    const isExpanded = expandedTicketId === ticket.id;
+                    return (
+                      <div key={ticket.id} 
+                        className={`border rounded-2xl p-4 transition-all ${isExpanded ? "border-amber-500/50 bg-amber-50/10" : "border-slate-100 hover:bg-slate-50/50"}`}>
+                        <div className="flex items-start justify-between gap-3 cursor-pointer"
+                          onClick={() => setExpandedTicketId(isExpanded ? null : ticket.id)}>
+                          <div className="space-y-1">
+                            <h4 className="font-bold text-xs text-[#0a1628] leading-tight">{ticket.subject}</h4>
+                            <p className="text-[9px] text-slate-400">{new Date(ticket.createdAt).toLocaleDateString()}</p>
+                          </div>
+                          <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border shrink-0 ${cfg.className}`}>
+                            {cfg.label}
+                          </span>
+                        </div>
+
+                        {isExpanded && (
+                          <div className="mt-3 pt-3 border-t border-slate-100 space-y-3 text-[11px] animate-[atlasPop_0.15s_ease-out_both]">
+                            <div className="space-y-1">
+                              <p className="font-bold text-slate-400 uppercase text-[9px] tracking-wider">Your Description</p>
+                              <p className="text-slate-600 leading-relaxed bg-slate-50 border border-slate-100 p-2.5 rounded-xl whitespace-pre-wrap">{ticket.description}</p>
+                            </div>
+
+                            {/* Response / Feedback Box */}
+                            <div className="space-y-1">
+                              <p className="font-bold text-[#0a1628] uppercase text-[9px] tracking-wider flex items-center gap-1">
+                                <MessageSquare className="w-3 h-3 text-[#0a1628]" /> Response from Admin
+                              </p>
+                              {ticket.feedback ? (
+                                <p className="text-[#0f2d1e] bg-emerald-500/5 border border-emerald-500/10 p-2.5 rounded-xl leading-relaxed whitespace-pre-wrap font-medium">
+                                  {ticket.feedback}
+                                </p>
+                              ) : (
+                                <p className="text-slate-400 italic bg-slate-50/80 border border-slate-100/50 p-2.5 rounded-xl">
+                                  {ticket.status === "RESOLVED" 
+                                    ? "This ticket has been marked as resolved by our admin." 
+                                    : "Our support team is reviewing your ticket and will provide feedback shortly."}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── VIEW: SUCCESS ── */}
+          {view === "success" && (
+            <div className="flex flex-col h-full bg-white">
+              {/* Header */}
+              <div className="flex items-center gap-3 px-5 py-4 flex-shrink-0"
+                style={{ background: "linear-gradient(135deg,#060d1a 0%,#0d1e4a 50%,#173473 100%)" }}>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-sm text-white leading-tight">Ticket Submitted</p>
+                </div>
+              </div>
+
+              {/* Success Content */}
+              <div className="flex-1 flex flex-col items-center justify-center p-6 text-center space-y-4">
+                <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-500 shadow-inner">
+                  <CheckCircle2 className="w-8 h-8" />
                 </div>
                 <div>
-                  <p className="font-black text-lg text-[#0a1628]">Ask Atlas AI</p>
-                  <p className="text-sm text-slate-400 mt-1 max-w-[220px] leading-relaxed">
-                    {user ? "Your always-on tax intelligence assistant." : "Sign in for personalized tax guidance."}
+                  <h3 className="font-black text-base text-[#0a1628]">Ticket Created!</h3>
+                  <p className="text-xs text-slate-500 mt-2 max-w-[245px] mx-auto leading-relaxed">
+                    Thank you. Your support ticket has been recorded. Our administrators will review it shortly.
                   </p>
                 </div>
-                <div className="flex flex-wrap gap-2 justify-center">
-                  {HINTS.map(h => (
-                    <button key={h} onClick={() => send(h)}
-                      className="text-xs font-semibold px-3 py-1.5 rounded-full border border-[#0a1628]/15 bg-[#0a1628]/5 text-[#0a1628] hover:bg-[#0a1628]/10 transition-all">
-                      {h}
-                    </button>
-                  ))}
-                </div>
+                <button onClick={() => setView("menu")}
+                  className="px-6 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-xs font-bold text-[#0a1628] transition-all bg-white">
+                  Back to Menu
+                </button>
               </div>
-            )}
-            {msgs.map(m => <MsgBubble key={m.id} m={m} />)}
-            {isLastStreaming && <TypingDots />}
-            <div ref={bottomRef} />
-          </div>
-
-          {/* Input */}
-          <div className="px-4 py-3 border-t border-slate-100 flex-shrink-0">
-            {mode === "compliance" && (
-              <div className="h-0.5 mb-3 rounded-full" style={{ background: "linear-gradient(90deg,#f59e0b,#fcd34d,#f59e0b)" }} />
-            )}
-            <form onSubmit={e => { e.preventDefault(); send(); }} className="flex items-center gap-2">
-              <input ref={inputRef} value={input} onChange={e => setInput(e.target.value)}
-                placeholder={mode === "compliance" ? "Ask for compliance guidance…" : "Ask a tax question…"}
-                disabled={loading}
-                className="flex-1 bg-slate-50 border border-slate-200 rounded-full px-4 py-2.5 text-sm outline-none focus:border-[#0a1628]/30 transition-all disabled:opacity-50 font-[inherit]"
-              />
-              <button type="submit" disabled={!input.trim() || loading}
-                className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-all active:scale-90 disabled:opacity-40"
-                style={{ background: "linear-gradient(135deg,#0a1628,#173473)" }}>
-                {loading
-                  ? <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
-                  : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>}
-              </button>
-            </form>
-            <p className="text-center text-[10px] text-slate-300 mt-2">
-              Atlas AI · Powered by {provider === "claude" ? "Claude" : "GPT-4o"}
-            </p>
-          </div>
+            </div>
+          )}
         </div>
       )}
     </>

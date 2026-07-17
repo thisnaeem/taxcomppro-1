@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import OpenAI from "openai";
 import Anthropic from "@anthropic-ai/sdk";
 
-const SYSTEM_PROMPT = `You are Atlas AI, a highly knowledgeable tax assistant for TaxComPro — a professional platform for CPAs, tax professionals, and taxpayers.
+const SYSTEM_PROMPT = `You are Atlas AI, a highly knowledgeable tax assistant for TaxCompPro — a professional platform for CPAs, tax professionals, and taxpayers.
 
 You provide accurate, concise, and actionable tax guidance. You cover topics including:
 - Federal & state tax filing, deadlines, and extensions

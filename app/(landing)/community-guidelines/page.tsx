@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { CheckCircle, XCircle } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Community Guidelines | TaxComPro",
-  description: "The rules and standards that keep TaxComPro a professional, respectful, and trustworthy community.",
+  title: "Community Guidelines | TaxCompPro",
+  description: "The rules and standards that keep TaxCompPro a professional, respectful, and trustworthy community.",
 };
 
 const dos = [
@@ -42,7 +42,7 @@ export default function CommunityGuidelinesPage() {
         <p className="text-[#d4a017] font-bold text-sm uppercase tracking-widest mb-4">Community</p>
         <h1 className="text-4xl font-black text-white mb-4">Community Guidelines</h1>
         <p className="text-white/60 max-w-xl mx-auto text-sm leading-relaxed">
-          TaxComPro is a professional community built on trust and expertise. These guidelines protect the integrity every member depends on.
+          TaxCompPro is a professional community built on trust and expertise. These guidelines protect the integrity every member depends on.
         </p>
       </section>
 
@@ -81,7 +81,7 @@ export default function CommunityGuidelinesPage() {
         <div>
           <h2 className="text-2xl font-black text-[#0a1628] mb-4">Professional Standards</h2>
           <div className="space-y-4 text-sm text-slate-600 leading-relaxed">
-            <p>Tax professionals on TaxComPro are held to the same ethical standards required by their licensing bodies (AICPA, IRS Circular 230, state bar associations, etc.). Misrepresenting credentials is grounds for immediate removal and may be reported to relevant authorities.</p>
+            <p>Tax professionals on TaxCompPro are held to the same ethical standards required by their licensing bodies (AICPA, IRS Circular 230, state bar associations, etc.). Misrepresenting credentials is grounds for immediate removal and may be reported to relevant authorities.</p>
             <p>When providing guidance, always clarify whether your response is general educational information or professional advice specific to a situation. Encourage clients to schedule formal consultations for complex matters.</p>
             <p>Atlas AI responses are AI-generated educational content and should not be presented to clients as professional advice. Professionals are responsible for verifying AI-generated information before relying on it.</p>
           </div>
@@ -109,14 +109,14 @@ export default function CommunityGuidelinesPage() {
         <div className="bg-[#0a1628] rounded-2xl p-8 text-center text-white">
           <h2 className="text-xl font-black mb-3">See Something? Report It.</h2>
           <p className="text-white/60 text-sm mb-5 max-w-md mx-auto">Every report is reviewed by our moderation team within 24 hours. Your identity is kept confidential.</p>
-          <a href="mailto:safety@taxcompro.com"
+          <a href="mailto:safety@taxcomppro.com"
             className="inline-flex items-center gap-2 bg-[#d4a017] text-[#0a1628] font-bold px-6 py-3 rounded-full text-sm hover:bg-[#e6b420] transition-all">
             Report a Violation
           </a>
         </div>
 
         <div className="text-center text-slate-400 text-xs">
-          Last updated: January 2025 · Questions? <a href="mailto:safety@taxcompro.com" className="hover:text-[#0a1628] transition-colors">safety@taxcompro.com</a>
+          Last updated: January 2025 · Questions? <a href="mailto:safety@taxcomppro.com" className="hover:text-[#0a1628] transition-colors">safety@taxcomppro.com</a>
         </div>
       </section>
     </main>

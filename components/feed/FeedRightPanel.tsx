@@ -350,7 +350,7 @@ export default function FeedRightPanel() {
       {/* Footer */}
       <div className="px-2 pb-2">
         <p className="text-[10px] text-slate-400 leading-relaxed text-center">
-          TaxComPro · <Link href="/terms" className="hover:underline">Terms</Link> · <Link href="/privacy" className="hover:underline">Privacy</Link> · © {new Date().getFullYear()}
+          TaxCompPro · <Link href="/terms" className="hover:underline">Terms</Link> · <Link href="/privacy" className="hover:underline">Privacy</Link> · © {new Date().getFullYear()}
         </p>
       </div>
     </aside>

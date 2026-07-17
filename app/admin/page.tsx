@@ -156,7 +156,7 @@ export default function AdminPage() {
           <h1 className="text-2xl font-black text-white mt-1">
             {getGreeting()}, Admin 👋
           </h1>
-          <p className="text-slate-400 text-sm mt-1">Here's what's happening on TaxComPro today.</p>
+          <p className="text-slate-400 text-sm mt-1">Here's what's happening on TaxCompPro today.</p>
         </div>
         <div className="flex items-center gap-2">
           <Link href="/admin/payments"

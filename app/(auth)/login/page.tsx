@@ -119,8 +119,8 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="flex justify-center mb-8">
           <Link href="/">
-            <Image src="/logo.webp"      alt="TaxComPro" width={160} height={60} className="object-contain dark:hidden" style={{ width: "auto", height: "auto" }} loading="eager" />
-            <Image src="/logo_dark.webp" alt="TaxComPro" width={160} height={60} className="object-contain hidden dark:block" style={{ width: "auto", height: "auto" }} loading="eager" />
+            <Image src="/logo.webp"      alt="TaxCompPro" width={160} height={60} className="object-contain dark:hidden" style={{ width: "auto", height: "auto" }} loading="eager" />
+            <Image src="/logo_dark.webp" alt="TaxCompPro" width={160} height={60} className="object-contain hidden dark:block" style={{ width: "auto", height: "auto" }} loading="eager" />
           </Link>
         </div>
 

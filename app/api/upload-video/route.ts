@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const timestamp = Math.round(Date.now() / 1000);
-  const folder    = "taxcompro/post-videos";
+  const folder    = "taxcomppro/post-videos";
 
   // Sign exactly the params that will be sent in the upload request
   const paramsToSign = `folder=${folder}&timestamp=${timestamp}`;

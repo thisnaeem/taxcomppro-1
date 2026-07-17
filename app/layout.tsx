@@ -15,9 +15,9 @@ const urbanist = Urbanist({
 });
 
 export const metadata: Metadata = {
-  title: "TaxComPro — Professional Tax Community",
+  title: "TaxCompPro — Professional Tax Community",
   description:
-    "Join TaxComPro — the premier professional community for tax experts, CPAs, and taxpayers. Access the marketplace, Pro Hub communities, training, and expert networking.",
+    "Join TaxCompPro — the premier professional community for tax experts, CPAs, and taxpayers. Access the marketplace, Pro Hub communities, training, and expert networking.",
   keywords: "tax professionals, CPA community, tax marketplace, tax training, IRS help",
   icons: {
     icon: [
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     shortcut: "/fevicon.webp",
   },
   openGraph: {
-    title: "TaxComPro — Professional Tax Community",
+    title: "TaxCompPro — Professional Tax Community",
     description: "The premier platform for tax professionals and taxpayers to connect, learn, and grow.",
     type: "website",
   },

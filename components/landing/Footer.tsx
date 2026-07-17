@@ -8,7 +8,7 @@ export default function PublicFooter() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
           <div>
             <Link href="/" className="inline-flex items-center mb-4 bg-white rounded-xl px-3 py-2">
-              <Image src="/logo.webp" alt="TaxComPro" width={130} height={38} className="object-contain" priority />
+              <Image src="/logo.webp" alt="TaxCompPro" width={130} height={38} className="object-contain" priority />
             </Link>
             <p className="text-white/45 text-sm leading-relaxed">The professional community for tax experts across America.</p>
           </div>
@@ -26,7 +26,7 @@ export default function PublicFooter() {
           ))}
         </div>
         <div className="border-t border-white/10 pt-6 flex flex-col md:flex-row justify-between items-center gap-3 text-white/30 text-xs">
-          <p>© {new Date().getFullYear()} TaxComPro. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} TaxCompPro. All rights reserved.</p>
           <p>Built for tax professionals</p>
         </div>
       </div>
