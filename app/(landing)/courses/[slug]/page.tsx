@@ -438,7 +438,7 @@ function CourseDetailContent() {
               {/* Square thumbnail */}
               <div className="relative aspect-square bg-gradient-to-br from-[#1a3a6b] to-[#0a1628] overflow-hidden">
                 {course.thumbnail
-                  ? <img src={course.thumbnail} alt={course.title} className="w-full h-full object-cover"/>
+                  ? <img src={course.thumbnail} alt={course.title} className="w-full h-full object-cover" onError={e => { (e.target as HTMLImageElement).style.display = "none"; }}/>
                   : <div className="absolute inset-0 flex items-center justify-center"><GraduationCap className="w-16 h-16 text-white/15"/></div>}
               </div>
               <div className="p-5">

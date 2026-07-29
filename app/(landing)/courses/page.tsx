@@ -44,13 +44,19 @@ function fmtDuration(secs: number) {
 
 function CourseCard({ course, isLoggedIn }: { course: Course; isLoggedIn: boolean }) {
   const totalLessons = course.sections.reduce((s, sec) => s + sec._count.lessons, 0);
+  const [imgError, setImgError] = useState(false);
   return (
     <Link href={`/courses/${course.slug}`}
       className="group bg-white rounded-2xl border border-slate-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col">
       {/* Thumbnail — 1:1 square */}
       <div className="relative aspect-square bg-gradient-to-br from-[#0a1628] to-[#1a3a6b] overflow-hidden">
-        {course.thumbnail
-          ? <img src={course.thumbnail} alt={course.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+        {course.thumbnail && !imgError
+          ? <img
+              src={course.thumbnail}
+              alt={course.title}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              onError={() => setImgError(true)}
+            />
           : (
             <div className="absolute inset-0 flex items-center justify-center">
               <GraduationCap className="w-16 h-16 text-white/20" />
