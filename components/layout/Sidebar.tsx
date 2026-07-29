@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAppSelector } from "@/store/hooks";
-import Image from "next/image";
 import {
   LayoutDashboard, Users, CheckSquare, BookOpen,
   BarChart2, Calendar, Images, Package, Gift, Bot,
@@ -61,17 +60,7 @@ export default function Sidebar() {
       {/* Logo area */}
       <div className="px-5 py-5 border-b border-white/10">
         <Link href="/" className="flex items-center gap-2">
-          <div className="bg-white rounded-xl px-2 py-1.5">
-            <Image
-              src="/logo.webp"
-              alt="TaxCompPro"
-              width={110}
-              height={32}
-              className="object-contain"
-              style={{ width: "auto", height: "auto" }}
-              priority
-            />
-          </div>
+          <img src="/logo_dark.webp" alt="TaxCompPro" className="h-10 w-auto" />
         </Link>
         {isAdmin && (
           <div className="mt-2.5 inline-flex items-center gap-1.5 bg-amber-400/15 text-amber-300 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full">
