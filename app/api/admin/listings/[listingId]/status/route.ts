@@ -21,8 +21,30 @@ export async function PATCH(
   const updated = await prisma.marketplaceListing.update({
     where: { id: listingId },
     data: { status },
-    select: { id: true, title: true, status: true },
+    select: { id: true, title: true, status: true, userId: true, slug: true },
   });
+
+  if (status === "APPROVED") {
+    await prisma.notification.create({
+      data: {
+        userId: updated.userId,
+        type: "SYSTEM",
+        title: "🎉 Listing Approved!",
+        message: `Your listing "${updated.title}" has been approved and is now live on the marketplace.`,
+        link: `/${updated.slug ?? updated.id}`,
+      },
+    }).catch(() => {});
+  } else if (status === "REJECTED") {
+    await prisma.notification.create({
+      data: {
+        userId: updated.userId,
+        type: "SYSTEM",
+        title: "❌ Listing Not Approved",
+        message: `Your listing "${updated.title}" was not approved by admin.`,
+        link: "/my-listings",
+      },
+    }).catch(() => {});
+  }
 
   return NextResponse.json(updated);
 }

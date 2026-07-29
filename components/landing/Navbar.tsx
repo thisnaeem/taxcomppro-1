@@ -266,16 +266,36 @@ export default function Navbar() {
 
             {/* Desktop right */}
             <div className="hidden md:flex items-center gap-1 ml-auto shrink-0 flex-nowrap">
-              {/* Theme toggle */}
+              {/* Theme toggle switch */}
               <button
-                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                className="p-2 text-slate-500 hover:text-[#0a1628] hover:bg-slate-50 rounded-full transition-all"
-                title={mounted ? (theme === "dark" ? "Switch to light mode" : "Switch to dark mode") : "Toggle theme"}
+                type="button"
+                onClick={() => setTheme(isDark ? "light" : "dark")}
+                className="relative inline-flex h-8 w-[58px] shrink-0 cursor-pointer items-center rounded-full p-1 transition-colors duration-300 bg-slate-200 dark:bg-slate-800 border border-slate-300/60 dark:border-slate-700 shadow-inner mx-1"
+                title={mounted ? (isDark ? "Switch to light mode" : "Switch to dark mode") : "Toggle theme"}
+                aria-label="Toggle theme switch"
               >
-                {mounted && (theme === "dark"
-                  ? <Sun className="w-5 h-5" />
-                  : <Moon className="w-5 h-5" />)
-                }
+                {/* Left slot indicator */}
+                <span className="flex items-center justify-center w-6 h-6 shrink-0 z-0">
+                  <Sun className={`w-3.5 h-3.5 transition-opacity ${isDark ? "text-amber-500/40" : "opacity-0"}`} />
+                </span>
+
+                {/* Right slot indicator */}
+                <span className="flex items-center justify-center w-6 h-6 shrink-0 z-0 ml-auto">
+                  <Moon className={`w-3.5 h-3.5 transition-opacity ${isDark ? "opacity-0" : "text-blue-400/50"}`} />
+                </span>
+
+                {/* Sliding Thumb containing active centered icon */}
+                <span
+                  className={`absolute left-1 top-1 h-6 w-6 rounded-full bg-white dark:bg-slate-900 shadow-md ring-1 ring-black/5 flex items-center justify-center transition-transform duration-300 ease-in-out z-10 ${
+                    isDark ? "translate-x-[26px]" : "translate-x-0"
+                  }`}
+                >
+                  {isDark ? (
+                    <Moon className="w-3.5 h-3.5 text-blue-400 fill-blue-400/20" />
+                  ) : (
+                    <Sun className="w-3.5 h-3.5 text-amber-500 fill-amber-500/20" />
+                  )}
+                </span>
               </button>
 
               {/* Search icon */}

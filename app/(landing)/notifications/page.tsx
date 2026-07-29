@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useAppDispatch } from "@/store/hooks";
 import { setNotifications, markAllRead as markAllReadSlice } from "@/store/slices/notificationSlice";
 import { Loader2 } from "lucide-react";
@@ -55,7 +56,7 @@ function NotifRow({ n }: { n: Notification }) {
   const cfg  = TYPE_CONFIG[n.type] ?? DEFAULT_CFG;
   const Icon = cfg.Icon;
 
-  return (
+  const content = (
     <div className={`flex items-start gap-4 bg-white rounded-2xl p-4 transition-all hover:-translate-y-0.5 ${!n.isRead ? "ring-1 ring-[#0a1628]/10" : "opacity-75 hover:opacity-100"}`}>
       {/* Icon */}
       <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${cfg.bg}`}>
@@ -77,6 +78,12 @@ function NotifRow({ n }: { n: Notification }) {
       )}
     </div>
   );
+
+  return n.link ? (
+    <Link href={n.link} className="block">
+      {content}
+    </Link>
+  ) : content;
 }
 
 /* ─── Page ──────────────────────────────────────────────────── */

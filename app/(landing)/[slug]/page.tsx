@@ -10,7 +10,7 @@ import {
   ArrowLeft01Icon, StarIcon, EyeIcon, ShoppingBag01Icon,
   GlobeIcon, Briefcase01Icon, School01Icon, BookOpen01Icon,
   Tag01Icon, ArrowRight01Icon, Share01Icon, Flag01Icon,
-  CrownIcon, Clock01Icon, CheckCircle01Icon,
+  CrownIcon, Clock01Icon,
 } from "hugeicons-react";
 
 interface Listing {
