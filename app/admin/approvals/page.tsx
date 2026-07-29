@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CheckCircle2, XCircle, Clock, Search, Loader2, BadgeCheck, Users, Megaphone, MonitorPlay, Star } from "lucide-react";
+import Link from "next/link";
+import { CheckCircle2, XCircle, Clock, Search, Loader2, BadgeCheck, Users, Megaphone, MonitorPlay, Star, Trash2, Plus } from "lucide-react";
 
 type Status = "PENDING" | "APPROVED" | "REJECTED";
 
@@ -146,6 +147,14 @@ export default function AdminApprovalsPage() {
       method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status }),
     });
     if (res.ok) setListings(prev => prev.map(l => l.id === id ? { ...l, status } : l));
+    setLActing(p => ({ ...p, [id]: false }));
+  };
+
+  const deleteListing = async (id: string) => {
+    if (!confirm("Are you sure you want to permanently delete this listing?")) return;
+    setLActing(p => ({ ...p, [id]: true }));
+    const res = await fetch(`/api/admin/listings/${id}`, { method: "DELETE" });
+    if (res.ok) setListings(prev => prev.filter(l => l.id !== id));
     setLActing(p => ({ ...p, [id]: false }));
   };
 
@@ -302,17 +311,22 @@ export default function AdminApprovalsPage() {
       {/* ─── LISTINGS TAB ─── */}
       {activeTab === "listings" && (
         <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
             <FilterChips active={lFilter} setActive={v => setLFilter(v as Status | "ALL")} options={[
               { key:"ALL",      label:"All",      count:listings.length,                              color:"bg-slate-100 text-slate-600" },
               { key:"PENDING",  label:"Pending",  count:listings.filter(l=>l.status==="PENDING").length,  color:"bg-amber-100 text-amber-700" },
               { key:"APPROVED", label:"Approved", count:listings.filter(l=>l.status==="APPROVED").length, color:"bg-emerald-100 text-emerald-700" },
               { key:"REJECTED", label:"Rejected", count:listings.filter(l=>l.status==="REJECTED").length, color:"bg-red-100 text-red-600" },
             ]}/>
-            <div className="relative flex-1 max-w-xs">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"/>
-              <input value={lSearch} onChange={e=>setLSearch(e.target.value)} placeholder="Search listings…"
-                className="w-full text-sm pl-9 pr-4 py-2 border border-slate-200 rounded-xl outline-none focus:border-[#0a1628] transition-all font-[inherit]"/>
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1 sm:w-60">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"/>
+                <input value={lSearch} onChange={e=>setLSearch(e.target.value)} placeholder="Search listings…"
+                  className="w-full text-sm pl-9 pr-4 py-2 border border-slate-200 rounded-xl outline-none focus:border-[#0a1628] transition-all font-[inherit]"/>
+              </div>
+              <Link href="/marketplace/create" className="flex items-center gap-1.5 text-xs font-bold bg-[#0a1628] text-white px-3.5 py-2 rounded-xl hover:bg-[#1a3a6b] transition-all shrink-0">
+                <Plus className="w-3.5 h-3.5" /> Create Listing
+              </Link>
             </div>
           </div>
 
@@ -340,7 +354,8 @@ export default function AdminApprovalsPage() {
                       <td className="px-5 py-4"><div className="flex items-center gap-2 justify-end">
                         {lActing[l.id] ? <Loader2 className="w-4 h-4 animate-spin text-slate-400"/> : (<>
                           {l.status!=="APPROVED" && <button onClick={()=>updateListing(l.id,"APPROVED")} className="flex items-center gap-1.5 text-xs font-bold bg-emerald-500 text-white px-3 py-1.5 rounded-lg hover:bg-emerald-600 transition-all"><CheckCircle2 className="w-3 h-3"/>Approve</button>}
-                          {l.status!=="REJECTED" && <button onClick={()=>updateListing(l.id,"REJECTED")} className="flex items-center gap-1.5 text-xs font-bold bg-red-50 text-red-500 border border-red-200 px-3 py-1.5 rounded-lg hover:bg-red-100 transition-all"><XCircle className="w-3 h-3"/>Reject</button>}
+                          {l.status!=="REJECTED" && <button onClick={()=>updateListing(l.id,"REJECTED")} className="flex items-center gap-1.5 text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200 px-3 py-1.5 rounded-lg hover:bg-amber-100 transition-all"><XCircle className="w-3 h-3"/>Reject</button>}
+                          <button onClick={()=>deleteListing(l.id)} title="Permanently delete listing" className="flex items-center gap-1 text-xs font-bold bg-red-50 text-red-600 border border-red-200 px-2.5 py-1.5 rounded-lg hover:bg-red-100 transition-all"><Trash2 className="w-3.5 h-3.5"/>Delete</button>
                         </>)}
                       </div></td>
                     </tr>

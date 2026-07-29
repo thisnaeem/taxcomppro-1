@@ -147,6 +147,40 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // ── Marketplace item purchase ──────────────────────────
+    if (type === "marketplace" && userId) {
+      const { listingId } = session.metadata ?? {};
+      if (listingId) {
+        await prisma.marketplacePurchase.upsert({
+          where:  { userId_listingId: { userId, listingId } },
+          create: { userId, listingId, price: Number(session.amount_total ? session.amount_total / 100 : 0), stripeSessionId: session.id },
+          update: { stripeSessionId: session.id },
+        });
+
+        const listing = await prisma.marketplaceListing.findUnique({ where: { id: listingId }, select: { title: true, userId: true, slug: true } });
+        if (listing) {
+          await prisma.notification.create({
+            data: {
+              userId: listing.userId,
+              type: "SYSTEM",
+              title: "💰 Listing Purchased!",
+              message: `Someone purchased your listing: ${listing.title}`,
+              link: `/${listing.slug ?? listingId}`,
+            },
+          }).catch(() => {});
+          await prisma.notification.create({
+            data: {
+              userId,
+              type: "SYSTEM",
+              title: "🎉 Purchase Complete!",
+              message: `Your purchase of "${listing.title}" is complete. Your product download is ready!`,
+              link: `/${listing.slug ?? listingId}`,
+            },
+          }).catch(() => {});
+        }
+      }
+    }
+
     if (type === "bundle" && userId) {
       const { bundleId } = session.metadata ?? {};
       const mTier  = (membershipTier ?? "MARKETPLACE_PLUS") as SubscriptionTier;

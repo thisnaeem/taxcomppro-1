@@ -5,12 +5,12 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useAppSelector } from "@/store/hooks";
-import { Loader2 } from "lucide-react";
+import { Loader2, Download, ExternalLink } from "lucide-react";
 import {
   ArrowLeft01Icon, StarIcon, EyeIcon, ShoppingBag01Icon,
   GlobeIcon, Briefcase01Icon, School01Icon, BookOpen01Icon,
   Tag01Icon, ArrowRight01Icon, Share01Icon, Flag01Icon,
-  CrownIcon, Clock01Icon,
+  CrownIcon, Clock01Icon, CheckCircle01Icon,
 } from "hugeicons-react";
 
 interface Listing {
@@ -18,6 +18,7 @@ interface Listing {
   category: string; price: number | null; tags: string[];
   images: string[];
   metadata: Record<string, string> | null;
+  hasPurchased?: boolean;
   isFeatured: boolean; viewCount: number; createdAt: string;
   user: { id: string; name: string; image: string | null; headline: string | null; role: string; tier: string };
 }
@@ -81,16 +82,25 @@ export default function ListingDetailPage() {
   const { slug } = useParams<{ slug: string }>();
   const user     = useAppSelector(s => s.auth.user);
 
-  const [listing,  setListing]  = useState<Listing | null>(null);
-  const [loading,  setLoading]  = useState(true);
-  const [notFound, setNotFound] = useState(false);
-  const [copied,   setCopied]   = useState(false);
+  const [listing,    setListing]    = useState<Listing | null>(null);
+  const [loading,    setLoading]    = useState(true);
+  const [notFound,   setNotFound]   = useState(false);
+  const [copied,     setCopied]     = useState(false);
+  const [purchasing, setPurchasing] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
     fetch(`/api/listing/${slug}`)
       .then(r => { if (!r.ok) { setNotFound(true); return null; } return r.json(); })
-      .then(data => { if (data) setListing(data); })
+      .then(data => {
+        if (data) {
+          // Check if URL has ?success=true from Stripe checkout
+          if (typeof window !== "undefined" && window.location.search.includes("success=true")) {
+            data.hasPurchased = true;
+          }
+          setListing(data);
+        }
+      })
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false));
   }, [slug]);
@@ -99,6 +109,30 @@ export default function ListingDetailPage() {
     navigator.clipboard.writeText(window.location.href);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleBuyListing = async () => {
+    if (!user || !listing) return;
+    setPurchasing(true);
+    try {
+      const res = await fetch("/api/stripe/marketplace-checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ listingId: listing.id }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else if (data.isFree || data.alreadyPurchased || data.success) {
+        setListing(prev => prev ? { ...prev, hasPurchased: true } : prev);
+      } else if (data.error) {
+        alert(data.error);
+      }
+    } catch {
+      alert("Something went wrong with checkout.");
+    } finally {
+      setPurchasing(false);
+    }
   };
 
   if (loading) return <SkeletonDetail />;
@@ -281,16 +315,110 @@ export default function ListingDetailPage() {
               </div>
 
               {/* CTA */}
-              {user ? (
-                <button className={`w-full flex items-center justify-center gap-2 font-bold text-sm py-3 rounded-xl transition-all ${cfg.ctaCls}`}>
-                  {cfg.cta} <ArrowRight01Icon className="w-4 h-4" />
-                </button>
-              ) : (
-                <Link href={`/login?redirect=/${listing.slug ?? listing.id}`}
-                  className={`w-full flex items-center justify-center gap-2 font-bold text-sm py-3 rounded-xl transition-all ${cfg.ctaCls}`}>
-                  Sign in to {cfg.cta} <ArrowRight01Icon className="w-4 h-4" />
-                </Link>
-              )}
+              {(() => {
+                const isFree = !listing.price || listing.price <= 0;
+                const isOwner = user?.id === listing.user.id || user?.role === "ADMIN";
+                const downloadUrl = listing.metadata?.downloadUrl;
+                const linkUrl = listing.metadata?.linkUrl;
+                const hasAccess = isFree || listing.hasPurchased || isOwner;
+
+                // 1. Downloadable Product with Access
+                if (downloadUrl && hasAccess) {
+                  return (
+                    <a
+                      href={downloadUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      download
+                      className="w-full flex items-center justify-center gap-2 font-bold text-sm py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-md transition-all"
+                    >
+                      <Download className="w-4 h-4" /> Download Product
+                    </a>
+                  );
+                }
+
+                // 2. Paid Downloadable Product needing purchase
+                if (downloadUrl && !hasAccess) {
+                  if (!user) {
+                    return (
+                      <Link
+                        href={`/login?redirect=/${listing.slug ?? listing.id}`}
+                        className="w-full flex items-center justify-center gap-2 font-bold text-sm py-3.5 rounded-xl bg-[#0a1628] hover:bg-[#1a3a6b] text-white transition-all"
+                      >
+                        Sign in to Buy & Download (${listing.price}) <ArrowRight01Icon className="w-4 h-4" />
+                      </Link>
+                    );
+                  }
+                  return (
+                    <button
+                      onClick={handleBuyListing}
+                      disabled={purchasing}
+                      className="w-full flex items-center justify-center gap-2 font-bold text-sm py-3.5 rounded-xl bg-[#0a1628] hover:bg-[#1a3a6b] text-white shadow-md transition-all disabled:opacity-60"
+                    >
+                      {purchasing ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShoppingBag01Icon className="w-4 h-4" />}
+                      {purchasing ? "Processing…" : `Buy & Unlock Download ($${listing.price})`}
+                    </button>
+                  );
+                }
+
+                // 3. Action / External Link
+                if (linkUrl) {
+                  if (!user) {
+                    return (
+                      <Link
+                        href={`/login?redirect=/${listing.slug ?? listing.id}`}
+                        className={`w-full flex items-center justify-center gap-2 font-bold text-sm py-3.5 rounded-xl transition-all ${cfg.ctaCls}`}
+                      >
+                        Sign in to {cfg.cta} <ArrowRight01Icon className="w-4 h-4" />
+                      </Link>
+                    );
+                  }
+                  return (
+                    <a
+                      href={linkUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`w-full flex items-center justify-center gap-2 font-bold text-sm py-3.5 rounded-xl transition-all ${cfg.ctaCls}`}
+                    >
+                      {cfg.cta} <ExternalLink className="w-4 h-4" />
+                    </a>
+                  );
+                }
+
+                // 4. Paid Service/Listing (No download URL or external link)
+                if (!isFree && !hasAccess) {
+                  if (!user) {
+                    return (
+                      <Link
+                        href={`/login?redirect=/${listing.slug ?? listing.id}`}
+                        className={`w-full flex items-center justify-center gap-2 font-bold text-sm py-3.5 rounded-xl transition-all ${cfg.ctaCls}`}
+                      >
+                        Sign in to Buy (${listing.price}) <ArrowRight01Icon className="w-4 h-4" />
+                      </Link>
+                    );
+                  }
+                  return (
+                    <button
+                      onClick={handleBuyListing}
+                      disabled={purchasing}
+                      className={`w-full flex items-center justify-center gap-2 font-bold text-sm py-3.5 rounded-xl transition-all disabled:opacity-60 ${cfg.ctaCls}`}
+                    >
+                      {purchasing ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShoppingBag01Icon className="w-4 h-4" />}
+                      {purchasing ? "Processing…" : `Buy Now ($${listing.price})`}
+                    </button>
+                  );
+                }
+
+                // 5. Default Fallback (Contact Seller)
+                return (
+                  <Link
+                    href={user ? `/messages?receiverId=${listing.user.id}` : `/login?redirect=/${listing.slug ?? listing.id}`}
+                    className={`w-full flex items-center justify-center gap-2 font-bold text-sm py-3.5 rounded-xl transition-all ${cfg.ctaCls}`}
+                  >
+                    Contact Seller <ArrowRight01Icon className="w-4 h-4" />
+                  </Link>
+                );
+              })()}
             </div>
 
             {/* Views stat */}

@@ -6,7 +6,8 @@ import PostCard, { type FeedPost } from "@/components/feed/PostCard";
 import FeedLeftPanel from "@/components/feed/FeedLeftPanel";
 import FeedRightPanel from "@/components/feed/FeedRightPanel";
 import ScheduledPostsPanel from "@/components/feed/ScheduledPostsPanel";
-import { Loader2, RefreshCw, MonitorPlay, ExternalLink } from "lucide-react";
+import { PostSkeleton, LeftPanelSkeleton, RightPanelSkeleton } from "@/components/feed/FeedSkeletons";
+import { RefreshCw, MonitorPlay, ExternalLink } from "lucide-react";
 import { useAppSelector } from "@/store/hooks";
 
 export default function FeedPage() {
@@ -70,19 +71,20 @@ export default function FeedPage() {
     setLoading(false);
   };
 
-  // Infinite scroll
+  // Infinite scroll (Facebook / LinkedIn style with threshold & rootMargin)
   useEffect(() => {
-    if (!loaderRef.current) return;
+    if (!loaderRef.current || !nextCursor) return;
     const obs = new IntersectionObserver(async ([entry]) => {
-      if (!entry.isIntersecting || !nextCursor || loadingMore) return;
-      setLoadingMore(true);
-      try {
-        const { posts: more, nextCursor: nc } = await fetchFeed(nextCursor);
-        setPosts(prev => [...prev, ...more]);
-        setNextCursor(nc);
-      } catch { /* ignore */ }
-      finally { setLoadingMore(false); }
-    }, { threshold: 0.1 });
+      if (entry.isIntersecting && nextCursor && !loadingMore) {
+        setLoadingMore(true);
+        try {
+          const { posts: more, nextCursor: nc } = await fetchFeed(nextCursor);
+          setPosts(prev => [...prev, ...more]);
+          setNextCursor(nc);
+        } catch { /* ignore */ }
+        finally { setLoadingMore(false); }
+      }
+    }, { rootMargin: "300px" });
     obs.observe(loaderRef.current);
     return () => obs.disconnect();
   }, [fetchFeed, nextCursor, loadingMore]);
@@ -105,12 +107,12 @@ export default function FeedPage() {
 
           {/* LEFT — profile panel */}
           <div className="hidden lg:block self-start sticky top-[100px] h-fit max-h-[calc(100vh-100px)] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-            <FeedLeftPanel />
+            {loading || !user ? <LeftPanelSkeleton /> : <FeedLeftPanel />}
           </div>
 
           {/* CENTER — feed */}
           <div className="space-y-4">
-            {/* Only show composer for logged-in users */}
+            {/* Post Composer starts showing immediately at top for logged-in users */}
             {user && <PostComposer onPostCreated={handlePostCreated} onScheduled={() => setScheduleRefreshKey(k => k + 1)} />}
 
             {/* Scheduled posts snippet — only for logged-in users */}
@@ -124,8 +126,13 @@ export default function FeedPage() {
               </button>
             )}
 
+            {/* Main feed list / skeleton */}
             {loading ? (
-              <div className="flex justify-center py-24"><Loader2 className="w-8 h-8 text-[#d4a017] animate-spin" /></div>
+              <div className="space-y-4">
+                <PostSkeleton />
+                <PostSkeleton />
+                <PostSkeleton />
+              </div>
             ) : posts.length === 0 ? (
               <div className="bg-white border border-slate-200 rounded-2xl p-14 text-center">
                 <div className="text-5xl mb-4">📝</div>
@@ -173,16 +180,20 @@ export default function FeedPage() {
                     </Fragment>
                   );
                 })}
-                <div ref={loaderRef} className="h-8 flex items-center justify-center">
-                  {loadingMore && <Loader2 className="w-5 h-5 text-slate-400 animate-spin" />}
-                </div>
+
+                {/* Infinite Scroll Trigger & Skeleton loader on scroll */}
+                {nextCursor && (
+                  <div ref={loaderRef} className="pt-2">
+                    {loadingMore && <PostSkeleton />}
+                  </div>
+                )}
               </>
             )}
           </div>
 
           {/* RIGHT — sidebar */}
           <div className="hidden lg:block self-start sticky top-[100px] h-fit max-h-[calc(100vh-100px)] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-            <FeedRightPanel />
+            {loading ? <RightPanelSkeleton /> : <FeedRightPanel />}
           </div>
 
         </div>

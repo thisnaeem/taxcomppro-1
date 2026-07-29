@@ -159,8 +159,12 @@ export default function AdminPage() {
           <p className="text-slate-400 text-sm mt-1">Here's what's happening on TaxCompPro today.</p>
         </div>
         <div className="flex items-center gap-2">
-          <Link href="/admin/payments"
+          <Link href="/marketplace/create"
             className="flex items-center gap-2 bg-[#f0c040] text-[#0a1628] font-black text-sm px-4 py-2.5 rounded-xl hover:bg-amber-400 transition-all shadow-lg shadow-amber-400/20">
+            <Plus className="w-4 h-4" /> Create Listing
+          </Link>
+          <Link href="/admin/payments"
+            className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white font-bold text-sm px-4 py-2.5 rounded-xl transition-all">
             <CreditCard className="w-4 h-4" /> Payments
           </Link>
         </div>

@@ -8,8 +8,6 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-
-
 export async function POST(req: NextRequest) {
   const session = await auth.api.getSession({ headers: req.headers });
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -24,20 +22,22 @@ export async function POST(req: NextRequest) {
   const file = formData.get("file") as File | null;
   if (!file) return NextResponse.json({ error: "No file provided" }, { status: 400 });
 
-  // 10 MB server-side limit
-  if (file.size > 10 * 1024 * 1024)
-    return NextResponse.json({ error: "File too large — max 10 MB" }, { status: 413 });
+  // 15 MB server-side limit
+  if (file.size > 15 * 1024 * 1024)
+    return NextResponse.json({ error: "File too large — max 15 MB" }, { status: 413 });
 
   const arrayBuffer = await file.arrayBuffer();
   const buffer      = Buffer.from(arrayBuffer);
   const b64         = buffer.toString("base64");
-  const dataUri     = `data:${file.type};base64,${b64}`;
+  const dataUri     = `data:${file.type || "application/octet-stream"};base64,${b64}`;
 
-  const result = await cloudinary.uploader.upload(dataUri, {
+  const isImage = file.type.startsWith("image/");
+  const result  = await cloudinary.uploader.upload(dataUri, {
     folder:        "taxcomppro/listings",
-    resource_type: "image",
-    transformation: [{ width: 1400, height: 560, crop: "limit", quality: "auto:good", fetch_format: "auto" }],
+    resource_type: isImage ? "image" : "auto",
+    ...(isImage ? { transformation: [{ width: 1400, height: 560, crop: "limit", quality: "auto:good", fetch_format: "auto" }] } : {}),
   });
 
   return NextResponse.json({ url: result.secure_url });
 }
+

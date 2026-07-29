@@ -59,6 +59,30 @@ function ServiceFields({ meta, set }: { meta: Record<string, string>; set: (k: s
 }
 
 function ProductFields({ meta, set }: { meta: Record<string, string>; set: (k: string, v: string) => void }) {
+  const [uploadingFile, setUploadingFile] = useState(false);
+  const [fileError, setFileError]         = useState("");
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    if (f.size > 15 * 1024 * 1024) { setFileError("File must be under 15 MB"); return; }
+    setFileError("");
+    setUploadingFile(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", f);
+      const res = await fetch("/api/upload/listing", { method: "POST", body: fd });
+      const data = await res.json() as { url?: string; error?: string };
+      if (data.url) {
+        set("downloadUrl", data.url);
+        if (!meta.downloadName) set("downloadName", f.name);
+      } else {
+        setFileError(data.error ?? "Upload failed");
+      }
+    } catch { setFileError("Upload failed"); }
+    finally { setUploadingFile(false); }
+  };
+
   return (
     <>
       <div className="grid grid-cols-2 gap-3">
@@ -85,6 +109,33 @@ function ProductFields({ meta, set }: { meta: Record<string, string>; set: (k: s
         <div>
           <label className={lbl}>Number of Files</label>
           <input className={inp} type="number" min="1" placeholder="e.g. 5" value={meta.fileCount ?? ""} onChange={e => set("fileCount", e.target.value)} />
+        </div>
+      </div>
+
+      {/* Downloadable Product File / Link */}
+      <div className="pt-2 space-y-2 border-t border-slate-100">
+        <label className={lbl}><Download className="w-3 h-3 inline mr-1" />Downloadable Product File / Link</label>
+        <div className="space-y-2">
+          <input
+            className={inp}
+            placeholder="https://drive.google.com/file/... or direct file URL"
+            value={meta.downloadUrl ?? ""}
+            onChange={e => set("downloadUrl", e.target.value)}
+          />
+          <div className="flex items-center gap-3">
+            <label className="cursor-pointer inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition-all border border-slate-200">
+              {uploadingFile ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5 text-slate-500" />}
+              {uploadingFile ? "Uploading File…" : "Upload File (PDF, ZIP, Excel, Word)"}
+              <input type="file" className="hidden" onChange={handleFileUpload} />
+            </label>
+            {meta.downloadUrl && (
+              <span className="text-xs font-bold text-emerald-600 truncate max-w-xs">
+                ✓ File attached
+              </span>
+            )}
+          </div>
+          {fileError && <p className="text-red-500 text-xs">{fileError}</p>}
+          <p className="text-[11px] text-slate-400">Buyers will gain instant download access after payment (or immediately if free).</p>
         </div>
       </div>
     </>
@@ -373,6 +424,13 @@ export default function CreateListingPage() {
                       onChange={e => setPrice(e.target.value)}
                       className="w-full font-[inherit] text-sm pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg outline-none focus:border-[#0a1628] focus:ring-2 focus:ring-[#0a1628]/10 transition-all" />
                   </div>
+                </div>
+                <div>
+                  <label className={lbl}><Globe className="w-3 h-3 inline mr-1" />Action / External Link (Website, Booking, Learn More)</label>
+                  <input type="url" placeholder="https://example.com/booking or https://yoursite.com"
+                    value={meta.linkUrl ?? ""} onChange={e => setMeta("linkUrl", e.target.value)}
+                    className="w-full font-[inherit] text-sm px-4 py-2.5 border border-slate-200 rounded-lg outline-none focus:border-[#0a1628] focus:ring-2 focus:ring-[#0a1628]/10 transition-all" />
+                  <p className="text-[11px] text-slate-400 mt-1">Optional. Direct link for users clicking your listing button (e.g. your scheduling page, website, or form).</p>
                 </div>
               </div>
 

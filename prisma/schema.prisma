@@ -162,6 +162,7 @@ model User {
   forumPosts          ForumPost[]
   forumComments       ForumComment[]
   forumVotes          ForumVote[]
+  marketplacePurchases MarketplacePurchase[]
 
   @@map("users")
 }
@@ -231,8 +232,24 @@ model MarketplaceListing {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   featuredRequests FeaturedListingRequest[]
+  purchases        MarketplacePurchase[]
 
   @@map("marketplace_listings")
+}
+
+model MarketplacePurchase {
+  id              String             @id @default(cuid())
+  userId          String
+  listingId       String
+  price           Float              @default(0)
+  stripeSessionId String?            @unique
+  createdAt       DateTime           @default(now())
+
+  user    User               @relation(fields: [userId],    references: [id], onDelete: Cascade)
+  listing MarketplaceListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, listingId])
+  @@map("marketplace_purchases")
 }
 
 model FeaturedListingRequest {

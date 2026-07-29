@@ -3,11 +3,11 @@
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "@/lib/auth-client";
 import { loginSchema, type LoginInput } from "@/lib/schemas";
-import { Mail, Lock, ArrowRight, Globe, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, ArrowRight, Globe, Eye, EyeOff, Check } from "lucide-react";
 import Image from "next/image";
 
 // Inner component that uses useSearchParams — must be inside <Suspense>
@@ -19,17 +19,33 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
 
-  const { register, handleSubmit, formState: { errors } } = useForm<LoginInput>({
+  const { register, handleSubmit, setValue, formState: { errors } } = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
   });
+
+  // Pre-fill email from localStorage if previously remembered
+  useEffect(() => {
+    const saved = localStorage.getItem("tcp_remembered_email");
+    if (saved) {
+      setValue("email", saved);
+      setRememberMe(true);
+    }
+  }, [setValue]);
 
   const onSubmit = async (data: LoginInput) => {
     setLoading(true); setServerError("");
     try {
-      const res = await signIn.email({ email: data.email, password: data.password });
-      if (res.error) setServerError(res.error.message || "Invalid email or password.");
-      else router.push(nextPath);
+      const res = await signIn.email({ email: data.email, password: data.password, rememberMe });
+      if (res.error) {
+        setServerError(res.error.message || "Invalid email or password.");
+      } else {
+        // Save or clear remembered email
+        if (rememberMe) localStorage.setItem("tcp_remembered_email", data.email);
+        else localStorage.removeItem("tcp_remembered_email");
+        router.push(nextPath);
+      }
     } catch { setServerError("Something went wrong. Please try again."); }
     finally { setLoading(false); }
   };
@@ -94,6 +110,29 @@ function LoginForm() {
             </button>
           </div>
           {errors.password && <p className="text-red-500 text-xs mt-1.5">{errors.password.message}</p>}
+        </div>
+
+        {/* Remember Me */}
+        <div className="flex items-center gap-3 pt-0.5">
+          <button
+            type="button"
+            id="remember-me"
+            onClick={() => setRememberMe(p => !p)}
+            className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all duration-150 ${
+              rememberMe
+                ? "bg-[#0a1628] border-[#0a1628]"
+                : "bg-white border-slate-300 hover:border-[#0a1628]"
+            }`}
+          >
+            {rememberMe && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+          </button>
+          <label
+            htmlFor="remember-me"
+            className="text-sm text-slate-600 cursor-pointer select-none"
+            onClick={() => setRememberMe(p => !p)}
+          >
+            Remember me
+          </label>
         </div>
 
         <button type="submit" disabled={loading}
