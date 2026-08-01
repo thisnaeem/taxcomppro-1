@@ -99,6 +99,12 @@ enum FeaturedListingStatus {
   EXPIRED
 }
 
+enum CardVisibility {
+  PUBLIC
+  MEMBERS_ONLY
+  PRIVATE
+}
+
 model User {
   id               String           @id @default(cuid())
   email            String           @unique
@@ -163,6 +169,7 @@ model User {
   forumComments       ForumComment[]
   forumVotes          ForumVote[]
   marketplacePurchases MarketplacePurchase[]
+  digitalCard         DigitalCard?
 
   @@map("users")
 }
@@ -869,5 +876,80 @@ model SupportTicket {
   updatedAt   DateTime @updatedAt
 
   @@map("support_tickets")
+}
+
+// ── NFC Business Card / Tap Card / Connect Card ─────────────────────────
+// One DigitalCard per User (internal FK = userId). `username` is the mutable,
+// public-facing slug used in /connect/[username] and /pro/[username] — never
+// used for DB relationships.
+model DigitalCard {
+  id        String  @id @default(cuid())
+  userId    String  @unique
+  username  String  @unique
+
+  isActivated Boolean   @default(false)
+  activatedAt DateTime?
+
+  // Card-specific business info (distinct from the member's main profile fields)
+  professionalTitle   String?
+  businessName        String?
+  businessDescription String?
+  phone               String?
+  bookingUrl          String?
+  businessAddress     String?
+  logoUrl             String?
+
+  // Design
+  theme       String @default("classic")
+  accentColor String @default("#0a1628")
+
+  // Privacy controls (per-field visibility)
+  phoneVisibility     CardVisibility @default(PUBLIC)
+  emailVisibility     CardVisibility @default(PUBLIC)
+  addressVisibility   CardVisibility @default(PRIVATE)
+  bookingVisibility   CardVisibility @default(PUBLIC)
+  websiteVisibility   CardVisibility @default(PUBLIC)
+  socialVisibility    CardVisibility @default(PUBLIC)
+  servicesVisibility  CardVisibility @default(PUBLIC)
+
+  // Analytics counters
+  pageViews         Int @default(0)
+  nfcTaps           Int @default(0)
+  qrScans           Int @default(0)
+  contactSaves      Int @default(0)
+  shareClicks       Int @default(0)
+  fullProfileClicks Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  links CardLink[]
+
+  @@map("digital_cards")
+}
+
+model CardLink {
+  id     String @id @default(cuid())
+  cardId String
+
+  label String
+  url   String
+  icon  String?
+  color String?
+
+  order      Int     @default(0)
+  isActive   Boolean @default(true)
+  clickCount Int     @default(0)
+
+  scheduledStart DateTime?
+  scheduledEnd   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  card DigitalCard @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  @@map("card_links")
 }
 

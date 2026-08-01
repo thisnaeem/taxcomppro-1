@@ -2,11 +2,13 @@
 import { useState, useEffect, useRef } from "react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setUser } from "@/store/slices/authSlice";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Loader2, BadgeCheck, Clock, X, CreditCard, Camera, Download } from "lucide-react";
 import { UserCircleIcon, Mail01Icon, Briefcase01Icon, NoteIcon, Tick02Icon, BookOpen01Icon, UserGroupIcon, Rocket01Icon, ShoppingBag01Icon, Add01Icon } from "hugeicons-react";
 import DueDiligenceBadge from "@/components/badges/DueDiligenceBadge";
 import { VoiceMemoEditor } from "@/components/profile/VoiceMemo";
+import ConnectCardManager from "@/components/profile/ConnectCardManager";
 
 interface Purchase {
   id: string; toolkitId: string; name: string; emoji: string;
@@ -40,7 +42,10 @@ export default function MemberProfile() {
   const [appSpec, setAppSpec] = useState(""); const [appCreds, setAppCreds] = useState(""); const [appReason, setAppReason] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<"profile" | "badges" | "purchases">("profile");
+  const searchParams = useSearchParams();
+  const [activeTab, setActiveTab] = useState<"profile" | "badges" | "purchases" | "card">(
+    searchParams.get("tab") === "card" ? "card" : "profile"
+  );
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [purchasesLoading, setPurchasesLoading] = useState(false);
   const [voiceMemoUrl, setVoiceMemoUrl] = useState<string | null>(null);
@@ -207,7 +212,7 @@ export default function MemberProfile() {
 
         {/* ── Tab Bar ── */}
         <div className="flex gap-1 bg-white rounded-2xl p-1.5 mb-5 border border-slate-100 shadow-sm">
-          {(["profile", "badges", "purchases"] as const).map(tab => (
+          {(["profile", "card", "badges", "purchases"] as const).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -217,7 +222,7 @@ export default function MemberProfile() {
                   : "text-slate-500 hover:bg-slate-50"
               }`}
             >
-              {tab === "profile" ? "✏️  Profile" : tab === "badges" ? "🏅  My Badges" : "📦  My Purchases"}
+              {tab === "profile" ? "✏️  Profile" : tab === "card" ? "💳  Connect Card" : tab === "badges" ? "🏅  My Badges" : "📦  My Purchases"}
             </button>
           ))}
         </div>
@@ -333,6 +338,9 @@ export default function MemberProfile() {
               ))}
             </div>
           </div>
+        ) : activeTab === "card" ? (
+          /* ── Connect Card Tab ── */
+          <ConnectCardManager />
         ) : (
         <div className="grid sm:grid-cols-3 gap-5">
           {/* Sidebar */}

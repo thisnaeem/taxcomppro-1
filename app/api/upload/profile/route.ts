@@ -24,6 +24,7 @@ export async function POST(req: NextRequest) {
     avatar: "taxcomppro/avatars",
     cover:  "taxcomppro/covers",
     media:  "taxcomppro/profile-media",
+    logo:   "taxcomppro/business-logos",
   };
   const folder = folderMap[type] ?? "taxcomppro/profile-media";
 
@@ -31,6 +32,7 @@ export async function POST(req: NextRequest) {
     avatar: [{ width: 400, height: 400, crop: "fill", gravity: "face", quality: "auto:good" }],
     cover:  [{ width: 1400, height: 400, crop: "fill", quality: "auto:good" }],
     media:  [{ width: 1200, crop: "limit", quality: "auto:good" }],
+    logo:   [{ width: 500, height: 500, crop: "fit", quality: "auto:good", background: "transparent" }],
   };
   const transformation = transformMap[type] ?? transformMap.media;
 

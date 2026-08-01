@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { signUp, signIn } from "@/lib/auth-client";
 import { z } from "zod";
 import { Mail, Lock, User, ArrowRight, Globe, Eye, EyeOff } from "lucide-react";
@@ -20,8 +20,10 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
-export default function RegisterPage() {
+function RegisterForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const nextPath = searchParams.get("next") || "/feed";
   const [serverError, setServerError] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -38,14 +40,14 @@ export default function RegisterPage() {
     try {
       const res = await signUp.email({ email: data.email, password: data.password, name: data.name });
       if (res.error) setServerError(res.error.message || "Registration failed.");
-      else router.push("/feed");
+      else router.push(nextPath);
     } catch { setServerError("Something went wrong. Please try again."); }
     finally { setLoading(false); }
   };
 
   const handleGoogle = async () => {
     setGoogleLoading(true);
-    try { await signIn.social({ provider: "google", callbackURL: "/feed" }); }
+    try { await signIn.social({ provider: "google", callbackURL: nextPath }); }
     catch { setServerError("Google sign-in failed."); }
     finally { setGoogleLoading(false); }
   };
@@ -156,5 +158,13 @@ export default function RegisterPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense>
+      <RegisterForm />
+    </Suspense>
   );
 }

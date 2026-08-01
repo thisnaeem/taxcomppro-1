@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setUser } from "@/store/slices/authSlice";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Loader2, BadgeCheck, X, MapPin } from "lucide-react";
 import { Tick02Icon, GlobeIcon, Linkedin02Icon, NewTwitterIcon, NoteIcon, UserCircleIcon, Briefcase01Icon, Mail01Icon, Edit01Icon, BookOpen01Icon, UserGroupIcon, CrownIcon } from "hugeicons-react";
@@ -11,6 +12,7 @@ import MediaGallery from "@/components/profile/MediaGallery";
 import ServiceEditor from "@/components/profile/ServiceEditor";
 import DueDiligenceBadge from "@/components/badges/DueDiligenceBadge";
 import { VoiceMemoEditor } from "@/components/profile/VoiceMemo";
+import ConnectCardManager from "@/components/profile/ConnectCardManager";
 
 interface Service { id: string; title: string; description: string | null; price: string | null; emoji: string; }
 
@@ -34,12 +36,13 @@ function TagInput({ value, onChange, placeholder }: { value: string[]; onChange:
 
 const inp = "w-full font-[inherit] text-sm px-4 py-3 border border-slate-200 rounded-xl outline-none focus:border-[#0a1628] focus:ring-2 focus:ring-[#0a1628]/10 transition-all bg-white";
 const lbl = "block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5";
-const TABS = ["Basic","Mission","Professional","Social","Services","Media","Badges"] as const;
+const TABS = ["Basic","Mission","Professional","Social","Services","Media","Connect Card","Badges"] as const;
 
 export default function ProProfileEditor() {
   const dispatch = useAppDispatch();
   const user = useAppSelector(s => s.auth.user);
-  const [tab, setTab] = useState<typeof TABS[number]>("Basic");
+  const searchParams = useSearchParams();
+  const [tab, setTab] = useState<typeof TABS[number]>(searchParams.get("tab") === "card" ? "Connect Card" : "Basic");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved]   = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
@@ -196,6 +199,8 @@ export default function ProProfileEditor() {
                 <MediaGallery photos={mediaPhotos} onChange={setMediaPhotos}/>
               </div>
             )}
+
+            {tab==="Connect Card" && <ConnectCardManager />}
 
             {tab==="Badges" && (
               <div className="bg-white rounded-2xl border border-slate-100 p-6">
