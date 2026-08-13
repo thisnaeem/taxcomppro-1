@@ -105,6 +105,18 @@ enum CardVisibility {
   PRIVATE
 }
 
+enum TrainingStatus {
+  INVITED
+  REGISTERED
+  TRAINING_STARTED
+  VIDEO_COMPLETED
+  ASSESSMENT_REQUIRED
+  PASSED
+  FAILED_RETAKE_REQUIRED
+  TRAINING_COMPLETED
+  ACCESS_REVOKED
+}
+
 model User {
   id               String           @id @default(cuid())
   email            String           @unique
@@ -170,6 +182,9 @@ model User {
   forumVotes          ForumVote[]
   marketplacePurchases MarketplacePurchase[]
   digitalCard         DigitalCard?
+  trainingLicenses     TrainingLicense[]
+  eroInvitationsSent   StaffInvitation[] @relation("EroInvitations")
+  preparerInvitations  StaffInvitation[] @relation("PreparerInvitations")
 
   @@map("users")
 }
@@ -951,5 +966,173 @@ model CardLink {
   card DigitalCard @relation(fields: [cardId], references: [id], onDelete: Cascade)
 
   @@map("card_links")
+}
+
+// ── ERO Training Center (staff due-diligence training) ──────────────────
+// One TrainingVersion per filing-season edition of a toolkit's training
+// (e.g. "2027 Filing Season Due-Diligence Staff Training" for toolkitId
+// "irs-fine-defense"). Historical versions are preserved — never overwritten
+// — so completed-training records always show which edition a preparer took.
+model TrainingVersion {
+  id        String  @id @default(cuid())
+  toolkitId String
+  versionLabel String
+
+  isActive Boolean @default(true)
+
+  videoProvider        String @default("youtube")
+  videoId              String?
+  videoUrl             String?
+  videoDurationSeconds Int    @default(0)
+
+  passingScore    Int @default(80)
+  questionsToShow Int @default(25)
+  maxAttempts     Int @default(2)
+
+  acknowledgmentText String @default("") @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  questions   TrainingQuestion[]
+  invitations StaffInvitation[]
+
+  @@map("training_versions")
+}
+
+model TrainingQuestion {
+  id           String  @id @default(cuid())
+  versionId    String
+  question     String  @db.Text
+  options      String[]
+  correctIndex Int
+  explanation  String? @db.Text
+  order        Int     @default(0)
+
+  createdAt DateTime @default(now())
+
+  version TrainingVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+
+  @@map("training_questions")
+}
+
+// The ERO's seat license for a toolkit's staff training (auto-created with
+// 5 seats when the toolkit is purchased; additional seats can be bought).
+model TrainingLicense {
+  id         String  @id @default(cuid())
+  eroId      String
+  toolkitId  String
+  officeName String?
+  totalSeats Int     @default(5)
+
+  purchasedAt DateTime @default(now())
+  expiresAt   DateTime
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ero           User                   @relation(fields: [eroId], references: [id], onDelete: Cascade)
+  invitations   StaffInvitation[]
+  seatPurchases TrainingSeatPurchase[]
+
+  @@unique([eroId, toolkitId])
+  @@map("training_licenses")
+}
+
+model TrainingSeatPurchase {
+  id              String   @id @default(cuid())
+  licenseId       String
+  seats           Int
+  priceUsd        Float
+  stripeSessionId String   @unique
+  createdAt       DateTime @default(now())
+
+  license TrainingLicense @relation(fields: [licenseId], references: [id], onDelete: Cascade)
+
+  @@map("training_seat_purchases")
+}
+
+// One seat assignment = one invited preparer. Each preparer gets their own
+// individual account (userId links once they accept + register) — never a
+// shared office login.
+model StaffInvitation {
+  id        String @id @default(cuid())
+  licenseId String
+  eroId     String
+  versionId String
+  userId    String?
+
+  name        String
+  email       String
+  inviteToken String         @unique
+  status      TrainingStatus @default(INVITED)
+
+  videoFurthestSeconds Int       @default(0)
+  videoCompletedAt     DateTime?
+  trainingStartedAt    DateTime?
+  registeredAt         DateTime?
+  revokedAt            DateTime?
+
+  invitedAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  license        TrainingLicense         @relation(fields: [licenseId], references: [id], onDelete: Cascade)
+  ero            User                    @relation("EroInvitations", fields: [eroId], references: [id], onDelete: Cascade)
+  version        TrainingVersion         @relation(fields: [versionId], references: [id])
+  user           User?                   @relation("PreparerInvitations", fields: [userId], references: [id], onDelete: SetNull)
+  attempts       AssessmentAttempt[]
+  acknowledgment TrainingAcknowledgment?
+  certificate    TrainingCertificate?
+
+  @@unique([licenseId, email])
+  @@map("staff_invitations")
+}
+
+model AssessmentAttempt {
+  id            String    @id @default(cuid())
+  invitationId  String
+  attemptNumber Int
+  questionIds   String[]
+  answers       Int[]
+  score         Int
+  passed        Boolean
+  startedAt     DateTime  @default(now())
+  submittedAt   DateTime?
+
+  invitation StaffInvitation @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+
+  @@map("assessment_attempts")
+}
+
+model TrainingAcknowledgment {
+  id            String   @id @default(cuid())
+  invitationId  String   @unique
+  fullName      String
+  email         String
+  officeName    String?
+  versionLabel  String
+  statements    String[]
+  signatureName String
+  ipAddress     String?
+  userAgent     String?
+  signedAt      DateTime @default(now())
+
+  invitation StaffInvitation @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+
+  @@map("training_acknowledgments")
+}
+
+model TrainingCertificate {
+  id                String   @id @default(cuid())
+  invitationId      String   @unique
+  certificateNumber String   @unique
+  pdfUrl            String?
+  score             Int
+  versionLabel      String
+  issuedAt          DateTime @default(now())
+
+  invitation StaffInvitation @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+
+  @@map("training_certificates")
 }
 

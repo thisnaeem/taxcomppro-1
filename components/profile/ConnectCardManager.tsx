@@ -268,50 +268,142 @@ export default function ConnectCardManager() {
       </div>
 
       {/* Custom links */}
-      <div className="bg-white rounded-2xl border border-slate-100 p-6">
-        <h2 className="font-black text-[#0a1628] text-sm uppercase tracking-widest mb-1">Manage Custom Links</h2>
-        <p className="text-xs text-slate-400 mb-4">Add, reorder, and track clicks on Linktree-style buttons.</p>
-        <div className="space-y-2 mb-4">
+      <div className="bg-white dark:bg-[#172135] rounded-2xl border border-slate-100 dark:border-slate-800 p-6 shadow-sm">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="font-black text-[#0a1628] dark:text-white text-base">Links &amp; Content</h2>
+            <p className="text-xs text-slate-400">Add, reorder, and track real-time clicks on your Linktree buttons.</p>
+          </div>
+          <button
+            onClick={() => {
+              const label = prompt("Enter button label (e.g., Book Consultation):");
+              if (!label) return;
+              const url = prompt("Enter destination URL (e.g., https://calendly.com):");
+              if (!url) return;
+              setNewLink({ label, url });
+              addLink();
+            }}
+            className="flex items-center gap-2 bg-[#0a1628] dark:bg-amber-500 text-white dark:text-[#0a1628] font-extrabold text-xs px-5 py-2.5 rounded-full hover:scale-105 transition-all shadow-md"
+          >
+            <Plus className="w-4 h-4" /> Add Link
+          </button>
+        </div>
+
+        {/* Existing links list */}
+        <div className="space-y-3 mb-6">
           {links.map((l, i) => (
-            <div key={l.id} className="flex items-center gap-2 bg-slate-50 rounded-xl px-3 py-2.5">
+            <div
+              key={l.id}
+              className={`flex items-center gap-3 rounded-2xl p-4 border transition-all ${
+                l.isActive
+                  ? "bg-slate-50 dark:bg-[#1e2e45] border-slate-200 dark:border-slate-700/80 shadow-sm"
+                  : "bg-slate-100/50 dark:bg-slate-900/40 border-dashed border-slate-300 dark:border-slate-800 opacity-60"
+              }`}
+            >
               <div className="flex flex-col shrink-0">
-                <button onClick={() => move(i, -1)} disabled={i === 0} className="text-slate-400 hover:text-slate-700 disabled:opacity-30"><GripVertical className="w-3.5 h-3.5 rotate-0" /></button>
+                <button
+                  onClick={() => move(i, -1)}
+                  disabled={i === 0}
+                  className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 disabled:opacity-30 p-1"
+                >
+                  <GripVertical className="w-4 h-4" />
+                </button>
               </div>
-              <div className="flex-1 min-w-0">
-                <input value={l.label} onChange={e => setLinks(ls => ls.map(x => x.id === l.id ? { ...x, label: e.target.value } : x))}
-                  onBlur={e => updateLink(l.id, { label: e.target.value })} className="w-full text-xs font-bold bg-transparent outline-none" />
-                <input value={l.url} onChange={e => setLinks(ls => ls.map(x => x.id === l.id ? { ...x, url: e.target.value } : x))}
-                  onBlur={e => updateLink(l.id, { url: e.target.value })} className="w-full text-[10px] text-slate-400 bg-transparent outline-none" />
+
+              <div className="flex-1 min-w-0 space-y-1">
+                <div className="flex items-center gap-2">
+                  <input
+                    value={l.label}
+                    onChange={(e) => setLinks((ls) => ls.map((x) => (x.id === l.id ? { ...x, label: e.target.value } : x)))}
+                    onBlur={(e) => updateLink(l.id, { label: e.target.value })}
+                    className="text-sm font-extrabold text-[#0a1628] dark:text-white bg-transparent outline-none border-b border-transparent focus:border-slate-300 dark:focus:border-slate-600 transition-colors"
+                  />
+                </div>
+                <input
+                  value={l.url}
+                  onChange={(e) => setLinks((ls) => ls.map((x) => (x.id === l.id ? { ...x, url: e.target.value } : x)))}
+                  onBlur={(e) => updateLink(l.id, { url: e.target.value })}
+                  className="w-full text-xs text-slate-400 bg-transparent outline-none font-mono"
+                />
               </div>
-              <span className="text-[10px] font-bold text-slate-400 shrink-0">{l.clickCount} clicks</span>
-              <button onClick={() => updateLink(l.id, { isActive: !l.isActive })} className="shrink-0 text-slate-400 hover:text-slate-700">
-                {l.isActive ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-              </button>
-              <button onClick={() => deleteLink(l.id)} className="shrink-0 text-slate-400 hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
+
+              <div className="flex items-center gap-3 shrink-0">
+                <span className="text-[11px] font-extrabold text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800 px-3 py-1 rounded-full border border-slate-200/60 dark:border-slate-700">
+                  {l.clickCount} clicks
+                </span>
+
+                {/* Linktree style toggle switch */}
+                <button
+                  onClick={() => updateLink(l.id, { isActive: !l.isActive })}
+                  className={`w-11 h-6 rounded-full transition-colors p-1 relative flex items-center ${
+                    l.isActive ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-700"
+                  }`}
+                  title={l.isActive ? "Link is active" : "Link is hidden"}
+                >
+                  <div
+                    className={`w-4 h-4 rounded-full bg-white transition-transform ${
+                      l.isActive ? "translate-x-5" : "translate-x-0"
+                    }`}
+                  />
+                </button>
+
+                <button
+                  onClick={() => deleteLink(l.id)}
+                  className="p-1.5 text-slate-400 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+                  title="Delete link"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           ))}
         </div>
+
+        {/* Manual Inline Add Form */}
         {links.length < 12 && (
-          <div className="flex gap-2">
-            <input value={newLink.label} onChange={e => setNewLink(l => ({ ...l, label: e.target.value }))} placeholder="Label" className={`${inp} flex-1`} />
-            <input value={newLink.url} onChange={e => setNewLink(l => ({ ...l, url: e.target.value }))} placeholder="https://…" className={`${inp} flex-1`} />
-            <button onClick={addLink} className="shrink-0 w-10 h-10 flex items-center justify-center rounded-xl bg-[#0a1628] text-white"><Plus className="w-4 h-4" /></button>
+          <div className="flex gap-2 p-3 rounded-2xl bg-slate-50 dark:bg-[#1e2e45] border border-slate-200/60 dark:border-slate-800">
+            <input
+              value={newLink.label}
+              onChange={(e) => setNewLink((l) => ({ ...l, label: e.target.value }))}
+              placeholder="Button Label (e.g., Book IRS Consultation)"
+              className={`${inp} flex-1`}
+            />
+            <input
+              value={newLink.url}
+              onChange={(e) => setNewLink((l) => ({ ...l, url: e.target.value }))}
+              placeholder="https://calendly.com/yourname"
+              className={`${inp} flex-1`}
+            />
+            <button
+              onClick={addLink}
+              className="shrink-0 px-5 flex items-center justify-center rounded-xl bg-[#0a1628] dark:bg-amber-500 text-white dark:text-[#0a1628] font-bold text-xs shadow-sm hover:opacity-90"
+            >
+              <Plus className="w-4 h-4 mr-1" /> Add
+            </button>
           </div>
         )}
       </div>
 
       {/* Privacy */}
-      <div className="bg-white rounded-2xl border border-slate-100 p-6">
-        <h2 className="font-black text-[#0a1628] text-sm uppercase tracking-widest mb-1">Privacy Settings</h2>
+      <div className="bg-white dark:bg-[#172135] rounded-2xl border border-slate-100 dark:border-slate-800 p-6">
+        <h2 className="font-black text-[#0a1628] dark:text-white text-sm uppercase tracking-widest mb-1">Privacy Settings</h2>
         <p className="text-xs text-slate-400 mb-4">Control who can see each field on your public card.</p>
         <div className="space-y-1.5">
           {VIS_FIELDS.map(([field]) => (
             <div key={field} className="flex items-center justify-between gap-2 text-xs">
-              <span className="capitalize font-semibold text-slate-600 w-20 shrink-0">{field}</span>
+              <span className="capitalize font-semibold text-slate-600 dark:text-slate-300 w-20 shrink-0">{field}</span>
               <div className="flex gap-1 flex-1 max-w-xs">
-                {VISIBILITY_OPTIONS.map(o => (
-                  <button key={o.value} type="button" onClick={() => setVisibility(v => ({ ...v, [field]: o.value }))}
-                    className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all ${visibility[field] === o.value ? "bg-[#0a1628] text-white" : "bg-slate-100 text-slate-500 hover:bg-slate-200"}`}>
+                {VISIBILITY_OPTIONS.map((o) => (
+                  <button
+                    key={o.value}
+                    type="button"
+                    onClick={() => setVisibility((v) => ({ ...v, [field]: o.value }))}
+                    className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all ${
+                      visibility[field] === o.value
+                        ? "bg-[#0a1628] dark:bg-amber-500 text-white dark:text-[#0a1628]"
+                        : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200"
+                    }`}
+                  >
                     {o.label}
                   </button>
                 ))}
@@ -322,26 +414,42 @@ export default function ConnectCardManager() {
       </div>
 
       {/* Replace / reassign */}
-      <div className="bg-white rounded-2xl border border-slate-100 p-6">
-        <h2 className="font-black text-[#0a1628] text-sm uppercase tracking-widest mb-1">Replace or Reassign Card</h2>
+      <div className="bg-white dark:bg-[#172135] rounded-2xl border border-slate-100 dark:border-slate-800 p-6">
+        <h2 className="font-black text-[#0a1628] dark:text-white text-sm uppercase tracking-widest mb-1">Replace or Reassign Card</h2>
         <p className="text-xs text-slate-400 mb-3">
           Change the username your public card and profile use. Your old link will stop working immediately.
         </p>
         <div className="flex items-center gap-2 max-w-sm">
           <span className="text-xs text-slate-400 shrink-0">/connect/</span>
           <input defaultValue={card.username} id="cc-username" className={inp} />
-          <button onClick={async () => {
-            const val = (document.getElementById("cc-username") as HTMLInputElement).value;
-            const res = await fetch("/api/dashboard/connect-card", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username: val }) });
-            if (res.ok) await load(); else { const d = await res.json(); alert(d.error ?? "Could not update username"); }
-          }} className="shrink-0 text-xs font-bold bg-slate-100 hover:bg-slate-200 px-4 py-2.5 rounded-xl">Save</button>
+          <button
+            onClick={async () => {
+              const val = (document.getElementById("cc-username") as HTMLInputElement).value;
+              const res = await fetch("/api/dashboard/connect-card", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username: val }),
+              });
+              if (res.ok) await load();
+              else {
+                const d = await res.json();
+                alert(d.error ?? "Could not update username");
+              }
+            }}
+            className="shrink-0 text-xs font-bold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-[#0a1628] dark:text-white px-4 py-2.5 rounded-xl"
+          >
+            Save
+          </button>
         </div>
       </div>
 
       <div className="flex justify-end sticky bottom-4">
-        <button onClick={save} disabled={saving}
-          className="flex items-center gap-2 bg-[#0a1628] text-white font-bold text-sm px-6 py-3 rounded-full hover:bg-[#1a3a6b] transition-all disabled:opacity-50 shadow-lg">
-          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : (saved ? <Check className="w-4 h-4" /> : null)}
+        <button
+          onClick={save}
+          disabled={saving}
+          className="flex items-center gap-2 bg-[#0a1628] dark:bg-amber-500 text-white dark:text-[#0a1628] font-bold text-sm px-6 py-3 rounded-full hover:bg-[#1a3a6b] dark:hover:bg-amber-400 transition-all disabled:opacity-50 shadow-lg"
+        >
+          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : saved ? <Check className="w-4 h-4" /> : null}
           {saving ? "Saving…" : saved ? "Saved!" : "Save Changes"}
         </button>
       </div>

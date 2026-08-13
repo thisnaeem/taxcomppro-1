@@ -6,7 +6,7 @@ import { useAppSelector } from "@/store/hooks";
 import {
   LayoutDashboard, Users, CheckSquare, BookOpen,
   BarChart2, Calendar, Images, Package, Gift, Bot,
-  CreditCard, ChevronRight, LifeBuoy,
+  CreditCard, ChevronRight, LifeBuoy, GraduationCap,
 } from "lucide-react";
 
 type NavLink = { icon: React.ElementType; label: string; href: string; exact?: boolean };
@@ -35,6 +35,7 @@ const adminLinks: NavLink[] = [
   { icon: Calendar,        label: "Content Calendar",  href: "/admin/content-calendar" },
   { icon: Images,          label: "Media Gallery",     href: "/admin/media-gallery" },
   { icon: Package,         label: "Toolkit Downloads", href: "/admin/toolkit-assets" },
+  { icon: GraduationCap,   label: "Staff Training",    href: "/admin/training" },
   { icon: Gift,            label: "Affiliate",         href: "/admin/affiliate" },
   { icon: Bot,             label: "Atlas AI",          href: "/admin/atlas" },
   { icon: LifeBuoy,        label: "Support Tickets",   href: "/admin/support" },

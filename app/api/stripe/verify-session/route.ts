@@ -3,6 +3,8 @@ import Stripe from "stripe";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import type { SubscriptionTier } from "@prisma/client";
+import { TRAINING_TOOLKIT_IDS, DEFAULT_SEATS, LICENSE_MONTHS } from "@/lib/training";
+import { ensureActiveTrainingVersion } from "@/lib/trainingServer";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
@@ -146,6 +148,25 @@ export async function POST(req: NextRequest) {
     }
 
     resolvedTier = (await prisma.user.findUnique({ where: { id: userId }, select: { tier: true } }))?.tier ?? "FREE";
+
+    // ── ERO Training Center: auto-grant a 5-seat, 12-month staff training license ──
+    // Idempotent (upsert on eroId+toolkitId) so it's safe to run here even if the
+    // webhook already handled it, and it's the only path that fires in local dev
+    // when Stripe webhooks aren't forwarded to localhost.
+    if (type === "toolkit" && toolkitId && TRAINING_TOOLKIT_IDS.has(toolkitId)) {
+      try {
+        await ensureActiveTrainingVersion(toolkitId);
+        const expiresAt = new Date();
+        expiresAt.setMonth(expiresAt.getMonth() + LICENSE_MONTHS);
+        await prisma.trainingLicense.upsert({
+          where: { eroId_toolkitId: { eroId: userId, toolkitId } },
+          create: { eroId: userId, toolkitId, totalSeats: DEFAULT_SEATS, expiresAt },
+          update: {},
+        });
+      } catch (e) {
+        console.error("verify-session: Failed to create training license:", e);
+      }
+    }
   }
 
   // Course one-time purchase — idempotent fallback for webhook

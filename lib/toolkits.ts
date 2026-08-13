@@ -12,6 +12,8 @@ export interface Toolkit {
   popular?: boolean;
   downloadEnvKey: string;
   badgeImage: string;
+  description: string;
+  externalUrl: string;
 }
 
 export interface Bundle {
@@ -28,6 +30,9 @@ export interface Bundle {
   color: string;
   accentColor: string;
   icon: string;
+  badgeImage?: string;
+  description: string;
+  externalUrl: string;
 }
 
 export const TOOLKITS: Toolkit[] = [
@@ -44,6 +49,8 @@ export const TOOLKITS: Toolkit[] = [
     membershipMonths: 2,
     downloadEnvKey: "TOOLKIT_DOWNLOAD_IRS_FINE_DEFENSE",
     badgeImage: "/toolkits-badge/irs-fine-defense.webp",
+    description: "Comprehensive IRS penalty risk reduction tools, practice protection resources, and due diligence compliance forms.",
+    externalUrl: "https://irsfinedefense.taxcomppro.com/",
     features: [
       "Penalty Risk Reduction Tools",
       "Practice Protection Resources",
@@ -69,6 +76,8 @@ export const TOOLKITS: Toolkit[] = [
     membershipMonths: 2,
     downloadEnvKey: "TOOLKIT_DOWNLOAD_30_DAY_TAX_OFFICE",
     badgeImage: "/toolkits-badge/30 DAY TAX OFFICE LAUNCH.webp",
+    description: "Step-by-step 30-day launch plan, legal setup guide, PTIN & EFIN application blueprint, and business banking setup.",
+    externalUrl: "https://30daylaunch.taxcomppro.com/",
     features: [
       "Legal Setup Guide",
       "Business Banking Setup",
@@ -94,6 +103,8 @@ export const TOOLKITS: Toolkit[] = [
     membershipMonths: 2,
     downloadEnvKey: "TOOLKIT_DOWNLOAD_AUDIT_PLAYBOOK",
     badgeImage: "/toolkits-badge/audit-playbok.webp",
+    description: "IRS audit mastery with a first 48-hour action plan, revenue agent interview guidance, and audit file preparation system.",
+    externalUrl: "https://irsfinedefense.taxcomppro.com/",
     features: [
       "First 48-Hour Action Plan",
       "Revenue Agent Interview",
@@ -118,6 +129,8 @@ export const TOOLKITS: Toolkit[] = [
     membershipMonths: 2,
     downloadEnvKey: "TOOLKIT_DOWNLOAD_SCHEDULE_C",
     badgeImage: "/toolkits-badge/SCHEDULE C RECONSTRUCTION.webp",
+    description: "Expense & income reconstruction framework, audit-ready workpapers, vehicle mileage methods, and IRC §162 verification.",
+    externalUrl: "http://schedulecrecon.taxcomppro.com/",
     features: [
       "Step-by-Step Reconstruction Framework",
       "Expense Categorization Blueprint",
@@ -142,6 +155,8 @@ export const TOOLKITS: Toolkit[] = [
     membershipMonths: 0,
     downloadEnvKey: "TOOLKIT_DOWNLOAD_PENALTY_POSTERS",
     badgeImage: "/toolkits-badge/irs-penalty-defense-posters-.webp",
+    description: "Compliance-focused posters, due diligence disclosures, preparer protection statements, and audit readiness education.",
+    externalUrl: "https://irsfinedefense.taxcomppro.com/",
     features: [
       "Due Diligence Disclosures",
       "Preparer Protection Statements",
@@ -167,6 +182,9 @@ export const BUNDLES: Bundle[] = [
     color: "from-amber-500 to-amber-700",
     accentColor: "amber",
     icon: "🏆",
+    badgeImage: "/icon.webp",
+    description: "All 4 tax success toolkits, IRS penalty posters, 3 months Marketplace Plus access, and VIP priority support.",
+    externalUrl: "https://30daylaunch.taxcomppro.com/",
     features: [
       "VIP Community",
       "Marketplace Plus",
@@ -184,7 +202,7 @@ export const BUNDLES: Bundle[] = [
     id: "atlas-elite-bundle",
     name: "Atlas Elite Bundle",
     tagline: "Our Everything for Success Bundle",
-    badge: "Most Value",
+    badge: "Ultimate Package",
     originalPrice: 3999,
     price: 1999,
     membershipTier: "MARKETPLACE_PLUS",
@@ -192,6 +210,9 @@ export const BUNDLES: Bundle[] = [
     color: "from-[#0a1628] to-[#1a3a6b]",
     accentColor: "blue",
     icon: "🤖",
+    badgeImage: "/icon.webp",
+    description: "The complete everything bundle featuring all toolkits, ATLAS Software, 10 AI Bot licenses, and office automation tools.",
+    externalUrl: "https://30daylaunch.taxcomppro.com/",
     features: [
       "VIP Community",
       "Marketplace Plus",

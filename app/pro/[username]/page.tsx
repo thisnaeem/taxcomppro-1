@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, notFound } from "next/navigation";
 import Link from "next/link";
 import { Loader2, UserPlus } from "lucide-react";
 import { useSession } from "@/lib/auth-client";
@@ -40,12 +40,7 @@ export default function ProProfileGatePage() {
   }
 
   if (card === null) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#f4f6fb] px-4 text-center">
-        <p className="text-lg font-black text-[#0a1628] mb-2">Profile not found</p>
-        <Link href="/find-a-pro" className="text-[#d4a017] font-bold text-sm hover:underline">Browse the Pro Directory instead</Link>
-      </div>
-    );
+    notFound();
   }
 
   // Logged out — show the join/login prompt, per spec, without trapping the visitor.

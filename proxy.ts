@@ -14,10 +14,33 @@ const PUBLIC_PAGES = new Set([
   "/contact",
   "/courses",
   "/toolkits",
+  "/tools",
+  "/marketplace",
+  "/communities",
+  "/find-a-pro",
+  "/pro-hub",
+  "/pro-marketing",
+  "/pro-talks",
+  "/connect",
+  "/verify-certificate",
+  "/security",
+  "/apply-professional",
 ]);
 
 // Prefix-based public paths (any sub-path is also public)
-const PUBLIC_PREFIXES = ["/courses/", "/toolkits/"];
+const PUBLIC_PREFIXES = [
+  "/courses/",
+  "/toolkits/",
+  "/tools/",
+  "/marketplace/",
+  "/communities/",
+  "/find-a-pro/",
+  "/pro-hub/",
+  "/pro-talks/",
+  "/connect/",
+  "/pro/",
+  "/verify-certificate/",
+];
 
 // Auth pages — logged-in users get bounced away from these
 const AUTH_PAGES = ["/login", "/register"];
@@ -31,6 +54,16 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith("/_next/") ||
     pathname.includes(".")
   ) {
+    return NextResponse.next();
+  }
+
+  // Do not issue middleware redirects for client prefetch requests
+  const isPrefetch =
+    request.headers.get("next-router-prefetch") === "1" ||
+    request.headers.get("purpose") === "prefetch" ||
+    request.headers.get("x-middleware-prefetch") === "1";
+
+  if (isPrefetch) {
     return NextResponse.next();
   }
 

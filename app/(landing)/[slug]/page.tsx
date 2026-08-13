@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, notFound } from "next/navigation";
 import Link from "next/link";
 import { useAppSelector } from "@/store/hooks";
 import { Loader2, Download, ExternalLink } from "lucide-react";
@@ -82,16 +82,16 @@ export default function ListingDetailPage() {
   const { slug } = useParams<{ slug: string }>();
   const user     = useAppSelector(s => s.auth.user);
 
-  const [listing,    setListing]    = useState<Listing | null>(null);
-  const [loading,    setLoading]    = useState(true);
-  const [notFound,   setNotFound]   = useState(false);
-  const [copied,     setCopied]     = useState(false);
-  const [purchasing, setPurchasing] = useState(false);
+  const [listing,     setListing]     = useState<Listing | null>(null);
+  const [loading,     setLoading]     = useState(true);
+  const [isNotFound,  setIsNotFound]  = useState(false);
+  const [copied,      setCopied]      = useState(false);
+  const [purchasing,  setPurchasing]  = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
     fetch(`/api/listing/${slug}`)
-      .then(r => { if (!r.ok) { setNotFound(true); return null; } return r.json(); })
+      .then(r => { if (!r.ok) { setIsNotFound(true); return null; } return r.json(); })
       .then(data => {
         if (data) {
           // Check if URL has ?success=true from Stripe checkout
@@ -101,7 +101,7 @@ export default function ListingDetailPage() {
           setListing(data);
         }
       })
-      .catch(() => setNotFound(true))
+      .catch(() => setIsNotFound(true))
       .finally(() => setLoading(false));
   }, [slug]);
 
@@ -137,19 +137,9 @@ export default function ListingDetailPage() {
 
   if (loading) return <SkeletonDetail />;
 
-  if (notFound || !listing) return (
-    <div className="min-h-screen bg-slate-100 flex items-center justify-center text-center px-4">
-      <div className="bg-white rounded-2xl p-12 max-w-md">
-        <ShoppingBag01Icon className="w-16 h-16 text-slate-200 mx-auto mb-4" />
-        <h1 className="text-xl font-black text-[#0a1628] mb-2">Listing Not Found</h1>
-        <p className="text-slate-400 text-sm mb-5">This listing may have been removed or is pending approval.</p>
-        <Link href="/marketplace"
-          className="inline-flex items-center gap-2 bg-[#0a1628] text-white font-bold text-sm px-5 py-2.5 rounded-xl hover:bg-[#1a3a6b] transition-all">
-          <ArrowLeft01Icon className="w-4 h-4" /> Back to Marketplace
-        </Link>
-      </div>
-    </div>
-  );
+  if (isNotFound || !listing) {
+    notFound();
+  }
 
   const cfg  = CAT_CONFIG[listing.category] ?? DEFAULT_CFG;
   const Icon = cfg.icon;

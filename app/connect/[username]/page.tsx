@@ -135,7 +135,7 @@ export default function TapCardPage() {
           {card.logoUrl && (
             <img src={card.logoUrl} alt="" className="w-14 h-14 object-contain mx-auto mb-3 rounded-xl bg-white/90 p-1.5" />
           )}
-          <div className="w-24 h-24 rounded-full mx-auto mb-4 overflow-hidden border-4 border-white/20 shadow-xl bg-white/10 flex items-center justify-center">
+          <div className="w-24 h-24 rounded-2xl mx-auto mb-4 overflow-hidden border-4 border-white/20 shadow-xl bg-white/10 flex items-center justify-center">
             {card.image ? <img src={card.image} alt={card.name} className="w-full h-full object-cover" /> : <span className="text-3xl font-black">{card.name[0]}</span>}
           </div>
           <h1 className="text-2xl font-black">{card.name}</h1>

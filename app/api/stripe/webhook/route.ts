@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { prisma } from "@/lib/prisma";
 import type { SubscriptionTier } from "@prisma/client";
+import { TRAINING_TOOLKIT_IDS, DEFAULT_SEATS, LICENSE_MONTHS } from "@/lib/training";
+import { ensureActiveTrainingVersion } from "@/lib/trainingServer";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
@@ -32,9 +34,33 @@ export async function POST(req: NextRequest) {
       const months = Number(membershipMonths ?? 2);
       const customerId = session.customer as string;
 
-      await prisma.toolkitPurchase.create({
-        data: { userId, toolkitId, stripeSessionId: session.id, membershipGranted: true, membershipTier: mTier, membershipMonths: months },
-      });
+      // Idempotent: the /toolkits/success page also calls verify-session as a
+      // fallback for local dev / delayed webhook delivery, so this record may
+      // already exist by the time this event arrives. Guard against the
+      // unique stripeSessionId constraint so a race never crashes the
+      // handler before it reaches the training-license grant below.
+      const alreadyRecorded = await prisma.toolkitPurchase.findFirst({ where: { stripeSessionId: session.id } });
+      if (!alreadyRecorded) {
+        await prisma.toolkitPurchase.create({
+          data: { userId, toolkitId, stripeSessionId: session.id, membershipGranted: true, membershipTier: mTier, membershipMonths: months },
+        });
+      }
+
+      // ── ERO Training Center: auto-grant a 5-seat, 12-month staff training license ──
+      if (TRAINING_TOOLKIT_IDS.has(toolkitId)) {
+        try {
+          await ensureActiveTrainingVersion(toolkitId);
+          const expiresAt = new Date();
+          expiresAt.setMonth(expiresAt.getMonth() + LICENSE_MONTHS);
+          await prisma.trainingLicense.upsert({
+            where: { eroId_toolkitId: { eroId: userId, toolkitId } },
+            create: { eroId: userId, toolkitId, totalSeats: DEFAULT_SEATS, expiresAt },
+            update: {}, // don't reset an existing license if somehow purchased twice
+          });
+        } catch (e) {
+          console.error("Failed to create training license:", e);
+        }
+      }
 
       // Only grant membership if this toolkit includes it
       if (months > 0) {
@@ -99,6 +125,24 @@ export async function POST(req: NextRequest) {
       });
     }
 
+
+    // ── Additional staff-training seats ────────────────────
+    if (type === "training_seats" && userId) {
+      const { licenseId, seats } = session.metadata ?? {};
+      const seatCount = Number(seats ?? 0);
+      if (licenseId && seatCount > 0) {
+        const already = await prisma.trainingSeatPurchase.findUnique({ where: { stripeSessionId: session.id } });
+        if (!already) {
+          await prisma.trainingSeatPurchase.create({
+            data: { licenseId, seats: seatCount, priceUsd: (session.amount_total ?? 0) / 100, stripeSessionId: session.id },
+          });
+          await prisma.trainingLicense.update({ where: { id: licenseId }, data: { totalSeats: { increment: seatCount } } });
+          await prisma.notification.create({
+            data: { userId, type: "SYSTEM", title: "✅ Training Seats Added", message: `${seatCount} additional staff training seat(s) have been added to your license.`, link: "/training-center" },
+          }).catch(() => {});
+        }
+      }
+    }
 
     // ── Pro Talk Host purchase (one-time $99.99) ──────────────────────
     if (type === "pro_talk_host" && userId) {

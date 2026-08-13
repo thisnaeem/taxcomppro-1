@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, notFound } from "next/navigation";
 import Link from "next/link";
 import { useAppSelector } from "@/store/hooks";
 import {
@@ -34,18 +34,18 @@ export default function MemberProfilePage() {
   const router  = useRouter();
   const me      = useAppSelector(s => s.auth.user);
 
-  const [profile,  setProfile]  = useState<PublicUser | null>(null);
-  const [loading,  setLoading]  = useState(true);
-  const [notFound, setNotFound] = useState(false);
-  const [connState, setConnState] = useState<"idle" | "pending" | "connected" | "sending">("idle");
+  const [profile,    setProfile]    = useState<PublicUser | null>(null);
+  const [loading,    setLoading]    = useState(true);
+  const [isNotFound, setIsNotFound] = useState(false);
+  const [connState,  setConnState]  = useState<"idle" | "pending" | "connected" | "sending">("idle");
 
   useEffect(() => {
     if (!id) return;
     if (me?.id === id) { router.replace("/profile"); return; }
     fetch(`/api/user/${id}`)
-      .then(r => { if (r.status === 404) { setNotFound(true); return null; } return r.json(); })
+      .then(r => { if (r.status === 404) { setIsNotFound(true); return null; } return r.json(); })
       .then(d => { if (d) setProfile(d); })
-      .catch(() => setNotFound(true))
+      .catch(() => setIsNotFound(true))
       .finally(() => setLoading(false));
   }, [id, me, router]);
 
@@ -87,15 +87,9 @@ export default function MemberProfilePage() {
     </div>
   );
 
-  if (notFound || !profile) return (
-    <div className="min-h-screen bg-[#f4f6fb] flex items-center justify-center px-4">
-      <div className="text-center">
-        <p className="text-2xl font-black text-[#0a1628] mb-2">Profile Not Found</p>
-        <p className="text-slate-500 text-sm mb-6">This member's profile doesn't exist or has been removed.</p>
-        <button onClick={() => router.back()} className="px-6 py-2.5 bg-[#0a1628] text-white font-bold rounded-full hover:bg-[#1a3a6b] transition-all text-sm">Go Back</button>
-      </div>
-    </div>
-  );
+  if (isNotFound || !profile) {
+    notFound();
+  }
 
   const tierInfo = TIER_BADGE[profile.tier] ?? TIER_BADGE["FREE"];
   const isPro    = profile.role === "PROFESSIONAL";
