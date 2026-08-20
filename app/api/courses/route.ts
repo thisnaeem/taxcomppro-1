@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
       ...(level    ? { level: level as "BEGINNER" | "INTERMEDIATE" | "ADVANCED" } : {}),
     },
     include: {
-      instructor: { select: { id: true, name: true, image: true, headline: true } },
+      instructor: { select: { id: true, name: true, image: true, headline: true, role: true } },
       _count:     { select: { enrollments: true, sections: true } },
       sections:   { include: { _count: { select: { lessons: true } } } },
     },

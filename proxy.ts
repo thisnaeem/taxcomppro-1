@@ -25,6 +25,8 @@ const PUBLIC_PAGES = new Set([
   "/verify-certificate",
   "/security",
   "/apply-professional",
+  "/affiliate",
+  "/upgrade",
 ]);
 
 // Prefix-based public paths (any sub-path is also public)
@@ -40,6 +42,8 @@ const PUBLIC_PREFIXES = [
   "/connect/",
   "/pro/",
   "/verify-certificate/",
+  "/affiliate/",
+  "/upgrade/",
 ];
 
 // Auth pages — logged-in users get bounced away from these

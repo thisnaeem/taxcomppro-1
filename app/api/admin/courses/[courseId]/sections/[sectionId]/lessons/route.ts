@@ -7,7 +7,9 @@ async function requireAdmin() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session?.user) return null;
   const dbUser = await prisma.user.findUnique({ where: { id: session.user.id } });
-  if (!dbUser || dbUser.role !== "ADMIN") return null;
+  if (!dbUser) return null;
+  const canManage = dbUser.role === "ADMIN" || dbUser.tier === "MARKETPLACE" || dbUser.tier === "MARKETPLACE_PLUS" || dbUser.role === "PROFESSIONAL";
+  if (!canManage) return null;
   return dbUser;
 }
 
@@ -19,7 +21,7 @@ export async function POST(
   if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const { sectionId } = await params;
-  const { title, description, contentType, videoUrl, textContent, duration, order, isFree } = await req.json();
+  const { title, description, contentType, videoUrl, textContent, downloadUrl, downloadName, duration, order, isFree } = await req.json();
 
   if (!title?.trim()) return NextResponse.json({ error: "Title required" }, { status: 400 });
 
@@ -30,14 +32,16 @@ export async function POST(
 
   const lesson = await prisma.lesson.create({
     data: {
-      title:       title.trim(),
-      description: description?.trim()  || null,
-      contentType: contentType          ?? "VIDEO",
-      videoUrl:    videoUrl?.trim()     || null,
-      textContent: textContent?.trim()  || null,
-      duration:    duration             ?? 0,
-      order:       order                ?? (lastLesson ? lastLesson.order + 1 : 0),
-      isFree:      isFree               ?? false,
+      title:        title.trim(),
+      description:  description?.trim()   || null,
+      contentType:  contentType           ?? "VIDEO",
+      videoUrl:     videoUrl?.trim()      || null,
+      textContent:  textContent?.trim()   || null,
+      downloadUrl:  downloadUrl?.trim()   || null,
+      downloadName: downloadName?.trim()  || null,
+      duration:     duration              ?? 0,
+      order:        order                 ?? (lastLesson ? lastLesson.order + 1 : 0),
+      isFree:       isFree                ?? false,
       sectionId,
     },
   });

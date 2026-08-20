@@ -7,7 +7,9 @@ async function requireAdmin() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session?.user) return null;
   const dbUser = await prisma.user.findUnique({ where: { id: session.user.id } });
-  if (!dbUser || dbUser.role !== "ADMIN") return null;
+  if (!dbUser) return null;
+  const canManage = dbUser.role === "ADMIN" || dbUser.tier === "MARKETPLACE" || dbUser.tier === "MARKETPLACE_PLUS" || dbUser.role === "PROFESSIONAL";
+  if (!canManage) return null;
   return dbUser;
 }
 

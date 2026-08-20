@@ -65,7 +65,7 @@ export default function AdminTrainingPage() {
     <div className="max-w-4xl mx-auto text-white pb-16">
       <div className="flex items-center gap-3 mb-6">
         <div className="w-10 h-10 rounded-xl bg-[#d4a017]/20 flex items-center justify-center"><GraduationCap className="w-5 h-5 text-[#d4a017]" /></div>
-        <div><h1 className="text-lg font-black">Staff Training — IRS Fine Defense Toolkit</h1><p className="text-xs text-white/40">Manage the video, settings, and question bank for the active training version.</p></div>
+        <div><h1 className="text-2xl font-black text-white">Staff Training — IRS Fine Defense Toolkit</h1><p className="text-sm text-slate-400 mt-0.5">Manage the video, settings, and question bank for the active training version.</p></div>
       </div>
 
       <div className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-6 space-y-4">

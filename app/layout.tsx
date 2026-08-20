@@ -37,7 +37,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${urbanist.variable} dark:bg-[#0f172a]`} suppressHydrationWarning>
+    <html lang="en" className={`${urbanist.variable} dark:bg-[#0f172a]`} data-scroll-behavior="smooth" suppressHydrationWarning>
       <body className="bg-white dark:bg-[#0f172a] dark:text-slate-100" suppressHydrationWarning>
         <ThemeProvider>
           <ReduxProvider>
@@ -51,3 +51,4 @@ export default function RootLayout({
     </html>
   );
 }
+

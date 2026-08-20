@@ -181,6 +181,8 @@ model User {
   forumComments       ForumComment[]
   forumVotes          ForumVote[]
   marketplacePurchases MarketplacePurchase[]
+  sellerCoupons        MarketplaceCoupon[]     @relation("SellerCoupons")
+  sellerReferrals      MarketplaceReferral[]   @relation("SellerReferrals")
   digitalCard         DigitalCard?
   trainingLicenses     TrainingLicense[]
   eroInvitationsSent   StaffInvitation[] @relation("EroInvitations")
@@ -255,8 +257,49 @@ model MarketplaceListing {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   featuredRequests FeaturedListingRequest[]
   purchases        MarketplacePurchase[]
+  coupons          MarketplaceCoupon[]
+  referrals        MarketplaceReferral[]
 
   @@map("marketplace_listings")
+}
+
+model MarketplaceCoupon {
+  id            String             @id @default(cuid())
+  code          String
+  discountType  String             @default("PERCENT") // "PERCENT" | "FIXED"
+  discountValue Float              // e.g. 20 (for 20%) or 15 (for $15)
+  maxUses       Int?
+  usedCount     Int                @default(0)
+  expiresAt     DateTime?
+  isActive      Boolean            @default(true)
+  sellerId      String
+  listingId     String?            // null = all listings of seller
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  seller        User               @relation("SellerCoupons", fields: [sellerId], references: [id], onDelete: Cascade)
+  listing       MarketplaceListing? @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@unique([sellerId, code])
+  @@map("marketplace_coupons")
+}
+
+model MarketplaceReferral {
+  id             String             @id @default(cuid())
+  code           String             @unique
+  sellerId       String
+  listingId      String?
+  clicks         Int                @default(0)
+  conversions    Int                @default(0)
+  earningsUsd    Float              @default(0)
+  commissionRate Float              @default(10) // 10%
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  seller         User               @relation("SellerReferrals", fields: [sellerId], references: [id], onDelete: Cascade)
+  listing        MarketplaceListing? @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@map("marketplace_referrals")
 }
 
 model MarketplacePurchase {
@@ -482,6 +525,8 @@ model Course {
   learningOutcomes String[]
   requirements     String[]
   totalDuration Int          @default(0)
+  downloadUrl   String?
+  downloadName  String?
   instructorId  String
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
@@ -514,6 +559,8 @@ model Lesson {
   contentType LessonContentType @default(VIDEO)
   videoUrl    String?
   textContent String?
+  downloadUrl String?
+  downloadName String?
   duration    Int               @default(0)
   order       Int
   isFree      Boolean           @default(false)
@@ -614,15 +661,19 @@ model CourseRating {
 }
 
 model AffiliateProfile {
-  id             String   @id @default(cuid())
-  userId         String   @unique
-  code           String   @unique
-  isActive       Boolean  @default(true)
-  totalEarned    Float    @default(0)
-  totalPaid      Float    @default(0)
-  pendingBalance Float    @default(0)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id                   String   @id @default(cuid())
+  userId               String   @unique
+  code                 String   @unique
+  isActive             Boolean  @default(true)
+  totalEarned          Float    @default(0)
+  totalPaid            Float    @default(0)
+  pendingBalance       Float    @default(0)
+  customCommissionRate Float?
+  customVip            Float?
+  customMarketplace    Float?
+  customPlus           Float?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 
   user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   referrals AffiliateReferral[]
@@ -902,6 +953,8 @@ model DigitalCard {
   userId    String  @unique
   username  String  @unique
 
+  isPurchased Boolean   @default(false)
+  stripeSessionId String?
   isActivated Boolean   @default(false)
   activatedAt DateTime?
 
@@ -1135,4 +1188,352 @@ model TrainingCertificate {
 
   @@map("training_certificates")
 }
+
+// ── Atlas Academy Models ─────────────────────────────────────────────────────
+
+model AcademyProfile {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clerkUserId  String   @unique @map("clerk_user_id")
+  tcpUserId    String?  @unique @map("tcp_user_id")
+  email        String
+  fullName     String   @map("full_name")
+  role         String   @default("LEARNER")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at")
+
+  organizations       AcademyOrganization[]    @relation("OrganizationOwner")
+  memberships         AcademyMembership[]
+  purchasedLicenses   AcademyLicense[]         @relation("PurchaserProfile")
+  invitationsSent     AcademyInvitation[]      @relation("InvitedBy")
+  assignments         AcademyAssignment[]
+  exerciseSubmissions AcademyExerciseSubmission[]
+  courseDayProgress   AcademyCourseDayProgress[]
+  auditLogs           AcademyAuditLog[]        @relation("ActorProfile")
+
+  @@map("academy_profiles")
+}
+
+model AcademyOrganization {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name           String
+  ownerProfileId String   @map("owner_profile_id") @db.Uuid
+  logoUrl        String?  @map("logo_url")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  owner       AcademyProfile      @relation("OrganizationOwner", fields: [ownerProfileId], references: [id])
+  locations   AcademyLocation[]
+  memberships AcademyMembership[]
+  licenses    AcademyLicense[]
+  invitations AcademyInvitation[]
+  auditLogs   AcademyAuditLog[]
+
+  @@map("academy_organizations")
+}
+
+model AcademyLocation {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  name           String
+  city           String?
+  state          String?
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  organization AcademyOrganization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  memberships  AcademyMembership[]
+  invitations  AcademyInvitation[]
+  assignments  AcademyAssignment[]
+
+  @@unique([organizationId, name])
+  @@map("academy_locations")
+}
+
+model AcademyMembership {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  profileId      String   @map("profile_id") @db.Uuid
+  role           String
+  locationId     String?  @map("location_id") @db.Uuid
+  joinedAt       DateTime @default(now()) @map("joined_at")
+
+  organization AcademyOrganization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  profile      AcademyProfile      @relation(fields: [profileId],      references: [id], onDelete: Cascade)
+  location     AcademyLocation?    @relation(fields: [locationId],     references: [id])
+
+  @@unique([organizationId, profileId])
+  @@map("academy_memberships")
+}
+
+model AcademyProduct {
+  id          String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  productKey  String  @unique @map("product_key")
+  title       String
+  productType String  @map("product_type")
+  active      Boolean @default(true)
+
+  trainingVersions  AcademyTrainingVersion[]
+  licenses          AcademyLicense[]
+  courseDayProgress AcademyCourseDayProgress[]
+
+  @@map("academy_products")
+}
+
+model AcademyLicense {
+  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId     String    @map("organization_id") @db.Uuid
+  productId          String    @map("product_id") @db.Uuid
+  purchaserProfileId String    @map("purchaser_profile_id") @db.Uuid
+  stripeSessionId    String?   @unique @map("stripe_session_id")
+  seatsPurchased     Int       @map("seats_purchased")
+  status             String    @default("ACTIVE")
+  startsAt           DateTime  @default(now()) @map("starts_at")
+  expiresAt          DateTime? @map("expires_at")
+  createdAt          DateTime  @default(now()) @map("created_at")
+
+  organization AcademyOrganization @relation(fields: [organizationId],     references: [id])
+  product      AcademyProduct      @relation(fields: [productId],           references: [id])
+  purchaser    AcademyProfile      @relation("PurchaserProfile", fields: [purchaserProfileId], references: [id])
+  invitations  AcademyInvitation[]
+  assignments  AcademyAssignment[]
+
+  @@map("academy_licenses")
+}
+
+model AcademyTrainingVersion {
+  id                   String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  productId            String   @map("product_id") @db.Uuid
+  versionKey           String   @map("version_key")
+  title                String
+  passMark             Int      @default(80)  @map("pass_mark")
+  maxAttempts          Int      @default(2)   @map("max_attempts")
+  requiredWatchPercent Int      @default(90)  @map("required_watch_percent")
+  acknowledgementText  String   @map("acknowledgement_text")
+  active               Boolean  @default(true)
+  createdAt            DateTime @default(now()) @map("created_at")
+
+  product     AcademyProduct          @relation(fields: [productId], references: [id])
+  modules     AcademyLearningModule[]
+  assignments AcademyAssignment[]
+  questions   AcademyQuestion[]
+
+  @@unique([productId, versionKey])
+  @@map("academy_training_versions")
+}
+
+model AcademyInvitation {
+  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId     String    @map("organization_id") @db.Uuid
+  licenseId          String    @map("license_id") @db.Uuid
+  invitedByProfileId String    @map("invited_by_profile_id") @db.Uuid
+  fullName           String    @map("full_name")
+  email              String
+  token              String    @unique
+  role               String    @default("PREPARER")
+  locationId         String?   @map("location_id") @db.Uuid
+  status             String    @default("SENT")
+  expiresAt          DateTime  @map("expires_at")
+  acceptedAt         DateTime? @map("accepted_at")
+  createdAt          DateTime  @default(now()) @map("created_at")
+
+  organization AcademyOrganization @relation(fields: [organizationId],    references: [id], onDelete: Cascade)
+  license      AcademyLicense      @relation(fields: [licenseId],          references: [id], onDelete: Cascade)
+  invitedBy    AcademyProfile      @relation("InvitedBy", fields: [invitedByProfileId], references: [id])
+  location     AcademyLocation?    @relation(fields: [locationId],         references: [id])
+  assignments  AcademyAssignment[]
+
+  @@map("academy_invitations")
+}
+
+model AcademyAssignment {
+  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  licenseId         String    @map("license_id") @db.Uuid
+  trainingVersionId String    @map("training_version_id") @db.Uuid
+  profileId         String?   @map("profile_id") @db.Uuid
+  invitationId      String?   @map("invitation_id") @db.Uuid
+  locationId        String?   @map("location_id") @db.Uuid
+  status            String    @default("INVITATION_SENT")
+  assignedAt        DateTime  @default(now()) @map("assigned_at")
+  completedAt       DateTime? @map("completed_at")
+
+  license         AcademyLicense         @relation(fields: [licenseId],         references: [id], onDelete: Cascade)
+  trainingVersion AcademyTrainingVersion @relation(fields: [trainingVersionId], references: [id])
+  profile         AcademyProfile?        @relation(fields: [profileId],         references: [id])
+  invitation      AcademyInvitation?     @relation(fields: [invitationId],      references: [id])
+  location        AcademyLocation?       @relation(fields: [locationId],        references: [id])
+  videoProgress   AcademyVideoProgress?
+  attempts        AcademyAssessmentAttempt[]
+  acknowledgement AcademyAcknowledgement?
+  certificate     AcademyCertificate?
+  reminders       AcademyReminder[]
+
+  @@unique([licenseId, profileId, trainingVersionId])
+  @@map("academy_assignments")
+}
+
+model AcademyVideoProgress {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  assignmentId    String    @unique @map("assignment_id") @db.Uuid
+  watchedPercent  Int       @default(0) @map("watched_percent")
+  furthestSeconds Int       @default(0) @map("furthest_seconds")
+  positionSeconds Int       @default(0) @map("position_seconds")
+  completedAt     DateTime? @map("completed_at")
+  updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  assignment AcademyAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+
+  @@map("academy_video_progress")
+}
+
+model AcademyQuestion {
+  id                String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  trainingVersionId String  @map("training_version_id") @db.Uuid
+  prompt            String
+  options           Json
+  correctOption     Int     @map("correct_option")
+  explanation       String?
+  active            Boolean @default(true)
+
+  trainingVersion AcademyTrainingVersion @relation(fields: [trainingVersionId], references: [id], onDelete: Cascade)
+
+  @@map("academy_questions")
+}
+
+model AcademyAssessmentAttempt {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  assignmentId  String    @map("assignment_id") @db.Uuid
+  attemptNumber Int       @map("attempt_number")
+  questionIds   Json      @map("question_ids")
+  answers       Json?
+  score         Int?
+  passed        Boolean?
+  startedAt     DateTime  @default(now()) @map("started_at")
+  completedAt   DateTime? @map("completed_at")
+
+  assignment AcademyAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+
+  @@unique([assignmentId, attemptNumber])
+  @@map("academy_assessment_attempts")
+}
+
+model AcademyAcknowledgement {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  assignmentId  String   @unique @map("assignment_id") @db.Uuid
+  statementHash String   @map("statement_hash")
+  signerName    String   @map("signer_name")
+  signerIp      String?  @map("signer_ip")
+  userAgent     String?  @map("user_agent")
+  signedAt      DateTime @default(now()) @map("signed_at")
+
+  assignment AcademyAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+
+  @@map("academy_acknowledgements")
+}
+
+model AcademyCertificate {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  assignmentId      String   @unique @map("assignment_id") @db.Uuid
+  certificateNumber String   @unique @map("certificate_number")
+  issuedAt          DateTime @default(now()) @map("issued_at")
+  status            String   @default("ACTIVE")
+
+  assignment AcademyAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+
+  @@map("academy_certificates")
+}
+
+model AcademyAuditLog {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String?  @map("organization_id") @db.Uuid
+  actorProfileId String?  @map("actor_profile_id") @db.Uuid
+  action         String
+  entityType     String   @map("entity_type")
+  entityId       String   @map("entity_id")
+  metadata       Json?
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  organization AcademyOrganization? @relation(fields: [organizationId], references: [id])
+  actor        AcademyProfile?      @relation("ActorProfile", fields: [actorProfileId], references: [id])
+
+  @@map("academy_audit_logs")
+}
+
+model AcademyReminder {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  assignmentId String    @map("assignment_id") @db.Uuid
+  reminderType String    @default("TRAINING_INCOMPLETE") @map("reminder_type")
+  scheduledFor DateTime  @map("scheduled_for")
+  status       String    @default("SCHEDULED")
+  sentAt       DateTime? @map("sent_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  assignment AcademyAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+
+  @@map("academy_reminders")
+}
+
+model AcademyLearningModule {
+  id                String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  trainingVersionId String  @map("training_version_id") @db.Uuid
+  moduleKey         String  @map("module_key")
+  title             String
+  description       String?
+  position          Int     @default(1)
+
+  trainingVersion AcademyTrainingVersion @relation(fields: [trainingVersionId], references: [id], onDelete: Cascade)
+  lessons         AcademyLearningLesson[]
+
+  @@unique([trainingVersionId, moduleKey])
+  @@map("academy_learning_modules")
+}
+
+model AcademyLearningLesson {
+  id              String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  moduleId        String  @map("module_id") @db.Uuid
+  lessonKey       String  @map("lesson_key")
+  title           String
+  lessonType      String  @map("lesson_type")
+  durationMinutes Int     @default(10) @map("duration_minutes")
+  content         Json?
+  position        Int     @default(1)
+
+  module      AcademyLearningModule       @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  submissions AcademyExerciseSubmission[]
+
+  @@unique([moduleId, lessonKey])
+  @@map("academy_learning_lessons")
+}
+
+model AcademyExerciseSubmission {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  lessonId       String   @map("lesson_id") @db.Uuid
+  profileId      String   @map("profile_id") @db.Uuid
+  selectedOption Int      @map("selected_option")
+  correct        Boolean
+  completedAt    DateTime @default(now()) @map("completed_at")
+
+  lesson  AcademyLearningLesson @relation(fields: [lessonId],  references: [id], onDelete: Cascade)
+  profile AcademyProfile        @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@unique([lessonId, profileId])
+  @@map("academy_exercise_submissions")
+}
+
+model AcademyCourseDayProgress {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  profileId   String    @map("profile_id") @db.Uuid
+  productId   String    @map("product_id") @db.Uuid
+  dayNumber   Int       @map("day_number")
+  reflection  String?
+  status      String    @default("IN_PROGRESS")
+  startedAt   DateTime  @default(now()) @map("started_at")
+  completedAt DateTime? @map("completed_at")
+  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  profile AcademyProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  product AcademyProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([profileId, productId, dayNumber])
+  @@map("academy_course_day_progress")
+}
+
 

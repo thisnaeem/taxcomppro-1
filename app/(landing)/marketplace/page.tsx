@@ -61,7 +61,7 @@ const CAT_CONFIG: Record<string, { label: string; icon: React.ElementType; pill:
   SERVICE:  { label: "Service",  icon: Briefcase01Icon,  pill: "bg-blue-100 text-blue-700",      bg: "bg-blue-50"    },
   PRODUCT:  { label: "Product",  icon: ShoppingBag01Icon,pill: "bg-amber-100 text-amber-700",    bg: "bg-amber-50"   },
   NETWORK:  { label: "Network",  icon: GlobeIcon,        pill: "bg-emerald-100 text-emerald-700", bg: "bg-emerald-50" },
-  TRAINING: { label: "Training", icon: School01Icon,     pill: "bg-purple-100 text-purple-700",  bg: "bg-purple-50"  },
+  TRAINING: { label: "Course", icon: School01Icon,     pill: "bg-purple-100 text-purple-700",  bg: "bg-purple-50"  },
 };
 const DEFAULT_CFG = { label: "Other", icon: BookOpen01Icon, pill: "bg-slate-100 text-slate-600", bg: "bg-slate-50" };
 const CATS: Category[] = ["ALL", "SERVICE", "PRODUCT", "NETWORK", "TRAINING"];

@@ -3,7 +3,6 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
-import { useSession } from "@/lib/auth-client";
 import {
   Scale, ShoppingBag, Users, GraduationCap, Mic, Lock,
   ArrowRight, CheckCircle2, TrendingUp, Star, Shield,
@@ -22,35 +21,35 @@ const features = [
   { img: "/features/professional_network.webp", title: "Professional Network",   desc: "Connect with business experts and tax professionals nationwide" },
   { img: "/features/markeplace.webp",           title: "Marketplace",             desc: "Buy and sell services, products, trainings, and courses" },
   { img: "/features/communitues.webp",          title: "Communities",             desc: "Join or create communities around your niche" },
-  { img: "/icon.webp",               title: "ATLAS AI Tax Assistant",        desc: "AI-powered tax assistant for real-time tax guidance and compliance" },
-  { img: "/features/Live Sessions.webp",        title: "Live Sessions",           
+  { img: "/icon.webp",                          title: "ATLAS AI Tax Assistant",  desc: "AI-powered tax assistant for real-time tax guidance and compliance" },
+  { img: "/features/live-sessions.webp",        title: "Live Sessions",           
     desc: (<>
       Host and attend live audio/video sessions with verified professionals. 
     </>) },
-  { img: "/features/MembersOnly Access.webp",   title: "Members-Only Access",     desc: "Secure, verified community with gated content and private forums" },
+  { img: "/features/members-only-access.webp",   title: "Members-Only Access",     desc: "Secure, verified community with gated content and private forums" },
 ];
 
 const plans = [
   {
-    name: "Basic Members Only", price: "FREE", period: "", img: "/free.webp",
+    name: "Basic Members Only", price: "FREE", period: "", img: "/plan-basic.webp",
     popular: false, badge: null, savings: null,
     features: ["Email Support","Marketplace Access (View)","Member Directory Access","Communities Access (View)","Marketplace Feed Access","Secure Members-Only Environment"],
     cta: "Join For Free", href: "/register",
   },
   {
-    name: "VIP Members Only", price: "$39.99", period: "/month", img: "/vip.webp",
+    name: "VIP Members Only", price: "$39.99", period: "/month", img: "/plan-vip.webp",
     popular: false, badge: "2 Months FREE", savings: null,
     features: ["Priority Email Support","Private Messaging & DMs","Training & Educational Support","Marketplace Feed Interaction","Communities Interaction","Private Discussion Forums","Ongoing Education & Training","Ability to Connect","Pro Training Access","ATLAS AI Tax Bot","Professional Networking"],
     cta: "Join Now", href: "/register?plan=VIP",
   },
   {
-    name: "VIP + Marketplace Bundle", price: "$79.99", period: "/month", img: "/vipplusmatplace.webp",
+    name: "VIP + Marketplace Bundle", price: "$79.99", period: "/month", img: "/plan-marketplace.webp",
     popular: true, badge: "Most Popular", savings: "Save $131.96/yr",
     features: ["Professional marketplace listing","Custom seller profile page","Ability to sell services","Private Discussion Forums","Fully Customizable Profile","Featured in Marketplace directory","Enhanced Visibility & Credibility","Stronger Brand Authority"],
     cta: "Join Now", href: "/register?plan=MARKETPLACE",
   },
   {
-    name: "VIP + Marketplace Plus", price: "$109.99", period: "/month", img: "/vipplusmarplaceplus.webp",
+    name: "VIP + Marketplace Plus", price: "$109.99", period: "/month", img: "/plan-marketplace-plus.webp",
     popular: true, badge: "Best Value", savings: "Save $131.96/yr",
     features: ["Professional marketplace listing","Custom seller profile","Ability to sell services","Private Discussion Forums","Fully Customizable Profile","Featured in directory","Enhanced Visibility","Live Audio Session Hosting","Live Video Session Hosting","Post ads/products/services"],
     cta: "Join Now", href: "/register?plan=MARKETPLACE_PLUS",
@@ -58,8 +57,6 @@ const plans = [
 ];
 
 export default function LandingPage() {
-  const { data: session } = useSession();
-
   return (
     <div className="min-h-screen flex flex-col font-[var(--font-urbanist,Urbanist),sans-serif]">
 

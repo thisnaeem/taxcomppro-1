@@ -243,8 +243,37 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    // ── ProConnect Card purchase ($29 one-time) ───────────
+    if ((type === "proconnect_card" || session.metadata?.product === "proconnect_card") && userId) {
+      const fallbackUsername = `user-${userId.slice(-6).toLowerCase()}`;
+      await prisma.digitalCard.upsert({
+        where: { userId },
+        create: {
+          userId,
+          username: fallbackUsername,
+          isPurchased: true,
+          isActivated: false,
+          stripeSessionId: session.id,
+        },
+        update: {
+          isPurchased: true,
+          stripeSessionId: session.id,
+        },
+      });
+
+      await prisma.notification.create({
+        data: {
+          userId,
+          type: "SYSTEM",
+          title: "💳 ProConnect Card Purchase Confirmed!",
+          message: "Your $29 ProConnect card order is confirmed. You can now activate and customize your digital business card and profile!",
+          link: "/connect",
+        },
+      }).catch(() => {});
+    }
+
     // ── Subscription upgrade ──────────────────────────────
-    if (type !== "toolkit" && userId && tier) {
+    if (type !== "toolkit" && type !== "proconnect_card" && session.metadata?.product !== "proconnect_card" && userId && tier) {
       const t = tier as SubscriptionTier;
       await prisma.user.update({ where: { id: userId }, data: { tier: t } });
       await prisma.subscription.upsert({

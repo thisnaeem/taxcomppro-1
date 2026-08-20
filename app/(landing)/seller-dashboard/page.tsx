@@ -8,17 +8,55 @@ import {
   LayoutDashboard, ShoppingBag, Plus, ExternalLink, Trash2,
   CheckCircle2, Clock, XCircle, Star, Eye, TrendingUp,
   AlertCircle, Loader2, Settings, ChevronRight, Package,
+  Ticket, Link2, Copy, Check, DollarSign, Percent, Calendar,
+  Share2, ArrowUpRight, Sparkles, X,
 } from "lucide-react";
 
 /* ─── Types ─── */
 interface Listing {
-  id: string; title: string; category: string; status: string;
-  price: number | null; images: string[]; tags: string[];
-  viewCount: number; isFeatured: boolean; createdAt: string; slug: string | null;
+  id: string;
+  title: string;
+  category: string;
+  status: string;
+  price: number | null;
+  images: string[];
+  tags: string[];
+  viewCount: number;
+  isFeatured: boolean;
+  createdAt: string;
+  slug: string | null;
+}
+
+interface Coupon {
+  id: string;
+  code: string;
+  discountType: "PERCENT" | "FIXED";
+  discountValue: number;
+  maxUses: number | null;
+  usedCount: number;
+  expiresAt: string | null;
+  isActive: boolean;
+  listingId: string | null;
+  createdAt: string;
+  listing?: { id: string; title: string; slug: string | null; category: string; price: number | null } | null;
+}
+
+interface Referral {
+  id: string;
+  code: string;
+  clicks: number;
+  conversions: number;
+  earningsUsd: number;
+  commissionRate: number;
+  listingId: string | null;
+  createdAt: string;
+  listing?: { id: string; title: string; slug: string | null; category: string; price: number | null } | null;
 }
 
 interface StripeStatus {
-  connected: boolean; onboarded: boolean; accountId: string | null;
+  connected: boolean;
+  onboarded: boolean;
+  accountId: string | null;
   accountDetails: { email: string | null; chargesEnabled: boolean; payoutsEnabled: boolean } | null;
 }
 
@@ -64,7 +102,7 @@ function StripeCard({ status, onDisconnect }: { status: StripeStatus | null; onD
   };
 
   const handleDisconnect = async () => {
-    if (!confirm("Disconnect your Stripe account? You won\'t receive direct payments.")) return;
+    if (!confirm("Disconnect your Stripe account? You won't receive direct payments.")) return;
     setDisconnecting(true);
     await fetch("/api/seller/stripe-connect", { method: "DELETE" });
     onDisconnect();
@@ -86,7 +124,6 @@ function StripeCard({ status, onDisconnect }: { status: StripeStatus | null; onD
 
   return (
     <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
-      {/* Header */}
       <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-50">
         <div className="w-9 h-9 rounded-xl bg-[#6772e5]/10 flex items-center justify-center">
           <svg viewBox="0 0 24 24" className="w-5 h-5 fill-[#6772e5]">
@@ -110,14 +147,13 @@ function StripeCard({ status, onDisconnect }: { status: StripeStatus | null; onD
       </div>
 
       <div className="p-5 space-y-4">
-        {/* Connected details */}
         {status.connected && status.accountDetails && (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
               { label: "Email",   value: status.accountDetails.email ?? "—" },
               { label: "Charges", value: status.accountDetails.chargesEnabled ? "Enabled" : "Disabled" },
               { label: "Payouts", value: status.accountDetails.payoutsEnabled ? "Enabled" : "Disabled" },
-              { label: "Account", value: (status.accountId?.slice(0, 20) ?? "—") + "…" },
+              { label: "Account", value: (status.accountId?.slice(0, 16) ?? "—") + "…" },
             ].map(s => (
               <div key={s.label} className="bg-slate-50 rounded-xl px-3 py-2">
                 <div className="text-[10px] text-slate-400 font-semibold">{s.label}</div>
@@ -127,7 +163,6 @@ function StripeCard({ status, onDisconnect }: { status: StripeStatus | null; onD
           </div>
         )}
 
-        {/* Actions */}
         <div className="flex items-center gap-3 flex-wrap">
           {!status.connected ? (
             <button onClick={handleConnect} disabled={connecting}
@@ -173,17 +208,15 @@ function ListingRow({ l, onDelete }: { l: Listing; onDelete: (id: string) => voi
 
   return (
     <div className="flex items-center gap-4 px-5 py-4 border-b border-slate-50 last:border-0 hover:bg-slate-50/60 transition-colors group">
-      {/* Thumb */}
       <div className="w-12 h-12 rounded-xl overflow-hidden bg-slate-100 shrink-0">
         {l.images?.[0]
           ? <img src={l.images[0]} alt={l.title} className="w-full h-full object-cover" />
           : <div className="w-full h-full flex items-center justify-center text-slate-300 text-2xl font-black">{l.title[0]}</div>}
       </div>
 
-      {/* Info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="font-bold text-[#0a1628] text-sm truncate max-w-[200px]">{l.title}</span>
+          <span className="font-bold text-[#0a1628] text-sm truncate max-w-[240px]">{l.title}</span>
           {l.isFeatured && (
             <span className="flex items-center gap-0.5 text-[9px] font-black text-[#d4a017] bg-amber-50 px-1.5 py-0.5 rounded-full">
               <Star className="w-2.5 h-2.5" /> Featured
@@ -191,18 +224,18 @@ function ListingRow({ l, onDelete }: { l: Listing; onDelete: (id: string) => voi
           )}
         </div>
         <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${CAT_COLORS[l.category] ?? "bg-slate-100 text-slate-500"}`}>{l.category}</span>
+          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${CAT_COLORS[l.category] ?? "bg-slate-100 text-slate-500"}`}>
+            {l.category === "TRAINING" ? "COURSE" : l.category}
+          </span>
           <StatusBadge status={l.status} />
           <span className="flex items-center gap-0.5 text-[10px] text-slate-400"><Eye className="w-3 h-3" />{l.viewCount}</span>
         </div>
       </div>
 
-      {/* Price */}
       <div className="text-sm font-black text-[#0a1628] shrink-0 tabular-nums hidden sm:block">
-        {l.price != null ? `$${l.price.toLocaleString()}` : <span className="text-emerald-600 text-xs">Free</span>}
+        {l.price != null && l.price > 0 ? `$${l.price.toLocaleString()}` : <span className="text-emerald-600 text-xs">Free</span>}
       </div>
 
-      {/* Actions */}
       <div className="flex items-center gap-2 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
         <Link href={`/${slugOrId}`} target="_blank"
           className="p-2 rounded-lg hover:bg-slate-200 transition-colors" title="View">
@@ -217,17 +250,39 @@ function ListingRow({ l, onDelete }: { l: Listing; onDelete: (id: string) => voi
   );
 }
 
-/* ─── Page (inner — needs Suspense for useSearchParams) ─── */
+/* ─── Page Inner ─── */
 function SellerDashboardInner() {
   const user = useAppSelector(s => s.auth.user);
   const searchParams = useSearchParams();
   const stripeMsg = searchParams.get("stripe");
 
-  const [mounted,      setMounted]      = useState(false);
-  const [listings,     setListings]     = useState<Listing[]>([]);
-  const [stripeStatus, setStripeStatus] = useState<StripeStatus | null>(null);
-  const [loading,      setLoading]      = useState(true);
-  const [stripeLoading,setStripeLoading]= useState(true);
+  const [mounted,       setMounted]       = useState(false);
+  const [activeTab,     setActiveTab]     = useState<"dashboard" | "coupons" | "referrals">("dashboard");
+  const [listings,      setListings]      = useState<Listing[]>([]);
+  const [coupons,       setCoupons]       = useState<Coupon[]>([]);
+  const [referrals,     setReferrals]     = useState<Referral[]>([]);
+  const [stripeStatus,  setStripeStatus]  = useState<StripeStatus | null>(null);
+  const [loading,       setLoading]       = useState(true);
+  const [stripeLoading, setStripeLoading] = useState(true);
+  const [copiedId,      setCopiedId]      = useState<string | null>(null);
+
+  // Coupon form modal state
+  const [showCouponModal, setShowCouponModal] = useState(false);
+  const [couponCode,      setCouponCode]      = useState("");
+  const [discountType,    setDiscountType]    = useState<"PERCENT" | "FIXED">("PERCENT");
+  const [discountValue,   setDiscountValue]   = useState("");
+  const [couponListingId, setCouponListingId] = useState("");
+  const [couponMaxUses,   setCouponMaxUses]   = useState("");
+  const [couponExpiresAt, setCouponExpiresAt] = useState("");
+  const [creatingCoupon,  setCreatingCoupon]  = useState(false);
+  const [couponError,     setCouponError]     = useState("");
+
+  // Referral form modal state
+  const [showRefModal,    setShowRefModal]    = useState(false);
+  const [refCode,         setRefCode]         = useState("");
+  const [refListingId,    setRefListingId]    = useState("");
+  const [creatingRef,     setCreatingRef]     = useState(false);
+  const [refError,        setRefError]        = useState("");
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -240,6 +295,18 @@ function SellerDashboardInner() {
     }).finally(() => setLoading(false));
   }, []);
 
+  const loadCoupons = useCallback(() => {
+    fetch("/api/seller/coupons").then(r => r.json()).then(d => {
+      setCoupons(Array.isArray(d) ? d : []);
+    });
+  }, []);
+
+  const loadReferrals = useCallback(() => {
+    fetch("/api/seller/referrals").then(r => r.json()).then(d => {
+      setReferrals(Array.isArray(d) ? d : []);
+    });
+  }, []);
+
   const loadStripe = useCallback(() => {
     fetch("/api/seller/stripe-connect").then(r => r.json()).then(d => {
       if (!d.error) setStripeStatus(d);
@@ -249,8 +316,97 @@ function SellerDashboardInner() {
   useEffect(() => {
     if (!mounted || !canSell) return;
     loadListings();
+    loadCoupons();
+    loadReferrals();
     loadStripe();
-  }, [mounted, canSell, loadListings, loadStripe]);
+  }, [mounted, canSell, loadListings, loadCoupons, loadReferrals, loadStripe]);
+
+  const handleCopyLink = (text: string, id: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const handleCreateCoupon = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCouponError("");
+    setCreatingCoupon(true);
+    try {
+      const res = await fetch("/api/seller/coupons", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code: couponCode,
+          discountType,
+          discountValue: parseFloat(discountValue),
+          listingId: couponListingId || null,
+          maxUses: couponMaxUses ? parseInt(couponMaxUses, 10) : null,
+          expiresAt: couponExpiresAt || null,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setCoupons(prev => [data, ...prev]);
+        setShowCouponModal(false);
+        setCouponCode("");
+        setDiscountValue("");
+        setCouponListingId("");
+        setCouponMaxUses("");
+        setCouponExpiresAt("");
+      } else {
+        setCouponError(data.error || "Failed to create coupon.");
+      }
+    } catch {
+      setCouponError("Network error. Please try again.");
+    } finally {
+      setCreatingCoupon(false);
+    }
+  };
+
+  const handleDeleteCoupon = async (id: string) => {
+    if (!confirm("Delete this coupon code?")) return;
+    const res = await fetch(`/api/seller/coupons/${id}`, { method: "DELETE" });
+    if (res.ok) {
+      setCoupons(prev => prev.filter(c => c.id !== id));
+    }
+  };
+
+  const handleCreateReferral = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setRefError("");
+    setCreatingRef(true);
+    try {
+      const res = await fetch("/api/seller/referrals", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code: refCode,
+          listingId: refListingId || null,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setReferrals(prev => [data, ...prev]);
+        setShowRefModal(false);
+        setRefCode("");
+        setRefListingId("");
+      } else {
+        setRefError(data.error || "Failed to create affiliate link.");
+      }
+    } catch {
+      setRefError("Network error. Please try again.");
+    } finally {
+      setCreatingRef(false);
+    }
+  };
+
+  const handleDeleteReferral = async (id: string) => {
+    if (!confirm("Delete this affiliate link?")) return;
+    const res = await fetch(`/api/seller/referrals/${id}`, { method: "DELETE" });
+    if (res.ok) {
+      setReferrals(prev => prev.filter(r => r.id !== id));
+    }
+  };
 
   // Stats
   const approved = listings.filter(l => l.status === "APPROVED").length;
@@ -258,10 +414,7 @@ function SellerDashboardInner() {
   const rejected = listings.filter(l => l.status === "REJECTED").length;
   const totalViews = listings.reduce((a, l) => a + (l.viewCount ?? 0), 0);
 
-  // Prevent hydration mismatch — wait for client mount
-  if (!mounted) {
-    return <div className="min-h-screen bg-[#f4f6fb]" />;
-  }
+  if (!mounted) return <div className="min-h-screen bg-[#f4f6fb]" />;
 
   if (!user) {
     return (
@@ -294,6 +447,8 @@ function SellerDashboardInner() {
     );
   }
 
+  const appUrl = typeof window !== "undefined" ? window.location.origin : "http://localhost:3000";
+
   return (
     <div className="min-h-screen bg-[#f4f6fb] pt-5 pb-14">
       <div className="max-w-[1320px] mx-auto px-4">
@@ -303,7 +458,6 @@ function SellerDashboardInner() {
           <div className="hidden lg:block self-start sticky top-[90px] space-y-3">
             {/* Profile */}
             <div className="bg-white rounded-2xl overflow-hidden border border-slate-100">
-              {/* Banner */}
               <div className="h-24 relative">
                 {user.coverImage
                   ? <div className="absolute inset-0 overflow-hidden"><img src={user.coverImage} alt="" className="w-full h-full object-cover" /></div>
@@ -326,21 +480,56 @@ function SellerDashboardInner() {
             </div>
 
             {/* Nav */}
-            <div className="bg-white rounded-2xl border border-slate-100 p-2 space-y-0.5">
-              {[
-                { href: "/seller-dashboard", Icon: LayoutDashboard, label: "Dashboard",       active: true  },
-                { href: "/marketplace",      Icon: ShoppingBag,     label: "Browse Marketplace", active: false },
-                { href: "/profile",          Icon: Settings,        label: "Profile Settings",   active: false },
-              ].map(({ href, Icon, label, active }) => (
-                <Link key={href} href={href}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${active ? "bg-[#0a1628] text-white" : "text-slate-600 hover:bg-slate-50"}`}>
-                  <Icon className="w-4 h-4 shrink-0" /> {label}
-                </Link>
-              ))}
+            <div className="bg-white rounded-2xl border border-slate-100 p-2 space-y-1">
+              <button
+                type="button"
+                onClick={() => setActiveTab("dashboard")}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all text-left ${activeTab === "dashboard" ? "bg-[#0a1628] text-white shadow-sm" : "text-slate-600 hover:bg-slate-50"}`}
+              >
+                <LayoutDashboard className="w-4 h-4 shrink-0" /> Dashboard & Listings
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab("coupons")}
+                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold transition-all text-left ${activeTab === "coupons" ? "bg-[#0a1628] text-white shadow-sm" : "text-slate-600 hover:bg-slate-50"}`}
+              >
+                <span className="flex items-center gap-3">
+                  <Ticket className="w-4 h-4 shrink-0" /> Coupons & Promos
+                </span>
+                <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-400 text-[#0a1628]">
+                  {coupons.length}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab("referrals")}
+                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold transition-all text-left ${activeTab === "referrals" ? "bg-[#0a1628] text-white shadow-sm" : "text-slate-600 hover:bg-slate-50"}`}
+              >
+                <span className="flex items-center gap-3">
+                  <Link2 className="w-4 h-4 shrink-0" /> Affiliate Links
+                </span>
+                <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-500 text-white">
+                  {referrals.length}
+                </span>
+              </button>
+
+              <div className="h-px bg-slate-100 my-1" />
+
+              <Link href="/marketplace"
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-all">
+                <ShoppingBag className="w-4 h-4 shrink-0" /> Browse Marketplace
+              </Link>
+
+              <Link href="/profile"
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-all">
+                <Settings className="w-4 h-4 shrink-0" /> Profile Settings
+              </Link>
             </div>
 
             {/* Create listing CTA */}
-            <Link href="/marketplace?create=1"
+            <Link href="/marketplace/create"
               className="flex items-center justify-center gap-2 bg-gradient-to-r from-[#d4a017] to-amber-500 text-white font-bold text-sm px-4 py-3 rounded-xl hover:opacity-90 transition-all w-full shadow-md shadow-amber-200/50">
               <Plus className="w-4 h-4" /> Create Listing
             </Link>
@@ -349,115 +538,510 @@ function SellerDashboardInner() {
           {/* ── Main Content ── */}
           <div className="space-y-5 min-w-0">
 
-            {/* Header */}
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <h1 className="text-2xl font-black text-[#0a1628]">Seller Dashboard</h1>
-                <p className="text-slate-400 text-sm mt-0.5">Manage your listings and payments</p>
-              </div>
-              <Link href="/marketplace?create=1"
-                className="lg:hidden flex items-center gap-1.5 bg-[#0a1628] text-white font-bold text-xs px-4 py-2.5 rounded-xl hover:bg-[#1a3a6b] transition-all">
-                <Plus className="w-3.5 h-3.5" /> Create
-              </Link>
-            </div>
-
-            {/* Stripe toast */}
-            {stripeMsg === "success" && (
-              <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 px-5 py-3 rounded-xl flex items-center gap-3 text-sm font-semibold">
-                <CheckCircle2 className="w-4 h-4 shrink-0" /> Stripe account connected successfully!
-              </div>
-            )}
-            {stripeMsg === "error" && (
-              <div className="bg-red-50 border border-red-200 text-red-600 px-5 py-3 rounded-xl flex items-center gap-3 text-sm font-semibold">
-                <AlertCircle className="w-4 h-4 shrink-0" /> Stripe connection failed. Please try again.
-              </div>
-            )}
-            {stripeMsg === "cancelled" && (
-              <div className="bg-slate-50 border border-slate-200 text-slate-600 px-5 py-3 rounded-xl flex items-center gap-3 text-sm font-semibold">
-                <AlertCircle className="w-4 h-4 shrink-0" /> Stripe connection cancelled.
-              </div>
-            )}
-
-            {/* Stats */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {/* Top Navigation Tabs (Mobile) */}
+            <div className="lg:hidden flex bg-white p-1.5 rounded-2xl border border-slate-100 overflow-x-auto gap-1">
               {[
-                { label: "Total Listings", value: listings.length, Icon: ShoppingBag,  color: "text-[#0a1628]", bg: "bg-slate-100" },
-                { label: "Approved",       value: approved,         Icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-100" },
-                { label: "Pending Review", value: pending,          Icon: Clock,        color: "text-amber-600",   bg: "bg-amber-100"   },
-                { label: "Total Views",    value: totalViews,       Icon: TrendingUp,   color: "text-blue-600",    bg: "bg-blue-100"    },
-              ].map(s => (
-                <div key={s.label} className="bg-white rounded-2xl p-4 border border-slate-100">
-                  <div className={`w-8 h-8 rounded-xl ${s.bg} flex items-center justify-center mb-2`}>
-                    <s.Icon className={`w-4 h-4 ${s.color}`} />
-                  </div>
-                  <div className="text-2xl font-black text-[#0a1628]">{s.value}</div>
-                  <div className="text-[11px] text-slate-400 mt-0.5">{s.label}</div>
-                </div>
-              ))}
+                { id: "dashboard", label: "Dashboard", Icon: LayoutDashboard },
+                { id: "coupons",   label: "Coupons",   Icon: Ticket },
+                { id: "referrals", label: "Affiliate", Icon: Link2 },
+              ].map(tab => {
+                const active = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id as any)}
+                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                      active ? "bg-[#0a1628] text-white shadow-sm" : "text-slate-600 hover:bg-slate-50"
+                    }`}
+                  >
+                    <tab.Icon className="w-3.5 h-3.5" /> {tab.label}
+                  </button>
+                );
+              })}
             </div>
 
-            {/* Stripe Connect */}
-            {stripeLoading
-              ? <div className="bg-white rounded-2xl p-5 animate-pulse h-32 border border-slate-100" />
-              : <StripeCard status={stripeStatus} onDisconnect={loadStripe} />
-            }
-
-            {/* Listings */}
-            <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
-              <div className="flex items-center justify-between px-5 py-4 border-b border-slate-50">
-                <div>
-                  <h2 className="font-black text-[#0a1628] text-sm">My Listings</h2>
-                  <p className="text-[11px] text-slate-400 mt-0.5">
-                    {loading ? "Loading…" : `${listings.length} listing${listings.length !== 1 ? "s" : ""}`}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  {rejected > 0 && (
-                    <span className="text-[11px] font-bold text-red-500 bg-red-50 px-2.5 py-1 rounded-full">
-                      {rejected} rejected
-                    </span>
-                  )}
-                  <Link href="/marketplace?create=1"
-                    className="flex items-center gap-1.5 bg-[#0a1628] text-white font-bold text-xs px-4 py-2 rounded-xl hover:bg-[#1a3a6b] transition-all">
-                    <Plus className="w-3.5 h-3.5" /> New Listing
+            {/* TAB 1: DASHBOARD OVERVIEW */}
+            {activeTab === "dashboard" && (
+              <div className="space-y-5">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <h1 className="text-2xl font-black text-[#0a1628]">Seller Dashboard</h1>
+                    <p className="text-slate-400 text-sm mt-0.5">Manage your listings, payouts, and sales</p>
+                  </div>
+                  <Link href="/marketplace/create"
+                    className="flex items-center gap-1.5 bg-[#0a1628] text-white font-bold text-xs px-4 py-2.5 rounded-xl hover:bg-[#1a3a6b] transition-all">
+                    <Plus className="w-3.5 h-3.5" /> Create Listing
                   </Link>
                 </div>
-              </div>
 
-              {loading ? (
-                <div className="divide-y divide-slate-50">
-                  {[1,2,3].map(i => (
-                    <div key={i} className="flex items-center gap-4 px-5 py-4 animate-pulse">
-                      <div className="w-12 h-12 rounded-xl bg-slate-200 shrink-0" />
-                      <div className="flex-1 space-y-2">
-                        <div className="h-4 bg-slate-200 rounded w-1/3" />
-                        <div className="h-3 bg-slate-200 rounded w-1/4" />
+                {/* Stripe toast */}
+                {stripeMsg === "success" && (
+                  <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 px-5 py-3 rounded-xl flex items-center gap-3 text-sm font-semibold">
+                    <CheckCircle2 className="w-4 h-4 shrink-0" /> Stripe account connected successfully!
+                  </div>
+                )}
+                {stripeMsg === "error" && (
+                  <div className="bg-red-50 border border-red-200 text-red-600 px-5 py-3 rounded-xl flex items-center gap-3 text-sm font-semibold">
+                    <AlertCircle className="w-4 h-4 shrink-0" /> Stripe connection failed. Please try again.
+                  </div>
+                )}
+
+                {/* Stats */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {[
+                    { label: "Total Listings", value: listings.length, Icon: ShoppingBag,  color: "text-[#0a1628]", bg: "bg-slate-100" },
+                    { label: "Approved",       value: approved,         Icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-100" },
+                    { label: "Pending Review", value: pending,          Icon: Clock,        color: "text-amber-600",   bg: "bg-amber-100"   },
+                    { label: "Total Views",    value: totalViews,       Icon: TrendingUp,   color: "text-blue-600",    bg: "bg-blue-100"    },
+                  ].map(s => (
+                    <div key={s.label} className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
+                      <div className={`w-8 h-8 rounded-xl ${s.bg} flex items-center justify-center mb-2`}>
+                        <s.Icon className={`w-4 h-4 ${s.color}`} />
                       </div>
-                      <div className="h-6 bg-slate-200 rounded w-16" />
+                      <div className="text-2xl font-black text-[#0a1628]">{s.value}</div>
+                      <div className="text-[11px] text-slate-400 mt-0.5">{s.label}</div>
                     </div>
                   ))}
                 </div>
-              ) : listings.length === 0 ? (
-                <div className="py-20 text-center">
-                  <ShoppingBag className="w-12 h-12 text-slate-200 mx-auto mb-3" />
-                  <p className="font-bold text-slate-400">No listings yet</p>
-                  <p className="text-slate-400 text-sm mt-1 mb-5">Create your first listing to start selling.</p>
-                  <Link href="/marketplace?create=1"
-                    className="inline-flex items-center gap-2 bg-[#0a1628] text-white font-bold text-sm px-6 py-3 rounded-xl hover:bg-[#1a3a6b] transition-all">
-                    <Plus className="w-4 h-4" /> Create First Listing
-                  </Link>
+
+                {/* Stripe Connect */}
+                {stripeLoading
+                  ? <div className="bg-white rounded-2xl p-5 animate-pulse h-32 border border-slate-100" />
+                  : <StripeCard status={stripeStatus} onDisconnect={loadStripe} />
+                }
+
+                {/* Listings */}
+                <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
+                  <div className="flex items-center justify-between px-5 py-4 border-b border-slate-50">
+                    <div>
+                      <h2 className="font-black text-[#0a1628] text-sm">My Listings & Courses</h2>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        {loading ? "Loading…" : `${listings.length} listing${listings.length !== 1 ? "s" : ""}`}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {rejected > 0 && (
+                        <span className="text-[11px] font-bold text-red-500 bg-red-50 px-2.5 py-1 rounded-full">
+                          {rejected} rejected
+                        </span>
+                      )}
+                      <Link href="/marketplace/create"
+                        className="flex items-center gap-1.5 bg-[#0a1628] text-white font-bold text-xs px-4 py-2 rounded-xl hover:bg-[#1a3a6b] transition-all">
+                        <Plus className="w-3.5 h-3.5" /> New Listing
+                      </Link>
+                    </div>
+                  </div>
+
+                  {loading ? (
+                    <div className="divide-y divide-slate-50">
+                      {[1,2,3].map(i => (
+                        <div key={i} className="flex items-center gap-4 px-5 py-4 animate-pulse">
+                          <div className="w-12 h-12 rounded-xl bg-slate-200 shrink-0" />
+                          <div className="flex-1 space-y-2">
+                            <div className="h-4 bg-slate-200 rounded w-1/3" />
+                            <div className="h-3 bg-slate-200 rounded w-1/4" />
+                          </div>
+                          <div className="h-6 bg-slate-200 rounded w-16" />
+                        </div>
+                      ))}
+                    </div>
+                  ) : listings.length === 0 ? (
+                    <div className="py-20 text-center">
+                      <ShoppingBag className="w-12 h-12 text-slate-200 mx-auto mb-3" />
+                      <p className="font-bold text-slate-400">No listings yet</p>
+                      <p className="text-slate-400 text-sm mt-1 mb-5">Create your first course, service, or product to start selling.</p>
+                      <Link href="/marketplace/create"
+                        className="inline-flex items-center gap-2 bg-[#0a1628] text-white font-bold text-sm px-6 py-3 rounded-xl hover:bg-[#1a3a6b] transition-all">
+                        <Plus className="w-4 h-4" /> Create Listing
+                      </Link>
+                    </div>
+                  ) : (
+                    <div>
+                      {listings.map(l => (
+                        <ListingRow key={l.id} l={l} onDelete={id => setListings(prev => prev.filter(x => x.id !== id))} />
+                      ))}
+                    </div>
+                  )}
                 </div>
-              ) : (
-                <div>
-                  {listings.map(l => (
-                    <ListingRow key={l.id} l={l} onDelete={id => setListings(prev => prev.filter(x => x.id !== id))} />
-                  ))}
+              </div>
+            )}
+
+            {/* TAB 2: COUPONS & PROMO CODES */}
+            {activeTab === "coupons" && (
+              <div className="space-y-5">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <h1 className="text-2xl font-black text-[#0a1628]">Coupons & Discounts</h1>
+                    <p className="text-slate-400 text-sm mt-0.5">Create custom discount promo codes for your listings and courses</p>
+                  </div>
+                  <button
+                    onClick={() => setShowCouponModal(true)}
+                    className="flex items-center gap-1.5 bg-[#0a1628] text-white font-bold text-xs px-4 py-2.5 rounded-xl hover:bg-[#1a3a6b] transition-all shadow-sm"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Create Coupon
+                  </button>
                 </div>
-              )}
-            </div>
+
+                <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
+                  <div className="px-5 py-4 border-b border-slate-50 flex items-center justify-between">
+                    <h2 className="font-black text-[#0a1628] text-sm">Active Coupons ({coupons.length})</h2>
+                  </div>
+
+                  {coupons.length === 0 ? (
+                    <div className="py-16 text-center px-4">
+                      <Ticket className="w-12 h-12 text-slate-200 mx-auto mb-3" />
+                      <p className="font-bold text-slate-700 text-sm">No coupons created yet</p>
+                      <p className="text-slate-400 text-xs mt-1 mb-5">Create discount codes like 20% OFF or $50 OFF to share with your audience.</p>
+                      <button
+                        onClick={() => setShowCouponModal(true)}
+                        className="inline-flex items-center gap-2 bg-[#0a1628] text-white font-bold text-xs px-5 py-2.5 rounded-xl hover:bg-[#1a3a6b] transition-all"
+                      >
+                        <Plus className="w-3.5 h-3.5" /> Create First Coupon
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-slate-50">
+                      {coupons.map(c => {
+                        const targetListing = c.listing;
+                        const targetSlug = targetListing?.slug || targetListing?.id || (listings[0]?.slug ?? "");
+                        const shareUrl = targetSlug ? `${appUrl}/${targetSlug}?coupon=${c.code}` : `${appUrl}/marketplace?coupon=${c.code}`;
+                        const isCopied = copiedId === c.id;
+
+                        return (
+                          <div key={c.id} className="p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:bg-slate-50/50 transition-colors">
+                            <div className="space-y-1 min-w-0">
+                              <div className="flex items-center gap-2.5 flex-wrap">
+                                <span className="font-black text-sm text-[#0a1628] bg-slate-100 px-3 py-1 rounded-xl tracking-wider font-mono">
+                                  {c.code}
+                                </span>
+                                <span className="text-xs font-black text-emerald-700 bg-emerald-100 px-2.5 py-0.5 rounded-full">
+                                  {c.discountType === "PERCENT" ? `${c.discountValue}% OFF` : `$${c.discountValue} OFF`}
+                                </span>
+                                <span className="text-[11px] text-slate-400">
+                                  • {c.usedCount} {c.usedCount === 1 ? "use" : "uses"}{c.maxUses ? ` / max ${c.maxUses}` : ""}
+                                </span>
+                              </div>
+                              <p className="text-xs text-slate-500 truncate max-w-md">
+                                Applies to: <span className="font-bold text-slate-700">{c.listing ? c.listing.title : "All My Listings & Courses"}</span>
+                              </p>
+                              {c.expiresAt && (
+                                <p className="text-[10px] text-slate-400">
+                                  Expires: {new Date(c.expiresAt).toLocaleDateString()}
+                                </p>
+                              )}
+                            </div>
+
+                            <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                              <button
+                                onClick={() => handleCopyLink(shareUrl, c.id)}
+                                className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 px-3 py-2 rounded-xl transition-all"
+                                title="Copy Shareable Discount Link"
+                              >
+                                {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-slate-500" />}
+                                {isCopied ? "Link Copied!" : "Copy Link"}
+                              </button>
+                              <button
+                                onClick={() => handleDeleteCoupon(c.id)}
+                                className="p-2 rounded-xl hover:bg-red-50 text-red-400 hover:text-red-600 transition-all"
+                                title="Delete"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* TAB 3: AFFILIATE & REFERRAL LINKS */}
+            {activeTab === "referrals" && (
+              <div className="space-y-5">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <h1 className="text-2xl font-black text-[#0a1628]">Affiliate & Referral Links</h1>
+                    <p className="text-slate-400 text-sm mt-0.5">Generate custom tracking links for partners and track sales & clicks</p>
+                  </div>
+                  <button
+                    onClick={() => setShowRefModal(true)}
+                    className="flex items-center gap-1.5 bg-[#0a1628] text-white font-bold text-xs px-4 py-2.5 rounded-xl hover:bg-[#1a3a6b] transition-all shadow-sm"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Generate Link
+                  </button>
+                </div>
+
+                <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
+                  <div className="px-5 py-4 border-b border-slate-50 flex items-center justify-between">
+                    <h2 className="font-black text-[#0a1628] text-sm">Affiliate Links ({referrals.length})</h2>
+                  </div>
+
+                  {referrals.length === 0 ? (
+                    <div className="py-16 text-center px-4">
+                      <Link2 className="w-12 h-12 text-slate-200 mx-auto mb-3" />
+                      <p className="font-bold text-slate-700 text-sm">No affiliate tracking links generated</p>
+                      <p className="text-slate-400 text-xs mt-1 mb-5">Create unique links like ?ref=PARTNER to share with influencers and affiliates.</p>
+                      <button
+                        onClick={() => setShowRefModal(true)}
+                        className="inline-flex items-center gap-2 bg-[#0a1628] text-white font-bold text-xs px-5 py-2.5 rounded-xl hover:bg-[#1a3a6b] transition-all"
+                      >
+                        <Plus className="w-3.5 h-3.5" /> Generate First Link
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-slate-50">
+                      {referrals.map(r => {
+                        const targetListing = r.listing;
+                        const targetSlug = targetListing?.slug || targetListing?.id || (listings[0]?.slug ?? "");
+                        const shareUrl = targetSlug ? `${appUrl}/${targetSlug}?ref=${r.code}` : `${appUrl}/marketplace?ref=${r.code}`;
+                        const isCopied = copiedId === r.id;
+
+                        return (
+                          <div key={r.id} className="p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:bg-slate-50/50 transition-colors">
+                            <div className="space-y-1 min-w-0">
+                              <div className="flex items-center gap-2.5 flex-wrap">
+                                <span className="font-black text-sm text-[#0a1628] bg-slate-100 px-3 py-1 rounded-xl tracking-wider font-mono">
+                                  {r.code}
+                                </span>
+                                <span className="text-xs font-bold text-blue-700 bg-blue-100 px-2.5 py-0.5 rounded-full">
+                                  {r.conversions} Sales
+                                </span>
+                                <span className="text-xs font-bold text-emerald-700 bg-emerald-100 px-2.5 py-0.5 rounded-full">
+                                  ${r.earningsUsd.toFixed(2)} Earned
+                                </span>
+                              </div>
+                              <p className="text-xs text-slate-500 truncate max-w-md">
+                                Linked item: <span className="font-bold text-slate-700">{r.listing ? r.listing.title : "All Seller Listings"}</span>
+                              </p>
+                              <p className="text-[10px] text-slate-400 truncate max-w-sm">
+                                {shareUrl}
+                              </p>
+                            </div>
+
+                            <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                              <button
+                                onClick={() => handleCopyLink(shareUrl, r.id)}
+                                className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 px-3 py-2 rounded-xl transition-all"
+                              >
+                                {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-slate-500" />}
+                                {isCopied ? "Link Copied!" : "Copy Link"}
+                              </button>
+                              <button
+                                onClick={() => handleDeleteReferral(r.id)}
+                                className="p-2 rounded-xl hover:bg-red-50 text-red-400 hover:text-red-600 transition-all"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
           </div>
         </div>
       </div>
+
+      {/* ── CREATE COUPON MODAL ── */}
+      {showCouponModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center text-amber-700">
+                  <Ticket className="w-5 h-5" />
+                </div>
+                <h3 className="text-lg font-black text-[#0a1628]">Create Coupon Code</h3>
+              </div>
+              <button onClick={() => setShowCouponModal(false)} className="text-slate-400 hover:text-slate-600 p-1">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {couponError && (
+              <div className="p-3 bg-red-50 text-red-700 text-xs font-bold rounded-xl">
+                {couponError}
+              </div>
+            )}
+
+            <form onSubmit={handleCreateCoupon} className="space-y-4">
+              <div>
+                <label className="block text-[11px] font-black uppercase text-slate-500 mb-1">Coupon Code *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. SAVE20, LAUNCH50, TAXPRO"
+                  value={couponCode}
+                  onChange={e => setCouponCode(e.target.value.toUpperCase())}
+                  className="w-full text-sm font-bold border border-slate-200 rounded-xl px-4 py-2.5 outline-none focus:border-[#0a1628] uppercase tracking-wider"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-black uppercase text-slate-500 mb-1">Discount Type</label>
+                  <select
+                    value={discountType}
+                    onChange={e => setDiscountType(e.target.value as any)}
+                    className="w-full text-sm font-bold border border-slate-200 rounded-xl px-4 py-2.5 outline-none focus:border-[#0a1628]"
+                  >
+                    <option value="PERCENT">Percentage (% OFF)</option>
+                    <option value="FIXED">Fixed Amount ($ OFF)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[11px] font-black uppercase text-slate-500 mb-1">Discount Value *</label>
+                  <input
+                    type="number"
+                    required
+                    min={1}
+                    max={discountType === "PERCENT" ? 100 : 10000}
+                    step="any"
+                    placeholder={discountType === "PERCENT" ? "20 (%)" : "50 ($)"}
+                    value={discountValue}
+                    onChange={e => setDiscountValue(e.target.value)}
+                    className="w-full text-sm font-bold border border-slate-200 rounded-xl px-4 py-2.5 outline-none focus:border-[#0a1628]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-black uppercase text-slate-500 mb-1">Applicable Item</label>
+                <select
+                  value={couponListingId}
+                  onChange={e => setCouponListingId(e.target.value)}
+                  className="w-full text-sm font-bold border border-slate-200 rounded-xl px-4 py-2.5 outline-none focus:border-[#0a1628]"
+                >
+                  <option value="">All My Listings & Courses</option>
+                  {listings.map(l => (
+                    <option key={l.id} value={l.id}>
+                      {l.title} ({l.price ? `$${l.price}` : "Free"})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-black uppercase text-slate-500 mb-1">Max Uses (Optional)</label>
+                  <input
+                    type="number"
+                    min={1}
+                    placeholder="Unlimited"
+                    value={couponMaxUses}
+                    onChange={e => setCouponMaxUses(e.target.value)}
+                    className="w-full text-sm border border-slate-200 rounded-xl px-4 py-2.5 outline-none focus:border-[#0a1628]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-black uppercase text-slate-500 mb-1">Expires On (Optional)</label>
+                  <input
+                    type="date"
+                    value={couponExpiresAt}
+                    onChange={e => setCouponExpiresAt(e.target.value)}
+                    className="w-full text-sm border border-slate-200 rounded-xl px-4 py-2.5 outline-none focus:border-[#0a1628]"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-2 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowCouponModal(false)}
+                  className="flex-1 py-3 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={creatingCoupon}
+                  className="flex-1 py-3 text-xs font-black text-white bg-[#0a1628] hover:bg-[#1a3a6b] rounded-xl transition-all disabled:opacity-60 flex items-center justify-center gap-2"
+                >
+                  {creatingCoupon ? <Loader2 className="w-4 h-4 animate-spin" /> : "Create Coupon"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── CREATE AFFILIATE LINK MODAL ── */}
+      {showRefModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-blue-100 flex items-center justify-center text-blue-700">
+                  <Link2 className="w-5 h-5" />
+                </div>
+                <h3 className="text-lg font-black text-[#0a1628]">Generate Affiliate Link</h3>
+              </div>
+              <button onClick={() => setShowRefModal(false)} className="text-slate-400 hover:text-slate-600 p-1">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {refError && (
+              <div className="p-3 bg-red-50 text-red-700 text-xs font-bold rounded-xl">
+                {refError}
+              </div>
+            )}
+
+            <form onSubmit={handleCreateReferral} className="space-y-4">
+              <div>
+                <label className="block text-[11px] font-black uppercase text-slate-500 mb-1">Referral Tag / Code</label>
+                <input
+                  type="text"
+                  placeholder="e.g. PARTNER20, YOUTUBE, INSTA (leave blank to auto-generate)"
+                  value={refCode}
+                  onChange={e => setRefCode(e.target.value.toUpperCase())}
+                  className="w-full text-sm font-bold border border-slate-200 rounded-xl px-4 py-2.5 outline-none focus:border-[#0a1628] uppercase tracking-wider"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-black uppercase text-slate-500 mb-1">Target Item</label>
+                <select
+                  value={refListingId}
+                  onChange={e => setRefListingId(e.target.value)}
+                  className="w-full text-sm font-bold border border-slate-200 rounded-xl px-4 py-2.5 outline-none focus:border-[#0a1628]"
+                >
+                  <option value="">All Seller Listings</option>
+                  {listings.map(l => (
+                    <option key={l.id} value={l.id}>
+                      {l.title} ({l.price ? `$${l.price}` : "Free"})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="pt-2 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowRefModal(false)}
+                  className="flex-1 py-3 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={creatingRef}
+                  className="flex-1 py-3 text-xs font-black text-white bg-[#0a1628] hover:bg-[#1a3a6b] rounded-xl transition-all disabled:opacity-60 flex items-center justify-center gap-2"
+                >
+                  {creatingRef ? <Loader2 className="w-4 h-4 animate-spin" /> : "Generate Link"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

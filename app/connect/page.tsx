@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect, useCallback, Suspense } from "react";
 import { useRouter } from "next/navigation";
@@ -67,7 +67,17 @@ async function uploadImage(file: File, type: "avatar" | "logo"): Promise<string 
 /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    LANDING PAGE
 â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
-function ConnectLandingPage({ onStart }: { onStart: () => void }) {
+function ConnectLandingPage({
+  onStart,
+  hasPurchased,
+  onBuy,
+  buying,
+}: {
+  onStart: () => void;
+  hasPurchased: boolean;
+  onBuy: () => void;
+  buying: boolean;
+}) {
   return (
     <div className="bg-[#f5f0e8] dark:bg-[#0a1628] min-h-screen proconnect-landing">
       <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -76,14 +86,14 @@ function ConnectLandingPage({ onStart }: { onStart: () => void }) {
       <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&display=swap" rel="stylesheet" />
       <Navbar />
 
-      {/* â”€â”€ Announcement bar â”€â”€ */}
+      {/* ── Announcement bar ── */}
       <div className="bg-[#0a1628] text-white text-center text-xs font-semibold py-2.5 px-4 tracking-wide">
         <span className="opacity-70">A smarter first impression for professionals</span>
-        <span className="mx-3 opacity-30">Â·</span>
-        <span className="text-amber-400 font-black uppercase tracking-widest">Introducing ProConnect â€” Free to Activate</span>
+        <span className="mx-3 opacity-30">·</span>
+        <span className="text-amber-400 font-black uppercase tracking-widest">Introducing ProConnect — $29 One-Time</span>
       </div>
 
-      {/* â”€â”€ HERO â”€â”€ */}
+      {/* ── HERO ── */}
       <section className="max-w-7xl mx-auto px-6 pt-16 pb-16 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
         {/* Left */}
         <div>
@@ -104,20 +114,38 @@ function ConnectLandingPage({ onStart }: { onStart: () => void }) {
           </p>
 
           <div className="flex flex-wrap items-center gap-3 mb-8">
-            <button
-              onClick={onStart}
-              className="flex items-center gap-2 bg-[#0a1628] dark:bg-amber-500 text-white dark:text-[#0a1628] font-black text-sm px-7 py-3.5 rounded-full hover:bg-[#1a3a6b] dark:hover:bg-amber-400 transition-all shadow-xl hover:scale-[1.02] active:scale-[0.98]"
-            >
-              Activate Free Connect Card <ArrowRight className="w-4 h-4" />
-            </button>
-            <a href="#how-it-works" className="flex items-center gap-1.5 border-2 border-[#0a1628]/20 dark:border-white/20 text-[#0a1628] dark:text-white font-bold text-sm px-6 py-3.5 rounded-full hover:bg-[#0a1628]/5 dark:hover:bg-white/10 transition-all">
-              See How It Works
+            {hasPurchased ? (
+              <button
+                onClick={onStart}
+                className="flex items-center gap-2 bg-[#0a1628] dark:bg-amber-500 text-white dark:text-[#0a1628] font-black text-sm px-7 py-3.5 rounded-full hover:bg-[#1a3a6b] dark:hover:bg-amber-400 transition-all shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+              >
+                Set Up Your Card <ArrowRight className="w-4 h-4" />
+              </button>
+            ) : (
+              <>
+                <button
+                  onClick={onBuy}
+                  disabled={buying}
+                  className="flex items-center gap-2 bg-[#0a1628] dark:bg-amber-500 text-white dark:text-[#0a1628] font-black text-sm px-7 py-3.5 rounded-full hover:bg-[#1a3a6b] dark:hover:bg-amber-400 transition-all shadow-xl hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+                >
+                  {buying ? "Opening Checkout..." : "Buy ProConnect — $29"} <ArrowRight className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={onStart}
+                  className="flex items-center gap-1.5 border-2 border-[#0a1628]/20 dark:border-white/20 text-[#0a1628] dark:text-white font-bold text-sm px-6 py-3.5 rounded-full hover:bg-[#0a1628]/5 dark:hover:bg-white/10 transition-all"
+                >
+                  Activate Existing Card
+                </button>
+              </>
+            )}
+            <a href="#how-it-works" className="flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white px-4 py-2 transition-colors">
+              See How It Works ↓
             </a>
           </div>
 
           <div className="flex items-center gap-2 mb-8">
             <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-            <span className="text-sm text-slate-600 dark:text-slate-300">Free to activate Â· No app needed to view Â· You control what people see</span>
+            <span className="text-sm text-slate-600 dark:text-slate-300">$29 one-time · No monthly fee · You control what people see</span>
           </div>
 
           <div className="flex items-center gap-8 pt-6 border-t border-[#0a1628]/10 dark:border-white/10">
@@ -472,7 +500,7 @@ function ConnectLandingPage({ onStart }: { onStart: () => void }) {
         </div>
       </section>
 
-      {/* â”€â”€ Final CTA â”€â”€ */}
+      {/* ── Final CTA ── */}
       <section className="max-w-4xl mx-auto px-6 py-24 text-center">
         <div className="flex items-center justify-center gap-2 mb-6">
           <div className="w-6 h-0.5 bg-amber-500" />
@@ -484,17 +512,27 @@ function ConnectLandingPage({ onStart }: { onStart: () => void }) {
           <span className="italic text-amber-600 dark:text-amber-400">one tap away.</span>
         </h2>
         <p className="text-slate-600 dark:text-slate-300 text-lg mb-10 max-w-xl mx-auto">
-          Activate your free Connect Card in under 3 minutes and start sharing a professional profile that works for you 24/7.
+          Get your ProConnect NFC digital business card for a one-time $29 purchase and start sharing a professional profile that works for you 24/7.
         </p>
         <div className="flex flex-wrap items-center justify-center gap-4">
-          <button
-            onClick={onStart}
-            className="flex items-center gap-2 bg-[#0a1628] dark:bg-amber-500 text-white dark:text-[#0a1628] font-black text-base px-10 py-4 rounded-full hover:bg-[#1a3a6b] dark:hover:bg-amber-400 transition-all shadow-2xl hover:scale-[1.02] active:scale-[0.98]"
-          >
-            Activate Your Free Card <Zap className="w-5 h-5 fill-white dark:fill-[#0a1628]" />
-          </button>
+          {hasPurchased ? (
+            <button
+              onClick={onStart}
+              className="flex items-center gap-2 bg-[#0a1628] dark:bg-amber-500 text-white dark:text-[#0a1628] font-black text-base px-10 py-4 rounded-full hover:bg-[#1a3a6b] dark:hover:bg-amber-400 transition-all shadow-2xl hover:scale-[1.02] active:scale-[0.98]"
+            >
+              Set Up Your Card <Zap className="w-5 h-5 fill-white dark:fill-[#0a1628]" />
+            </button>
+          ) : (
+            <button
+              onClick={onBuy}
+              disabled={buying}
+              className="flex items-center gap-2 bg-[#0a1628] dark:bg-amber-500 text-white dark:text-[#0a1628] font-black text-base px-10 py-4 rounded-full hover:bg-[#1a3a6b] dark:hover:bg-amber-400 transition-all shadow-2xl hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+            >
+              {buying ? "Opening Checkout..." : "Buy ProConnect Card — $29"} <Zap className="w-5 h-5 fill-white dark:fill-[#0a1628]" />
+            </button>
+          )}
           <Link href="/login?next=/connect" className="text-sm font-bold text-slate-500 dark:text-slate-400 hover:text-[#0a1628] dark:hover:text-white transition-colors">
-            Already have an account? Log in â†’
+            Already have an account? Log in →
           </Link>
         </div>
       </section>
@@ -1017,10 +1055,155 @@ function ConnectWizard({ onBack }: { onBack: () => void }) {
    ROOT PAGE â€” switches between Landing â†’ Wizard
 â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 function ConnectRoot() {
+  const router = useRouter();
+  const { data: session, isPending } = useSession();
   const [mode, setMode] = useState<"landing" | "wizard">("landing");
+  const [hasPurchased, setHasPurchased] = useState(false);
+  const [showPurchaseModal, setShowPurchaseModal] = useState(false);
+  const [buying, setBuying] = useState(false);
 
-  if (mode === "wizard") return <ConnectWizard onBack={() => setMode("landing")} />;
-  return <ConnectLandingPage onStart={() => setMode("wizard")} />;
+  // Check purchase status and handle Stripe redirect
+  useEffect(() => {
+    if (isPending) return;
+
+    if (!session?.user) {
+      setHasPurchased(false);
+      return;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get("session_id");
+    const isPurchasedRedirect = params.get("purchased") === "1";
+    const wantsActivate = params.get("activate") === "1";
+
+    fetch(`/api/connect/verify-purchase${sessionId ? `?session_id=${sessionId}` : ""}`)
+      .then((r) => r.json())
+      .then((data: { hasPurchased?: boolean; isActivated?: boolean; username?: string | null }) => {
+        if (data.hasPurchased) {
+          setHasPurchased(true);
+          if (data.isActivated && data.username) {
+            router.replace(`/connect/${data.username}`);
+            return;
+          }
+          if (isPurchasedRedirect || wantsActivate) {
+            setMode("wizard");
+          }
+        } else {
+          setHasPurchased(false);
+        }
+      })
+      .catch(() => {});
+  }, [session, isPending, router]);
+
+  async function handleBuy() {
+    if (!session?.user) {
+      router.push("/login?next=/connect");
+      return;
+    }
+
+    setBuying(true);
+    try {
+      const res = await fetch("/api/stripe/proconnect-checkout", { method: "POST" });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert(data.error || "Could not start checkout. Please try again.");
+      }
+    } catch {
+      alert("Network error. Please try again.");
+    } finally {
+      setBuying(false);
+    }
+  }
+
+  function handleStart() {
+    if (!session?.user) {
+      router.push("/login?next=/connect?activate=1");
+      return;
+    }
+
+    if (hasPurchased || (session.user as { role?: string }).role === "ADMIN") {
+      setMode("wizard");
+    } else {
+      setShowPurchaseModal(true);
+    }
+  }
+
+  if (mode === "wizard") {
+    return <ConnectWizard onBack={() => setMode("landing")} />;
+  }
+
+  return (
+    <>
+      <ConnectLandingPage
+        onStart={handleStart}
+        hasPurchased={hasPurchased}
+        onBuy={handleBuy}
+        buying={buying}
+      />
+
+      {/* Modal shown if user tries to activate without purchasing */}
+      {showPurchaseModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <div className="relative w-full max-w-md bg-white dark:bg-[#172135] rounded-3xl p-8 border border-slate-200 dark:border-slate-800 shadow-2xl text-center">
+            <button
+              type="button"
+              onClick={() => setShowPurchaseModal(false)}
+              className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white rounded-full transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="w-14 h-14 rounded-2xl bg-amber-400/20 text-amber-600 dark:text-amber-400 mx-auto flex items-center justify-center mb-4">
+              <CreditCard className="w-7 h-7" />
+            </div>
+
+            <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-2">
+              ProConnect Card Required
+            </h3>
+            <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed mb-6">
+              To activate your verified public profile and link your NFC card, a one-time <strong>$29</strong> card purchase is required.
+            </p>
+
+            <div className="bg-slate-50 dark:bg-[#1e2e45] rounded-2xl p-4 mb-6 text-left space-y-2.5 text-xs text-slate-600 dark:text-slate-300">
+              <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-white">
+                <Check className="w-4 h-4 text-emerald-500 shrink-0" />
+                <span>Physical Premium NFC Tap Card shipped to you</span>
+              </div>
+              <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-white">
+                <Check className="w-4 h-4 text-emerald-500 shrink-0" />
+                <span>Instant Digital Business Card &amp; Marketplace profile</span>
+              </div>
+              <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-white">
+                <Check className="w-4 h-4 text-emerald-500 shrink-0" />
+                <span>No monthly or recurring card fees</span>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <button
+                type="button"
+                onClick={handleBuy}
+                disabled={buying}
+                className="w-full bg-[#0a1628] dark:bg-amber-500 text-white dark:text-[#0a1628] font-black text-sm py-4 rounded-full hover:bg-[#1a3a6b] dark:hover:bg-amber-400 transition-all shadow-lg hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {buying ? "Redirecting to Stripe..." : "Buy ProConnect Card — $29"}
+                <ArrowRight className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowPurchaseModal(false)}
+                className="w-full text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white py-2"
+              >
+                Maybe later
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
 }
 
 export default function ConnectActivationPage() {

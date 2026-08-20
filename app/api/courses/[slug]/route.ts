@@ -1,30 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { headers } from "next/headers";
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
   const { slug } = await params;
-  const session = await auth.api.getSession({ headers: await headers() });
+  const session = await auth.api.getSession({ headers: req.headers });
 
   const course = await prisma.course.findUnique({
     where: { slug },
     include: {
-      instructor: { select: { id: true, name: true, image: true, headline: true } },
+      instructor: { select: { id: true, name: true, image: true, headline: true, role: true } },
       sections: {
         orderBy: { order: "asc" },
         include: {
           lessons: {
-              orderBy: { order: "asc" },
-              include: {
-                quiz: {
-                  include: { questions: { orderBy: { order: "asc" } } },
-                },
+            orderBy: { order: "asc" },
+            include: {
+              quiz: {
+                include: { questions: { orderBy: { order: "asc" } } },
               },
             },
+          },
         },
       },
       _count: { select: { enrollments: true } },
@@ -32,23 +31,53 @@ export async function GET(
   });
 
   if (!course) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  const dbUser = session?.user ? await prisma.user.findUnique({ where: { id: session.user.id } }) : null;
+
   if (course.status !== "PUBLISHED") {
-    const dbUser = session?.user ? await prisma.user.findUnique({ where: { id: session.user.id } }) : null;
-    if (!dbUser || dbUser.role !== "ADMIN") {
+    const canViewUnpublished = dbUser && (dbUser.role === "ADMIN" || dbUser.id === course.instructorId);
+    if (!canViewUnpublished) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
   }
 
-  let enrollment = null;
+  let isEnrolled = false;
   let completedLessonIds: string[] = [];
 
   if (session?.user) {
-    enrollment = await prisma.enrollment.findUnique({
+    const isOwnerOrAdmin = session.user.id === course.instructorId || dbUser?.role === "ADMIN";
+    if (isOwnerOrAdmin) {
+      isEnrolled = true;
+    }
+
+    const enrollment = await prisma.enrollment.findUnique({
       where: { userId_courseId: { userId: session.user.id, courseId: course.id } },
       include: { progress: { select: { lessonId: true } } },
     });
+
     if (enrollment) {
+      isEnrolled = true;
       completedLessonIds = enrollment.progress.map((p) => p.lessonId);
+    } else if (!isOwnerOrAdmin) {
+      // Check if user purchased this course from marketplace listing
+      const listingPurchase = await prisma.marketplacePurchase.findFirst({
+        where: {
+          userId: session.user.id,
+          listing: {
+            OR: [
+              { slug: course.slug },
+              { metadata: { path: ["courseId"], equals: course.id } },
+            ],
+          },
+        },
+      });
+      if (listingPurchase) {
+        isEnrolled = true;
+        // Auto-create enrollment for future tracking
+        await prisma.enrollment.create({
+          data: { userId: session.user.id, courseId: course.id },
+        }).catch(() => {});
+      }
     }
   }
 
@@ -69,7 +98,7 @@ export async function GET(
   return NextResponse.json({
     ...course,
     totalLessons,
-    isEnrolled: !!enrollment,
+    isEnrolled,
     completedLessonIds,
     progressPercent: totalLessons > 0 ? Math.round((completedLessonIds.length / totalLessons) * 100) : 0,
     ratings,

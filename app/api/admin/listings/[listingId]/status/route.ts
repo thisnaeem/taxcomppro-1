@@ -33,7 +33,7 @@ export async function PATCH(
         message: `Your listing "${updated.title}" has been approved and is now live on the marketplace.`,
         link: `/${updated.slug ?? updated.id}`,
       },
-    }).catch(() => {});
+    }).catch(() => { });
   } else if (status === "REJECTED") {
     await prisma.notification.create({
       data: {
@@ -43,7 +43,7 @@ export async function PATCH(
         message: `Your listing "${updated.title}" was not approved by admin.`,
         link: "/my-listings",
       },
-    }).catch(() => {});
+    }).catch(() => { });
   }
 
   return NextResponse.json(updated);

@@ -10,21 +10,23 @@ import {
 } from "lucide-react";
 import RichTextEditor from "@/components/courses/RichTextEditor";
 
-const CATEGORIES = ["Tax Law","Compliance","Accounting","Bookkeeping","Audit","Financial Planning","Business Tax","Payroll"];
+const CATEGORIES = ["Tax Office Startup","Compliance","Accounting","Bookkeeping","Audit","Financial Planning","Business Tax","Payroll"];
 type ContentType = "VIDEO" | "TEXT" | "QUIZ";
 
 interface QuizQ { question: string; options: string[]; correctAnswer: number; explanation: string; }
 interface LessonDraft {
   id: string; title: string; description: string;
   contentType: ContentType;
-  videoUrl: string; textContent: string; duration: number; isFree: boolean;
+  videoUrl: string; textContent: string;
+  downloadUrl?: string; downloadName?: string;
+  duration: number; isFree: boolean;
   quiz: { title: string; passMark: number; questions: QuizQ[] };
 }
 interface SectionDraft { id: string; title: string; lessons: LessonDraft[]; }
 
 const uid = () => Math.random().toString(36).slice(2);
 const emptyQuiz = () => ({ title: "Lesson Quiz", passMark: 70, questions: [] });
-const emptyLesson = (): LessonDraft => ({ id: uid(), title: "", description: "", contentType: "VIDEO", videoUrl: "", textContent: "", duration: 0, isFree: false, quiz: emptyQuiz() });
+const emptyLesson = (): LessonDraft => ({ id: uid(), title: "", description: "", contentType: "VIDEO", videoUrl: "", textContent: "", downloadUrl: "", downloadName: "", duration: 0, isFree: false, quiz: emptyQuiz() });
 
 const CT_ICONS: Record<ContentType, React.ElementType> = { VIDEO: Video, TEXT: FileText, QUIZ: HelpCircle };
 const CT_LABELS: Record<ContentType, string> = { VIDEO: "Video", TEXT: "Article", QUIZ: "Quiz" };
@@ -52,10 +54,20 @@ export default function CreateCoursePage() {
       const fd = new FormData();
       fd.append("files", file);
       fd.append("folder", "course-thumbnails");
-      const res  = await fetch("/api/upload", { method: "POST", body: fd });
-      const data = await res.json() as { urls?: string[] };
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        alert(errData.error || "Failed to upload image. Please try a smaller image.");
+        return;
+      }
+      const data = (await res.json()) as { urls?: string[] };
       if (data.urls?.[0]) setThumbnail(data.urls[0]);
-    } finally { setThumbUploading(false); }
+    } catch (e) {
+      console.error(e);
+      alert("An error occurred while uploading the thumbnail.");
+    } finally {
+      setThumbUploading(false);
+    }
   };
 
   const autoSlug = (t: string) => t.toLowerCase().trim().replace(/[^a-z0-9\s-]/g,"").replace(/\s+/g,"-").slice(0,80);
@@ -95,7 +107,7 @@ export default function CreateCoursePage() {
         for (let li = 0; li < sec.lessons.length; li++) {
           const l = sec.lessons[li];
           const lr = await fetch(`/api/admin/courses/${course.id}/sections/${secData.id}/lessons`, { method:"POST", headers:{"Content-Type":"application/json"},
-            body: JSON.stringify({ title:l.title, description:l.description, contentType:l.contentType, videoUrl:l.videoUrl, textContent:l.textContent, duration:l.duration, isFree:l.isFree, order:li }) });
+            body: JSON.stringify({ title:l.title, description:l.description, contentType:l.contentType, videoUrl:l.videoUrl, textContent:l.textContent, downloadUrl:l.downloadUrl, downloadName:l.downloadName, duration:l.duration, isFree:l.isFree, order:li }) });
           if (!lr.ok) continue;
           const lessonData = await lr.json();
           if (l.contentType === "QUIZ" && l.quiz.questions.length > 0) {
@@ -112,27 +124,27 @@ export default function CreateCoursePage() {
 
   if (done) return (
     <div className="max-w-xl mx-auto text-center py-24">
-      <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6"><CheckCircle2 className="w-10 h-10 text-emerald-500" /></div>
-      <h2 className="text-2xl font-black text-[#0a1628] mb-2">Course Created!</h2>
-      <p className="text-slate-500 mb-8">Your course has been saved successfully.</p>
+      <div className="w-20 h-20 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-6"><CheckCircle2 className="w-10 h-10 text-emerald-400" /></div>
+      <h2 className="text-2xl font-black text-white mb-2">Course Created!</h2>
+      <p className="text-slate-400 mb-8">Your course has been saved successfully.</p>
       <div className="flex gap-3 justify-center">
-        <Link href="/admin/courses" className="bg-[#0a1628] text-white font-bold px-6 py-3 rounded-xl hover:bg-[#1a3a6b] transition-all">Back to Courses</Link>
-        <Link href="/courses" className="bg-slate-100 text-slate-700 font-bold px-6 py-3 rounded-xl hover:bg-slate-200 transition-all">View Catalog</Link>
+        <Link href="/admin/courses" className="bg-[#f0c040] hover:bg-amber-400 text-slate-950 font-black px-6 py-3 rounded-xl transition-all shadow-lg shadow-amber-400/20">Back to Courses</Link>
+        <Link href="/courses" className="bg-slate-800 text-slate-200 border border-white/10 font-bold px-6 py-3 rounded-xl hover:bg-slate-700 transition-all">View Catalog</Link>
       </div>
     </div>
   );
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
+    <div className="max-w-3xl mx-auto space-y-6 pb-16">
       <div className="flex items-center gap-4">
-        <Link href="/admin/courses" className="text-slate-400 hover:text-slate-600"><ArrowLeft className="w-5 h-5" /></Link>
-        <div><h1 className="text-2xl font-black text-[#0a1628]">Create New Course</h1><p className="text-slate-500 text-sm">Step {step} of 2</p></div>
+        <Link href="/admin/courses" className="text-slate-400 hover:text-white"><ArrowLeft className="w-5 h-5" /></Link>
+        <div><h1 className="text-2xl font-black text-white">Create New Course</h1><p className="text-slate-400 text-sm">Step {step} of 2</p></div>
       </div>
 
       <div className="flex items-center gap-3">
         {[{n:1,label:"Course Details"},{n:2,label:"Curriculum"}].map(({n,label}) => (
           <button key={n} onClick={() => n <= step && setStep(n)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${step===n?"bg-[#0a1628] text-white":step>n?"bg-emerald-100 text-emerald-700":"bg-slate-100 text-slate-400"}`}>
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${step===n?"bg-[#f0c040] text-slate-950 font-black shadow-md shadow-amber-400/20":step>n?"bg-emerald-500/15 text-emerald-300 border border-emerald-500/20":"bg-slate-800/80 text-slate-400 border border-white/10"}`}>
             {step>n ? <CheckCircle2 className="w-4 h-4"/> : n} {label}
           </button>
         ))}
@@ -213,20 +225,24 @@ export default function CreateCoursePage() {
               </select>
             </div>
             <div>
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Pricing</label>
-              <div className="flex gap-3">
-                {["Free","Paid"].map((l,i)=>(
-                  <button key={l} onClick={()=>setIsFree(i===0)} className={`flex-1 py-2.5 rounded-xl text-sm font-bold border-2 transition-all ${(i===0)===isFree?"border-[#0a1628] bg-[#0a1628] text-white":"border-slate-200 text-slate-500"}`}>{l}</button>
-                ))}
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Price (USD)</label>
+              <div className="relative">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold">$</span>
+                <input
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  value={price || ""}
+                  onChange={e => {
+                    const val = Number(e.target.value) || 0;
+                    setPrice(val);
+                    setIsFree(val <= 0);
+                  }}
+                  placeholder="0.00 — leave blank for free"
+                  className="w-full font-[inherit] text-sm border border-slate-200 rounded-xl pl-8 pr-4 py-3 outline-none focus:border-[#0a1628] transition-all bg-white"
+                />
               </div>
             </div>
-            {!isFree && (
-              <div>
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Price (USD)</label>
-                <input type="number" value={price} onChange={e=>setPrice(Number(e.target.value))} min={0}
-                  className="w-full font-[inherit] text-sm border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-[#0a1628] transition-all"/>
-              </div>
-            )}
             <div className="md:col-span-2">
               <label className="flex items-center gap-3 cursor-pointer">
                 <input type="checkbox" checked={isSequential} onChange={e=>setIsSequential(e.target.checked)} className="w-4 h-4 rounded"/>
@@ -338,8 +354,19 @@ export default function CreateCoursePage() {
                             <button onClick={()=>rmLesson(sec.id,l.id)} className="text-slate-300 hover:text-red-500 transition-colors ml-1"><Trash2 className="w-3.5 h-3.5"/></button>
                           </div>
 
-                          <input value={l.title} onChange={e=>updLesson(sec.id,l.id,"title",e.target.value)} placeholder="Lesson title"
+                          <input value={l.title} onChange={e=>updLesson(sec.id,l.id,"title",e.target.value)} placeholder="Lesson title *"
                             className="w-full font-[inherit] text-sm border border-slate-200 rounded-lg px-3 py-2 outline-none focus:border-[#0a1628] bg-white"/>
+
+                          <input value={l.description} onChange={e=>updLesson(sec.id,l.id,"description",e.target.value)} placeholder="Lesson description or overview (optional)"
+                            className="w-full font-[inherit] text-xs border border-slate-200 rounded-lg px-3 py-2 outline-none focus:border-[#0a1628] bg-white text-slate-600"/>
+
+                          {/* Downloadable Attachment */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                            <input value={l.downloadName ?? ""} onChange={e=>updLesson(sec.id,l.id,"downloadName",e.target.value)} placeholder="Resource / Download Name (e.g. Worksheet.pdf)"
+                              className="font-[inherit] text-xs border border-slate-200 rounded-md px-2.5 py-1.5 outline-none bg-white"/>
+                            <input value={l.downloadUrl ?? ""} onChange={e=>updLesson(sec.id,l.id,"downloadUrl",e.target.value)} placeholder="Download File URL (Cloudinary / PDF link)"
+                              className="font-[inherit] text-xs border border-slate-200 rounded-md px-2.5 py-1.5 outline-none bg-white"/>
+                          </div>
 
                           {l.contentType === "VIDEO" && (
                             <div className="grid grid-cols-2 gap-3">

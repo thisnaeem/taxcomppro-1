@@ -408,25 +408,25 @@ export default function AdminContentCalendarPage() {
   );
 
   return (
-    <div className="max-w-6xl mx-auto space-y-5">
+    <div className="max-w-6xl mx-auto space-y-5 pb-12">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-black text-[#0a1628]">Content Calendar</h1>
-          <p className="text-slate-500 text-sm mt-0.5">All scheduled posts across the platform</p>
+          <h1 className="text-2xl font-black text-white">Content Calendar</h1>
+          <p className="text-slate-400 text-sm mt-0.5">All scheduled posts across the platform</p>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={() => load(year, month)}
-            className="p-2 rounded-xl border border-slate-200 hover:bg-slate-50 transition-all text-slate-500">
+            className="p-2 rounded-xl border border-white/10 bg-slate-800/80 hover:bg-slate-700 transition-all text-slate-300">
             <RefreshCw className="w-4 h-4" />
           </button>
-          <div className="flex rounded-xl border border-slate-200 overflow-hidden">
+          <div className="flex rounded-xl border border-white/10 overflow-hidden bg-slate-800/80">
             <button onClick={() => setView("calendar")}
-              className={`flex items-center gap-1.5 px-4 py-2 text-sm font-bold transition-all ${view === "calendar" ? "bg-[#0a1628] text-white" : "bg-white text-slate-500 hover:bg-slate-50"}`}>
+              className={`flex items-center gap-1.5 px-4 py-2 text-sm font-bold transition-all ${view === "calendar" ? "bg-[#f0c040] text-slate-950 font-black" : "text-slate-400 hover:text-white"}`}>
               <Calendar className="w-4 h-4" /> Calendar
             </button>
             <button onClick={() => setView("list")}
-              className={`flex items-center gap-1.5 px-4 py-2 text-sm font-bold transition-all ${view === "list" ? "bg-[#0a1628] text-white" : "bg-white text-slate-500 hover:bg-slate-50"}`}>
+              className={`flex items-center gap-1.5 px-4 py-2 text-sm font-bold transition-all ${view === "list" ? "bg-[#f0c040] text-slate-950 font-black" : "text-slate-400 hover:text-white"}`}>
               <List className="w-4 h-4" /> List
             </button>
           </div>
@@ -434,30 +434,30 @@ export default function AdminContentCalendarPage() {
       </div>
 
       {/* Month nav + stats */}
-      <div className="bg-white rounded-2xl p-4 flex items-center justify-between flex-wrap gap-4">
+      <div className="bg-slate-800/60 border border-white/8 rounded-2xl p-4 flex items-center justify-between flex-wrap gap-4 shadow-xl backdrop-blur-sm">
         <div className="flex items-center gap-3">
-          <button onClick={prevMonth} className="p-2 rounded-xl hover:bg-slate-100 transition-all">
-            <ChevronLeft className="w-5 h-5 text-slate-500" />
+          <button onClick={prevMonth} className="p-2 rounded-xl hover:bg-slate-700/60 transition-all text-slate-300">
+            <ChevronLeft className="w-5 h-5" />
           </button>
-          <h2 className="text-xl font-black text-[#0a1628] min-w-[180px] text-center">
+          <h2 className="text-xl font-black text-white min-w-[180px] text-center">
             {MONTHS[month - 1]} {year}
           </h2>
-          <button onClick={nextMonth} className="p-2 rounded-xl hover:bg-slate-100 transition-all">
-            <ChevronRight className="w-5 h-5 text-slate-500" />
+          <button onClick={nextMonth} className="p-2 rounded-xl hover:bg-slate-700/60 transition-all text-slate-300">
+            <ChevronRight className="w-5 h-5" />
           </button>
           <button onClick={() => { const n = new Date(); setYear(n.getFullYear()); setMonth(n.getMonth() + 1); }}
-            className="text-xs font-bold text-[#0a1628] border border-[#0a1628]/20 px-3 py-1.5 rounded-lg hover:bg-[#0a1628]/5 transition-all">
+            className="text-xs font-bold text-amber-300 border border-amber-400/30 px-3 py-1.5 rounded-lg hover:bg-amber-400/10 transition-all">
             Today
           </button>
         </div>
         <div className="flex items-center gap-4 text-sm">
           <div className="flex items-center gap-1.5">
             <div className="w-3 h-3 rounded-full bg-blue-500" />
-            <span className="text-slate-600 font-semibold">{posts.length} scheduled</span>
+            <span className="text-slate-300 font-semibold">{posts.length} scheduled</span>
           </div>
           <div className="flex items-center gap-1.5">
             <div className="w-3 h-3 rounded-full bg-emerald-500" />
-            <span className="text-slate-600 font-semibold">{[...new Set(posts.map(p => p.author.id))].length} authors</span>
+            <span className="text-slate-300 font-semibold">{[...new Set(posts.map(p => p.author.id))].length} authors</span>
           </div>
         </div>
       </div>

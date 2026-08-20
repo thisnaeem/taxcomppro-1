@@ -21,7 +21,7 @@ interface Section { id: string; title: string; order: number; lessons: Lesson[];
 interface Course {
   id: string; slug: string; title: string; isSequential: boolean;
   sections: Section[]; completedLessonIds: string[]; progressPercent: number;
-  instructor: { name: string };
+  instructor: { id?: string; name: string; role?: string };
 }
 
 interface QuizResult {
@@ -76,14 +76,15 @@ export default function LearnPage() {
 
   useEffect(() => { fetchCourse(); }, [fetchCourse]);
 
-  // Check if a lesson is unlocked (sequential rules)
   const isUnlocked = useCallback((lesson: Lesson, allLessons: Lesson[]): boolean => {
+    const userRole = (session?.user as any)?.role;
+    if (course?.instructor?.id === session?.user?.id || userRole === "ADMIN") return true;
     if (!course?.isSequential) return true;
     if (completedIds.has(lesson.id)) return true;
     const idx = allLessons.findIndex(l => l.id === lesson.id);
     if (idx === 0) return true;
     return completedIds.has(allLessons[idx - 1].id);
-  }, [course, completedIds]);
+  }, [course, completedIds, session]);
 
   const selectLesson = (lesson: Lesson, allLessons: Lesson[]) => {
     if (!isUnlocked(lesson, allLessons)) return;

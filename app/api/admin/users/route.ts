@@ -22,7 +22,29 @@ export async function GET(req: NextRequest) {
       ...(search ? { OR: [{ name: { contains: search, mode: "insensitive" } }, { email: { contains: search, mode: "insensitive" } }] } : {}),
       ...(role !== "ALL" ? { role: role as "MEMBER" | "PROFESSIONAL" | "ADMIN" } : {}),
     },
-    select: { id: true, name: true, email: true, role: true, tier: true, image: true, createdAt: true },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      tier: true,
+      image: true,
+      createdAt: true,
+      subscription: {
+        select: {
+          plan: true,
+          status: true,
+          currentPeriodEnd: true,
+        },
+      },
+      digitalCard: {
+        select: {
+          isPurchased: true,
+          isActivated: true,
+          username: true,
+        },
+      },
+    },
     orderBy: { createdAt: "desc" },
     take: 100,
   });

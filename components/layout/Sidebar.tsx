@@ -6,7 +6,7 @@ import { useAppSelector } from "@/store/hooks";
 import {
   LayoutDashboard, Users, CheckSquare, BookOpen,
   BarChart2, Calendar, Images, Package, Gift, Bot,
-  CreditCard, ChevronRight, LifeBuoy, GraduationCap,
+  CreditCard, ChevronRight, LifeBuoy, GraduationCap, Ticket,
 } from "lucide-react";
 
 type NavLink = { icon: React.ElementType; label: string; href: string; exact?: boolean };
@@ -29,6 +29,7 @@ const adminLinks: NavLink[] = [
   { icon: LayoutDashboard, label: "Dashboard",        href: "/admin",                 exact: true },
   { icon: Users,           label: "Users",             href: "/admin/users" },
   { icon: CreditCard,      label: "Payments",          href: "/admin/payments" },
+  { icon: Ticket,          label: "Coupons",           href: "/admin/coupons" },
   { icon: CheckSquare,     label: "Approvals",         href: "/admin/approvals" },
   { icon: BookOpen,        label: "Courses",           href: "/admin/courses" },
   { icon: BarChart2,       label: "Analytics",         href: "/admin/analytics" },
@@ -41,11 +42,10 @@ const adminLinks: NavLink[] = [
   { icon: LifeBuoy,        label: "Support Tickets",   href: "/admin/support" },
 ];
 
-
 const navGroups = [
-  { label: "Overview",   items: adminLinks.slice(0, 3) },
-  { label: "Management", items: adminLinks.slice(3, 7) },
-  { label: "Tools",      items: adminLinks.slice(7) },
+  { label: "Overview",   items: adminLinks.slice(0, 4) },
+  { label: "Management", items: adminLinks.slice(4, 8) },
+  { label: "Tools",      items: adminLinks.slice(8) },
 ];
 
 export default function Sidebar() {

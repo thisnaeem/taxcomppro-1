@@ -36,54 +36,69 @@ export async function POST(req: NextRequest) {
   }
   if (Array.isArray(body.specialties)) userPatch.specialties = body.specialties;
 
-  const card = await prisma.$transaction(async (tx) => {
-    if (Object.keys(userPatch).length > 0) {
-      await tx.user.update({ where: { id: session.user.id }, data: userPatch });
-    }
+  try {
+    const card = await prisma.$transaction(async (tx) => {
+      if (Object.keys(userPatch).length > 0) {
+        await tx.user.update({ where: { id: session.user.id }, data: userPatch });
+      }
 
-    const priorCard = await tx.digitalCard.findUnique({ where: { userId: session.user.id } });
+      const priorCard = await tx.digitalCard.findUnique({ where: { userId: session.user.id } });
+      const isAllowed = priorCard?.isPurchased || priorCard?.isActivated || (session.user as { role?: string }).role === "ADMIN";
 
-    const data = {
-      username,
-      isActivated: true,
-      activatedAt: priorCard?.activatedAt ?? new Date(),
-      professionalTitle:   typeof body.professionalTitle === "string" ? body.professionalTitle : undefined,
-      businessName:        typeof body.businessName === "string" ? body.businessName : undefined,
-      businessDescription: typeof body.businessDescription === "string" ? body.businessDescription : undefined,
-      phone:               typeof body.phone === "string" ? body.phone : undefined,
-      bookingUrl:          typeof body.bookingUrl === "string" ? body.bookingUrl : undefined,
-      businessAddress:     typeof body.businessAddress === "string" ? body.businessAddress : undefined,
-      logoUrl:             typeof body.logoUrl === "string" ? body.logoUrl : undefined,
-      theme:               typeof body.theme === "string" ? body.theme : undefined,
-      accentColor:         typeof body.accentColor === "string" ? body.accentColor : undefined,
-      phoneVisibility:     asVis((body.visibility as Record<string, unknown>)?.phone,     "PUBLIC"),
-      emailVisibility:     asVis((body.visibility as Record<string, unknown>)?.email,     "PUBLIC"),
-      addressVisibility:   asVis((body.visibility as Record<string, unknown>)?.address,   "PRIVATE"),
-      bookingVisibility:   asVis((body.visibility as Record<string, unknown>)?.booking,   "PUBLIC"),
-      websiteVisibility:   asVis((body.visibility as Record<string, unknown>)?.website,   "PUBLIC"),
-      socialVisibility:    asVis((body.visibility as Record<string, unknown>)?.social,    "PUBLIC"),
-      servicesVisibility:  asVis((body.visibility as Record<string, unknown>)?.services,  "PUBLIC"),
-    };
+      if (!isAllowed) {
+        throw new Error("PURCHASE_REQUIRED");
+      }
 
-    const saved = await tx.digitalCard.upsert({
-      where: { userId: session.user.id },
-      create: { userId: session.user.id, ...data },
-      update: data,
+      const data = {
+        username,
+        isActivated: true,
+        activatedAt: priorCard?.activatedAt ?? new Date(),
+        professionalTitle:   typeof body.professionalTitle === "string" ? body.professionalTitle : undefined,
+        businessName:        typeof body.businessName === "string" ? body.businessName : undefined,
+        businessDescription: typeof body.businessDescription === "string" ? body.businessDescription : undefined,
+        phone:               typeof body.phone === "string" ? body.phone : undefined,
+        bookingUrl:          typeof body.bookingUrl === "string" ? body.bookingUrl : undefined,
+        businessAddress:     typeof body.businessAddress === "string" ? body.businessAddress : undefined,
+        logoUrl:             typeof body.logoUrl === "string" ? body.logoUrl : undefined,
+        theme:               typeof body.theme === "string" ? body.theme : undefined,
+        accentColor:         typeof body.accentColor === "string" ? body.accentColor : undefined,
+        phoneVisibility:     asVis((body.visibility as Record<string, unknown>)?.phone,     "PUBLIC"),
+        emailVisibility:     asVis((body.visibility as Record<string, unknown>)?.email,     "PUBLIC"),
+        addressVisibility:   asVis((body.visibility as Record<string, unknown>)?.address,   "PRIVATE"),
+        bookingVisibility:   asVis((body.visibility as Record<string, unknown>)?.booking,   "PUBLIC"),
+        websiteVisibility:   asVis((body.visibility as Record<string, unknown>)?.website,   "PUBLIC"),
+        socialVisibility:    asVis((body.visibility as Record<string, unknown>)?.social,    "PUBLIC"),
+        servicesVisibility:  asVis((body.visibility as Record<string, unknown>)?.services,  "PUBLIC"),
+      };
+
+      const saved = await tx.digitalCard.upsert({
+        where: { userId: session.user.id },
+        create: { userId: session.user.id, ...data },
+        update: data,
+      });
+
+      if (links) {
+        await tx.cardLink.deleteMany({ where: { cardId: saved.id } });
+        if (links.length > 0) {
+          await tx.cardLink.createMany({
+            data: links.map((l, i) => ({
+              cardId: saved.id, label: l.label, url: l.url, icon: l.icon ?? null, color: l.color ?? null, order: i,
+            })),
+          });
+        }
+      }
+
+      return saved;
     });
 
-    if (links) {
-      await tx.cardLink.deleteMany({ where: { cardId: saved.id } });
-      if (links.length > 0) {
-        await tx.cardLink.createMany({
-          data: links.map((l, i) => ({
-            cardId: saved.id, label: l.label, url: l.url, icon: l.icon ?? null, color: l.color ?? null, order: i,
-          })),
-        });
-      }
+    return NextResponse.json({ username: card.username, cardUrl: cardPublicUrl(card.username) });
+  } catch (err: unknown) {
+    if (err instanceof Error && err.message === "PURCHASE_REQUIRED") {
+      return NextResponse.json(
+        { error: "A ProConnect Card purchase is required before activation. Please purchase your card for $29 first." },
+        { status: 403 }
+      );
     }
-
-    return saved;
-  });
-
-  return NextResponse.json({ username: card.username, cardUrl: cardPublicUrl(card.username) });
+    return NextResponse.json({ error: "Failed to activate card." }, { status: 500 });
+  }
 }

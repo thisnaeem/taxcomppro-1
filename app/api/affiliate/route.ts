@@ -17,14 +17,16 @@ async function getOrCreateSettings() {
   return settings;
 }
 
-// GET — fetch current user's affiliate profile
+// GET — fetch current user's affiliate profile (or public settings if not logged in)
 export async function GET(req: NextRequest) {
-  const session = await auth.api.getSession({ headers: req.headers });
-  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
   const settings = await getOrCreateSettings();
   if (!settings.programEnabled) {
     return NextResponse.json({ error: "Affiliate program is currently disabled" }, { status: 403 });
+  }
+
+  const session = await auth.api.getSession({ headers: req.headers });
+  if (!session?.user?.id) {
+    return NextResponse.json({ profile: null, settings });
   }
 
   const profile = await prisma.affiliateProfile.findUnique({

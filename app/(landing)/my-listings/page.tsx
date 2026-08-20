@@ -14,7 +14,7 @@ interface Listing {
 }
 
 const catLabels: Record<string, string> = {
-  SERVICE: "Service", PRODUCT: "Product", NETWORK: "Network", TRAINING: "Training",
+  SERVICE: "Service", PRODUCT: "Product", NETWORK: "Network", TRAINING: "Course",
 };
 const catColors: Record<string, string> = {
   SERVICE: "bg-blue-100 text-blue-700",

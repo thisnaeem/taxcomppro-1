@@ -6,8 +6,11 @@ import { headers } from "next/headers";
 async function requireAdmin() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session?.user) return null;
-  const u = await prisma.user.findUnique({ where: { id: session.user.id } });
-  return u?.role === "ADMIN" ? u : null;
+  const dbUser = await prisma.user.findUnique({ where: { id: session.user.id } });
+  if (!dbUser) return null;
+  const canManage = dbUser.role === "ADMIN" || dbUser.tier === "MARKETPLACE" || dbUser.tier === "MARKETPLACE_PLUS" || dbUser.role === "PROFESSIONAL";
+  if (!canManage) return null;
+  return dbUser;
 }
 
 // POST /api/admin/courses/[courseId]/sections/[sectionId]/lessons/[lessonId]/quiz

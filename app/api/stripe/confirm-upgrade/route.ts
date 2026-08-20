@@ -78,17 +78,27 @@ export async function POST(req: NextRequest) {
         });
 
         if (!alreadyCredited) {
-          // Get commission rates
+          // Get commission rates (custom affiliate overrides take priority over global settings)
           const settings = await prisma.affiliateSettings.findFirst();
-          const rateMap: Record<string, number> = {
-            VIP:              settings?.commissionVip         ?? 10,
-            MARKETPLACE:      settings?.commissionMarketplace ?? 15,
-            MARKETPLACE_PLUS: settings?.commissionPlus        ?? 20,
-          };
+          
+          let ratePercent = affiliateProfile.customCommissionRate ?? null;
+          if (tier === "VIP" && affiliateProfile.customVip != null) ratePercent = affiliateProfile.customVip;
+          if (tier === "MARKETPLACE" && affiliateProfile.customMarketplace != null) ratePercent = affiliateProfile.customMarketplace;
+          if (tier === "MARKETPLACE_PLUS" && affiliateProfile.customPlus != null) ratePercent = affiliateProfile.customPlus;
+          
+          if (ratePercent == null) {
+            const rateMap: Record<string, number> = {
+              VIP:              settings?.commissionVip         ?? 10,
+              MARKETPLACE:      settings?.commissionMarketplace ?? 15,
+              MARKETPLACE_PLUS: settings?.commissionPlus        ?? 20,
+            };
+            ratePercent = rateMap[tier] ?? 10;
+          }
+
           const prices: Record<string, number> = {
             VIP: 39.99, MARKETPLACE: 79.99, MARKETPLACE_PLUS: 109.99,
           };
-          const rate       = (rateMap[tier] ?? 10) / 100;
+          const rate       = ratePercent / 100;
           const price      = prices[tier] ?? 39.99;
           const commission = parseFloat((price * rate).toFixed(2));
 

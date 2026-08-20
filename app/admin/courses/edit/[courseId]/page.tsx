@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import RichTextEditor from "@/components/courses/RichTextEditor";
 
-const CATEGORIES = ["Tax Law","Compliance","Accounting","Bookkeeping","Audit","Financial Planning","Business Tax","Payroll"];
+const CATEGORIES = ["Tax Office Startup","Compliance","Accounting","Bookkeeping","Audit","Financial Planning","Business Tax","Payroll"];
 type ContentType = "VIDEO"|"TEXT"|"QUIZ";
 const CT_ICONS: Record<ContentType, React.ElementType> = { VIDEO: Video, TEXT: FileText, QUIZ: HelpCircle };
 const CT_LABELS: Record<ContentType, string> = { VIDEO: "Video", TEXT: "Article", QUIZ: "Quiz" };
@@ -53,10 +53,20 @@ export default function EditCoursePage() {
       const fd = new FormData();
       fd.append("files", file);
       fd.append("folder", "course-thumbnails");
-      const res  = await fetch("/api/upload", { method: "POST", body: fd });
-      const data = await res.json() as { urls?: string[] };
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        alert(errData.error || "Failed to upload image. Please try a smaller image.");
+        return;
+      }
+      const data = (await res.json()) as { urls?: string[] };
       if (data.urls?.[0]) setThumbnail(data.urls[0]);
-    } finally { setThumbUploading(false); }
+    } catch (e) {
+      console.error(e);
+      alert("An error occurred while uploading the thumbnail.");
+    } finally {
+      setThumbUploading(false);
+    }
   };
 
   useEffect(() => {
@@ -143,10 +153,10 @@ export default function EditCoursePage() {
       {/* Header */}
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <Link href="/admin/courses" className="text-slate-400 hover:text-slate-600"><ArrowLeft className="w-5 h-5"/></Link>
+          <Link href="/admin/courses" className="text-slate-400 hover:text-white"><ArrowLeft className="w-5 h-5"/></Link>
           <div>
-            <h1 className="text-2xl font-black text-[#0a1628]">Edit Course</h1>
-            <p className="text-slate-500 text-sm mt-0.5 truncate max-w-xs">{course.title}</p>
+            <h1 className="text-2xl font-black text-white">Edit Course</h1>
+            <p className="text-slate-400 text-sm mt-0.5 truncate max-w-xs">{course.title}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">

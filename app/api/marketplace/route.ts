@@ -62,26 +62,10 @@ export async function POST(req: NextRequest) {
       images:      body.images ?? [],
       metadata:    body.metadata ?? undefined,
       userId:      session.user.id,
-      status:      isAdmin ? "APPROVED" : "PENDING",
+      status:      "APPROVED",
       isFeatured:  isAdmin,
     },
   });
-
-  // Notify all Admins if listing requires approval
-  if (!isAdmin) {
-    const admins = await prisma.user.findMany({ where: { role: "ADMIN" }, select: { id: true } });
-    if (admins.length > 0) {
-      await prisma.notification.createMany({
-        data: admins.map(a => ({
-          userId: a.id,
-          type: "SYSTEM",
-          title: "🛒 Listing Pending Approval",
-          message: `"${listing.title}" submitted by ${user?.name ?? "a user"} is waiting for approval.`,
-          link: "/admin/approvals",
-        })),
-      }).catch(() => {});
-    }
-  }
 
   return NextResponse.json(listing, { status: 201 });
 }

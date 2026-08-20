@@ -41,7 +41,7 @@ const catColors: Record<string, string> = {
   NETWORK: "bg-emerald-100 text-emerald-700", TRAINING: "bg-amber-100 text-amber-700",
 };
 const catLabels: Record<string, string> = {
-  SERVICE: "Service", PRODUCT: "Product", NETWORK: "Network", TRAINING: "Training",
+  SERVICE: "Service", PRODUCT: "Product", NETWORK: "Network", TRAINING: "Course",
 };
 
 function timeAgo(d: string) {

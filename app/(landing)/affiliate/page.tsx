@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useSession } from "@/lib/auth-client";
 import { Loader2 } from "lucide-react";
 import {
   Copy01Icon, Tick02Icon, DollarCircleIcon, UserGroupIcon,
@@ -28,6 +30,8 @@ const FAQS = [
 ];
 
 export default function AffiliatePage() {
+  const router = useRouter();
+  const { data: session } = useSession();
   const [profile,   setProfile]   = useState<Profile|null>(null);
   const [settings,  setSettings]  = useState<Settings|null>(null);
   const [referrals, setReferrals] = useState<Referral[]>([]);
@@ -47,7 +51,7 @@ export default function AffiliatePage() {
 
   useEffect(()=>{
     fetch("/api/affiliate").then(r=>r.json()).then(async d=>{
-      setSettings(d.settings);
+      if (d.settings) setSettings(d.settings);
       if(d.profile){ setProfile(d.profile);
         const [stats,pays]=await Promise.all([fetch("/api/affiliate/stats").then(r=>r.json()),fetch("/api/affiliate/payout").then(r=>r.json())]);
         if(stats?.referrals) setReferrals(stats.referrals);
@@ -56,7 +60,16 @@ export default function AffiliatePage() {
     }).finally(()=>setLoading(false));
   },[]);
 
-  const activate=async()=>{ setActivating(true); const r=await fetch("/api/affiliate",{method:"POST"}); if(r.ok) setProfile(await r.json()); setActivating(false); };
+  const activate=async()=>{
+    if (!session?.user) {
+      router.push("/register?next=/affiliate");
+      return;
+    }
+    setActivating(true);
+    const r=await fetch("/api/affiliate",{method:"POST"});
+    if(r.ok) setProfile(await r.json());
+    setActivating(false);
+  };
   const copy=()=>{ navigator.clipboard.writeText(refLink); setCopied(true); setTimeout(()=>setCopied(false),2000); };
   const submitPayout=async(e:React.FormEvent)=>{ e.preventDefault(); setSubmitting(true); setFormError("");
     const r=await fetch("/api/affiliate/payout",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({amount:parseFloat(amount),method,details})});

@@ -7,7 +7,9 @@ async function requireAdmin() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session?.user) return null;
   const dbUser = await prisma.user.findUnique({ where: { id: session.user.id } });
-  if (!dbUser || dbUser.role !== "ADMIN") return null;
+  if (!dbUser) return null;
+  const canManage = dbUser.role === "ADMIN" || dbUser.tier === "MARKETPLACE" || dbUser.tier === "MARKETPLACE_PLUS" || dbUser.role === "PROFESSIONAL";
+  if (!canManage) return null;
   return dbUser;
 }
 
@@ -24,14 +26,16 @@ export async function PATCH(
   const lesson = await prisma.lesson.update({
     where: { id: lessonId },
     data: {
-      ...(body.title       !== undefined ? { title:       body.title }                  : {}),
-      ...(body.description !== undefined ? { description: body.description || null }    : {}),
-      ...(body.contentType !== undefined ? { contentType: body.contentType }            : {}),
-      ...(body.videoUrl    !== undefined ? { videoUrl:    body.videoUrl || null }       : {}),
-      ...(body.textContent !== undefined ? { textContent: body.textContent || null }    : {}),
-      ...(body.duration    !== undefined ? { duration:    body.duration }               : {}),
-      ...(body.order       !== undefined ? { order:       body.order }                  : {}),
-      ...(body.isFree      !== undefined ? { isFree:      body.isFree }                 : {}),
+      ...(body.title       !== undefined ? { title:        body.title }                   : {}),
+      ...(body.description !== undefined ? { description:  body.description || null }     : {}),
+      ...(body.contentType !== undefined ? { contentType:  body.contentType }             : {}),
+      ...(body.videoUrl    !== undefined ? { videoUrl:     body.videoUrl || null }        : {}),
+      ...(body.textContent !== undefined ? { textContent:  body.textContent || null }     : {}),
+      ...(body.downloadUrl !== undefined ? { downloadUrl:  body.downloadUrl || null }     : {}),
+      ...(body.downloadName !== undefined ? { downloadName: body.downloadName || null }   : {}),
+      ...(body.duration    !== undefined ? { duration:     body.duration }                : {}),
+      ...(body.order       !== undefined ? { order:        body.order }                   : {}),
+      ...(body.isFree      !== undefined ? { isFree:       body.isFree }                  : {}),
     },
   });
 

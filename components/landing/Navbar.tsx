@@ -36,6 +36,8 @@ const navItems: NavItem[] = [
       { label: "Pro Marketing",href: "/pro-marketing",icon: Megaphone,     desc: "" },
     ],
   },
+  { type: "link",     label: "Pricing",     href: "/upgrade",    icon: Rocket01Icon },
+  { type: "link",     label: "Affiliates",  href: "/affiliate",  icon: Gift },
 ];
 
 // Flat list for mobile menu — links + all dropdown sub-items
@@ -67,17 +69,6 @@ export default function Navbar() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
   const isDark = mounted && resolvedTheme === "dark";
-
-  // Directly set nav item colors — beats all CSS specificity issues
-  useEffect(() => {
-    if (!mounted) return;
-    const items = document.querySelectorAll<HTMLElement>("[data-nav-item]");
-    items.forEach(el => {
-      el.style.color = resolvedTheme === "dark" ? "#ffffff" : "";
-      el.onmouseenter = () => { el.style.color = resolvedTheme === "dark" ? "#f0c040" : ""; };
-      el.onmouseleave = () => { el.style.color = resolvedTheme === "dark" ? "#ffffff" : ""; };
-    });
-  }, [mounted, resolvedTheme]);
 
   // Seed Redux auth state so feed components work in (landing) pages
   useEffect(() => {
@@ -170,12 +161,12 @@ export default function Navbar() {
         .atlas-btn:hover { animation: atlas-shine 1.5s ease infinite; }
       `}</style>
       <header className="sticky top-0 z-50 bg-white dark:bg-[#172135] border-b border-slate-200 dark:border-[#243550] shadow-sm dark:shadow-[0_1px_8px_rgba(0,0,0,0.5)]">
-      <div className="max-w-7xl mx-auto px-6 h-[80px] flex items-center gap-4">
+      <div className="w-full max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-8 h-[80px] flex items-center justify-between gap-4">
 
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 relative z-50">
-          <img src="/logo.webp"      alt="TaxCompPro" className="h-16 w-auto dark:hidden" />
-          <img src="/logo_dark.webp" alt="TaxCompPro" className="h-16 w-auto hidden dark:block" />
+        <Link href="/" className="flex items-center shrink-0 relative z-50 mr-1 lg:mr-2">
+          <img src="/logo.webp"      alt="TaxCompPro" className="h-11 sm:h-13 lg:h-15 w-auto max-w-none object-contain dark:hidden shrink-0" />
+          <img src="/logo_dark.webp" alt="TaxCompPro" className="h-11 sm:h-13 lg:h-15 w-auto max-w-none object-contain hidden dark:block shrink-0" />
         </Link>
 
         {/* Search bar (expanded) */}
@@ -204,15 +195,15 @@ export default function Navbar() {
         ) : (
           <>
             {/* Desktop nav */}
-            <nav className="hidden md:flex items-center gap-1 flex-1" ref={navMenuRef}>
+            <nav className="hidden lg:flex items-center gap-1 xl:gap-2 shrink-0" ref={navMenuRef}>
               {navItems.map(item => {
                 if (item.type === "link") {
                   const Icon = item.icon;
+                  const href = item.label === "Home" ? (session ? "/feed" : "/") : item.href;
                   return (
-                    <Link key={item.label} href={item.href}
-                      data-nav-item
-                      className="flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-[#0a1628] hover:bg-slate-50 dark:hover:bg-white/10 px-2.5 py-2 rounded-lg transition-all">
-                      <Icon className="w-3.5 h-3.5" />{item.label}
+                    <Link key={item.label} href={href}
+                      className="flex items-center gap-1.5 text-xs xl:text-sm font-semibold text-slate-600 hover:text-[#0a1628] hover:bg-slate-50 dark:text-white dark:hover:text-[#f0c040] dark:hover:bg-white/10 px-2.5 py-2 rounded-lg transition-all shrink-0 whitespace-nowrap">
+                      <Icon className="w-3.5 h-3.5 shrink-0" />{item.label}
                     </Link>
                   );
                 }
@@ -220,15 +211,14 @@ export default function Navbar() {
                 const Icon = item.icon;
                 const isOpen = openMenu === item.label;
                 return (
-                  <div key={item.label} className="relative">
+                  <div key={item.label} className="relative shrink-0">
                     <button onClick={() => setOpenMenu(isOpen ? null : item.label)}
-                      data-nav-item
-                      className={`flex items-center gap-1.5 text-sm font-semibold px-2.5 py-2 rounded-lg transition-all ${
+                      className={`flex items-center gap-1.5 text-xs xl:text-sm font-semibold px-2.5 py-2 rounded-lg transition-all shrink-0 whitespace-nowrap ${
                         isOpen
-                          ? "bg-slate-100 dark:bg-white/10 text-[#0a1628]"
-                          : "text-slate-500 hover:text-[#0a1628] hover:bg-slate-50 dark:hover:bg-white/10"
+                          ? "bg-slate-100 dark:bg-white/10 text-[#0a1628] dark:text-[#f0c040]"
+                          : "text-slate-600 hover:text-[#0a1628] hover:bg-slate-50 dark:text-white dark:hover:text-[#f0c040] dark:hover:bg-white/10"
                       }`}>
-                      <Icon className="w-3.5 h-3.5" />{item.label}
+                      <Icon className="w-3.5 h-3.5 shrink-0" />{item.label}
                       <ChevronDown className={`w-3 h-3 transition-transform ${isOpen ? "rotate-180" : ""}`} />
                     </button>
                     {isOpen && (
@@ -253,19 +243,19 @@ export default function Navbar() {
               })}
             </nav>
 
-            {/* Atlas AI promo button — square, black text */}
-            <a
-              href="https://atlas-ai-iota.vercel.app"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="atlas-btn hidden md:flex items-center gap-2 text-[#0a1628] font-black text-xs px-4 py-2 rounded-xl transition-all hover:scale-105 active:scale-95 shrink-0 ml-2"
-            >
-              <img src="/icon.webp" alt="Atlas AI" className="w-5 h-5 rounded-sm object-contain" />
-              <span>Try Atlas AI</span>
-            </a>
-
             {/* Desktop right */}
-            <div className="hidden md:flex items-center gap-1 ml-auto shrink-0 flex-nowrap">
+            <div className="hidden lg:flex items-center gap-1.5 xl:gap-2 shrink-0 flex-nowrap">
+              {/* Atlas AI promo button — square, black text */}
+              <a
+                href="https://atlas-ai-iota.vercel.app"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="atlas-btn hidden xl:flex items-center gap-2 !text-black font-black text-xs px-3.5 py-2 rounded-xl transition-all hover:scale-105 active:scale-95 shrink-0"
+              >
+                <img src="/icon.webp" alt="Atlas AI" className="w-5 h-5 rounded-sm object-contain" />
+                <span className="!text-black font-black">Try Atlas AI</span>
+              </a>
+
               {/* Theme toggle switch */}
               <button
                 type="button"
@@ -424,7 +414,7 @@ export default function Navbar() {
                     Sign In
                   </Link>
                   <Link href="/register"
-                    className="text-sm font-bold bg-gradient-to-r from-[#f0c040] to-[#d4a017] text-[#0a1628] px-5 py-2.5 rounded-full hover:shadow-[0_0_20px_rgba(212,160,23,0.4)] transition-all whitespace-nowrap">
+                    className="text-sm font-black bg-gradient-to-r from-[#f0c040] to-[#d4a017] !text-black px-5 py-2.5 rounded-full hover:shadow-[0_0_20px_rgba(212,160,23,0.4)] transition-all whitespace-nowrap">
                     Get Started Free
                   </Link>
                 </div>
@@ -432,7 +422,7 @@ export default function Navbar() {
             </div>
 
             {/* Mobile toggle */}
-            <button onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden text-[#0a1628] dark:text-white relative z-50 p-2 -mr-2 ml-auto">
+            <button onClick={() => setMobileOpen(!mobileOpen)} className="lg:hidden text-[#0a1628] dark:text-white relative z-50 p-2 -mr-2 ml-auto">
               {mobileOpen ? <Cancel01Icon className="w-6 h-6" /> : <Menu01Icon className="w-6 h-6" />}
             </button>
           </>
@@ -441,7 +431,7 @@ export default function Navbar() {
 
       {/* Mobile menu — full-width panel below header */}
       {mobileOpen && !searchOpen && (
-        <div className="md:hidden bg-white dark:bg-[#172135] border-t border-slate-200 dark:border-[#243550] shadow-lg">
+        <div className="lg:hidden bg-white dark:bg-[#172135] border-t border-slate-200 dark:border-[#243550] shadow-lg">
           <div className="px-4 pt-4 pb-2">
             {/* Mobile search */}
             <form onSubmit={handleSearch} className="flex items-center gap-2 bg-slate-100 dark:bg-white/10 border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2.5 mb-3">
@@ -457,28 +447,29 @@ export default function Navbar() {
 
           {/* Nav links */}
           <div className="px-3 pb-2">
-            {navLinks.map(l => (
-              <Link key={l.label} href={l.href}
-                className="flex items-center gap-3 text-slate-700 dark:text-white/85 px-3 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-white/8 font-semibold transition-colors"
-                onClick={() => setMobileOpen(false)}>
-                <span className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-white/10 flex items-center justify-center shrink-0">
-                  <l.icon className="w-4 h-4 text-[#0a1628] dark:text-white/80" />
-                </span>
-                {l.label}
-              </Link>
-            ))}
-          </div>
-
-          {/* Atlas AI button on mobile */}
+            {navLinks.map(l => {
+              const href = l.label === "Home" ? (session ? "/feed" : "/") : l.href;
+              return (
+                <Link key={l.label} href={href}
+                  className="flex items-center gap-3 text-slate-700 dark:text-white/85 px-3 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-white/8 font-semibold transition-colors"
+                  onClick={() => setMobileOpen(false)}>
+                  <span className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-white/10 flex items-center justify-center shrink-0">
+                    <l.icon className="w-4 h-4 text-[#0a1628] dark:text-white/80" />
+                  </span>
+                  {l.label}
+                </Link>
+              );
+            })}
+                    {/* Atlas AI button on mobile */}
           <div className="px-4 pb-3">
             <a
               href="https://atlas-ai-iota.vercel.app"
               target="_blank"
               rel="noopener noreferrer"
-              className="atlas-btn flex items-center justify-center gap-2 text-[#0a1628] font-black text-sm px-4 py-3 rounded-xl w-full"
+              className="atlas-btn flex items-center justify-center gap-2 !text-black font-black text-sm px-4 py-3 rounded-xl w-full"
             >
               <img src="/icon.webp" alt="Atlas AI" className="w-5 h-5 rounded-sm object-contain" />
-              Try Atlas AI
+              <span className="!text-black font-black">Try Atlas AI</span>
             </a>
           </div>
 
@@ -573,12 +564,12 @@ export default function Navbar() {
                   Sign In
                 </Link>
                 <Link href="/register"
-                  className="text-center text-sm font-bold bg-gradient-to-r from-[#f0c040] to-[#d4a017] text-[#0a1628] py-3 rounded-full hover:shadow-[0_0_20px_rgba(212,160,23,0.4)] transition-all">
+                  className="text-center text-sm font-black bg-gradient-to-r from-[#f0c040] to-[#d4a017] !text-black py-3 rounded-full hover:shadow-[0_0_20px_rgba(212,160,23,0.4)] transition-all">
                   Get Started Free
                 </Link>
               </div>
             )}
-          </div>
+          </div>    </div>
         </div>
       )}
     </header>

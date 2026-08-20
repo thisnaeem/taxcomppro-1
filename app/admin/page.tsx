@@ -31,7 +31,7 @@ const tierColors: Record<string, string> = {
 };
 
 const catLabels: Record<string, string> = {
-  SERVICE: "Service", PRODUCT: "Product", NETWORK: "Network", TRAINING: "Training",
+  SERVICE: "Service", PRODUCT: "Product", NETWORK: "Network", TRAINING: "Course",
 };
 
 function timeAgo(d: string) {

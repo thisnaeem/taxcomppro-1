@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { headers } from "next/headers";
 
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
   const { slug } = await params;
-  const session = await auth.api.getSession({ headers: await headers() });
+  const session = await auth.api.getSession({ headers: req.headers });
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { lessonId } = await req.json();
@@ -22,11 +21,22 @@ export async function POST(
   });
   if (!course) return NextResponse.json({ error: "Course not found" }, { status: 404 });
 
-  const enrollment = await prisma.enrollment.findUnique({
+  let enrollment = await prisma.enrollment.findUnique({
     where: { userId_courseId: { userId: session.user.id, courseId: course.id } },
     include: { progress: { select: { lessonId: true } } },
   });
-  if (!enrollment) return NextResponse.json({ error: "Not enrolled" }, { status: 403 });
+
+  if (!enrollment) {
+    const dbUser = await prisma.user.findUnique({ where: { id: session.user.id } });
+    if (session.user.id === course.instructorId || dbUser?.role === "ADMIN") {
+      enrollment = await prisma.enrollment.create({
+        data: { userId: session.user.id, courseId: course.id },
+        include: { progress: { select: { lessonId: true } } },
+      });
+    } else {
+      return NextResponse.json({ error: "Not enrolled" }, { status: 403 });
+    }
+  }
 
   // Upsert progress (idempotent)
   await prisma.lessonProgress.upsert({

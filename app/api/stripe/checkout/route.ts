@@ -15,12 +15,76 @@ export async function POST(req: NextRequest) {
   const session = await auth.api.getSession({ headers: req.headers });
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { tier } = await req.json();
+  const { tier, couponCode } = (await req.json()) as { tier: string; couponCode?: string };
   const priceId = PRICE_IDS[tier];
   if (!priceId) return NextResponse.json({ error: "Invalid tier" }, { status: 400 });
 
   const user = await prisma.user.findUnique({ where: { id: session.user.id } });
   if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
+
+  let appliedCoupon = null;
+
+  if (couponCode) {
+    const coupon = await prisma.marketplaceCoupon.findFirst({
+      where: {
+        code: couponCode.toUpperCase().trim(),
+        isActive: true,
+      },
+    });
+
+    if (coupon) {
+      const isValidTime = !coupon.expiresAt || new Date() <= coupon.expiresAt;
+      const isValidUses = coupon.maxUses == null || coupon.usedCount < coupon.maxUses;
+      const isValidScope =
+        !coupon.listingId ||
+        coupon.listingId === "ALL" ||
+        coupon.listingId === "MEMBERSHIP" ||
+        coupon.listingId === "UPGRADE" ||
+        coupon.listingId === tier;
+
+      if (isValidTime && isValidUses && isValidScope) {
+        appliedCoupon = coupon;
+
+        // If 100% discount, grant membership upgrade immediately without Stripe checkout
+        if (coupon.discountType === "PERCENT" && coupon.discountValue >= 100) {
+          const periodEnd = new Date();
+          periodEnd.setMonth(periodEnd.getMonth() + 1);
+
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { tier: tier as any },
+          });
+
+          await prisma.subscription.upsert({
+            where: { userId: user.id },
+            create: {
+              userId: user.id,
+              plan: tier as any,
+              status: "active",
+              currentPeriodEnd: periodEnd,
+            },
+            update: {
+              plan: tier as any,
+              status: "active",
+              currentPeriodEnd: periodEnd,
+            },
+          });
+
+          await prisma.marketplaceCoupon.update({
+            where: { id: coupon.id },
+            data: { usedCount: { increment: 1 } },
+          });
+
+          return NextResponse.json({ url: "/profile?upgraded=1&free=1" });
+        }
+
+        await prisma.marketplaceCoupon.update({
+          where: { id: coupon.id },
+          data: { usedCount: { increment: 1 } },
+        });
+      }
+    }
+  }
 
   // Create or retrieve Stripe customer
   let customerId = user.stripeCustomerId;
@@ -36,11 +100,17 @@ export async function POST(req: NextRequest) {
   const checkoutSession = await stripe.checkout.sessions.create({
     customer: customerId,
     mode: "subscription",
+    allow_promotion_codes: true,
     payment_method_types: ["card"],
     line_items: [{ price: priceId, quantity: 1 }],
     success_url: `${process.env.NEXT_PUBLIC_APP_URL}/profile?upgraded=1&session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/upgrade`,
-    metadata: { userId: user.id, tier, ...(refCode ? { referralCode: refCode } : {}) },
+    metadata: {
+      userId: user.id,
+      tier,
+      couponCode: appliedCoupon?.code || "",
+      ...(refCode ? { referralCode: refCode } : {}),
+    },
   });
 
   return NextResponse.json({ url: checkoutSession.url });
