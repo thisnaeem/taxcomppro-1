@@ -53,10 +53,12 @@ export const auth = betterAuth({
   advanced: {
     crossSubdomainCookies: {
       enabled: true,
+      domain: process.env.NODE_ENV === "production" ? ".taxcomppro.com" : undefined,
     },
     defaultCookieAttributes: {
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
+      domain: process.env.NODE_ENV === "production" ? ".taxcomppro.com" : undefined,
     },
   },
 });
