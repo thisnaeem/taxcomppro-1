@@ -16,6 +16,18 @@ export const registerSchema = z.object({
   path: ["confirmPassword"],
 });
 
+export const forgotPasswordSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+});
+
+export const resetPasswordSchema = z.object({
+  password: z.string().min(8, "Password must be at least 8 characters"),
+  confirmPassword: z.string(),
+}).refine((d) => d.password === d.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
+});
+
 export const listingSchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters").max(120),
   description: z.string().min(20, "Description must be at least 20 characters").max(2000),
@@ -69,6 +81,8 @@ export const lessonSchema = z.object({
 
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;
+export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
 export type ListingInput = z.infer<typeof listingSchema>;
 export type CommunityInput = z.infer<typeof communitySchema>;
 export type PostInput = z.infer<typeof postSchema>;

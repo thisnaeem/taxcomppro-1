@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { prisma } from "@/lib/prisma";
+import { sendPasswordResetEmail } from "@/lib/email";
 
 const appUrl = process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
@@ -9,6 +10,15 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: false,
+    resetPasswordTokenExpiresIn: 3600, // 1 hour
+    sendResetPassword: async ({ user, url, token }) => {
+      const resetUrl = `${appUrl}/reset-password?token=${encodeURIComponent(token)}`;
+      await sendPasswordResetEmail({
+        to: user.email,
+        userName: user.name || "Member",
+        resetUrl,
+      });
+    },
   },
   socialProviders: {
     google: {

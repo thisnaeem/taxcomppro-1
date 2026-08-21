@@ -6,6 +6,8 @@ const PUBLIC_PAGES = new Set([
   "/",
   "/login",
   "/register",
+  "/forgot-password",
+  "/reset-password",
   "/about",
   "/terms",
   "/privacy",
@@ -44,10 +46,11 @@ const PUBLIC_PREFIXES = [
   "/verify-certificate/",
   "/affiliate/",
   "/upgrade/",
+  "/reset-password/",
 ];
 
 // Auth pages — logged-in users get bounced away from these
-const AUTH_PAGES = ["/login", "/register"];
+const AUTH_PAGES = ["/login", "/register", "/forgot-password", "/reset-password"];
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;

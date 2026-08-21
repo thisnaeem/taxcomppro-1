@@ -21,7 +21,7 @@ const features = [
   { img: "/features/professional_network.webp", title: "Professional Network",   desc: "Connect with business experts and tax professionals nationwide" },
   { img: "/features/markeplace.webp",           title: "Marketplace",             desc: "Buy and sell services, products, trainings, and courses" },
   { img: "/features/communitues.webp",          title: "Communities",             desc: "Join or create communities around your niche" },
-  { img: "/icon.webp",                          title: "ATLAS AI Tax Assistant",  desc: "AI-powered tax assistant for real-time tax guidance and compliance" },
+  { img: "/atlsasai.png",                       title: "ATLAS AI Tax Assistant",  desc: "AI-powered tax assistant for real-time tax guidance and compliance" },
   { img: "/features/live-sessions.webp",        title: "Live Sessions",           
     desc: (<>
       Host and attend live audio/video sessions with verified professionals. 
@@ -122,8 +122,8 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {features.map((f) => (
               <div key={f.title} className="bg-white border border-slate-200 rounded-2xl p-8 hover:border-[#d4a017] hover:-translate-y-1 hover:shadow-xl transition-all flex flex-col items-center text-center">
-                <div className="mb-5">
-                <Image src={f.img} alt={f.title} width={80} height={80} className="object-contain" style={{ width: "auto", height: "auto" }} />
+                <div className="mb-5 w-20 h-20 flex items-center justify-center">
+                  <Image src={f.img} alt={f.title} width={80} height={80} className="w-20 h-20 object-contain" />
                 </div>
                 <h3 className="text-xl font-bold text-[#0a1628] mb-2">{f.title}</h3>
                 <p className="text-slate-500 text-base leading-relaxed">{f.desc}</p>
