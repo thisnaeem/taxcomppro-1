@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# scratch / temp processing
+scratch/
+/scratch/
+*.pdf
+scripts/upload-toolkits.js
