@@ -167,7 +167,7 @@ export const TOOLKITS: Toolkit[] = [
     downloadEnvKey: "TOOLKIT_DOWNLOAD_CREDITS_FILING_STATUS",
     badgeImage: "/credits-filing-status.png",
     description: "Master filing statuses, qualifying dependents, head of household rules, and tax credit eligibility with audit-ready documentation.",
-    externalUrl: "/training-center",
+    externalUrl: "https://credits.taxcomppro.com/",
     features: [
       "Head of Household Qualification Protocols",
       "Tie-Breaker Rules & Dependent Decision Trees",
