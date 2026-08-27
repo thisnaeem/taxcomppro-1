@@ -83,9 +83,17 @@ export async function sendEmail(options: SendEmailOptions): Promise<{ success: b
     },
   }));
 
+  const senderName = process.env.MICROSOFT_SENDER_NAME || "Tax Compliance Pro Support";
+
   const payload = {
     message: {
       subject: options.subject,
+      from: {
+        emailAddress: {
+          name: senderName,
+          address: senderEmail,
+        },
+      },
       body: {
         contentType: "HTML",
         content: options.html,
@@ -252,9 +260,9 @@ export async function sendPasswordResetEmail({
   <div class="wrapper">
     <table class="main" width="100%" cellpadding="0" cellspacing="0" role="presentation">
       <tr>
-        <td class="header">
-          <div class="brand-title">TAX COMPLIANCE PRO</div>
-          <div class="brand-subtitle">#1 TAX PREPARER AUDIT PROTECTION</div>
+        <td class="header" style="background: linear-gradient(135deg, #0a1628 0%, #1a3a6b 100%); padding: 32px 30px; text-align: center;">
+          <img src="https://taxcomppro.com/logo_dark.webp" alt="Tax Compliance Pro" width="170" style="display: block; margin: 0 auto 12px auto; max-width: 170px; height: auto; border: 0;" />
+          <div class="brand-subtitle" style="color: #f0c040; font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;">#1 TAX PREPARER AUDIT PROTECTION</div>
         </td>
       </tr>
       <tr>

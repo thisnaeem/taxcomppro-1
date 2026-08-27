@@ -1,81 +1,161 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import Link from "next/link";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setUser } from "@/store/slices/authSlice";
-import { useSearchParams } from "next/navigation";
-import Link from "next/link";
-import { Loader2, BadgeCheck, Clock, X, CreditCard, Camera, Download } from "lucide-react";
-import { UserCircleIcon, Mail01Icon, Briefcase01Icon, NoteIcon, Tick02Icon, BookOpen01Icon, UserGroupIcon, Rocket01Icon, ShoppingBag01Icon, Add01Icon } from "hugeicons-react";
-import DueDiligenceBadge from "@/components/badges/DueDiligenceBadge";
-import { VoiceMemoEditor } from "@/components/profile/VoiceMemo";
-import ConnectCardManager from "@/components/profile/ConnectCardManager";
+import {
+  Loader2,
+  MapPin,
+  UserCheck,
+  Share2,
+  Award,
+  BookOpen,
+  FolderDown,
+  ShieldCheck,
+  Check,
+  Crown,
+  ChevronRight,
+  Camera,
+  Sparkles,
+  Edit3,
+  Download,
+  X,
+  Link2,
+  Mail,
+} from "lucide-react";
+import EditProfileModal, { type ProfileFormData } from "@/components/profile/EditProfileModal";
 
 interface Purchase {
-  id: string; toolkitId: string; name: string; emoji: string;
-  membershipTier: string; membershipMonths: number;
-  createdAt: string; downloadUrl: string | null;
+  id: string;
+  toolkitId: string;
+  name: string;
+  emoji: string;
+  membershipTier: string;
+  membershipMonths: number;
+  createdAt: string;
+  downloadUrl: string | null;
 }
-const TIER_LABELS: Record<string, string> = {
-  MARKETPLACE: "Marketplace", MARKETPLACE_PLUS: "Marketplace Plus", VIP: "VIP",
-};
 
-type AppStatus = "PENDING"|"APPROVED"|"REJECTED";
-interface App { status: AppStatus; note: string|null; createdAt: string; }
-const inp = "w-full font-[inherit] text-sm px-4 py-3 border border-slate-200 rounded-xl outline-none focus:border-[#0a1628] focus:ring-2 focus:ring-[#0a1628]/10 transition-all";
+const MEMBER_SIDEBAR_TABS = [
+  { id: "overview", label: "Overview", icon: UserCheck },
+  { id: "basic", label: "Basic Info", icon: Edit3 },
+  { id: "learning", label: "My Learning & Courses", icon: BookOpen },
+  { id: "badges", label: "Due Diligence & Badges", icon: ShieldCheck },
+  { id: "purchases", label: "Toolkits & Downloads", icon: FolderDown },
+  { id: "membership", label: "Membership Plan", icon: Crown },
+] as const;
 
 export default function MemberProfile() {
   const dispatch = useAppDispatch();
-  const user = useAppSelector(s => s.auth.user);
-  const [name, setName] = useState(user?.name ?? "");
-  const [headline, setHeadline] = useState("");
-  const [bio, setBio] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [coverImage, setCoverImage] = useState<string|null>(user?.coverImage ?? null);
-  const [coverUploading, setCoverUploading] = useState(false);
-  const [avatarImage, setAvatarImage] = useState<string|null>(user?.image ?? null);
+  const user = useAppSelector((s) => s.auth.user);
+
+  const [activeTab, setActiveTab] = useState<typeof MEMBER_SIDEBAR_TABS[number]["id"]>("overview");
+  const [loading, setLoading] = useState(true);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [savingInPage, setSavingInPage] = useState(false);
+  const [saveToast, setSaveToast] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
-  const bannerInputRef = useRef<HTMLInputElement>(null);
-  const avatarInputRef = useRef<HTMLInputElement>(null);
-  const [app, setApp] = useState<App | null | undefined>(undefined);
-  const [showForm, setShowForm] = useState(false);
-  const [appSpec, setAppSpec] = useState(""); const [appCreds, setAppCreds] = useState(""); const [appReason, setAppReason] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [portalLoading, setPortalLoading] = useState(false);
-  const searchParams = useSearchParams();
-  const [activeTab, setActiveTab] = useState<"profile" | "badges" | "purchases" | "card">(
-    searchParams.get("tab") === "card" ? "card" : "profile"
-  );
+  const [coverUploading, setCoverUploading] = useState(false);
+
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [purchasesLoading, setPurchasesLoading] = useState(false);
-  const [voiceMemoUrl, setVoiceMemoUrl] = useState<string | null>(null);
 
-  const openPortal = async () => {
-    setPortalLoading(true);
-    const res = await fetch("/api/stripe/portal", { method: "POST" });
-    const data = await res.json() as { url?: string; error?: string };
-    if (data.url) window.location.href = data.url;
-    else { alert(data.error ?? "Could not open portal"); setPortalLoading(false); }
-  };
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    fetch("/api/user/me").then(r => r.json()).then((u: Record<string,unknown>) => {
-      setName((u.name as string) ?? ""); setHeadline((u.headline as string) ?? ""); setBio((u.bio as string) ?? "");
-      setCoverImage((u.coverImage as string|null) ?? null);
-      setVoiceMemoUrl((u.voiceMemoUrl as string|null) ?? null);
-    });
-    fetch("/api/professional-application").then(r => r.json()).then(setApp);
+  const [profile, setProfile] = useState<ProfileFormData>({
+    name: user?.name ?? "",
+    headline: user?.headline ?? "",
+    bio: user?.bio ?? "",
+    mission: user?.mission ?? "",
+    location: user?.location ?? "",
+    yearsExperience: user?.yearsExperience ? String(user?.yearsExperience) : "",
+    website: user?.website ?? "",
+    linkedIn: user?.linkedIn ?? "",
+    twitter: user?.twitter ?? "",
+    facebook: user?.facebook ?? "",
+    image: user?.image ?? null,
+    coverImage: user?.coverImage ?? null,
+    specialties: user?.specialties?.length ? user.specialties : [],
+    certifications: user?.certifications?.length ? user.certifications : [],
+    languages: user?.languages?.length ? user.languages : [],
+    mediaPhotos: user?.mediaPhotos ?? [],
+    voiceMemoUrl: user?.voiceMemoUrl ?? null,
+  });
+
+  const [stats, setStats] = useState({
+    completedCourses: 0,
+    totalEnrollments: 0,
+    toolkitPurchases: 0,
+    memberSince: "",
+    tierName: "STANDARD MEMBER",
+    validThru: "",
+  });
+
+  const loadUserData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await fetch("/api/user/me");
+      if (res.ok) {
+        const u = await res.json();
+        setProfile({
+          name: u.name || "",
+          headline: u.headline || "",
+          bio: u.bio || "",
+          mission: u.mission || "",
+          location: u.location || "",
+          yearsExperience: u.yearsExperience != null ? String(u.yearsExperience) : "",
+          website: u.website || "",
+          linkedIn: u.linkedIn || "",
+          twitter: u.twitter || "",
+          facebook: u.facebook || "",
+          image: u.image || null,
+          coverImage: u.coverImage || null,
+          specialties: u.specialties?.length ? u.specialties : [],
+          certifications: u.certifications?.length ? u.certifications : [],
+          languages: u.languages?.length ? u.languages : [],
+          mediaPhotos: u.mediaPhotos || [],
+          voiceMemoUrl: u.voiceMemoUrl || null,
+        });
+
+        const createdDate = u.createdAt ? new Date(u.createdAt) : new Date();
+        const memberSinceStr = createdDate.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+
+        const tierLabel =
+          u.tier === "VIP" ? "VIP MEMBER"
+            : u.tier === "MARKETPLACE_PLUS" ? "MARKETPLACE PLUS"
+            : u.tier === "MARKETPLACE" ? "MARKETPLACE MEMBER"
+            : "STANDARD MEMBER";
+
+        setStats({
+          completedCourses: u.stats?.completedCourses ?? 0,
+          totalEnrollments: u.stats?.totalEnrollments ?? 0,
+          toolkitPurchases: u.stats?.toolkitPurchases ?? 0,
+          memberSince: memberSinceStr,
+          tierName: tierLabel,
+          validThru: u.subscription?.currentPeriodEnd
+            ? new Date(u.subscription.currentPeriodEnd).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+            : "",
+        });
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  // Load purchases when the tab is activated
+  useEffect(() => { loadUserData(); }, [loadUserData]);
+
   useEffect(() => {
-    if (activeTab !== "purchases" || purchases.length > 0) return;
-    setPurchasesLoading(true);
-    fetch("/api/user/purchases")
-      .then(r => r.json())
-      .then((d: Purchase[]) => setPurchases(Array.isArray(d) ? d : []))
-      .finally(() => setPurchasesLoading(false));
-  }, [activeTab]); // eslint-disable-line
+    if (activeTab === "purchases" && purchases.length === 0) {
+      setPurchasesLoading(true);
+      fetch("/api/user/purchases").then((r) => r.json()).then((d) => setPurchases(Array.isArray(d) ? d : [])).catch(() => {}).finally(() => setPurchasesLoading(false));
+    }
+  }, [activeTab, purchases.length]);
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -84,363 +164,527 @@ export default function MemberProfile() {
     const fd = new FormData();
     fd.append("files", file);
     fd.append("type", "avatar");
-    const res = await fetch("/api/upload/profile", { method: "POST", body: fd });
-    if (res.ok) {
-      const { urls } = await res.json() as { urls: string[] };
-      const url = urls[0];
-      await fetch("/api/user/profile", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image: url }),
-      });
-      setAvatarImage(url);
-      dispatch(setUser({ ...user!, image: url }));
-    }
-    setAvatarUploading(false);
-    e.target.value = "";
+    try {
+      const res = await fetch("/api/upload/profile", { method: "POST", body: fd });
+      if (res.ok) {
+        const { urls } = (await res.json()) as { urls: string[] };
+        const url = urls[0];
+        await fetch("/api/user/profile", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ image: url }) });
+        setProfile((p) => ({ ...p, image: url }));
+        if (user) dispatch(setUser({ ...user, image: url }));
+      }
+    } catch (err) { console.error(err); }
+    finally { setAvatarUploading(false); e.target.value = ""; }
   };
 
-  const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setCoverUploading(true);
     const fd = new FormData();
     fd.append("files", file);
     fd.append("type", "cover");
-    const res = await fetch("/api/upload/profile", { method: "POST", body: fd });
-    if (res.ok) {
-      const { urls } = await res.json() as { urls: string[] };
-      const url = urls[0];
-      // Persist to DB so it survives refresh
-      await fetch("/api/user/profile", {
+    try {
+      const res = await fetch("/api/upload/profile", { method: "POST", body: fd });
+      if (res.ok) {
+        const { urls } = (await res.json()) as { urls: string[] };
+        const url = urls[0];
+        await fetch("/api/user/profile", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ coverImage: url }) });
+        setProfile((p) => ({ ...p, coverImage: url }));
+        if (user) dispatch(setUser({ ...user, coverImage: url }));
+      }
+    } catch (err) { console.error(err); }
+    finally { setCoverUploading(false); e.target.value = ""; }
+  };
+
+  const saveInPageProfile = async () => {
+    setSavingInPage(true);
+    try {
+      const res = await fetch("/api/user/profile", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ coverImage: url }),
+        body: JSON.stringify({ ...profile, yearsExperience: profile.yearsExperience ? Number(profile.yearsExperience) : null }),
       });
-      setCoverImage(url);
-      dispatch(setUser({ ...user!, coverImage: url }));
-    }
-    setCoverUploading(false);
-    e.target.value = "";
+      if (res.ok) {
+        setSaveToast(true);
+        if (user) dispatch(setUser({ ...user, name: profile.name, headline: profile.headline, bio: profile.bio, image: profile.image, coverImage: profile.coverImage }));
+        setTimeout(() => setSaveToast(false), 2500);
+      }
+    } catch (err) { console.error(err); }
+    finally { setSavingInPage(false); }
   };
 
-  const save = async () => {
-    setSaving(true);
-    const res = await fetch("/api/user/profile", { method:"PATCH", headers:{"Content-Type":"application/json"}, body: JSON.stringify({name, headline, bio, coverImage}) });
-    if (res.ok && user) { dispatch(setUser({...user, name, bio, headline, coverImage})); setSaved(true); setTimeout(()=>setSaved(false),3000); }
-    setSaving(false);
+  const profileShareUrl = typeof window !== "undefined" ? window.location.href : "";
+  const shareText = `Check out ${profile.name || "my"} profile on TaxComPro!`;
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(profileShareUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
   };
 
-  const submitApp = async () => {
-    setSubmitting(true);
-    const res = await fetch("/api/professional-application", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({reason:appReason, specialty:appSpec, credentials:appCreds}) });
-    if (res.ok) { const d = await res.json() as App; setApp(d); setShowForm(false); }
-    setSubmitting(false);
+  const onProfileUpdated = (updated: ProfileFormData) => {
+    setProfile(updated);
+    if (user) dispatch(setUser({ ...user, name: updated.name, headline: updated.headline, bio: updated.bio, image: updated.image, coverImage: updated.coverImage }));
   };
 
-  const tierColors: Record<string,string> = { FREE:"bg-slate-100 text-slate-600", VIP:"bg-amber-100 text-amber-700", MARKETPLACE:"bg-indigo-100 text-indigo-700", MARKETPLACE_PLUS:"bg-emerald-100 text-emerald-700" };
-  const tierLabels: Record<string,string> = { FREE:"Free Member", VIP:"VIP Member", MARKETPLACE:"Marketplace", MARKETPLACE_PLUS:"Marketplace Plus" };
-  const tier = user?.tier ?? "FREE";
+  if (loading) {
+    return <div className="min-h-[70vh] flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#1E56A0]" /></div>;
+  }
+
+  const isProOrVIP = user?.role === "PROFESSIONAL" || user?.tier === "VIP";
 
   return (
-    <div className="min-h-screen bg-slate-100 pb-12">
-      {/* Banner — full-width, same layout as original */}
-      <div className="relative h-36 overflow-hidden cursor-pointer group"
-        onClick={() => bannerInputRef.current?.click()}>
-        {coverImage
-          ? <img src={coverImage} alt="" className="w-full h-full object-cover" />
-          : <div className="absolute inset-0 bg-gradient-to-br from-[#0a1628] via-[#1a3a6b] to-[#0d2a50]" />
-        }
-        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center">
-          {coverUploading
-            ? <div className="w-7 h-7 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            : <div className="flex flex-col items-center gap-2 text-white">
-                <Camera className="w-7 h-7" />
-                <span className="text-xs font-bold">Change Banner</span>
-              </div>
-          }
-        </div>
-        <input ref={bannerInputRef} type="file" accept="image/*" className="hidden" onChange={handleBannerUpload} />
-      </div>
-      <div className="max-w-4xl mx-auto px-4 -mt-14 relative z-10">
-        {/* Header card */}
-        <div className="bg-white rounded-2xl shadow-sm p-6 mb-5">
-          <div className="flex flex-col sm:flex-row items-start gap-4">
-            <div className="relative -mt-10 shrink-0">
-              {/* Avatar — click to change (supports photo, GIF, short video) */}
-              <div
-                className="w-20 h-20 rounded-2xl bg-[#0a1628] border-4 border-white overflow-hidden flex items-center justify-center shadow-lg cursor-pointer group/av relative"
-                onClick={() => avatarInputRef.current?.click()}>
-                {avatarImage
-                  ? avatarImage.endsWith(".gif")
-                    ? <img src={avatarImage} alt="" className="w-full h-full object-cover" />
-                    : <img src={avatarImage} alt="" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
-                  : <span className="text-white font-black text-3xl">{user?.name?.[0]}</span>}
-                {/* Hover overlay */}
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover/av:opacity-100 transition-all flex flex-col items-center justify-center gap-1">
-                  {avatarUploading
-                    ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    : <><Camera className="w-5 h-5 text-white" /><span className="text-[9px] text-white font-bold">Change</span></>}
-                </div>
-              </div>
-              <input ref={avatarInputRef} type="file" accept="image/*,video/mp4,video/webm,video/quicktime" className="hidden" onChange={handleAvatarUpload} />
-            </div>
-            <div className="flex-1 pt-1">
-              <div className="flex flex-wrap items-center gap-2 mb-1">
-                <span className="text-xl font-black text-[#0a1628]">{user?.name}</span>
-                {user?.hasDueDiligenceBadge && <DueDiligenceBadge size={26} />}
-                <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full ${tierColors[tier]}`}>{tierLabels[tier]}</span>
-              </div>
-              {headline ? <p className="text-sm text-slate-500">{headline}</p> : <p className="text-sm text-slate-400 italic">No headline yet</p>}
-              <p className="text-xs text-slate-400 mt-1">{user?.email}</p>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-2 shrink-0">
-              {tier !== "FREE" && (
-                <button onClick={openPortal} disabled={portalLoading}
-                  className="flex items-center gap-1.5 text-xs font-bold border-2 border-[#0a1628] text-[#0a1628] px-4 py-2 rounded-full hover:bg-[#0a1628] hover:text-white transition-all">
-                  {portalLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CreditCard className="w-3.5 h-3.5" />}
-                  Manage Plan
+    <div className="max-w-[1440px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <input type="file" ref={avatarInputRef} onChange={handleAvatarUpload} accept="image/*" className="hidden" />
+      <input type="file" ref={coverInputRef} onChange={handleCoverUpload} accept="image/*" className="hidden" />
+
+      <div className="flex flex-col lg:flex-row gap-6">
+        {/* ── LEFT SIDEBAR ────────────────────────────────────────────────── */}
+        <aside className="w-full lg:w-64 shrink-0 lg:sticky lg:top-24 self-start space-y-5">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-3 space-y-0.5">
+            <div className="px-3 py-2 text-[10px] font-black uppercase tracking-widest text-slate-400">PROFILE MENU</div>
+            {MEMBER_SIDEBAR_TABS.map((tab) => {
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold tracking-wide transition-all text-left ${isActive ? "bg-[#EAF2FC] text-[#1E56A0]" : "text-slate-600 hover:text-[#0A1628] hover:bg-slate-50"}`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <tab.icon className={`w-4 h-4 ${isActive ? "text-[#1E56A0]" : "text-slate-400"}`} />
+                    <span>{tab.label}</span>
+                  </div>
+                  {isActive && <ChevronRight className="w-3.5 h-3.5 text-[#1E56A0]" />}
                 </button>
-              )}
-              {/* Only show Upgrade for free members */}
-              {tier === "FREE" && (
-                <Link href="/upgrade" className="text-xs font-bold bg-[#0a1628] text-white px-4 py-2 rounded-full hover:bg-[#1a3a6b] transition-all shrink-0">Upgrade</Link>
-              )}
-            </div>
+              );
+            })}
           </div>
-        </div>
 
-        {/* ── Tab Bar ── */}
-        <div className="flex gap-1 bg-white rounded-2xl p-1.5 mb-5 border border-slate-100 shadow-sm">
-          {(["profile", "card", "badges", "purchases"] as const).map(tab => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`flex-1 py-2 rounded-xl text-sm font-bold capitalize transition-all ${
-                activeTab === tab
-                  ? "bg-[#0a1628] text-white shadow-sm"
-                  : "text-slate-500 hover:bg-slate-50"
-              }`}
-            >
-              {tab === "profile" ? "✏️  Profile" : tab === "card" ? "💳  Connect Card" : tab === "badges" ? "🏅  My Badges" : "📦  My Purchases"}
-            </button>
-          ))}
-        </div>
+          {/* Become a Pro CTA - only if not already Pro or VIP */}
+          {!isProOrVIP && (
+            <div className="rounded-2xl bg-gradient-to-br from-[#0A1628] to-[#1A3A6B] p-5 text-white border border-slate-800">
+              <span className="text-[10px] font-black uppercase tracking-widest text-amber-400">GROW YOUR PRACTICE</span>
+              <h4 className="text-xs font-extrabold text-white leading-snug mt-1 mb-2">Apply as a Verified Tax Pro</h4>
+              <p className="text-[11px] text-slate-300 font-medium mb-4 leading-relaxed">Get client leads, activate your NFC Connect Card, and unlock IRS defense toolkits.</p>
+              <Link href="/apply-professional" className="w-full block text-center py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 text-[#0A1628] font-black text-xs uppercase tracking-wider transition-all active:scale-[0.98]">
+                APPLY NOW
+              </Link>
+            </div>
+          )}
+        </aside>
 
-        {activeTab === "purchases" ? (
-          /* ── Purchases Tab ── */
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
-            <h2 className="font-black text-[#0a1628] text-base mb-1">My Purchases</h2>
-            <p className="text-xs text-slate-400 mb-6">Your toolkit downloads are always available here.</p>
-            {purchasesLoading ? (
-              <div className="flex justify-center py-10">
-                <Loader2 className="w-7 h-7 animate-spin text-slate-300" />
-              </div>
-            ) : purchases.length === 0 ? (
-              <div className="text-center py-10">
-                <span className="text-4xl mb-3 block">📦</span>
-                <p className="font-black text-slate-400">No purchases yet</p>
-                <p className="text-xs text-slate-300 mt-1 mb-4">Buy a toolkit to get professional resources + membership access.</p>
-                <a href="/toolkits" className="inline-flex items-center gap-2 bg-[#0a1628] text-white text-xs font-bold px-5 py-2.5 rounded-xl hover:bg-[#1a3a6b] transition-all">
-                  Browse Toolkits
-                </a>
+        {/* ── MAIN CONTENT ────────────────────────────────────────────────── */}
+        <div className="flex-1 min-w-0 space-y-6">
+
+          {/* HERO CARD */}
+          <div className="rounded-2xl bg-white border border-slate-200 shadow-xs overflow-hidden">
+            {/* Cover */}
+            {profile.coverImage ? (
+              <div className="relative h-40 sm:h-48 w-full overflow-hidden">
+                <img src={profile.coverImage} alt="Cover" className="w-full h-full object-cover" />
+                <button onClick={() => coverInputRef.current?.click()} disabled={coverUploading} className="absolute top-3 right-3 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-black/50 hover:bg-black/70 backdrop-blur-sm text-white text-xs font-bold border border-white/20 transition-all">
+                  {coverUploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Camera className="w-3.5 h-3.5" />}
+                  Change Cover
+                </button>
               </div>
             ) : (
-              <div className="space-y-3">
-                {purchases.map(p => (
-                  <div key={p.id} className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl border border-slate-100">
-                    <span className="text-3xl shrink-0">{p.emoji}</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-bold text-[#0a1628] text-sm truncate">{p.name}</p>
-                      <p className="text-xs text-emerald-600 font-semibold">
-                        {p.membershipMonths}mo {TIER_LABELS[p.membershipTier] ?? p.membershipTier} membership included
-                      </p>
-                      <p className="text-[10px] text-slate-400 mt-0.5">
-                        Purchased {new Date(p.createdAt).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" })}
-                      </p>
-                    </div>
-                    {p.downloadUrl ? (
-                      <a href={p.downloadUrl} target="_blank" rel="noopener noreferrer"
-                        className="flex items-center gap-1.5 bg-[#0a1628] text-white text-xs font-bold px-4 py-2 rounded-xl hover:bg-[#1a3a6b] transition-all shrink-0">
-                        <Download className="w-3.5 h-3.5" /> Download
-                      </a>
+              <div className="relative h-28 sm:h-32 w-full bg-slate-100 flex items-center justify-center">
+                <button onClick={() => coverInputRef.current?.click()} disabled={coverUploading} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white border border-slate-300 text-slate-600 text-xs font-bold hover:border-[#1E56A0] hover:text-[#1E56A0] transition-all">
+                  {coverUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
+                  Add Cover Photo
+                </button>
+              </div>
+            )}
+
+            {/* Profile Info */}
+            <div className="px-6 py-5 sm:px-8">
+              <div className="flex flex-col sm:flex-row gap-5">
+                {/* Square Avatar */}
+                <div className="relative shrink-0 w-24 h-24 sm:w-28 sm:h-28 -mt-14 sm:-mt-16 group self-start">
+                  <div className="w-full h-full rounded-2xl overflow-hidden bg-gradient-to-br from-[#0A1628] to-[#1E56A0] ring-4 ring-white shadow-lg flex items-center justify-center">
+                    {profile.image ? (
+                      <img src={profile.image} alt={profile.name} className="w-full h-full object-cover" />
                     ) : (
-                      <span className="text-xs text-slate-400 px-3 py-2 bg-slate-100 rounded-xl shrink-0">Coming soon</span>
+                      <span className="text-white font-black text-3xl">{(profile.name || "?")[0]?.toUpperCase()}</span>
                     )}
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-        ) : activeTab === "badges" ? (
-          /* ── Badges Tab ── */
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
-            <h2 className="font-black text-[#0a1628] text-base mb-1">My Achievements</h2>
-            <p className="text-xs text-slate-400 mb-6">Complete activities to unlock badges. They appear next to your name across the platform.</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Due Diligence Badge */}
-              {(() => {
-                const earned = user?.hasDueDiligenceBadge ?? false;
-                return (
-                  <div className={`relative rounded-2xl border-2 p-5 flex items-center gap-4 transition-all ${
-                    earned
-                      ? "border-amber-300 bg-amber-50/40"
-                      : "border-slate-100 bg-slate-50/50 opacity-60 grayscale"
-                  }`}>
-                    <div className={`w-16 h-16 rounded-xl flex items-center justify-center shrink-0 ${
-                      earned ? "bg-amber-100" : "bg-slate-100"
-                    }`}>
-                      <img
-                        src="/due_dilligence_badge.webp"
-                        alt="Due Diligence Badge"
-                        className="w-12 h-12 object-contain"
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-black text-[#0a1628] text-sm">Due Diligence</span>
-                        {earned && (
-                          <span className="flex items-center gap-0.5 text-[10px] font-bold text-emerald-600 bg-emerald-100 px-1.5 py-0.5 rounded-full">
-                            ✓ Earned
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
-                        {earned
-                          ? "You've earned this badge! It now shows next to your name on all your posts."
-                          : "Complete any course or purchase any toolkit to unlock this badge."}
-                      </p>
-                    </div>
-                    {!earned && (
-                      <div className="absolute top-3 right-3 text-slate-300">
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-                        </svg>
-                      </div>
+                  <button
+                    onClick={() => avatarInputRef.current?.click()}
+                    disabled={avatarUploading}
+                    className="absolute inset-0 rounded-2xl bg-black/40 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer z-10"
+                    title="Change photo"
+                  >
+                    {avatarUploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Camera className="w-5 h-5" />}
+                  </button>
+                  <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-emerald-500 border-[3px] border-white z-20 pointer-events-none" />
+                </div>
+
+                {/* Name & meta */}
+                <div className="flex-1 min-w-0 space-y-1.5">
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    <h1 className="text-xl sm:text-2xl font-black text-[#0A1628] tracking-tight truncate">{profile.name || "Your Name"}</h1>
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-blue-50 text-[#1E56A0] border border-blue-200 text-[10px] font-black tracking-wider uppercase">
+                      <ShieldCheck className="w-3 h-3" />
+                      {stats.tierName}
+                    </span>
+                  </div>
+                  {profile.headline && <p className="text-sm font-medium text-slate-600">{profile.headline}</p>}
+                  <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-500 pt-0.5">
+                    {profile.location && <span className="flex items-center gap-1 text-[#1E56A0]"><MapPin className="w-3.5 h-3.5" />{profile.location}</span>}
+                    {stats.memberSince && <span className="text-slate-400">Member Since: {stats.memberSince}</span>}
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex flex-wrap items-center gap-2.5 pt-3">
+                    <button onClick={() => setEditModalOpen(true)} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#1E56A0] hover:bg-[#16437E] text-white text-xs font-bold transition-all shadow-sm">
+                      <Edit3 className="w-3.5 h-3.5" /> EDIT PROFILE
+                    </button>
+                    {!isProOrVIP && (
+                      <Link href="/apply-professional" className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-[#0A1628] text-xs font-black uppercase tracking-wider transition-all shadow-sm">
+                        <Sparkles className="w-3.5 h-3.5" /> APPLY FOR PRO
+                      </Link>
                     )}
+                    <button
+                      onClick={() => setShareDialogOpen(true)}
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 hover:border-[#1E56A0] hover:text-[#1E56A0] bg-white text-slate-600 text-xs font-bold transition-all"
+                    >
+                      <Share2 className="w-3.5 h-3.5" />
+                      SHARE
+                    </button>
                   </div>
-                );
-              })()}
-              {/* Placeholder for future badges */}
-              {["Course Creator", "Community Leader", "Top Contributor"].map(name => (
-                <div key={name} className="relative rounded-2xl border-2 border-slate-100 bg-slate-50/50 opacity-40 grayscale p-5 flex items-center gap-4">
-                  <div className="w-16 h-16 rounded-xl bg-slate-100 flex items-center justify-center shrink-0 text-2xl">🏆</div>
-                  <div className="flex-1">
-                    <div className="font-black text-[#0a1628] text-sm">{name}</div>
-                    <p className="text-xs text-slate-400 mt-0.5">Coming soon</p>
-                  </div>
-                  <div className="absolute top-3 right-3 text-slate-300">
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : activeTab === "card" ? (
-          /* ── Connect Card Tab ── */
-          <ConnectCardManager />
-        ) : (
-        <div className="grid sm:grid-cols-3 gap-5">
-          {/* Sidebar */}
-          <div className="space-y-4">
-            <div className="bg-white rounded-2xl p-4">
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Quick Links</p>
-              {[{icon:BookOpen01Icon,label:"My Courses",href:"/my-courses",c:"text-indigo-500 bg-indigo-50"},{icon:UserGroupIcon,label:"Connections",href:"/connections",c:"text-emerald-500 bg-emerald-50"},{icon:ShoppingBag01Icon,label:"Marketplace",href:"/marketplace",c:"text-amber-500 bg-amber-50"},{icon:Rocket01Icon,label:"Upgrade Plan",href:"/upgrade",c:"text-purple-500 bg-purple-50"}].map(l=>(
-                <Link key={l.href} href={l.href} className="flex items-center gap-3 px-2 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 transition-all">
-                  <span className={`w-8 h-8 rounded-lg flex items-center justify-center ${l.c}`}><l.icon className="w-4 h-4"/></span>{l.label}
-                </Link>
-              ))}
-            </div>
-
-            {/* Pro application — only show for non-marketplace users */}
-            {user?.tier !== "MARKETPLACE" && user?.tier !== "MARKETPLACE_PLUS" && (
-            <div className="bg-white rounded-2xl p-4">
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Professional Status</p>
-              {app === undefined && <div className="h-8 bg-slate-100 rounded-lg animate-pulse" />}
-              {app === null && !showForm && (
-                <>
-                  <p className="text-xs text-slate-500 mb-3">Become a verified professional and appear in the Pros directory.</p>
-                  <button onClick={()=>setShowForm(true)} className="w-full flex items-center justify-center gap-2 text-xs font-bold bg-[#0a1628] text-white py-2.5 rounded-xl hover:bg-[#1a3a6b] transition-all">
-                    <Add01Icon className="w-3.5 h-3.5"/>Apply Now
-                  </button>
-                </>
-              )}
-              {app?.status==="PENDING" && <div className="flex items-center gap-2 text-amber-600 bg-amber-50 rounded-xl px-3 py-2 text-xs font-semibold"><Clock className="w-3.5 h-3.5 shrink-0"/>Pending review</div>}
-              {app?.status==="REJECTED" && <div className="text-xs text-red-500 bg-red-50 rounded-xl px-3 py-2">{app.note ? `Not approved: ${app.note}` : "Not approved"}</div>}
-            </div>
-            )}
-          </div>
-
-          {/* Edit form */}
-          <div className="sm:col-span-2 space-y-5">
-            {showForm ? (
-              <div className="bg-white rounded-2xl p-6 border-2 border-[#0a1628]/20">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="font-black text-[#0a1628]">Apply to Become a Professional</h2>
-                  <button onClick={()=>setShowForm(false)}><X className="w-4 h-4 text-slate-400"/></button>
-                </div>
-                <div className="space-y-3">
-                  <div><label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5">Primary Specialty *</label><input value={appSpec} onChange={e=>setAppSpec(e.target.value)} placeholder="e.g. Tax Resolution" className={inp}/></div>
-                  <div><label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5">Credentials *</label><input value={appCreds} onChange={e=>setAppCreds(e.target.value)} placeholder="e.g. EA, 10 years experience" className={inp}/></div>
-                  <div><label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5">Why become a professional? *</label><textarea value={appReason} onChange={e=>setAppReason(e.target.value)} rows={3} className={`${inp} resize-none`}/></div>
-                  <button onClick={submitApp} disabled={submitting||!appReason.trim()||!appSpec.trim()||!appCreds.trim()} className="flex items-center gap-2 bg-[#0a1628] text-white text-sm font-bold px-6 py-2.5 rounded-full disabled:opacity-40 hover:bg-[#1a3a6b] transition-all">
-                    {submitting?<Loader2 className="w-4 h-4 animate-spin"/>:null}Submit Application
-                  </button>
                 </div>
               </div>
-            ) : (
-              <div className="bg-white rounded-2xl p-6">
-                <div className="flex items-center justify-between mb-5">
-                  <h2 className="font-black text-[#0a1628]">Edit Profile</h2>
-                  {saved && <span className="text-xs font-semibold text-emerald-600 flex items-center gap-1"><Tick02Icon className="w-3.5 h-3.5"/>Saved!</span>}
+            </div>
+          </div>
+
+          {/* ── OVERVIEW ──────────────────────────────────────────────────── */}
+          {activeTab === "overview" && (
+            <div className="grid lg:grid-cols-12 gap-6">
+              <div className="lg:col-span-7 space-y-6">
+                {/* ABOUT ME */}
+                <div className="rounded-2xl bg-white border border-slate-200 p-6 shadow-xs space-y-4">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <h3 className="text-xs font-black text-[#0A1628] uppercase tracking-widest flex items-center gap-2"><UserCheck className="w-4 h-4 text-[#1E56A0]" /> ABOUT ME</h3>
+                    <button onClick={() => setActiveTab("basic")} className="text-xs font-bold text-[#1E56A0] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Edit</button>
+                  </div>
+                  {profile.bio ? (
+                    <p className="text-sm text-slate-600 leading-relaxed">{profile.bio}</p>
+                  ) : (
+                    <p className="text-sm text-slate-400 italic">No bio added yet. Click Edit to add your summary.</p>
+                  )}
+
+                  {/* Real stats only */}
+                  {(stats.completedCourses > 0 || stats.totalEnrollments > 0 || stats.toolkitPurchases > 0) && (
+                    <div className="flex flex-wrap gap-3 pt-2">
+                      {stats.completedCourses > 0 && (
+                        <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                          <BookOpen className="w-4 h-4 text-[#1E56A0]" />
+                          <div>
+                            <p className="text-sm font-black text-[#0A1628]">{stats.completedCourses}</p>
+                            <p className="text-[10px] font-bold text-slate-400">Courses Done</p>
+                          </div>
+                        </div>
+                      )}
+                      {stats.totalEnrollments > 0 && (
+                        <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                          <Award className="w-4 h-4 text-amber-600" />
+                          <div>
+                            <p className="text-sm font-black text-[#0A1628]">{stats.totalEnrollments}</p>
+                            <p className="text-[10px] font-bold text-slate-400">Enrollments</p>
+                          </div>
+                        </div>
+                      )}
+                      {stats.toolkitPurchases > 0 && (
+                        <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                          <FolderDown className="w-4 h-4 text-purple-600" />
+                          <div>
+                            <p className="text-sm font-black text-[#0A1628]">{stats.toolkitPurchases}</p>
+                            <p className="text-[10px] font-bold text-slate-400">Toolkits</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
-                <div className="space-y-4">
-                  <div><label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5">Full Name</label>
-                    <div className="relative"><UserCircleIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"/><input value={name} onChange={e=>setName(e.target.value)} className={`${inp} pl-10`}/></div>
+
+                {/* FOCUS AREAS */}
+                {profile.specialties.length > 0 && (
+                  <div className="rounded-2xl bg-white border border-slate-200 p-6 shadow-xs space-y-4">
+                    <h3 className="text-xs font-black text-[#0A1628] uppercase tracking-widest flex items-center gap-2 border-b border-slate-100 pb-3">
+                      <Award className="w-4 h-4 text-[#1E56A0]" /> TAX FOCUS AREAS
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {profile.specialties.map((spec) => (
+                        <span key={spec} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#EAF2FC] text-[#1E56A0] border border-[#1E56A0]/20">{spec}</span>
+                      ))}
+                    </div>
                   </div>
-                  <div><label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5">Email</label>
-                    <div className="relative"><Mail01Icon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300"/><input value={user?.email??""} disabled className={`${inp} pl-10 bg-slate-50 text-slate-400 cursor-not-allowed`}/></div>
+                )}
+              </div>
+
+              {/* RIGHT COLUMN */}
+              <div className="lg:col-span-5 space-y-6">
+                {/* MEMBERSHIP */}
+                <div className="rounded-2xl bg-white border border-slate-200 p-6 shadow-xs space-y-4">
+                  <h3 className="text-xs font-black text-[#0A1628] uppercase tracking-widest flex items-center gap-2 border-b border-slate-100 pb-3">
+                    <Crown className="w-4 h-4 text-amber-500" /> MEMBERSHIP STATUS
+                  </h3>
+                  <div className="flex items-center justify-between gap-3 p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-[#0A1628] text-amber-400 flex items-center justify-center shrink-0"><Crown className="w-5 h-5" /></div>
+                      <div>
+                        <h4 className="text-sm font-black text-[#0A1628]">{stats.tierName}</h4>
+                        {stats.validThru && <p className="text-[11px] font-semibold text-slate-500">Valid Thru: {stats.validThru}</p>}
+                      </div>
+                    </div>
+                    <Link href="/upgrade" className="px-3 py-2 rounded-lg bg-[#1E56A0] hover:bg-[#16437E] text-white text-xs font-bold transition-all shrink-0">UPGRADE</Link>
                   </div>
-                  <div><label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5">Headline</label>
-                    <div className="relative"><Briefcase01Icon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"/><input value={headline} onChange={e=>setHeadline(e.target.value)} placeholder="e.g. Tax Professional | IRS Specialist" className={`${inp} pl-10`} maxLength={100}/></div>
+                  <div className="grid grid-cols-2 gap-2 text-xs font-bold text-slate-700 pt-1">
+                    {["Free Platform Access", "Training Library", "Community Forums", "Find a Pro Directory", "Certificates Record", "Support Center"].map((b) => (
+                      <div key={b} className="flex items-center gap-1.5"><span className="text-[#1E56A0]">✓</span><span>{b}</span></div>
+                    ))}
                   </div>
-                  <div><label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5">Bio</label>
-                    <div className="relative"><NoteIcon className="absolute left-3.5 top-3.5 w-4 h-4 text-slate-400"/><textarea value={bio} onChange={e=>setBio(e.target.value)} rows={4} placeholder="Tell the community about yourself…" className={`${inp} pl-10 resize-none`} maxLength={500}/></div>
+                </div>
+
+                {/* UPGRADE CTA - only if not already Pro/VIP */}
+                {!isProOrVIP && (
+                  <div className="rounded-2xl bg-gradient-to-br from-[#0A1628] to-[#1A3A6B] p-6 text-white border border-slate-800 space-y-3">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-amber-400">GROW YOUR PRACTICE</span>
+                    <h3 className="text-sm font-extrabold">Are you a Tax Professional?</h3>
+                    <p className="text-xs text-slate-300 leading-relaxed">Get listed on Find a Pro, receive client leads, and activate your NFC Connect Card.</p>
+                    <Link href="/apply-professional" className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 text-[#0A1628] font-black text-xs uppercase tracking-wider transition-all active:scale-98">
+                      APPLY FOR PRO STATUS <ChevronRight className="w-4 h-4" />
+                    </Link>
                   </div>
-                  {/* Voice Memo */}
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ── BASIC INFO ────────────────────────────────────────────────── */}
+          {activeTab === "basic" && (
+            <div className="rounded-2xl bg-white border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                <h2 className="text-base font-black text-[#0A1628] uppercase tracking-wider flex items-center gap-2"><Edit3 className="w-5 h-5 text-[#1E56A0]" /> Basic Information</h2>
+                <button onClick={saveInPageProfile} disabled={savingInPage} className="px-5 py-2.5 rounded-xl bg-[#1E56A0] hover:bg-[#16437E] text-white text-xs font-bold transition-all disabled:opacity-50 flex items-center gap-1.5">
+                  {savingInPage ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                  {saveToast ? "Saved!" : "Save Changes"}
+                </button>
+              </div>
+              <div className="grid sm:grid-cols-2 gap-5">
+                <div>
+                  <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-1">Full Name</label>
+                  <input type="text" value={profile.name} onChange={(e) => setProfile((p) => ({ ...p, name: e.target.value }))} className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-medium focus:border-[#1E56A0] focus:ring-2 focus:ring-[#1E56A0]/10 outline-none" />
+                </div>
+                <div>
+                  <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-1">Location</label>
+                  <input type="text" value={profile.location} onChange={(e) => setProfile((p) => ({ ...p, location: e.target.value }))} placeholder="e.g. Houston, Texas" className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-medium focus:border-[#1E56A0] focus:ring-2 focus:ring-[#1E56A0]/10 outline-none" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-1">About Me / Bio</label>
+                <textarea rows={4} value={profile.bio} onChange={(e) => setProfile((p) => ({ ...p, bio: e.target.value }))} className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-medium focus:border-[#1E56A0] focus:ring-2 focus:ring-[#1E56A0]/10 outline-none resize-none" />
+              </div>
+            </div>
+          )}
+
+          {/* ── LEARNING ──────────────────────────────────────────────────── */}
+          {activeTab === "learning" && (
+            <div className="rounded-2xl bg-white border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                <h2 className="text-base font-black text-[#0A1628] uppercase tracking-wider flex items-center gap-2"><BookOpen className="w-5 h-5 text-[#1E56A0]" /> My Courses</h2>
+                <Link href="/courses" className="px-4 py-2 rounded-xl bg-[#1E56A0] text-white text-xs font-bold hover:bg-[#16437E] transition-all">Browse Courses</Link>
+              </div>
+              <div className="p-5 rounded-xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-sm font-extrabold text-[#0A1628]">Course Dashboard</h3>
+                  <p className="text-xs text-slate-500">Access your training materials, quizzes, and certificates.</p>
+                </div>
+                <Link href="/my-courses" className="px-4 py-2 bg-white border border-slate-300 text-xs font-bold text-slate-800 rounded-xl hover:border-[#1E56A0] hover:text-[#1E56A0] transition-colors">Go to Dashboard →</Link>
+              </div>
+            </div>
+          )}
+
+          {/* ── BADGES ────────────────────────────────────────────────────── */}
+          {activeTab === "badges" && (
+            <div className="rounded-2xl bg-white border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6">
+              <div className="border-b border-slate-100 pb-4">
+                <h2 className="text-base font-black text-[#0A1628] uppercase tracking-wider flex items-center gap-2"><ShieldCheck className="w-5 h-5 text-emerald-600" /> Badges & Due Diligence</h2>
+                <p className="text-xs text-slate-400 mt-1">Your verified compliance credentials.</p>
+              </div>
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div className="p-4 rounded-xl bg-emerald-50/50 border border-emerald-200 flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0"><ShieldCheck className="w-6 h-6" /></div>
                   <div>
-                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Voice Intro</label>
-                    <p className="text-xs text-slate-400 mb-3">Record a short voice intro (max 4 minutes). It plays on your public profile so others can hear from you directly.</p>
-                    <VoiceMemoEditor currentUrl={voiceMemoUrl} onSaved={setVoiceMemoUrl} />
+                    <h4 className="text-sm font-black text-[#0A1628]">Due Diligence Verified</h4>
+                    <p className="text-xs text-slate-500">Earned by completing compliance training</p>
                   </div>
-                  <button onClick={save} disabled={saving} className="flex items-center gap-2 bg-[#0a1628] text-white font-bold text-sm px-6 py-2.5 rounded-full hover:bg-[#1a3a6b] transition-all disabled:opacity-40">
-                    {saving?<><Loader2 className="w-4 h-4 animate-spin"/>Saving…</>:<><Tick02Icon className="w-4 h-4"/>Save Changes</>}
-                  </button>
+                </div>
+                <div className="p-4 rounded-xl bg-blue-50/50 border border-blue-200 flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-xl bg-blue-100 text-[#1E56A0] flex items-center justify-center shrink-0"><Check className="w-6 h-6" /></div>
+                  <div>
+                    <h4 className="text-sm font-black text-[#0A1628]">Verified Member</h4>
+                    <p className="text-xs text-slate-500">Account and email verified</p>
+                  </div>
                 </div>
               </div>
-            )}
+            </div>
+          )}
 
-            {/* Become a Pro CTA — only show if user is NOT on marketplace plans */}
-            {user?.tier !== "MARKETPLACE" && user?.tier !== "MARKETPLACE_PLUS" && (
-            <div className="bg-gradient-to-br from-[#0a1628] to-[#1a3a6b] rounded-2xl p-5 text-white">
-              <div className="flex items-center gap-2 mb-2"><BadgeCheck className="w-5 h-5 text-amber-400"/><span className="font-black text-sm">Become a Pro</span></div>
-              <p className="text-white/60 text-xs mb-4">Get verified, appear in the Pros directory, and connect with clients directly.</p>
-              <Link href="/apply-professional" className="block text-center text-xs font-bold bg-amber-400 text-[#0a1628] py-2 rounded-lg hover:bg-amber-300 transition-all">Apply Now</Link>
+          {/* ── PURCHASES ─────────────────────────────────────────────────── */}
+          {activeTab === "purchases" && (
+            <div className="rounded-2xl bg-white border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div>
+                  <h2 className="text-base font-black text-[#0A1628] uppercase tracking-wider flex items-center gap-2"><FolderDown className="w-5 h-5 text-[#1E56A0]" /> Purchased Toolkits</h2>
+                  <p className="text-xs text-slate-400 mt-1">Download your IRS compliance toolkits.</p>
+                </div>
+                <Link href="/toolkits" className="px-4 py-2 rounded-xl bg-[#1E56A0] text-white text-xs font-bold hover:bg-[#16437E] transition-all">Explore Toolkits</Link>
+              </div>
+              {purchasesLoading ? (
+                <div className="py-12 flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-[#1E56A0]" /></div>
+              ) : purchases.length > 0 ? (
+                <div className="grid sm:grid-cols-2 gap-4">
+                  {purchases.map((p) => (
+                    <div key={p.id} className="p-4 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl">{p.emoji || "📦"}</span>
+                        <div>
+                          <h4 className="text-xs font-bold text-[#0A1628]">{p.name}</h4>
+                          <p className="text-[10px] text-slate-400">{new Date(p.createdAt).toLocaleDateString()}</p>
+                        </div>
+                      </div>
+                      {p.downloadUrl && <a href={p.downloadUrl} target="_blank" rel="noreferrer" className="p-2 bg-[#1E56A0] text-white rounded-xl hover:bg-[#16437E] transition-colors"><Download className="w-4 h-4" /></a>}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="py-8 text-center text-slate-400 text-xs">No toolkits purchased yet.</p>
+              )}
             </div>
-            )}
-            {/* Marketplace Plus badge display */}
-            {user?.tier === "MARKETPLACE_PLUS" && (
-            <div className="bg-gradient-to-br from-[#d4a017] to-[#f0c040] rounded-2xl p-5 text-[#0a1628]">
-              <div className="flex items-center gap-2 mb-2"><BadgeCheck className="w-5 h-5 text-[#0a1628]"/><span className="font-black text-sm">Marketplace Plus Member</span></div>
-              <p className="text-[#0a1628]/70 text-xs">You have full access to all platform features including marketplace listings and Pro Talk hosting.</p>
+          )}
+
+          {/* ── MEMBERSHIP ────────────────────────────────────────────────── */}
+          {activeTab === "membership" && (
+            <div className="rounded-2xl bg-white border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6">
+              <div className="border-b border-slate-100 pb-4">
+                <h2 className="text-base font-black text-[#0A1628] uppercase tracking-wider flex items-center gap-2"><Crown className="w-5 h-5 text-amber-500" /> Membership Plan</h2>
+                <p className="text-xs text-slate-400 mt-1">Manage your plan and benefits.</p>
+              </div>
+              <div className="p-5 rounded-xl bg-gradient-to-r from-amber-500/10 to-amber-600/10 border border-amber-300/40 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-amber-700">CURRENT TIER</span>
+                  <h3 className="text-lg font-black text-[#0A1628]">{stats.tierName}</h3>
+                  <p className="text-xs text-slate-500">Access to standard member features</p>
+                </div>
+                <Link href="/upgrade" className="px-5 py-2.5 bg-gradient-to-r from-amber-400 to-amber-500 text-[#0A1628] font-black text-xs uppercase tracking-wider rounded-xl shadow-md transition-all">UPGRADE TO VIP</Link>
+              </div>
             </div>
-            )}
+          )}
+        </div>
+      </div>
+
+      <EditProfileModal isOpen={editModalOpen} onClose={() => setEditModalOpen(false)} initialData={profile} userId={user?.id || ""} role={user?.role || "MEMBER"} onSaveSuccess={onProfileUpdated} />
+
+      {/* Share Profile Dialog */}
+      {shareDialogOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShareDialogOpen(false)} />
+          <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200 p-6 space-y-5 animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-black text-[#0A1628] tracking-tight">Share Your Profile</h3>
+              <button onClick={() => setShareDialogOpen(false)} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex items-center gap-2 p-3 rounded-xl bg-slate-50 border border-slate-200">
+              <Link2 className="w-4 h-4 text-slate-400 shrink-0" />
+              <p className="text-xs font-medium text-slate-600 truncate flex-1">{profileShareUrl}</p>
+              <button
+                onClick={handleCopyLink}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 ${
+                  copied ? "bg-emerald-100 text-emerald-700" : "bg-[#1E56A0] text-white hover:bg-[#16437E]"
+                }`}
+              >
+                {copied ? "Copied!" : "Copy"}
+              </button>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3">
+              <a
+                href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(profileShareUrl)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex flex-col items-center gap-2 p-4 rounded-xl border border-slate-200 hover:border-blue-300 hover:bg-blue-50 transition-all group"
+              >
+                <div className="w-10 h-10 rounded-full bg-[#1877F2] flex items-center justify-center text-white shadow-md group-hover:scale-110 transition-transform">
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>
+                </div>
+                <span className="text-[11px] font-bold text-slate-600">Facebook</span>
+              </a>
+
+              <a
+                href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(profileShareUrl)}&text=${encodeURIComponent(shareText)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex flex-col items-center gap-2 p-4 rounded-xl border border-slate-200 hover:border-slate-400 hover:bg-slate-50 transition-all group"
+              >
+                <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center text-white shadow-md group-hover:scale-110 transition-transform">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
+                </div>
+                <span className="text-[11px] font-bold text-slate-600">X / Twitter</span>
+              </a>
+
+              <a
+                href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(profileShareUrl)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex flex-col items-center gap-2 p-4 rounded-xl border border-slate-200 hover:border-blue-300 hover:bg-blue-50 transition-all group"
+              >
+                <div className="w-10 h-10 rounded-full bg-[#0A66C2] flex items-center justify-center text-white shadow-md group-hover:scale-110 transition-transform">
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" /></svg>
+                </div>
+                <span className="text-[11px] font-bold text-slate-600">LinkedIn</span>
+              </a>
+
+              <a
+                href={`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + " " + profileShareUrl)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex flex-col items-center gap-2 p-4 rounded-xl border border-slate-200 hover:border-green-300 hover:bg-green-50 transition-all group"
+              >
+                <div className="w-10 h-10 rounded-full bg-[#25D366] flex items-center justify-center text-white shadow-md group-hover:scale-110 transition-transform">
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" /></svg>
+                </div>
+                <span className="text-[11px] font-bold text-slate-600">WhatsApp</span>
+              </a>
+
+              <a
+                href={`mailto:?subject=${encodeURIComponent(shareText)}&body=${encodeURIComponent(shareText + "\n\n" + profileShareUrl)}`}
+                className="flex flex-col items-center gap-2 p-4 rounded-xl border border-slate-200 hover:border-red-300 hover:bg-red-50 transition-all group"
+              >
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center text-white shadow-md group-hover:scale-110 transition-transform">
+                  <Mail className="w-5 h-5" />
+                </div>
+                <span className="text-[11px] font-bold text-slate-600">Email</span>
+              </a>
+
+              <button
+                onClick={handleCopyLink}
+                className="flex flex-col items-center gap-2 p-4 rounded-xl border border-slate-200 hover:border-[#1E56A0]/30 hover:bg-blue-50 transition-all group"
+              >
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white shadow-md group-hover:scale-110 transition-transform ${copied ? "bg-emerald-500" : "bg-[#1E56A0]"}`}>
+                  {copied ? <Check className="w-5 h-5" /> : <Link2 className="w-5 h-5" />}
+                </div>
+                <span className="text-[11px] font-bold text-slate-600">{copied ? "Copied!" : "Copy Link"}</span>
+              </button>
+            </div>
           </div>
         </div>
-        )} {/* end activeTab === profile */}
-      </div>
+      )}
     </div>
   );
 }

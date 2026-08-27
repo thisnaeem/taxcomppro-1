@@ -7,12 +7,14 @@ import { Suspense, useEffect, useState } from "react";
 import { Loader2, CheckCircle2, X, CreditCard } from "lucide-react";
 import dynamic from "next/dynamic";
 
+import ProfileDashboardShell from "@/components/profile/ProfileDashboardShell";
+
 const MemberProfile = dynamic(() => import("@/components/profile/MemberProfile"), {
-  loading: () => <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-7 h-7 animate-spin text-[#0a1628]" /></div>,
+  loading: () => <div className="min-h-[60vh] flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#1E56A0]" /></div>,
 });
 
 const ProProfile = dynamic(() => import("@/components/profile/ProProfileEditor"), {
-  loading: () => <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-7 h-7 animate-spin text-[#0a1628]" /></div>,
+  loading: () => <div className="min-h-[60vh] flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#1E56A0]" /></div>,
 });
 
 const TIER_META: Record<string, { name: string; color: string }> = {
@@ -34,7 +36,7 @@ function UpgradeBanner({ tier, onDismiss }: { tier: string; onDismiss: () => voi
   };
 
   return (
-    <div className={`bg-gradient-to-r ${t.color} text-white px-4 py-3`}>
+    <div className={`bg-gradient-to-r ${t.color} text-white px-4 py-3 rounded-2xl mb-6 shadow-md`}>
       <div className="max-w-4xl mx-auto flex items-center gap-3">
         <CheckCircle2 className="w-5 h-5 shrink-0" />
         <p className="flex-1 text-sm font-semibold">
@@ -55,11 +57,30 @@ function UpgradeBanner({ tier, onDismiss }: { tier: string; onDismiss: () => voi
 
 function ProfileContent() {
   const dispatch    = useAppDispatch();
-  const user        = useAppSelector(s => s.auth.user);
+  const storeUser   = useAppSelector(s => s.auth.user);
+  const [localUser, setLocalUser] = useState(storeUser);
+  const [loadingUser, setLoadingUser] = useState(!storeUser);
   const params      = useSearchParams();
   const [showBanner, setShowBanner] = useState(false);
   const [upgradedTier, setUpgradedTier] = useState("");
   const [verifying, setVerifying] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/user/me")
+      .then(r => r.ok ? r.json() : null)
+      .then(u => {
+        if (u) {
+          setLocalUser(u);
+          dispatch(setUser(u));
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoadingUser(false));
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (storeUser) setLocalUser(storeUser);
+  }, [storeUser]);
 
   useEffect(() => {
     const upgraded  = params.get("upgraded");
@@ -83,11 +104,10 @@ function ProfileContent() {
         if (tier && tier !== "FREE") {
           setUpgradedTier(tier);
           setShowBanner(true);
-          // Refresh Redux so profile header, marketplace etc. all update immediately
-          if (user && data.user) {
+          if (localUser && data.user) {
             dispatch(setUser({
-              ...user,
-              tier: tier as typeof user.tier,
+              ...localUser,
+              tier: tier as typeof localUser.tier,
             }));
           }
         }
@@ -97,21 +117,25 @@ function ProfileContent() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if (!user || verifying) return (
-    <div className="min-h-screen flex items-center justify-center">
+  const activeUser = storeUser || localUser;
+
+  if (loadingUser || verifying) return (
+    <div className="min-h-screen flex items-center justify-center bg-[#F5F7FB]">
       <div className="text-center">
-        <Loader2 className="w-7 h-7 animate-spin text-[#0a1628] mx-auto mb-2" />
-        {verifying && <p className="text-sm text-slate-500">Activating your membership…</p>}
+        <Loader2 className="w-8 h-8 animate-spin text-[#1E56A0] mx-auto mb-2" />
+        {verifying && <p className="text-sm font-medium text-slate-500">Activating your membership…</p>}
       </div>
     </div>
   );
 
   return (
-    <div>
+    <div className="min-h-screen bg-[#F5F7FB] py-4">
       {showBanner && (
-        <UpgradeBanner tier={upgradedTier} onDismiss={() => setShowBanner(false)} />
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
+          <UpgradeBanner tier={upgradedTier} onDismiss={() => setShowBanner(false)} />
+        </div>
       )}
-      {(user.role === "PROFESSIONAL" || user.role === "ADMIN")
+      {activeUser?.role === "PROFESSIONAL" || activeUser?.role === "ADMIN"
         ? <ProProfile />
         : <MemberProfile />}
     </div>
@@ -121,8 +145,8 @@ function ProfileContent() {
 export default function ProfilePage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-7 h-7 animate-spin text-[#0a1628]" />
+      <div className="min-h-screen flex items-center justify-center bg-[#F5F7FB]">
+        <Loader2 className="w-8 h-8 animate-spin text-[#1E56A0]" />
       </div>
     }>
       <ProfileContent />

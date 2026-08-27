@@ -10,6 +10,18 @@ export interface AuthUser {
   coverImage?: string | null;
   bio?: string | null;
   headline?: string | null;
+  location?: string | null;
+  yearsExperience?: number | null;
+  mission?: string | null;
+  website?: string | null;
+  linkedIn?: string | null;
+  twitter?: string | null;
+  facebook?: string | null;
+  specialties?: string[];
+  certifications?: string[];
+  languages?: string[];
+  mediaPhotos?: string[];
+  voiceMemoUrl?: string | null;
   hasDueDiligenceBadge?: boolean;
 }
 
