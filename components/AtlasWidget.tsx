@@ -23,8 +23,8 @@ const statusConfig = {
 };
 
 const HINTS = ["Schedule C Help", "IRS Audit Defense", "Max My Deductions", "W-2 Question"];
-const WIDGET_WIDTH = 95;
-const WIDGET_HEIGHT = 125;
+const WIDGET_WIDTH = 142;
+const WIDGET_HEIGHT = 188;
 const PADDING = 16;
 
 function TypingDots() {
@@ -241,7 +241,7 @@ export default function AtlasWidget() {
   // Compute panel position dynamically near widget
   const getPanelStyle = (): React.CSSProperties => {
     if (!pos || typeof window === "undefined") {
-      return { bottom: 135, right: 24 };
+      return { bottom: 198, right: 24 };
     }
 
     const panelWidth = Math.min(380, window.innerWidth - 24);
