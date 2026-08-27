@@ -31,7 +31,6 @@ const adminLinks: NavLink[] = [
   { icon: CreditCard,      label: "Payments",          href: "/admin/payments" },
   { icon: Ticket,          label: "Coupons",           href: "/admin/coupons" },
   { icon: CheckSquare,     label: "Approvals",         href: "/admin/approvals" },
-  { icon: BookOpen,        label: "Courses",           href: "/admin/courses" },
   { icon: BarChart2,       label: "Analytics",         href: "/admin/analytics" },
   { icon: Calendar,        label: "Content Calendar",  href: "/admin/content-calendar" },
   { icon: Images,          label: "Media Gallery",     href: "/admin/media-gallery" },
@@ -44,8 +43,8 @@ const adminLinks: NavLink[] = [
 
 const navGroups = [
   { label: "Overview",   items: adminLinks.slice(0, 4) },
-  { label: "Management", items: adminLinks.slice(4, 8) },
-  { label: "Tools",      items: adminLinks.slice(8) },
+  { label: "Management", items: adminLinks.slice(4, 7) },
+  { label: "Tools",      items: adminLinks.slice(7) },
 ];
 
 export default function Sidebar() {

@@ -1,51 +1,30 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { useAppSelector } from "@/store/hooks";
+import { COURSES, CourseOffering } from "@/lib/courses";
 import {
   BookOpen,
   Search,
   Users,
   Clock,
   Star,
-  Loader2,
   GraduationCap,
   Filter,
   SlidersHorizontal,
-  Lock,
   ArrowRight,
   ShieldCheck,
   Zap,
   Award,
+  Layers,
 } from "lucide-react";
-
-interface Course {
-  id: string;
-  slug: string;
-  title: string;
-  description: string;
-  thumbnail: string | null;
-  level: string;
-  category: string;
-  price: number;
-  isFree: boolean;
-  totalDuration: number;
-  instructor: { name: string; image: string | null; role?: string };
-  _count: { enrollments: number; sections: number };
-  sections: { _count: { lessons: number } }[];
-}
 
 const CATEGORIES = [
   "All",
   "Tax Office Startup",
   "Compliance",
-  "Accounting",
-  "Bookkeeping",
-  "Audit",
-  "Financial Planning",
   "Business Tax",
-  "Payroll",
+  "Audit",
 ];
 
 const LEVELS = [
@@ -61,26 +40,18 @@ const LEVEL_COLORS: Record<string, string> = {
   ADVANCED: "bg-purple-100 text-purple-800 dark:bg-purple-500/20 dark:text-purple-300",
 };
 
-function fmtDuration(secs: number) {
-  const h = Math.floor(secs / 3600);
-  const m = Math.floor((secs % 3600) / 60);
-  if (h > 0) return `${h}h ${m}m`;
-  return `${m}m`;
-}
-
-function CourseCard({ course, isLoggedIn }: { course: Course; isLoggedIn: boolean }) {
-  const totalLessons = course.sections.reduce((s, sec) => s + sec._count.lessons, 0);
+function CourseCard({ course }: { course: CourseOffering }) {
   const [imgError, setImgError] = useState(false);
 
   return (
     <div className="group bg-white dark:bg-[#172135] rounded-3xl border border-slate-200/80 dark:border-slate-800 overflow-hidden hover:shadow-xl dark:hover:shadow-[0_0_30px_rgba(240,192,64,0.12)] hover:-translate-y-1.5 transition-all duration-300 flex flex-col">
       {/* Thumbnail — Full uncropped image visible */}
-      <div className="relative w-full h-72 sm:h-80 bg-gradient-to-br from-[#0a1628] via-[#0d1c32] to-[#1a3a6b] flex items-center justify-center p-4 overflow-hidden border-b border-slate-100 dark:border-slate-800">
+      <div className="relative w-full h-64 sm:h-72 bg-gradient-to-br from-[#0a1628] via-[#0d1c32] to-[#1a3a6b] overflow-hidden border-b border-slate-100 dark:border-slate-800">
         {course.thumbnail && !imgError ? (
           <img
             src={course.thumbnail}
             alt={course.title}
-            className="w-full h-full object-contain drop-shadow-xl transition-transform duration-300 group-hover:scale-105"
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
             onError={() => setImgError(true)}
           />
         ) : (
@@ -90,13 +61,20 @@ function CourseCard({ course, isLoggedIn }: { course: Course; isLoggedIn: boolea
         )}
 
         {/* Level badge */}
-        <div className="absolute top-3 left-3">
+        <div className="absolute top-3 left-3 z-10">
           <span
-            className={`text-[11px] font-black uppercase tracking-wider px-3 py-1 rounded-full shadow-sm ${
+            className={`text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full shadow-md backdrop-blur-md ${
               LEVEL_COLORS[course.level] ?? "bg-slate-100 text-slate-700"
             }`}
           >
             {course.level.charAt(0) + course.level.slice(1).toLowerCase()}
+          </span>
+        </div>
+
+        {/* Modules count badge */}
+        <div className="absolute top-3 right-3 z-10">
+          <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-[#0a1628]/85 text-amber-400 border border-amber-400/30 backdrop-blur-md shadow-md flex items-center gap-1">
+            <Layers className="w-3 h-3" /> {course.modules} Modules
           </span>
         </div>
       </div>
@@ -115,24 +93,18 @@ function CourseCard({ course, isLoggedIn }: { course: Course; isLoggedIn: boolea
         {/* Instructor / Platform Branding */}
         <div className="flex items-center gap-2.5 mb-4">
           <div className="w-7 h-7 rounded-full bg-[#0a1628] overflow-hidden flex items-center justify-center shrink-0 border border-slate-200 dark:border-slate-700">
-            {course.instructor.role !== "ADMIN" && course.instructor.image ? (
+            {course.instructor.image ? (
               <img
                 src={course.instructor.image}
                 alt={course.instructor.name}
-                className="w-full h-full object-cover"
-              />
-            ) : course.instructor.role !== "ADMIN" ? (
-              <span className="text-white text-xs font-bold">{course.instructor.name?.[0] || "U"}</span>
-            ) : (
-              <img
-                src="/fevicon.webp"
-                alt="TaxCompPro"
                 className="w-full h-full object-contain p-0.5"
               />
+            ) : (
+              <span className="text-white text-xs font-bold">{course.instructor.name?.[0] || "U"}</span>
             )}
           </div>
           <span className="text-xs text-slate-700 dark:text-slate-300 font-bold truncate">
-            {course.instructor.role !== "ADMIN" ? course.instructor.name : "TaxCompPro"}
+            {course.instructor.name}
           </span>
         </div>
 
@@ -140,60 +112,57 @@ function CourseCard({ course, isLoggedIn }: { course: Course; isLoggedIn: boolea
         <div className="flex items-center gap-4 text-xs text-slate-400 dark:text-slate-400 border-t border-slate-100 dark:border-slate-800/80 pt-3 mb-5">
           <span className="flex items-center gap-1">
             <BookOpen className="w-3.5 h-3.5" />
-            {totalLessons} lessons
+            {course.totalLessons} lessons
           </span>
-          {course.totalDuration > 0 && (
-            <span className="flex items-center gap-1">
-              <Clock className="w-3.5 h-3.5" />
-              {fmtDuration(course.totalDuration)}
-            </span>
-          )}
+          <span className="flex items-center gap-1">
+            <Clock className="w-3.5 h-3.5" />
+            {course.duration}
+          </span>
           <span className="flex items-center gap-1 ml-auto">
             <Users className="w-3.5 h-3.5" />
-            {course._count.enrollments} enrolled
+            {course.enrolledCount} enrolled
           </span>
         </div>
 
-        {/* White Call to Action Button */}
-        <Link
-          href={`/courses/${course.slug}`}
+        {/* White Call to Action Button linking to specific landing page */}
+        <a
+          href={course.externalUrl}
+          target="_blank"
+          rel="noopener noreferrer"
           className="w-full bg-white dark:bg-white text-[#0a1628] hover:bg-slate-50 border border-slate-200 shadow-sm font-black text-xs uppercase tracking-wider py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-all hover:shadow-md active:scale-[0.99]"
         >
           VIEW COURSE DETAILS <ArrowRight className="w-3.5 h-3.5 text-[#0a1628]" />
-        </Link>
+        </a>
       </div>
     </div>
   );
 }
 
 export default function CoursesPage() {
-  const user = useAppSelector((s) => s.auth.user);
-  const isLoggedIn = !!user;
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
   const [level, setLevel] = useState("");
   const [query, setQuery] = useState("");
 
-  useEffect(() => {
-    setLoading(true);
-    const params = new URLSearchParams();
-    if (query) params.set("search", query);
-    if (category !== "All") params.set("category", category);
-    if (level) params.set("level", level);
-
-    fetch(`/api/courses?${params}`)
-      .then((r) => (r.ok ? r.json() : []))
-      .then((d) => setCourses(Array.isArray(d) ? d : []))
-      .catch(() => setCourses([]))
-      .finally(() => setLoading(false));
-  }, [query, category, level]);
-
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setQuery(search.trim());
   };
+
+  const filteredCourses = COURSES.filter((c) => {
+    if (category !== "All" && c.category !== category) return false;
+    if (level && c.level !== level) return false;
+    if (query) {
+      const q = query.toLowerCase();
+      return (
+        c.title.toLowerCase().includes(q) ||
+        c.description.toLowerCase().includes(q) ||
+        c.category.toLowerCase().includes(q) ||
+        c.instructor.name.toLowerCase().includes(q)
+      );
+    }
+    return true;
+  });
 
   return (
     <div className="min-h-screen bg-[#f8fafc] dark:bg-[#0c1527]">
@@ -280,10 +249,10 @@ export default function CoursesPage() {
         <div className="relative border-t border-white/10">
           <div className="max-w-7xl mx-auto px-6 py-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
             {[
-              { num: "10+", label: "Professional Courses" },
+              { num: "6", label: "Professional Masterclasses" },
               { num: "100%", label: "IRS-Compliant Modules" },
-              { num: "CPE / CE", label: "Ready Content" },
-              { num: "2 mo", label: "Free Community Access" },
+              { num: "CPE / CE", label: "Ready Curriculum" },
+              { num: "2 mo", label: "Free VIP Membership" },
             ].map((s) => (
               <div key={s.label} className="text-center">
                 <p className="text-2xl font-black text-amber-400 mb-0.5">{s.num}</p>
@@ -338,11 +307,7 @@ export default function CoursesPage() {
         </div>
 
         {/* Grid */}
-        {loading ? (
-          <div className="flex justify-center py-24">
-            <Loader2 className="w-8 h-8 text-[#d4a017] animate-spin" />
-          </div>
-        ) : courses.length === 0 ? (
+        {filteredCourses.length === 0 ? (
           <div className="text-center py-24 bg-white dark:bg-[#172135] rounded-3xl border border-slate-200 dark:border-slate-800 p-8">
             <GraduationCap className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
             <p className="text-slate-600 dark:text-slate-200 font-bold text-lg">No courses found</p>
@@ -350,8 +315,8 @@ export default function CoursesPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {courses.map((c) => (
-              <CourseCard key={c.id} course={c} isLoggedIn={isLoggedIn} />
+            {filteredCourses.map((c) => (
+              <CourseCard key={c.id} course={c} />
             ))}
           </div>
         )}
