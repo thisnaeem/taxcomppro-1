@@ -23,7 +23,8 @@ const statusConfig = {
 };
 
 const HINTS = ["Schedule C Help", "IRS Audit Defense", "Max My Deductions", "W-2 Question"];
-const WIDGET_SIZE = 104;
+const WIDGET_WIDTH = 95;
+const WIDGET_HEIGHT = 125;
 const PADDING = 16;
 
 function TypingDots() {
@@ -92,8 +93,8 @@ export default function AtlasWidget() {
   // Clamp position to viewport bounds
   const clampPos = useCallback((x: number, y: number) => {
     if (typeof window === "undefined") return { x, y };
-    const maxX = Math.max(PADDING, window.innerWidth - WIDGET_SIZE - PADDING);
-    const maxY = Math.max(PADDING, window.innerHeight - WIDGET_SIZE - PADDING);
+    const maxX = Math.max(PADDING, window.innerWidth - WIDGET_WIDTH - PADDING);
+    const maxY = Math.max(PADDING, window.innerHeight - WIDGET_HEIGHT - PADDING);
     return {
       x: Math.min(Math.max(PADDING, x), maxX),
       y: Math.min(Math.max(PADDING, y), maxY),
@@ -113,7 +114,7 @@ export default function AtlasWidget() {
       }
     } catch {}
 
-    setPos(clampPos(window.innerWidth - WIDGET_SIZE - 24, window.innerHeight - WIDGET_SIZE - 24));
+    setPos(clampPos(window.innerWidth - WIDGET_WIDTH - 24, window.innerHeight - WIDGET_HEIGHT - 24));
   }, [clampPos]);
 
   // Keep inside viewport on window resize
@@ -240,12 +241,11 @@ export default function AtlasWidget() {
   // Compute panel position dynamically near widget
   const getPanelStyle = (): React.CSSProperties => {
     if (!pos || typeof window === "undefined") {
-      return { bottom: 124, right: 24 };
+      return { bottom: 135, right: 24 };
     }
 
     const panelWidth = Math.min(380, window.innerWidth - 24);
     const panelHeight = Math.min(560, window.innerHeight - 100);
-    const widgetSize = WIDGET_SIZE;
 
     let top: number;
     if (pos.y > window.innerHeight / 2) {
@@ -253,12 +253,12 @@ export default function AtlasWidget() {
       top = Math.max(12, pos.y - panelHeight - 12);
     } else {
       // Position below widget
-      top = Math.min(window.innerHeight - panelHeight - 12, pos.y + widgetSize + 12);
+      top = Math.min(window.innerHeight - panelHeight - 12, pos.y + WIDGET_HEIGHT + 12);
     }
 
     let left: number;
     if (pos.x > window.innerWidth / 2) {
-      left = Math.max(12, Math.min(pos.x + widgetSize - panelWidth, window.innerWidth - panelWidth - 12));
+      left = Math.max(12, Math.min(pos.x + WIDGET_WIDTH - panelWidth, window.innerWidth - panelWidth - 12));
     } else {
       left = Math.max(12, Math.min(pos.x, window.innerWidth - panelWidth - 12));
     }
@@ -418,29 +418,29 @@ export default function AtlasWidget() {
         tabIndex={0}
         aria-label="Chat with Atlas AI - Click to open, drag to move"
         title="Chat with Atlas AI · Drag to move anywhere"
-        className={`fixed z-50 select-none touch-none group flex items-center justify-center ${
+        className={`fixed z-50 select-none touch-none group flex items-center justify-center bg-transparent ${
           isDragging ? "cursor-grabbing scale-105" : "cursor-grab hover:scale-105"
         }`}
         style={{
-          width: WIDGET_SIZE,
-          height: WIDGET_SIZE,
-          left: pos ? `${pos.x}px` : "calc(100vw - 124px)",
-          top: pos ? `${pos.y}px` : "calc(100vh - 124px)",
+          width: WIDGET_WIDTH,
+          height: WIDGET_HEIGHT,
+          left: pos ? `${pos.x}px` : `calc(100vw - ${WIDGET_WIDTH + 24}px)`,
+          top: pos ? `${pos.y}px` : `calc(100vh - ${WIDGET_HEIGHT + 24}px)`,
           transition: isDragging ? "none" : "transform 0.2s ease, filter 0.2s ease",
         }}
       >
-        <div className={`w-full h-full relative ${!isDragging ? "atlas-floating" : ""}`}>
-          {/* Full unclipped robot character */}
+        <div className={`w-full h-full relative flex items-center justify-center ${!isDragging ? "atlas-floating" : ""}`}>
+          {/* Full unclipped transparent robot character - no background box */}
           <img
-            src="/icon.webp"
+            src="/atlas-bot.webp"
             alt="Atlas AI"
             draggable={false}
-            className="w-full h-full object-contain pointer-events-none drop-shadow-[0_12px_24px_rgba(10,22,40,0.28)] group-hover:drop-shadow-[0_18px_32px_rgba(10,22,40,0.4)] transition-all"
+            className="w-full h-full object-contain pointer-events-none drop-shadow-[0_12px_24px_rgba(0,0,0,0.4)] group-hover:drop-shadow-[0_18px_36px_rgba(240,192,64,0.45)] transition-all"
           />
 
           {/* Unread badge */}
           {unread && !open && (
-            <span className="absolute top-1 right-2 flex h-4 w-4 pointer-events-none">
+            <span className="absolute top-0 right-1 flex h-4 w-4 pointer-events-none">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-4 w-4 bg-amber-500 border-2 border-white shadow-sm"></span>
             </span>
@@ -448,7 +448,7 @@ export default function AtlasWidget() {
 
           {/* Close button indicator when panel is open */}
           {open && (
-            <div className="absolute top-0 right-0 w-7 h-7 rounded-full bg-[#0a1628] text-white border-2 border-white shadow-xl flex items-center justify-center animate-in zoom-in-50 duration-150 pointer-events-none">
+            <div className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-[#0a1628] text-white border-2 border-white shadow-xl flex items-center justify-center animate-in zoom-in-50 duration-150 pointer-events-none">
               <X className="w-3.5 h-3.5 text-white" />
             </div>
           )}

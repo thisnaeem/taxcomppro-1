@@ -200,7 +200,7 @@ export default function CoursesPage() {
             </div>
 
             <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-7xl xl:text-8xl font-black mb-6 leading-[1.02] tracking-tight uppercase">
-              KNOWLEDGE IS YOUR <span className="text-amber-400">COMPETITIVE EDGE</span>
+              Knowledge is you <span className="text-amber-400">Competetive edge</span>
             </h1>
             <p className="text-slate-300 text-base sm:text-lg md:text-xl lg:text-2xl max-w-3xl mx-auto lg:mx-0 mb-10 leading-relaxed font-normal">
               Atlas Academy equips Tax Professionals with due diligence training, compliance
