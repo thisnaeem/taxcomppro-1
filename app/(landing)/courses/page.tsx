@@ -35,36 +35,39 @@ const LEVELS = [
 ];
 
 const LEVEL_COLORS: Record<string, string> = {
-  BEGINNER: "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300",
-  INTERMEDIATE: "bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-300",
-  ADVANCED: "bg-purple-100 text-purple-800 dark:bg-purple-500/20 dark:text-purple-300",
+  BEGINNER: "bg-emerald-500/90 text-white backdrop-blur-md",
+  INTERMEDIATE: "bg-blue-500/90 text-white backdrop-blur-md",
+  ADVANCED: "bg-purple-500/90 text-white backdrop-blur-md",
 };
 
 function CourseCard({ course }: { course: CourseOffering }) {
   const [imgError, setImgError] = useState(false);
 
   return (
-    <div className="group bg-white dark:bg-[#172135] rounded-3xl border border-slate-200/80 dark:border-slate-800 overflow-hidden hover:shadow-xl dark:hover:shadow-[0_0_30px_rgba(240,192,64,0.12)] hover:-translate-y-1.5 transition-all duration-300 flex flex-col">
-      {/* Thumbnail — Full uncropped image visible */}
-      <div className="relative w-full h-64 sm:h-72 bg-gradient-to-br from-[#0a1628] via-[#0d1c32] to-[#1a3a6b] overflow-hidden border-b border-slate-100 dark:border-slate-800">
+    <div className="group bg-white dark:bg-[#172135] rounded-[32px] border border-slate-200/80 dark:border-slate-800/90 overflow-hidden hover:shadow-2xl dark:hover:shadow-[0_0_45px_rgba(240,192,64,0.18)] hover:-translate-y-2 transition-all duration-300 flex flex-col">
+      {/* Big Crisp Artwork Header */}
+      <div className="relative w-full h-80 sm:h-96 md:h-[360px] lg:h-[400px] xl:h-[420px] bg-gradient-to-br from-[#0a1628] via-[#0d1c32] to-[#1a3a6b] overflow-hidden border-b border-slate-100 dark:border-slate-800">
         {course.thumbnail && !imgError ? (
           <img
             src={course.thumbnail}
             alt={course.title}
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
             onError={() => setImgError(true)}
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center">
-            <GraduationCap className="w-16 h-16 text-white/20" />
+            <GraduationCap className="w-24 h-24 text-white/20" />
           </div>
         )}
 
+        {/* Gradient Overlay for Badges */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30 pointer-events-none" />
+
         {/* Level badge */}
-        <div className="absolute top-3 left-3 z-10">
+        <div className="absolute top-4 left-4 z-10">
           <span
-            className={`text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full shadow-md backdrop-blur-md ${
-              LEVEL_COLORS[course.level] ?? "bg-slate-100 text-slate-700"
+            className={`text-xs font-black uppercase tracking-wider px-3.5 py-1.5 rounded-full shadow-lg ${
+              LEVEL_COLORS[course.level] ?? "bg-slate-900 text-white"
             }`}
           >
             {course.level.charAt(0) + course.level.slice(1).toLowerCase()}
@@ -72,27 +75,31 @@ function CourseCard({ course }: { course: CourseOffering }) {
         </div>
 
         {/* Modules count badge */}
-        <div className="absolute top-3 right-3 z-10">
-          <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-[#0a1628]/85 text-amber-400 border border-amber-400/30 backdrop-blur-md shadow-md flex items-center gap-1">
-            <Layers className="w-3 h-3" /> {course.modules} Modules
+        <div className="absolute top-4 right-4 z-10">
+          <span className="text-xs font-black uppercase tracking-wider px-3.5 py-1.5 rounded-full bg-[#0a1628]/90 text-amber-400 border border-amber-400/40 backdrop-blur-md shadow-lg flex items-center gap-1.5">
+            <Layers className="w-3.5 h-3.5" /> {course.modules} Modules
+          </span>
+        </div>
+
+        {/* Bottom category pill on image */}
+        <div className="absolute bottom-4 left-4 z-10">
+          <span className="text-[11px] font-extrabold uppercase tracking-widest px-3 py-1 rounded-lg bg-black/60 backdrop-blur-md text-amber-300 border border-amber-300/20">
+            {course.category}
           </span>
         </div>
       </div>
 
-      <div className="p-6 flex flex-col flex-1">
-        <div className="text-[11px] font-black text-[#c28e10] dark:text-amber-400 uppercase tracking-widest mb-1.5">
-          {course.category}
-        </div>
-        <h3 className="font-extrabold text-[#0a1628] dark:text-white text-lg leading-snug mb-2 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors line-clamp-2">
+      <div className="p-7 sm:p-8 md:p-9 flex flex-col flex-1">
+        <h3 className="font-extrabold text-[#0a1628] dark:text-white text-xl sm:text-2xl leading-snug mb-3 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors line-clamp-2">
           {course.title}
         </h3>
-        <p className="text-slate-500 dark:text-slate-300 text-xs leading-relaxed mb-4 line-clamp-2 flex-1">
+        <p className="text-slate-500 dark:text-slate-300 text-sm sm:text-base leading-relaxed mb-6 line-clamp-3 flex-1">
           {course.description}
         </p>
 
         {/* Instructor / Platform Branding */}
-        <div className="flex items-center gap-2.5 mb-4">
-          <div className="w-7 h-7 rounded-full bg-[#0a1628] overflow-hidden flex items-center justify-center shrink-0 border border-slate-200 dark:border-slate-700">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-9 h-9 rounded-full bg-[#0a1628] overflow-hidden flex items-center justify-center shrink-0 border-2 border-slate-200 dark:border-slate-700 shadow-sm">
             {course.instructor.image ? (
               <img
                 src={course.instructor.image}
@@ -103,35 +110,39 @@ function CourseCard({ course }: { course: CourseOffering }) {
               <span className="text-white text-xs font-bold">{course.instructor.name?.[0] || "U"}</span>
             )}
           </div>
-          <span className="text-xs text-slate-700 dark:text-slate-300 font-bold truncate">
-            {course.instructor.name}
-          </span>
+          <div>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Instructor</p>
+            <p className="text-sm text-slate-800 dark:text-slate-200 font-extrabold truncate">
+              {course.instructor.name}
+            </p>
+          </div>
         </div>
 
         {/* Stats */}
-        <div className="flex items-center gap-4 text-xs text-slate-400 dark:text-slate-400 border-t border-slate-100 dark:border-slate-800/80 pt-3 mb-5">
-          <span className="flex items-center gap-1">
-            <BookOpen className="w-3.5 h-3.5" />
-            {course.totalLessons} lessons
+        <div className="flex items-center justify-between text-xs sm:text-sm text-slate-500 dark:text-slate-400 border-t border-slate-100 dark:border-slate-800/80 pt-4 mb-6 font-medium">
+          <span className="flex items-center gap-1.5">
+            <BookOpen className="w-4 h-4 text-amber-500" />
+            <span className="font-bold text-slate-700 dark:text-slate-200">{course.totalLessons}</span> lessons
           </span>
-          <span className="flex items-center gap-1">
-            <Clock className="w-3.5 h-3.5" />
-            {course.duration}
+          <span className="flex items-center gap-1.5">
+            <Clock className="w-4 h-4 text-amber-500" />
+            <span className="font-bold text-slate-700 dark:text-slate-200">{course.duration}</span>
           </span>
-          <span className="flex items-center gap-1 ml-auto">
-            <Users className="w-3.5 h-3.5" />
-            {course.enrolledCount} enrolled
+          <span className="flex items-center gap-1.5">
+            <Users className="w-4 h-4 text-amber-500" />
+            <span className="font-bold text-slate-700 dark:text-slate-200">{course.enrolledCount}</span> enrolled
           </span>
         </div>
 
-        {/* White Call to Action Button linking to specific landing page */}
+        {/* High-Impact Call to Action Button */}
         <a
           href={course.externalUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="w-full bg-white dark:bg-white text-[#0a1628] hover:bg-slate-50 border border-slate-200 shadow-sm font-black text-xs uppercase tracking-wider py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-all hover:shadow-md active:scale-[0.99]"
+          className="w-full bg-white dark:bg-white text-[#0a1628] hover:bg-slate-50 border border-slate-200 dark:border-slate-300 shadow-md font-black text-sm uppercase tracking-wider py-4 px-6 rounded-2xl flex items-center justify-center gap-2.5 transition-all hover:shadow-lg active:scale-[0.99] group/btn"
         >
-          VIEW COURSE DETAILS <ArrowRight className="w-3.5 h-3.5 text-[#0a1628]" />
+          <span>VIEW COURSE DETAILS</span>
+          <ArrowRight className="w-4 h-4 text-[#0a1628] transition-transform group-hover/btn:translate-x-1" />
         </a>
       </div>
     </div>
@@ -167,7 +178,7 @@ export default function CoursesPage() {
   return (
     <div className="min-h-screen bg-[#f8fafc] dark:bg-[#0c1527]">
       {/* ══════════════════════════════════════
-          HERO (Same layout as toolkits)
+          EXPANSIVE HERO
       ══════════════════════════════════════ */}
       <div className="relative bg-gradient-to-br from-[#0a1628] via-[#0d2040] to-[#0a1628] text-white overflow-hidden">
         {/* Dot grid */}
@@ -175,79 +186,79 @@ export default function CoursesPage() {
           className="absolute inset-0 opacity-[0.07]"
           style={{
             backgroundImage: "radial-gradient(circle,white 1px,transparent 1px)",
-            backgroundSize: "28px 28px",
+            backgroundSize: "32px 32px",
           }}
         />
-        <div className="absolute -top-24 -right-24 w-[500px] h-[500px] bg-amber-400/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-80 h-80 bg-blue-400/8 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -top-32 -right-32 w-[600px] h-[600px] bg-amber-400/12 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative max-w-7xl mx-auto px-6 pt-16 pb-16 flex flex-col lg:flex-row items-center gap-12">
+        <div className="relative max-w-[1680px] mx-auto px-6 sm:px-10 lg:px-14 xl:px-16 pt-20 pb-20 sm:pt-24 sm:pb-24 lg:pt-28 lg:pb-28 flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
           {/* Left: text */}
           <div className="flex-1 text-center lg:text-left">
-            <div className="inline-flex items-center gap-2 bg-amber-400/15 border border-amber-400/30 text-amber-300 text-xs font-bold px-4 py-2 rounded-full mb-6 uppercase tracking-widest">
-              <GraduationCap className="w-3.5 h-3.5" /> Atlas Academy · Tax &amp; Finance Learning Hub
+            <div className="inline-flex items-center gap-2.5 bg-amber-400/15 border border-amber-400/30 text-amber-300 text-xs sm:text-sm font-extrabold px-5 py-2.5 rounded-full mb-8 uppercase tracking-widest shadow-lg shadow-amber-400/10">
+              <GraduationCap className="w-4 h-4" /> Atlas Academy · Professional Learning Hub
             </div>
 
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black mb-5 leading-[1.05] tracking-tight uppercase">
+            <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-7xl xl:text-8xl font-black mb-6 leading-[1.02] tracking-tight uppercase">
               KNOWLEDGE IS YOUR <span className="text-amber-400">COMPETITIVE EDGE</span>
             </h1>
-            <p className="text-slate-300 text-base sm:text-lg max-w-xl mx-auto lg:mx-0 mb-8 leading-relaxed">
+            <p className="text-slate-300 text-base sm:text-lg md:text-xl lg:text-2xl max-w-3xl mx-auto lg:mx-0 mb-10 leading-relaxed font-normal">
               Atlas Academy equips Tax Professionals with due diligence training, compliance
-              strategies, and business skills to help build a stronger, more profitable business.
+              strategies, and business skills to help build a stronger, more profitable practice.
             </p>
 
             {/* Search form in hero */}
-            <form onSubmit={handleSearch} className="flex gap-2 max-w-md mx-auto lg:mx-0 mb-8">
-              <div className="flex-1 flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-4 py-3 focus-within:border-amber-400">
-                <Search className="w-4 h-4 text-white/50 shrink-0" />
+            <form onSubmit={handleSearch} className="flex gap-3 max-w-xl mx-auto lg:mx-0 mb-10">
+              <div className="flex-1 flex items-center gap-3 bg-white/10 border border-white/20 rounded-full px-5 py-4 focus-within:border-amber-400 focus-within:bg-white/15 transition-all shadow-inner">
+                <Search className="w-5 h-5 text-white/50 shrink-0" />
                 <input
                   type="text"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search courses, compliance, tax…"
-                  className="flex-1 bg-transparent text-white placeholder-white/40 outline-none text-sm font-[inherit]"
+                  placeholder="Search masterclasses, compliance, due diligence…"
+                  className="flex-1 bg-transparent text-white placeholder-white/40 outline-none text-base font-[inherit]"
                 />
               </div>
               <button
                 type="submit"
-                className="bg-amber-500 hover:bg-amber-400 text-[#0a1628] font-black px-6 py-3 rounded-full transition-all shrink-0 text-sm shadow-lg shadow-amber-500/20"
+                className="bg-amber-500 hover:bg-amber-400 text-[#0a1628] font-black px-8 py-4 rounded-full transition-all shrink-0 text-base shadow-xl shadow-amber-500/25 hover:scale-105 active:scale-95"
               >
                 Search
               </button>
             </form>
 
-            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-5 text-xs font-semibold text-white/70">
+            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-6 sm:gap-8 text-xs sm:text-sm font-bold text-white/80">
               {[
                 { icon: ShieldCheck, label: "IRS-Compliant Content" },
                 { icon: Zap, label: "Self-Paced Learning" },
                 { icon: Award, label: "Verified Certificates" },
               ].map(({ icon: Icon, label }) => (
-                <div key={label} className="flex items-center gap-1.5">
-                  <Icon className="w-4 h-4 text-amber-400" /> {label}
+                <div key={label} className="flex items-center gap-2">
+                  <Icon className="w-5 h-5 text-amber-400" /> {label}
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Right: hero image */}
-          <div className="relative flex-shrink-0 w-full max-w-sm lg:max-w-md">
-            <div className="absolute inset-0 bg-amber-400/20 rounded-3xl blur-2xl scale-110 pointer-events-none" />
-            <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-black/40 border border-white/10 bg-[#172135]">
+          {/* Right: Large hero visual banner */}
+          <div className="relative flex-shrink-0 w-full max-w-md lg:max-w-lg xl:max-w-xl 2xl:max-w-2xl">
+            <div className="absolute inset-0 bg-amber-400/20 rounded-3xl blur-3xl scale-110 pointer-events-none" />
+            <div className="relative rounded-3xl overflow-hidden shadow-2xl shadow-black/50 border border-white/15 bg-[#172135]">
               <img
                 src="/courses-hero.webp"
                 alt="Atlas Academy Courses"
                 className="w-full h-auto object-cover"
               />
-              <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-[#0a1628]/80 backdrop-blur-sm border border-amber-400/40 text-amber-300 text-[10px] font-black px-3 py-1.5 rounded-full">
-                <Star className="w-3 h-3 fill-amber-400 text-amber-400" /> Professional Academy
+              <div className="absolute top-4 left-4 flex items-center gap-2 bg-[#0a1628]/85 backdrop-blur-md border border-amber-400/40 text-amber-300 text-xs font-black px-4 py-2 rounded-full shadow-lg">
+                <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" /> Professional Academy
               </div>
             </div>
           </div>
         </div>
 
-        {/* Stats row below */}
-        <div className="relative border-t border-white/10">
-          <div className="max-w-7xl mx-auto px-6 py-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
+        {/* Big Stats Row */}
+        <div className="relative border-t border-white/10 bg-black/20">
+          <div className="max-w-[1680px] mx-auto px-6 sm:px-10 lg:px-14 xl:px-16 py-8 sm:py-10 grid grid-cols-2 md:grid-cols-4 gap-6">
             {[
               { num: "6", label: "Professional Masterclasses" },
               { num: "100%", label: "IRS-Compliant Modules" },
@@ -255,8 +266,8 @@ export default function CoursesPage() {
               { num: "2 mo", label: "Free VIP Membership" },
             ].map((s) => (
               <div key={s.label} className="text-center">
-                <p className="text-2xl font-black text-amber-400 mb-0.5">{s.num}</p>
-                <p className="text-[11px] font-semibold text-white/50 uppercase tracking-wider leading-snug">
+                <p className="text-3xl sm:text-4xl lg:text-5xl font-black text-amber-400 mb-1 tracking-tight">{s.num}</p>
+                <p className="text-xs sm:text-sm font-extrabold text-white/60 uppercase tracking-wider leading-snug">
                   {s.label}
                 </p>
               </div>
@@ -266,22 +277,22 @@ export default function CoursesPage() {
       </div>
 
       {/* ══════════════════════════════════════
-          COURSES LISTING & FILTERS
+          BIG COURSES GRID & EXPANDED FILTERS
       ══════════════════════════════════════ */}
-      <div className="max-w-7xl mx-auto px-6 py-12">
+      <div className="max-w-[1680px] mx-auto px-6 sm:px-10 lg:px-14 xl:px-16 py-14 sm:py-18">
         {/* Filters */}
-        <div className="flex flex-col md:flex-row gap-4 mb-10 items-center justify-between">
+        <div className="flex flex-col md:flex-row gap-6 mb-12 items-center justify-between">
           {/* Category chips */}
-          <div className="flex items-center gap-2 flex-wrap flex-1">
-            <Filter className="w-4 h-4 text-slate-400 shrink-0" />
+          <div className="flex items-center gap-2.5 sm:gap-3 flex-wrap flex-1">
+            <Filter className="w-5 h-5 text-slate-400 shrink-0 mr-1" />
             {CATEGORIES.map((cat) => (
               <button
                 key={cat}
                 onClick={() => setCategory(cat)}
-                className={`text-xs font-bold px-4 py-2 rounded-full transition-all border ${
+                className={`text-xs sm:text-sm font-extrabold px-5 sm:px-6 py-2.5 sm:py-3 rounded-full transition-all border ${
                   category === cat
-                    ? "bg-[#0a1628] dark:bg-amber-500 text-white dark:text-[#0a1628] border-transparent shadow-md"
-                    : "bg-white dark:bg-[#172135] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-slate-300"
+                    ? "bg-[#0a1628] dark:bg-amber-500 text-white dark:text-[#0a1628] border-transparent shadow-lg"
+                    : "bg-white dark:bg-[#172135] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
                 }`}
               >
                 {cat}
@@ -290,12 +301,12 @@ export default function CoursesPage() {
           </div>
 
           {/* Level select */}
-          <div className="flex items-center gap-2">
-            <SlidersHorizontal className="w-4 h-4 text-slate-400" />
+          <div className="flex items-center gap-2.5 shrink-0">
+            <SlidersHorizontal className="w-5 h-5 text-slate-400" />
             <select
               value={level}
               onChange={(e) => setLevel(e.target.value)}
-              className="font-[inherit] text-xs font-bold border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 bg-white dark:bg-[#172135] text-slate-700 dark:text-white outline-none focus:border-[#0a1628] cursor-pointer"
+              className="font-[inherit] text-xs sm:text-sm font-extrabold border border-slate-200 dark:border-slate-800 rounded-2xl px-5 py-3 bg-white dark:bg-[#172135] text-slate-700 dark:text-white outline-none focus:border-amber-500 cursor-pointer shadow-sm"
             >
               {LEVELS.map((l) => (
                 <option key={l.value} value={l.value}>
@@ -306,15 +317,15 @@ export default function CoursesPage() {
           </div>
         </div>
 
-        {/* Grid */}
+        {/* Expanded Grid */}
         {filteredCourses.length === 0 ? (
-          <div className="text-center py-24 bg-white dark:bg-[#172135] rounded-3xl border border-slate-200 dark:border-slate-800 p-8">
-            <GraduationCap className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
-            <p className="text-slate-600 dark:text-slate-200 font-bold text-lg">No courses found</p>
-            <p className="text-slate-400 text-sm mt-1">Try adjusting your filters or search term</p>
+          <div className="text-center py-32 bg-white dark:bg-[#172135] rounded-3xl border border-slate-200 dark:border-slate-800 p-12">
+            <GraduationCap className="w-16 h-16 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
+            <p className="text-slate-600 dark:text-slate-200 font-extrabold text-xl">No courses found</p>
+            <p className="text-slate-400 text-sm mt-1.5">Try adjusting your filters or search term</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 lg:gap-10 xl:gap-12">
             {filteredCourses.map((c) => (
               <CourseCard key={c.id} course={c} />
             ))}
