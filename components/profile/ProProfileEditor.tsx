@@ -328,8 +328,8 @@ export default function ProProfileEditor() {
       <div className="flex flex-col lg:flex-row gap-6">
         {/* ── LEFT SIDEBAR ────────────────────────────────────────────────── */}
         <aside className="w-full lg:w-72 shrink-0 lg:sticky lg:top-24 self-start space-y-5">
-          <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-3.5 space-y-1">
-            <div className="px-3.5 py-2 text-[11px] font-black uppercase tracking-wider text-slate-400">
+          <div className="bg-white dark:bg-[#172135] rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-sm p-3.5 space-y-1">
+            <div className="px-3.5 py-2 text-[11px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
               PROFILE MENU
             </div>
             {PRO_SIDEBAR_TABS.map((tab) => {
@@ -340,19 +340,19 @@ export default function ProProfileEditor() {
                   onClick={() => setActiveTab(tab.id)}
                   className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-bold tracking-normal transition-all text-left group ${
                     isActive
-                      ? "bg-[#EAF2FC] text-[#1E56A0] shadow-xs"
-                      : "text-slate-600 hover:text-[#0A1628] hover:bg-slate-50"
+                      ? "bg-[#EAF2FC] dark:bg-[#1E56A0]/20 text-[#1E56A0] dark:text-[#60a5fa] shadow-xs"
+                      : "text-slate-600 dark:text-slate-300 hover:text-[#0A1628] dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50"
                   }`}
                 >
                   <div className="flex items-center gap-3.5">
                     <tab.icon
                       className={`w-5 h-5 shrink-0 transition-colors ${
-                        isActive ? "text-[#1E56A0]" : "text-slate-400 group-hover:text-slate-600"
+                        isActive ? "text-[#1E56A0] dark:text-[#60a5fa]" : "text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300"
                       }`}
                     />
                     <span className="leading-snug">{tab.label}</span>
                   </div>
-                  {isActive && <ChevronRight className="w-4 h-4 text-[#1E56A0] shrink-0" />}
+                  {isActive && <ChevronRight className="w-4 h-4 text-[#1E56A0] dark:text-[#60a5fa] shrink-0" />}
                 </button>
               );
             })}
@@ -382,7 +382,7 @@ export default function ProProfileEditor() {
         <div className="flex-1 min-w-0 space-y-6">
 
           {/* ── HERO PROFILE CARD ─────────────────────────────────────────── */}
-          <div className="rounded-2xl bg-white border border-slate-200 shadow-xs overflow-hidden">
+          <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
 
             {/* Cover Image Area */}
             {profile.coverImage ? (
@@ -398,11 +398,11 @@ export default function ProProfileEditor() {
                 </button>
               </div>
             ) : (
-              <div className="relative h-28 sm:h-32 w-full bg-slate-100 flex items-center justify-center">
+              <div className="relative h-28 sm:h-32 w-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
                 <button
                   onClick={() => coverInputRef.current?.click()}
                   disabled={coverUploading}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white border border-slate-300 text-slate-600 text-xs font-bold hover:border-[#1E56A0] hover:text-[#1E56A0] transition-all"
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-200 text-xs font-bold hover:border-[#1E56A0] hover:text-[#1E56A0] transition-all"
                 >
                   {coverUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
                   Add Cover Photo
@@ -415,7 +415,7 @@ export default function ProProfileEditor() {
               <div className="flex flex-col sm:flex-row gap-5">
                 {/* Square Avatar */}
                 <div className="relative shrink-0 w-24 h-24 sm:w-28 sm:h-28 -mt-14 sm:-mt-16 group self-start">
-                  <div className="w-full h-full rounded-2xl overflow-hidden bg-gradient-to-br from-[#0A1628] to-[#1E56A0] ring-4 ring-white shadow-lg flex items-center justify-center">
+                  <div className="w-full h-full rounded-2xl overflow-hidden bg-gradient-to-br from-[#0A1628] to-[#1E56A0] ring-4 ring-white dark:ring-[#172135] shadow-lg flex items-center justify-center">
                     {profile.image ? (
                       <img src={profile.image} alt={profile.name} className="w-full h-full object-cover" />
                     ) : (
@@ -431,13 +431,13 @@ export default function ProProfileEditor() {
                     {avatarUploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Camera className="w-5 h-5" />}
                   </button>
                   {/* Online dot */}
-                  <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-emerald-500 border-[3px] border-white z-20 pointer-events-none" />
+                  <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-emerald-500 border-[3px] border-white dark:border-[#172135] z-20 pointer-events-none" />
                 </div>
 
                 {/* Name, headline, meta */}
                 <div className="flex-1 min-w-0 space-y-1.5">
                   <div className="flex flex-wrap items-center gap-2.5">
-                    <h1 className="text-xl sm:text-2xl font-black text-[#0A1628] tracking-tight truncate">
+                    <h1 className="text-xl sm:text-2xl font-black text-[#0A1628] dark:text-white tracking-tight truncate">
                       {displayName}
                     </h1>
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-[#1E56A0] text-white text-[10px] font-black tracking-wider uppercase">
@@ -446,17 +446,17 @@ export default function ProProfileEditor() {
                     </span>
                   </div>
 
-                  <p className="text-sm font-medium text-slate-600">{headline}</p>
+                  <p className="text-sm font-medium text-slate-600 dark:text-slate-300">{headline}</p>
 
-                  <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-500 pt-0.5">
+                  <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-500 dark:text-slate-400 pt-0.5">
                     {location && (
-                      <span className="flex items-center gap-1 text-[#1E56A0]">
+                      <span className="flex items-center gap-1 text-[#1E56A0] dark:text-[#60a5fa]">
                         <MapPin className="w-3.5 h-3.5" />
                         {location}
                       </span>
                     )}
                     {memberStats.memberSince && (
-                      <span className="text-slate-400">Member Since: {memberStats.memberSince}</span>
+                      <span className="text-slate-400 dark:text-slate-500">Member Since: {memberStats.memberSince}</span>
                     )}
                   </div>
 
@@ -472,7 +472,7 @@ export default function ProProfileEditor() {
 
                     <button
                       onClick={() => setShareDialogOpen(true)}
-                      className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 hover:border-[#1E56A0] hover:text-[#1E56A0] bg-white text-slate-600 text-xs font-bold transition-all"
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-[#1E56A0] hover:text-[#1E56A0] bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-200 text-xs font-bold transition-all"
                     >
                       <Share2 className="w-3.5 h-3.5" />
                       SHARE
@@ -488,41 +488,41 @@ export default function ProProfileEditor() {
             <div className="grid lg:grid-cols-12 gap-6">
               <div className="lg:col-span-7 space-y-6">
                 {/* ABOUT ME */}
-                <div className="rounded-2xl bg-white border border-slate-200 p-6 shadow-xs space-y-4">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                    <h3 className="text-xs font-black text-[#0A1628] uppercase tracking-widest flex items-center gap-2">
-                      <UserCheck className="w-4 h-4 text-[#1E56A0]" />
+                <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
+                  <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                    <h3 className="text-xs font-black text-[#0A1628] dark:text-white uppercase tracking-widest flex items-center gap-2">
+                      <UserCheck className="w-4 h-4 text-[#1E56A0] dark:text-[#60a5fa]" />
                       ABOUT ME
                     </h3>
-                    <button onClick={() => setActiveTab("basic")} className="text-xs font-bold text-[#1E56A0] hover:underline flex items-center gap-1">
+                    <button onClick={() => setActiveTab("basic")} className="text-xs font-bold text-[#1E56A0] dark:text-[#60a5fa] hover:underline flex items-center gap-1">
                       <Edit3 className="w-3 h-3" /> Edit
                     </button>
                   </div>
 
                   {profile.bio ? (
-                    <p className="text-sm text-slate-600 leading-relaxed">{profile.bio}</p>
+                    <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">{profile.bio}</p>
                   ) : (
-                    <p className="text-sm text-slate-400 italic">No bio added yet. Click Edit to add your professional summary.</p>
+                    <p className="text-sm text-slate-400 dark:text-slate-500 italic">No bio added yet. Click Edit to add your professional summary.</p>
                   )}
 
                   {/* Stats — only show real data */}
                   {(yearsExp !== "–" || profile.certifications.length > 0) && (
                     <div className="flex flex-wrap gap-3 pt-2">
                       {yearsExp !== "–" && (
-                        <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-100">
-                          <Clock className="w-4 h-4 text-[#1E56A0]" />
+                        <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-100 dark:border-slate-700/80">
+                          <Clock className="w-4 h-4 text-[#1E56A0] dark:text-[#60a5fa]" />
                           <div>
-                            <p className="text-sm font-black text-[#0A1628]">{yearsExp}+ Years</p>
-                            <p className="text-[10px] font-bold text-slate-400">Experience</p>
+                            <p className="text-sm font-black text-[#0A1628] dark:text-white">{yearsExp}+ Years</p>
+                            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-400">Experience</p>
                           </div>
                         </div>
                       )}
                       {profile.certifications.length > 0 && (
-                        <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-100">
-                          <Award className="w-4 h-4 text-amber-600" />
+                        <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-100 dark:border-slate-700/80">
+                          <Award className="w-4 h-4 text-amber-500" />
                           <div>
-                            <p className="text-sm font-black text-[#0A1628]">{profile.certifications[0]}</p>
-                            <p className="text-[10px] font-bold text-slate-400">Credential</p>
+                            <p className="text-sm font-black text-[#0A1628] dark:text-white">{profile.certifications[0]}</p>
+                            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-400">Credential</p>
                           </div>
                         </div>
                       )}
@@ -532,17 +532,17 @@ export default function ProProfileEditor() {
 
                 {/* EXPERTISE */}
                 {profile.specialties.length > 0 && (
-                  <div className="rounded-2xl bg-white border border-slate-200 p-6 shadow-xs space-y-4">
-                    <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                      <h3 className="text-xs font-black text-[#0A1628] uppercase tracking-widest flex items-center gap-2">
-                        <Award className="w-4 h-4 text-[#1E56A0]" />
+                  <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
+                    <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                      <h3 className="text-xs font-black text-[#0A1628] dark:text-white uppercase tracking-widest flex items-center gap-2">
+                        <Award className="w-4 h-4 text-[#1E56A0] dark:text-[#60a5fa]" />
                         EXPERTISE
                       </h3>
-                      <button onClick={() => setActiveTab("credentials")} className="text-[11px] font-bold text-[#1E56A0] hover:underline">Manage</button>
+                      <button onClick={() => setActiveTab("credentials")} className="text-[11px] font-bold text-[#1E56A0] dark:text-[#60a5fa] hover:underline">Manage</button>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {profile.specialties.map((spec) => (
-                        <span key={spec} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#EAF2FC] text-[#1E56A0] border border-[#1E56A0]/20">{spec}</span>
+                        <span key={spec} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#EAF2FC] dark:bg-blue-500/15 text-[#1E56A0] dark:text-blue-300 border border-[#1E56A0]/20 dark:border-blue-500/30">{spec}</span>
                       ))}
                     </div>
                   </div>
@@ -550,22 +550,22 @@ export default function ProProfileEditor() {
 
                 {/* SERVICES */}
                 {services.length > 0 && (
-                  <div className="rounded-2xl bg-white border border-slate-200 p-6 shadow-xs space-y-4">
-                    <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                      <h3 className="text-xs font-black text-[#0A1628] uppercase tracking-widest flex items-center gap-2">
-                        <Check className="w-4 h-4 text-[#1E56A0]" />
+                  <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
+                    <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                      <h3 className="text-xs font-black text-[#0A1628] dark:text-white uppercase tracking-widest flex items-center gap-2">
+                        <Check className="w-4 h-4 text-[#1E56A0] dark:text-[#60a5fa]" />
                         SERVICES OFFERED
                       </h3>
-                      <button onClick={() => setActiveTab("services")} className="text-[11px] font-bold text-[#1E56A0] hover:underline">Manage</button>
+                      <button onClick={() => setActiveTab("services")} className="text-[11px] font-bold text-[#1E56A0] dark:text-[#60a5fa] hover:underline">Manage</button>
                     </div>
-                    <ul className="space-y-2 text-xs font-bold text-slate-700">
+                    <ul className="space-y-2 text-xs font-bold text-slate-700 dark:text-slate-200">
                       {services.map((svc) => (
                         <li key={svc.id} className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-2">
-                            <span className="text-[#1E56A0]">✓</span>
+                            <span className="text-[#1E56A0] dark:text-[#60a5fa]">✓</span>
                             <span>{svc.title}</span>
                           </div>
-                          {svc.price && <span className="text-[11px] font-semibold text-emerald-600">{svc.price}</span>}
+                          {svc.price && <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">{svc.price}</span>}
                         </li>
                       ))}
                     </ul>
@@ -574,21 +574,21 @@ export default function ProProfileEditor() {
 
                 {/* CREDENTIALS */}
                 {profile.certifications.length > 0 && (
-                  <div className="rounded-2xl bg-white border border-slate-200 p-6 shadow-xs space-y-4">
-                    <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                      <h3 className="text-xs font-black text-[#0A1628] uppercase tracking-widest flex items-center gap-2">
-                        <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                  <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
+                    <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                      <h3 className="text-xs font-black text-[#0A1628] dark:text-white uppercase tracking-widest flex items-center gap-2">
+                        <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                         CREDENTIALS
                       </h3>
-                      <button onClick={() => setActiveTab("credentials")} className="text-[11px] font-bold text-[#1E56A0] hover:underline">Edit</button>
+                      <button onClick={() => setActiveTab("credentials")} className="text-[11px] font-bold text-[#1E56A0] dark:text-[#60a5fa] hover:underline">Edit</button>
                     </div>
                     <div className="grid sm:grid-cols-2 gap-3">
                       {profile.certifications.map((cert) => (
-                        <div key={cert} className="p-3.5 rounded-xl bg-slate-50 border border-slate-100 flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+                        <div key={cert} className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-100 dark:border-slate-700/80 flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-lg bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0">
                             <Award className="w-4 h-4" />
                           </div>
-                          <p className="text-xs font-bold text-[#0A1628]">{cert}</p>
+                          <p className="text-xs font-bold text-[#0A1628] dark:text-white">{cert}</p>
                         </div>
                       ))}
                     </div>
@@ -597,10 +597,10 @@ export default function ProProfileEditor() {
 
                 {/* VOICE MEMO */}
                 {profile.voiceMemoUrl && (
-                  <div className="rounded-2xl bg-white border border-slate-200 p-6 shadow-xs space-y-3">
-                    <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                      <h3 className="text-xs font-black uppercase tracking-widest text-[#0A1628]">Voice Introduction</h3>
-                      <button onClick={() => setActiveTab("voice")} className="text-[11px] font-bold text-[#1E56A0] hover:underline">Record New</button>
+                  <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-3">
+                    <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+                      <h3 className="text-xs font-black uppercase tracking-widest text-[#0A1628] dark:text-white">Voice Introduction</h3>
+                      <button onClick={() => setActiveTab("voice")} className="text-[11px] font-bold text-[#1E56A0] dark:text-[#60a5fa] hover:underline">Record New</button>
                     </div>
                     <VoiceMemoPlayer url={profile.voiceMemoUrl} name={profile.name} />
                   </div>
@@ -610,35 +610,35 @@ export default function ProProfileEditor() {
               {/* RIGHT COLUMN */}
               <div className="lg:col-span-5 space-y-6">
                 {/* MEMBERSHIP */}
-                <div className="rounded-2xl bg-white border border-slate-200 p-6 shadow-xs space-y-4">
-                  <h3 className="text-xs font-black text-[#0A1628] uppercase tracking-widest flex items-center gap-2 border-b border-slate-100 pb-3">
+                <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
+                  <h3 className="text-xs font-black text-[#0A1628] dark:text-white uppercase tracking-widest flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
                     <Crown className="w-4 h-4 text-amber-500" />
                     MEMBERSHIP STATUS
                   </h3>
-                  <div className="flex items-center justify-between gap-3 p-3.5 rounded-xl bg-amber-50/70 border border-amber-200/60">
+                  <div className="flex items-center justify-between gap-3 p-3.5 rounded-xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-500/20">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 text-white flex items-center justify-center shrink-0">
                         <Crown className="w-5 h-5" />
                       </div>
                       <div>
-                        <h4 className="text-sm font-black text-[#0A1628]">{memberStats.tierName}</h4>
+                        <h4 className="text-sm font-black text-[#0A1628] dark:text-white">{memberStats.tierName}</h4>
                         {memberStats.validThru && (
-                          <p className="text-[11px] font-semibold text-slate-500">Valid Thru: {memberStats.validThru}</p>
+                          <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">Valid Thru: {memberStats.validThru}</p>
                         )}
                       </div>
                     </div>
                     <button
                       onClick={openStripePortal}
                       disabled={portalLoading}
-                      className="px-3 py-2 rounded-lg bg-white border border-slate-200 text-xs font-bold text-[#0A1628] hover:bg-slate-50 transition-all shrink-0"
+                      className="px-3 py-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-[#0A1628] dark:text-white hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shrink-0"
                     >
                       {portalLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "MANAGE"}
                     </button>
                   </div>
-                  <div className="grid grid-cols-2 gap-2 text-xs font-bold text-slate-700 pt-1">
+                  <div className="grid grid-cols-2 gap-2 text-xs font-bold text-slate-700 dark:text-slate-300 pt-1">
                     {["Unlimited Toolkit Access", "Priority Support", "All Course Access", "Exclusive Discounts", "Pro Talks Access", "Community Access"].map((b) => (
                       <div key={b} className="flex items-center gap-1.5">
-                        <span className="text-[#1E56A0]">✓</span>
+                        <span className="text-[#1E56A0] dark:text-[#60a5fa]">✓</span>
                         <span>{b}</span>
                       </div>
                     ))}
@@ -646,13 +646,13 @@ export default function ProProfileEditor() {
                 </div>
 
                 {/* PRO CONNECT CARD PREVIEW */}
-                <div className="rounded-2xl bg-white border border-slate-200 p-6 shadow-xs space-y-4">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                    <h3 className="text-xs font-black text-[#0A1628] uppercase tracking-widest flex items-center gap-2">
-                      <CreditCard className="w-4 h-4 text-[#1E56A0]" />
+                <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
+                  <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                    <h3 className="text-xs font-black text-[#0A1628] dark:text-white uppercase tracking-widest flex items-center gap-2">
+                      <CreditCard className="w-4 h-4 text-[#1E56A0] dark:text-[#60a5fa]" />
                       PRO CONNECT CARD
                     </h3>
-                    <button onClick={() => setActiveTab("card")} className="text-[11px] font-bold text-[#1E56A0] hover:underline">Configure</button>
+                    <button onClick={() => setActiveTab("card")} className="text-[11px] font-bold text-[#1E56A0] dark:text-[#60a5fa] hover:underline">Configure</button>
                   </div>
                   <div className="rounded-xl bg-gradient-to-br from-[#0A1628] to-[#1C3658] p-4 text-white flex items-center justify-between gap-3">
                     <div className="space-y-1 flex-1 min-w-0">
@@ -683,10 +683,10 @@ export default function ProProfileEditor() {
 
           {/* ── BASIC INFO TAB ────────────────────────────────────────────── */}
           {activeTab === "basic" && (
-            <div className="rounded-2xl bg-white border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-                <h2 className="text-base font-black text-[#0A1628] uppercase tracking-wider flex items-center gap-2">
-                  <Edit3 className="w-5 h-5 text-[#1E56A0]" />
+            <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-xs space-y-6">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
+                <h2 className="text-base font-black text-[#0A1628] dark:text-white uppercase tracking-wider flex items-center gap-2">
+                  <Edit3 className="w-5 h-5 text-[#1E56A0] dark:text-[#60a5fa]" />
                   Basic Information
                 </h2>
                 <button
@@ -700,35 +700,35 @@ export default function ProProfileEditor() {
               </div>
               <div className="grid sm:grid-cols-2 gap-5">
                 <div>
-                  <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-1">Full Name & Suffix</label>
-                  <input type="text" value={profile.name} onChange={(e) => setProfile((p) => ({ ...p, name: e.target.value }))} className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-medium focus:border-[#1E56A0] focus:ring-2 focus:ring-[#1E56A0]/10 outline-none" />
+                  <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Full Name & Suffix</label>
+                  <input type="text" value={profile.name} onChange={(e) => setProfile((p) => ({ ...p, name: e.target.value }))} className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm font-medium focus:border-[#1E56A0] focus:ring-2 focus:ring-[#1E56A0]/10 outline-none" />
                 </div>
                 <div>
-                  <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-1">Location</label>
-                  <input type="text" value={profile.location} onChange={(e) => setProfile((p) => ({ ...p, location: e.target.value }))} placeholder="e.g. Houston, Texas" className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-medium focus:border-[#1E56A0] focus:ring-2 focus:ring-[#1E56A0]/10 outline-none" />
+                  <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Location</label>
+                  <input type="text" value={profile.location} onChange={(e) => setProfile((p) => ({ ...p, location: e.target.value }))} placeholder="e.g. Houston, Texas" className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm font-medium focus:border-[#1E56A0] focus:ring-2 focus:ring-[#1E56A0]/10 outline-none" />
                 </div>
                 <div>
-                  <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-1">Professional Headline</label>
-                  <input type="text" value={profile.headline} onChange={(e) => setProfile((p) => ({ ...p, headline: e.target.value }))} placeholder="e.g. Enrolled Agent | Tax Professional" className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-medium focus:border-[#1E56A0] focus:ring-2 focus:ring-[#1E56A0]/10 outline-none" />
+                  <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Professional Headline</label>
+                  <input type="text" value={profile.headline} onChange={(e) => setProfile((p) => ({ ...p, headline: e.target.value }))} placeholder="e.g. Enrolled Agent | Tax Professional" className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm font-medium focus:border-[#1E56A0] focus:ring-2 focus:ring-[#1E56A0]/10 outline-none" />
                 </div>
                 <div>
-                  <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-1">Years of Experience</label>
-                  <input type="number" value={profile.yearsExperience} onChange={(e) => setProfile((p) => ({ ...p, yearsExperience: e.target.value }))} placeholder="20" className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-medium focus:border-[#1E56A0] focus:ring-2 focus:ring-[#1E56A0]/10 outline-none" />
+                  <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Years of Experience</label>
+                  <input type="number" value={profile.yearsExperience} onChange={(e) => setProfile((p) => ({ ...p, yearsExperience: e.target.value }))} placeholder="20" className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm font-medium focus:border-[#1E56A0] focus:ring-2 focus:ring-[#1E56A0]/10 outline-none" />
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-1">About Me / Bio</label>
-                <textarea rows={4} value={profile.bio} onChange={(e) => setProfile((p) => ({ ...p, bio: e.target.value }))} className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-medium focus:border-[#1E56A0] focus:ring-2 focus:ring-[#1E56A0]/10 outline-none resize-none" />
+                <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">About Me / Bio</label>
+                <textarea rows={4} value={profile.bio} onChange={(e) => setProfile((p) => ({ ...p, bio: e.target.value }))} className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm font-medium focus:border-[#1E56A0] focus:ring-2 focus:ring-[#1E56A0]/10 outline-none resize-none" />
               </div>
             </div>
           )}
 
           {/* ── MISSION TAB ───────────────────────────────────────────────── */}
           {activeTab === "mission" && (
-            <div className="rounded-2xl bg-white border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-                <h2 className="text-base font-black text-[#0A1628] uppercase tracking-wider flex items-center gap-2">
-                  <Target className="w-5 h-5 text-[#1E56A0]" />
+            <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-xs space-y-6">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
+                <h2 className="text-base font-black text-[#0A1628] dark:text-white uppercase tracking-wider flex items-center gap-2">
+                  <Target className="w-5 h-5 text-[#1E56A0] dark:text-[#60a5fa]" />
                   Mission &amp; Professional Philosophy
                 </h2>
                 <button onClick={saveInPageProfile} disabled={savingInPage} className="px-5 py-2.5 rounded-xl bg-[#1E56A0] hover:bg-[#16437E] text-white text-xs font-bold transition-all disabled:opacity-50 flex items-center gap-1.5">
@@ -737,20 +737,20 @@ export default function ProProfileEditor() {
                 </button>
               </div>
               <div>
-                <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-1.5">My Mission</label>
-                <textarea rows={3} value={profile.mission} onChange={(e) => setProfile((p) => ({ ...p, mission: e.target.value }))} placeholder="e.g. Empowering individuals and business owners to navigate complex tax codes..." className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-medium focus:border-[#1E56A0] focus:ring-2 focus:ring-[#1E56A0]/10 outline-none resize-none" />
+                <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">My Mission</label>
+                <textarea rows={3} value={profile.mission} onChange={(e) => setProfile((p) => ({ ...p, mission: e.target.value }))} placeholder="e.g. Empowering individuals and business owners to navigate complex tax codes..." className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm font-medium focus:border-[#1E56A0] focus:ring-2 focus:ring-[#1E56A0]/10 outline-none resize-none" />
               </div>
             </div>
           )}
 
           {/* ── SERVICES TAB ──────────────────────────────────────────────── */}
           {activeTab === "services" && (
-            <div className="rounded-2xl bg-white border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6">
-              <div className="border-b border-slate-100 pb-4">
-                <h2 className="text-base font-black text-[#0A1628] uppercase tracking-wider flex items-center gap-2">
-                  <Briefcase className="w-5 h-5 text-[#1E56A0]" /> Services &amp; Pricing
+            <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-xs space-y-6">
+              <div className="border-b border-slate-100 dark:border-slate-800 pb-4">
+                <h2 className="text-base font-black text-[#0A1628] dark:text-white uppercase tracking-wider flex items-center gap-2">
+                  <Briefcase className="w-5 h-5 text-[#1E56A0] dark:text-[#60a5fa]" /> Services &amp; Pricing
                 </h2>
-                <p className="text-xs text-slate-400 mt-1">Add and manage the tax services displayed on your public profile.</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Add and manage the tax services displayed on your public profile.</p>
               </div>
               <ServiceEditor proId={user?.id || ""} initial={services} />
             </div>
@@ -758,13 +758,13 @@ export default function ProProfileEditor() {
 
           {/* ── CREDENTIALS TAB ───────────────────────────────────────────── */}
           {activeTab === "credentials" && (
-            <div className="rounded-2xl bg-white border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+            <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-xs space-y-6">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
                 <div>
-                  <h2 className="text-base font-black text-[#0A1628] uppercase tracking-wider flex items-center gap-2">
-                    <ShieldCheck className="w-5 h-5 text-emerald-600" /> Credentials &amp; Expertise
+                  <h2 className="text-base font-black text-[#0A1628] dark:text-white uppercase tracking-wider flex items-center gap-2">
+                    <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400" /> Credentials &amp; Expertise
                   </h2>
-                  <p className="text-xs text-slate-400 mt-1">Manage your IRS licenses, PTIN, and focus specialties.</p>
+                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Manage your IRS licenses, PTIN, and focus specialties.</p>
                 </div>
                 <button onClick={() => setEditModalOpen(true)} className="px-4 py-2 rounded-xl bg-[#1E56A0] text-white text-xs font-bold hover:bg-[#16437E] transition-all">
                   Edit Badges
@@ -773,37 +773,37 @@ export default function ProProfileEditor() {
               {profile.certifications.length > 0 && (
                 <div className="grid sm:grid-cols-3 gap-3">
                   {profile.certifications.map((cert) => (
-                    <div key={cert} className="p-4 rounded-xl bg-amber-50/60 border border-amber-200 flex items-center gap-3">
-                      <Award className="w-7 h-7 text-amber-600 shrink-0" />
-                      <p className="text-sm font-black text-[#0A1628]">{cert}</p>
+                    <div key={cert} className="p-4 rounded-xl bg-amber-50/60 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-500/30 flex items-center gap-3">
+                      <Award className="w-7 h-7 text-amber-600 dark:text-amber-400 shrink-0" />
+                      <p className="text-sm font-black text-[#0A1628] dark:text-white">{cert}</p>
                     </div>
                   ))}
                 </div>
               )}
               {profile.specialties.length > 0 && (
                 <div className="space-y-3 pt-2">
-                  <h3 className="text-xs font-black uppercase tracking-wider text-slate-500">Active Expertise Tags</h3>
+                  <h3 className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">Active Expertise Tags</h3>
                   <div className="flex flex-wrap gap-2">
                     {profile.specialties.map((spec) => (
-                      <span key={spec} className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#EAF2FC] text-[#1E56A0] border border-[#1E56A0]/20">{spec}</span>
+                      <span key={spec} className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#EAF2FC] dark:bg-blue-500/15 text-[#1E56A0] dark:text-blue-300 border border-[#1E56A0]/20 dark:border-blue-500/30">{spec}</span>
                     ))}
                   </div>
                 </div>
               )}
               {profile.certifications.length === 0 && profile.specialties.length === 0 && (
-                <p className="text-sm text-slate-400 italic py-4">No credentials or expertise tags added yet. Click &quot;Edit Badges&quot; to add.</p>
+                <p className="text-sm text-slate-400 dark:text-slate-500 italic py-4">No credentials or expertise tags added yet. Click &quot;Edit Badges&quot; to add.</p>
               )}
             </div>
           )}
 
           {/* ── VOICE INTRO TAB ───────────────────────────────────────────── */}
           {activeTab === "voice" && (
-            <div className="rounded-2xl bg-white border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6">
-              <div className="border-b border-slate-100 pb-4">
-                <h2 className="text-base font-black text-[#0A1628] uppercase tracking-wider flex items-center gap-2">
-                  <Mic className="w-5 h-5 text-[#1E56A0]" /> Voice Introduction Memo
+            <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-xs space-y-6">
+              <div className="border-b border-slate-100 dark:border-slate-800 pb-4">
+                <h2 className="text-base font-black text-[#0A1628] dark:text-white uppercase tracking-wider flex items-center gap-2">
+                  <Mic className="w-5 h-5 text-[#1E56A0] dark:text-[#60a5fa]" /> Voice Introduction Memo
                 </h2>
-                <p className="text-xs text-slate-400 mt-1">Record a voice intro that plays on your public profile.</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Record a voice intro that plays on your public profile.</p>
               </div>
               <VoiceMemoEditor currentUrl={profile.voiceMemoUrl} onSaved={(url) => setProfile((p) => ({ ...p, voiceMemoUrl: url }))} />
             </div>
@@ -811,12 +811,12 @@ export default function ProProfileEditor() {
 
           {/* ── MEDIA GALLERY TAB ─────────────────────────────────────────── */}
           {activeTab === "media" && (
-            <div className="rounded-2xl bg-white border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6">
-              <div className="border-b border-slate-100 pb-4">
-                <h2 className="text-base font-black text-[#0A1628] uppercase tracking-wider flex items-center gap-2">
-                  <ImageIcon className="w-5 h-5 text-[#1E56A0]" /> Media &amp; Certificate Gallery
+            <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-xs space-y-6">
+              <div className="border-b border-slate-100 dark:border-slate-800 pb-4">
+                <h2 className="text-base font-black text-[#0A1628] dark:text-white uppercase tracking-wider flex items-center gap-2">
+                  <ImageIcon className="w-5 h-5 text-[#1E56A0] dark:text-[#60a5fa]" /> Media &amp; Certificate Gallery
                 </h2>
-                <p className="text-xs text-slate-400 mt-1">Upload photos of your office, speaking events, and certificates.</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Upload photos of your office, speaking events, and certificates.</p>
               </div>
               <MediaGallery photos={profile.mediaPhotos} onChange={(photos) => setProfile((p) => ({ ...p, mediaPhotos: photos }))} />
             </div>
@@ -824,12 +824,12 @@ export default function ProProfileEditor() {
 
           {/* ── CONNECT CARD TAB ──────────────────────────────────────────── */}
           {activeTab === "card" && (
-            <div className="rounded-2xl bg-white border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6">
-              <div className="border-b border-slate-100 pb-4">
-                <h2 className="text-base font-black text-[#0A1628] uppercase tracking-wider flex items-center gap-2">
-                  <CreditCard className="w-5 h-5 text-[#1E56A0]" /> Pro Connect NFC &amp; Digital Tap Card
+            <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-xs space-y-6">
+              <div className="border-b border-slate-100 dark:border-slate-800 pb-4">
+                <h2 className="text-base font-black text-[#0A1628] dark:text-white uppercase tracking-wider flex items-center gap-2">
+                  <CreditCard className="w-5 h-5 text-[#1E56A0] dark:text-[#60a5fa]" /> Pro Connect NFC &amp; Digital Tap Card
                 </h2>
-                <p className="text-xs text-slate-400 mt-1">Manage links, QR code, and business contact settings.</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Manage links, QR code, and business contact settings.</p>
               </div>
               <ConnectCardManager />
             </div>
@@ -837,18 +837,18 @@ export default function ProProfileEditor() {
 
           {/* ── MEMBERSHIP TAB ────────────────────────────────────────────── */}
           {activeTab === "membership" && (
-            <div className="rounded-2xl bg-white border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6">
-              <div className="border-b border-slate-100 pb-4">
-                <h2 className="text-base font-black text-[#0A1628] uppercase tracking-wider flex items-center gap-2">
+            <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-xs space-y-6">
+              <div className="border-b border-slate-100 dark:border-slate-800 pb-4">
+                <h2 className="text-base font-black text-[#0A1628] dark:text-white uppercase tracking-wider flex items-center gap-2">
                   <Crown className="w-5 h-5 text-amber-500" /> Membership &amp; Subscription
                 </h2>
-                <p className="text-xs text-slate-400 mt-1">Manage your subscription tier, billing, and benefits.</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Manage your subscription tier, billing, and benefits.</p>
               </div>
-              <div className="p-5 rounded-xl bg-gradient-to-r from-amber-500/10 to-amber-600/10 border border-amber-300/40 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="p-5 rounded-xl bg-gradient-to-r from-amber-500/10 to-amber-600/10 dark:from-amber-500/15 dark:to-amber-600/15 border border-amber-300/40 dark:border-amber-500/30 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div>
-                  <span className="text-[10px] font-black uppercase tracking-wider text-amber-700">CURRENT TIER</span>
-                  <h3 className="text-lg font-black text-[#0A1628]">{memberStats.tierName}</h3>
-                  {memberStats.validThru && <p className="text-xs text-slate-500">Valid Thru: {memberStats.validThru}</p>}
+                  <span className="text-[10px] font-black uppercase tracking-wider text-amber-700 dark:text-amber-400">CURRENT TIER</span>
+                  <h3 className="text-lg font-black text-[#0A1628] dark:text-white">{memberStats.tierName}</h3>
+                  {memberStats.validThru && <p className="text-xs text-slate-500 dark:text-slate-400">Valid Thru: {memberStats.validThru}</p>}
                 </div>
                 <button
                   onClick={openStripePortal}

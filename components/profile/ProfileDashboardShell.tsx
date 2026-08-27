@@ -158,15 +158,15 @@ export default function ProfileDashboardShell({
   ];
 
   return (
-    <div className="min-h-screen bg-[#F5F7FB] text-[#0A1628] font-sans antialiased flex flex-col">
+    <div className="min-h-screen bg-[#F5F7FB] dark:bg-[#0c1527] text-[#0A1628] dark:text-white font-sans antialiased flex flex-col">
       {/* ── TOPBAR HEADER ──────────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-xs">
+      <header className="sticky top-0 z-40 bg-white dark:bg-[#172135] border-b border-slate-200 dark:border-slate-800 shadow-xs">
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between gap-4">
           {/* Left: Brand Logo & Mobile Toggle */}
           <div className="flex items-center gap-3 shrink-0">
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="lg:hidden p-2 rounded-xl text-slate-600 hover:bg-slate-100 transition-colors"
+              className="lg:hidden p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               aria-label="Toggle Navigation"
             >
               {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -177,10 +177,10 @@ export default function ProfileDashboardShell({
                 <span className="text-amber-400 font-black text-xs tracking-wider">TCP</span>
               </div>
               <div className="hidden sm:flex flex-col">
-                <span className="text-sm font-black tracking-tight text-[#0a1628] leading-tight">
+                <span className="text-sm font-black tracking-tight text-[#0a1628] dark:text-white leading-tight">
                   TAX COMPLIANCE <span className="text-red-600">PRO</span>
                 </span>
-                <span className="text-[9px] font-bold tracking-widest text-slate-400 uppercase">
+                <span className="text-[9px] font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase">
                   PROTECT. EMPOWER. ELEVATE.
                 </span>
               </div>
@@ -199,7 +199,7 @@ export default function ProfileDashboardShell({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search Tax Compliance Pro..."
-                className="w-full bg-[#f8fafc] hover:bg-slate-100 focus:bg-white text-xs font-medium text-slate-800 placeholder-slate-400 pl-10 pr-4 py-2.5 rounded-full border border-slate-200 focus:border-[#1E56A0] focus:ring-2 focus:ring-[#1E56A0]/10 outline-none transition-all"
+                className="w-full bg-[#f8fafc] dark:bg-slate-800/90 hover:bg-slate-100 dark:hover:bg-slate-800 focus:bg-white dark:focus:bg-slate-800 text-xs font-medium text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 pl-10 pr-4 py-2.5 rounded-full border border-slate-200 dark:border-slate-700 focus:border-[#1E56A0] focus:ring-2 focus:ring-[#1E56A0]/10 outline-none transition-all"
               />
             </div>
           </form>
@@ -209,7 +209,7 @@ export default function ProfileDashboardShell({
             {/* Messages */}
             <Link
               href="/messages"
-              className="relative p-2.5 text-slate-600 hover:text-[#1E56A0] hover:bg-slate-100 rounded-full transition-colors"
+              className="relative p-2.5 text-slate-600 dark:text-slate-300 hover:text-[#1E56A0] dark:hover:text-[#60a5fa] hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"
               title="Messages"
             >
               <MessageSquare className="w-5 h-5" />
@@ -218,7 +218,7 @@ export default function ProfileDashboardShell({
             {/* Notifications with Badge */}
             <Link
               href="/notifications"
-              className="relative p-2.5 text-slate-600 hover:text-[#1E56A0] hover:bg-slate-100 rounded-full transition-colors"
+              className="relative p-2.5 text-slate-600 dark:text-slate-300 hover:text-[#1E56A0] dark:hover:text-[#60a5fa] hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"
               title="Notifications"
             >
               <Bell className="w-5 h-5" />
@@ -231,9 +231,9 @@ export default function ProfileDashboardShell({
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setDropdownOpen(!dropdownOpen)}
-                className="flex items-center gap-2.5 p-1 sm:px-2 sm:py-1.5 rounded-full hover:bg-slate-100 transition-colors"
+                className="flex items-center gap-2.5 p-1 sm:px-2 sm:py-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               >
-                <div className="w-8 h-8 rounded-full overflow-hidden bg-[#0A1628] ring-2 ring-slate-200 flex items-center justify-center shrink-0">
+                <div className="w-8 h-8 rounded-full overflow-hidden bg-[#0A1628] ring-2 ring-slate-200 dark:ring-slate-700 flex items-center justify-center shrink-0">
                   {currentUser?.image ? (
                     <img
                       src={currentUser.image}
@@ -246,7 +246,7 @@ export default function ProfileDashboardShell({
                     </span>
                   )}
                 </div>
-                <span className="text-xs font-bold text-slate-800 hidden sm:inline-block max-w-[120px] truncate">
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-200 hidden sm:inline-block max-w-[120px] truncate">
                   {currentUser?.name ?? "Account"}
                 </span>
                 <ChevronDown className="w-3.5 h-3.5 text-slate-400 hidden sm:inline-block" />
@@ -254,11 +254,11 @@ export default function ProfileDashboardShell({
 
               {/* Dropdown Menu */}
               {dropdownOpen && (
-                <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
-                  <div className="px-4 py-2 border-b border-slate-100">
-                    <p className="text-xs font-bold text-[#0A1628] truncate">{currentUser?.name}</p>
-                    <p className="text-[11px] text-slate-400 truncate">{currentUser?.email}</p>
-                    <span className="inline-block mt-1 text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-[#172135] rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                  <div className="px-4 py-2 border-b border-slate-100 dark:border-slate-800">
+                    <p className="text-xs font-bold text-[#0A1628] dark:text-white truncate">{currentUser?.name}</p>
+                    <p className="text-[11px] text-slate-400 dark:text-slate-500 truncate">{currentUser?.email}</p>
+                    <span className="inline-block mt-1 text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-500/30">
                       {currentUser && "role" in currentUser && currentUser.role === "PROFESSIONAL"
                         ? "Verified Pro"
                         : currentUser && "role" in currentUser && currentUser.role === "ADMIN"
@@ -271,14 +271,14 @@ export default function ProfileDashboardShell({
                     <Link
                       href="/profile"
                       onClick={() => setDropdownOpen(false)}
-                      className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-[#1E56A0]"
+                      className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-[#1E56A0] dark:hover:text-[#60a5fa]"
                     >
                       <User className="w-4 h-4 text-slate-400" /> My Profile
                     </Link>
                     <Link
                       href="/upgrade"
                       onClick={() => setDropdownOpen(false)}
-                      className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-amber-600"
+                      className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-amber-600 dark:hover:text-amber-400"
                     >
                       <Crown className="w-4 h-4 text-amber-500" /> Membership Plan
                     </Link>
@@ -286,17 +286,17 @@ export default function ProfileDashboardShell({
                       <Link
                         href="/admin"
                         onClick={() => setDropdownOpen(false)}
-                        className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-amber-700 hover:bg-amber-50"
+                        className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40"
                       >
-                        <ShieldCheck className="w-4 h-4 text-amber-600" /> Admin Dashboard
+                        <ShieldCheck className="w-4 h-4 text-amber-600 dark:text-amber-400" /> Admin Dashboard
                       </Link>
                     )}
                   </div>
 
-                  <div className="border-t border-slate-100 pt-1">
+                  <div className="border-t border-slate-100 dark:border-slate-800 pt-1">
                     <button
                       onClick={handleLogout}
-                      className="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 text-left transition-colors"
+                      className="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 text-left transition-colors"
                     >
                       <LogOut className="w-4 h-4" /> Log Out
                     </button>
@@ -312,7 +312,7 @@ export default function ProfileDashboardShell({
       <div className="flex-1 max-w-[1440px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex gap-6">
         {/* ── LEFT SIDEBAR NAVIGATION ─────────────────────────────────────────── */}
         <aside
-          className={`fixed lg:static top-20 left-4 h-[calc(100vh-6rem)] lg:h-auto w-72 bg-white rounded-3xl border border-slate-200/90 shadow-sm shrink-0 z-30 flex flex-col justify-between overflow-y-auto transition-transform duration-200 ${
+          className={`fixed lg:static top-20 left-4 h-[calc(100vh-6rem)] lg:h-auto w-72 bg-white dark:bg-[#172135] rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm shrink-0 z-30 flex flex-col justify-between overflow-y-auto transition-transform duration-200 ${
             mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
           }`}
         >
@@ -331,14 +331,14 @@ export default function ProfileDashboardShell({
                   onClick={() => setMobileOpen(false)}
                   className={`flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-bold tracking-normal transition-all ${
                     isActive
-                      ? "bg-[#EAF2FC] text-[#1E56A0] shadow-xs"
-                      : "text-slate-600 hover:text-[#0A1628] hover:bg-slate-100/80"
+                      ? "bg-[#EAF2FC] dark:bg-[#1E56A0]/20 text-[#1E56A0] dark:text-[#60a5fa] shadow-xs"
+                      : "text-slate-600 dark:text-slate-300 hover:text-[#0A1628] dark:hover:text-white hover:bg-slate-100/80 dark:hover:bg-slate-800"
                   }`}
                 >
                   <div className="flex items-center gap-3.5">
                     <item.icon
                       className={`w-5 h-5 ${
-                        isActive ? "text-[#1E56A0]" : "text-slate-400 group-hover:text-slate-600"
+                        isActive ? "text-[#1E56A0] dark:text-[#60a5fa]" : "text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300"
                       }`}
                     />
                     <span className="leading-snug">{item.label}</span>
@@ -356,9 +356,9 @@ export default function ProfileDashboardShell({
             {/* Log Out */}
             <button
               onClick={handleLogout}
-              className="w-full flex items-center gap-3.5 px-3.5 py-3 rounded-xl text-sm font-bold tracking-normal text-slate-500 hover:text-red-600 hover:bg-red-50/80 transition-all text-left mt-2"
+              className="w-full flex items-center gap-3.5 px-3.5 py-3 rounded-xl text-sm font-bold tracking-normal text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50/80 dark:hover:bg-red-950/30 transition-all text-left mt-2"
             >
-              <LogOut className="w-5 h-5 text-slate-400" />
+              <LogOut className="w-5 h-5 text-slate-400 dark:text-slate-500" />
               <span>LOG OUT</span>
             </button>
           </div>

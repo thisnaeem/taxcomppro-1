@@ -48,7 +48,7 @@ export const TOOLKITS: Toolkit[] = [
   },
   {
     id: "due-diligence-course",
-    name: "The Staff's Audit Ready Due Diligence Course",
+    name: "The Staff's Audit Ready Due Diligence Playbook",
     category: "STAFF TRAINING",
     tagline: "Staff Training & Compliance",
     badge: "Training Included",
@@ -101,7 +101,7 @@ export const TOOLKITS: Toolkit[] = [
   },
   {
     id: "schedule-c-reconstruction",
-    name: "Schedule C Reconstruction",
+    name: "Schedule C Reconstruction Toolkit",
     category: "TAX PREPARATION",
     tagline: "Expense & Income Clarity",
     badge: "Membership Included",

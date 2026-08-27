@@ -242,21 +242,21 @@ export default function MemberProfile() {
       <div className="flex flex-col lg:flex-row gap-6">
         {/* ── LEFT SIDEBAR ────────────────────────────────────────────────── */}
         <aside className="w-full lg:w-72 shrink-0 lg:sticky lg:top-24 self-start space-y-5">
-          <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-3.5 space-y-1">
-            <div className="px-3.5 py-2 text-[11px] font-black uppercase tracking-wider text-slate-400">PROFILE MENU</div>
+          <div className="bg-white dark:bg-[#172135] rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-sm p-3.5 space-y-1">
+            <div className="px-3.5 py-2 text-[11px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">PROFILE MENU</div>
             {MEMBER_SIDEBAR_TABS.map((tab) => {
               const isActive = activeTab === tab.id;
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-bold tracking-normal transition-all text-left group ${isActive ? "bg-[#EAF2FC] text-[#1E56A0] shadow-xs" : "text-slate-600 hover:text-[#0A1628] hover:bg-slate-50"}`}
+                  className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-bold tracking-normal transition-all text-left group ${isActive ? "bg-[#EAF2FC] dark:bg-[#1E56A0]/20 text-[#1E56A0] dark:text-[#60a5fa] shadow-xs" : "text-slate-600 dark:text-slate-300 hover:text-[#0A1628] dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50"}`}
                 >
                   <div className="flex items-center gap-3.5">
-                    <tab.icon className={`w-5 h-5 shrink-0 transition-colors ${isActive ? "text-[#1E56A0]" : "text-slate-400 group-hover:text-slate-600"}`} />
+                    <tab.icon className={`w-5 h-5 shrink-0 transition-colors ${isActive ? "text-[#1E56A0] dark:text-[#60a5fa]" : "text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300"}`} />
                     <span className="leading-snug">{tab.label}</span>
                   </div>
-                  {isActive && <ChevronRight className="w-4 h-4 text-[#1E56A0] shrink-0" />}
+                  {isActive && <ChevronRight className="w-4 h-4 text-[#1E56A0] dark:text-[#60a5fa] shrink-0" />}
                 </button>
               );
             })}
@@ -279,7 +279,7 @@ export default function MemberProfile() {
         <div className="flex-1 min-w-0 space-y-6">
 
           {/* HERO CARD */}
-          <div className="rounded-2xl bg-white border border-slate-200 shadow-xs overflow-hidden">
+          <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
             {/* Cover */}
             {profile.coverImage ? (
               <div className="relative h-40 sm:h-48 w-full overflow-hidden">
@@ -290,8 +290,8 @@ export default function MemberProfile() {
                 </button>
               </div>
             ) : (
-              <div className="relative h-28 sm:h-32 w-full bg-slate-100 flex items-center justify-center">
-                <button onClick={() => coverInputRef.current?.click()} disabled={coverUploading} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white border border-slate-300 text-slate-600 text-xs font-bold hover:border-[#1E56A0] hover:text-[#1E56A0] transition-all">
+              <div className="relative h-28 sm:h-32 w-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                <button onClick={() => coverInputRef.current?.click()} disabled={coverUploading} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-200 text-xs font-bold hover:border-[#1E56A0] hover:text-[#1E56A0] transition-all">
                   {coverUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
                   Add Cover Photo
                 </button>
@@ -303,7 +303,7 @@ export default function MemberProfile() {
               <div className="flex flex-col sm:flex-row gap-5">
                 {/* Square Avatar */}
                 <div className="relative shrink-0 w-24 h-24 sm:w-28 sm:h-28 -mt-14 sm:-mt-16 group self-start">
-                  <div className="w-full h-full rounded-2xl overflow-hidden bg-gradient-to-br from-[#0A1628] to-[#1E56A0] ring-4 ring-white shadow-lg flex items-center justify-center">
+                  <div className="w-full h-full rounded-2xl overflow-hidden bg-gradient-to-br from-[#0A1628] to-[#1E56A0] ring-4 ring-white dark:ring-[#172135] shadow-lg flex items-center justify-center">
                     {profile.image ? (
                       <img src={profile.image} alt={profile.name} className="w-full h-full object-cover" />
                     ) : (
@@ -318,22 +318,22 @@ export default function MemberProfile() {
                   >
                     {avatarUploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Camera className="w-5 h-5" />}
                   </button>
-                  <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-emerald-500 border-[3px] border-white z-20 pointer-events-none" />
+                  <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-emerald-500 border-[3px] border-white dark:border-[#172135] z-20 pointer-events-none" />
                 </div>
 
                 {/* Name & meta */}
                 <div className="flex-1 min-w-0 space-y-1.5">
                   <div className="flex flex-wrap items-center gap-2.5">
-                    <h1 className="text-xl sm:text-2xl font-black text-[#0A1628] tracking-tight truncate">{profile.name || "Your Name"}</h1>
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-blue-50 text-[#1E56A0] border border-blue-200 text-[10px] font-black tracking-wider uppercase">
+                    <h1 className="text-xl sm:text-2xl font-black text-[#0A1628] dark:text-white tracking-tight truncate">{profile.name || "Your Name"}</h1>
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-blue-50 dark:bg-blue-500/20 text-[#1E56A0] dark:text-blue-300 border border-blue-200 dark:border-blue-500/30 text-[10px] font-black tracking-wider uppercase">
                       <ShieldCheck className="w-3 h-3" />
                       {stats.tierName}
                     </span>
                   </div>
-                  {profile.headline && <p className="text-sm font-medium text-slate-600">{profile.headline}</p>}
-                  <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-500 pt-0.5">
-                    {profile.location && <span className="flex items-center gap-1 text-[#1E56A0]"><MapPin className="w-3.5 h-3.5" />{profile.location}</span>}
-                    {stats.memberSince && <span className="text-slate-400">Member Since: {stats.memberSince}</span>}
+                  {profile.headline && <p className="text-sm font-medium text-slate-600 dark:text-slate-300">{profile.headline}</p>}
+                  <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-500 dark:text-slate-400 pt-0.5">
+                    {profile.location && <span className="flex items-center gap-1 text-[#1E56A0] dark:text-[#60a5fa]"><MapPin className="w-3.5 h-3.5" />{profile.location}</span>}
+                    {stats.memberSince && <span className="text-slate-400 dark:text-slate-500">Member Since: {stats.memberSince}</span>}
                   </div>
 
                   {/* Actions */}
@@ -348,7 +348,7 @@ export default function MemberProfile() {
                     )}
                     <button
                       onClick={() => setShareDialogOpen(true)}
-                      className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 hover:border-[#1E56A0] hover:text-[#1E56A0] bg-white text-slate-600 text-xs font-bold transition-all"
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-[#1E56A0] hover:text-[#1E56A0] bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-200 text-xs font-bold transition-all"
                     >
                       <Share2 className="w-3.5 h-3.5" />
                       SHARE
@@ -364,44 +364,44 @@ export default function MemberProfile() {
             <div className="grid lg:grid-cols-12 gap-6">
               <div className="lg:col-span-7 space-y-6">
                 {/* ABOUT ME */}
-                <div className="rounded-2xl bg-white border border-slate-200 p-6 shadow-xs space-y-4">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                    <h3 className="text-xs font-black text-[#0A1628] uppercase tracking-widest flex items-center gap-2"><UserCheck className="w-4 h-4 text-[#1E56A0]" /> ABOUT ME</h3>
-                    <button onClick={() => setActiveTab("basic")} className="text-xs font-bold text-[#1E56A0] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Edit</button>
+                <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
+                  <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                    <h3 className="text-xs font-black text-[#0A1628] dark:text-white uppercase tracking-widest flex items-center gap-2"><UserCheck className="w-4 h-4 text-[#1E56A0] dark:text-[#60a5fa]" /> ABOUT ME</h3>
+                    <button onClick={() => setActiveTab("basic")} className="text-xs font-bold text-[#1E56A0] dark:text-[#60a5fa] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Edit</button>
                   </div>
                   {profile.bio ? (
-                    <p className="text-sm text-slate-600 leading-relaxed">{profile.bio}</p>
+                    <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">{profile.bio}</p>
                   ) : (
-                    <p className="text-sm text-slate-400 italic">No bio added yet. Click Edit to add your summary.</p>
+                    <p className="text-sm text-slate-400 dark:text-slate-500 italic">No bio added yet. Click Edit to add your summary.</p>
                   )}
 
                   {/* Real stats only */}
                   {(stats.completedCourses > 0 || stats.totalEnrollments > 0 || stats.toolkitPurchases > 0) && (
                     <div className="flex flex-wrap gap-3 pt-2">
                       {stats.completedCourses > 0 && (
-                        <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-100">
-                          <BookOpen className="w-4 h-4 text-[#1E56A0]" />
+                        <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-100 dark:border-slate-700/80">
+                          <BookOpen className="w-4 h-4 text-[#1E56A0] dark:text-[#60a5fa]" />
                           <div>
-                            <p className="text-sm font-black text-[#0A1628]">{stats.completedCourses}</p>
-                            <p className="text-[10px] font-bold text-slate-400">Courses Done</p>
+                            <p className="text-sm font-black text-[#0A1628] dark:text-white">{stats.completedCourses}</p>
+                            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-400">Courses Done</p>
                           </div>
                         </div>
                       )}
                       {stats.totalEnrollments > 0 && (
-                        <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-100">
-                          <Award className="w-4 h-4 text-amber-600" />
+                        <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-100 dark:border-slate-700/80">
+                          <Award className="w-4 h-4 text-amber-500" />
                           <div>
-                            <p className="text-sm font-black text-[#0A1628]">{stats.totalEnrollments}</p>
-                            <p className="text-[10px] font-bold text-slate-400">Enrollments</p>
+                            <p className="text-sm font-black text-[#0A1628] dark:text-white">{stats.totalEnrollments}</p>
+                            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-400">Enrollments</p>
                           </div>
                         </div>
                       )}
                       {stats.toolkitPurchases > 0 && (
-                        <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-100">
-                          <FolderDown className="w-4 h-4 text-purple-600" />
+                        <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-100 dark:border-slate-700/80">
+                          <FolderDown className="w-4 h-4 text-purple-500" />
                           <div>
-                            <p className="text-sm font-black text-[#0A1628]">{stats.toolkitPurchases}</p>
-                            <p className="text-[10px] font-bold text-slate-400">Toolkits</p>
+                            <p className="text-sm font-black text-[#0A1628] dark:text-white">{stats.toolkitPurchases}</p>
+                            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-400">Toolkits</p>
                           </div>
                         </div>
                       )}
@@ -411,13 +411,13 @@ export default function MemberProfile() {
 
                 {/* FOCUS AREAS */}
                 {profile.specialties.length > 0 && (
-                  <div className="rounded-2xl bg-white border border-slate-200 p-6 shadow-xs space-y-4">
-                    <h3 className="text-xs font-black text-[#0A1628] uppercase tracking-widest flex items-center gap-2 border-b border-slate-100 pb-3">
-                      <Award className="w-4 h-4 text-[#1E56A0]" /> TAX FOCUS AREAS
+                  <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
+                    <h3 className="text-xs font-black text-[#0A1628] dark:text-white uppercase tracking-widest flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
+                      <Award className="w-4 h-4 text-[#1E56A0] dark:text-[#60a5fa]" /> TAX FOCUS AREAS
                     </h3>
                     <div className="flex flex-wrap gap-2">
                       {profile.specialties.map((spec) => (
-                        <span key={spec} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#EAF2FC] text-[#1E56A0] border border-[#1E56A0]/20">{spec}</span>
+                        <span key={spec} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#EAF2FC] dark:bg-blue-500/15 text-[#1E56A0] dark:text-blue-300 border border-[#1E56A0]/20 dark:border-blue-500/30">{spec}</span>
                       ))}
                     </div>
                   </div>
@@ -427,23 +427,23 @@ export default function MemberProfile() {
               {/* RIGHT COLUMN */}
               <div className="lg:col-span-5 space-y-6">
                 {/* MEMBERSHIP */}
-                <div className="rounded-2xl bg-white border border-slate-200 p-6 shadow-xs space-y-4">
-                  <h3 className="text-xs font-black text-[#0A1628] uppercase tracking-widest flex items-center gap-2 border-b border-slate-100 pb-3">
+                <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
+                  <h3 className="text-xs font-black text-[#0A1628] dark:text-white uppercase tracking-widest flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
                     <Crown className="w-4 h-4 text-amber-500" /> MEMBERSHIP STATUS
                   </h3>
-                  <div className="flex items-center justify-between gap-3 p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                  <div className="flex items-center justify-between gap-3 p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-xl bg-[#0A1628] text-amber-400 flex items-center justify-center shrink-0"><Crown className="w-5 h-5" /></div>
                       <div>
-                        <h4 className="text-sm font-black text-[#0A1628]">{stats.tierName}</h4>
-                        {stats.validThru && <p className="text-[11px] font-semibold text-slate-500">Valid Thru: {stats.validThru}</p>}
+                        <h4 className="text-sm font-black text-[#0A1628] dark:text-white">{stats.tierName}</h4>
+                        {stats.validThru && <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">Valid Thru: {stats.validThru}</p>}
                       </div>
                     </div>
                     <Link href="/upgrade" className="px-3 py-2 rounded-lg bg-[#1E56A0] hover:bg-[#16437E] text-white text-xs font-bold transition-all shrink-0">UPGRADE</Link>
                   </div>
-                  <div className="grid grid-cols-2 gap-2 text-xs font-bold text-slate-700 pt-1">
+                  <div className="grid grid-cols-2 gap-2 text-xs font-bold text-slate-700 dark:text-slate-300 pt-1">
                     {["Free Platform Access", "Training Library", "Community Forums", "Find a Pro Directory", "Certificates Record", "Support Center"].map((b) => (
-                      <div key={b} className="flex items-center gap-1.5"><span className="text-[#1E56A0]">✓</span><span>{b}</span></div>
+                      <div key={b} className="flex items-center gap-1.5"><span className="text-[#1E56A0] dark:text-[#60a5fa]">✓</span><span>{b}</span></div>
                     ))}
                   </div>
                 </div>
@@ -452,7 +452,7 @@ export default function MemberProfile() {
                 {!isProOrVIP && (
                   <div className="rounded-2xl bg-gradient-to-br from-[#0A1628] to-[#1A3A6B] p-6 text-white border border-slate-800 space-y-3">
                     <span className="text-[10px] font-black uppercase tracking-widest text-amber-400">GROW YOUR PRACTICE</span>
-                    <h3 className="text-sm font-extrabold">Are you a Tax Professional?</h3>
+                    <h3 className="text-sm font-extrabold text-white">Are you a Tax Professional?</h3>
                     <p className="text-xs text-slate-300 leading-relaxed">Get listed on Find a Pro, receive client leads, and activate your NFC Connect Card.</p>
                     <Link href="/apply-professional" className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 text-[#0A1628] font-black text-xs uppercase tracking-wider transition-all active:scale-98">
                       APPLY FOR PRO STATUS <ChevronRight className="w-4 h-4" />
@@ -465,9 +465,9 @@ export default function MemberProfile() {
 
           {/* ── BASIC INFO ────────────────────────────────────────────────── */}
           {activeTab === "basic" && (
-            <div className="rounded-2xl bg-white border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-                <h2 className="text-base font-black text-[#0A1628] uppercase tracking-wider flex items-center gap-2"><Edit3 className="w-5 h-5 text-[#1E56A0]" /> Basic Information</h2>
+            <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-xs space-y-6">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
+                <h2 className="text-base font-black text-[#0A1628] dark:text-white uppercase tracking-wider flex items-center gap-2"><Edit3 className="w-5 h-5 text-[#1E56A0] dark:text-[#60a5fa]" /> Basic Information</h2>
                 <button onClick={saveInPageProfile} disabled={savingInPage} className="px-5 py-2.5 rounded-xl bg-[#1E56A0] hover:bg-[#16437E] text-white text-xs font-bold transition-all disabled:opacity-50 flex items-center gap-1.5">
                   {savingInPage ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
                   {saveToast ? "Saved!" : "Save Changes"}
@@ -475,58 +475,58 @@ export default function MemberProfile() {
               </div>
               <div className="grid sm:grid-cols-2 gap-5">
                 <div>
-                  <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-1">Full Name</label>
-                  <input type="text" value={profile.name} onChange={(e) => setProfile((p) => ({ ...p, name: e.target.value }))} className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-medium focus:border-[#1E56A0] focus:ring-2 focus:ring-[#1E56A0]/10 outline-none" />
+                  <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Full Name</label>
+                  <input type="text" value={profile.name} onChange={(e) => setProfile((p) => ({ ...p, name: e.target.value }))} className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm font-medium focus:border-[#1E56A0] focus:ring-2 focus:ring-[#1E56A0]/10 outline-none" />
                 </div>
                 <div>
-                  <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-1">Location</label>
-                  <input type="text" value={profile.location} onChange={(e) => setProfile((p) => ({ ...p, location: e.target.value }))} placeholder="e.g. Houston, Texas" className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-medium focus:border-[#1E56A0] focus:ring-2 focus:ring-[#1E56A0]/10 outline-none" />
+                  <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Location</label>
+                  <input type="text" value={profile.location} onChange={(e) => setProfile((p) => ({ ...p, location: e.target.value }))} placeholder="e.g. Houston, Texas" className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm font-medium focus:border-[#1E56A0] focus:ring-2 focus:ring-[#1E56A0]/10 outline-none" />
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-1">About Me / Bio</label>
-                <textarea rows={4} value={profile.bio} onChange={(e) => setProfile((p) => ({ ...p, bio: e.target.value }))} className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-medium focus:border-[#1E56A0] focus:ring-2 focus:ring-[#1E56A0]/10 outline-none resize-none" />
+                <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">About Me / Bio</label>
+                <textarea rows={4} value={profile.bio} onChange={(e) => setProfile((p) => ({ ...p, bio: e.target.value }))} className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm font-medium focus:border-[#1E56A0] focus:ring-2 focus:ring-[#1E56A0]/10 outline-none resize-none" />
               </div>
             </div>
           )}
 
           {/* ── LEARNING ──────────────────────────────────────────────────── */}
           {activeTab === "learning" && (
-            <div className="rounded-2xl bg-white border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-                <h2 className="text-base font-black text-[#0A1628] uppercase tracking-wider flex items-center gap-2"><BookOpen className="w-5 h-5 text-[#1E56A0]" /> My Courses</h2>
+            <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-xs space-y-6">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
+                <h2 className="text-base font-black text-[#0A1628] dark:text-white uppercase tracking-wider flex items-center gap-2"><BookOpen className="w-5 h-5 text-[#1E56A0] dark:text-[#60a5fa]" /> My Courses</h2>
                 <Link href="/courses" className="px-4 py-2 rounded-xl bg-[#1E56A0] text-white text-xs font-bold hover:bg-[#16437E] transition-all">Browse Courses</Link>
               </div>
-              <div className="p-5 rounded-xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="p-5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div>
-                  <h3 className="text-sm font-extrabold text-[#0A1628]">Course Dashboard</h3>
-                  <p className="text-xs text-slate-500">Access your training materials, quizzes, and certificates.</p>
+                  <h3 className="text-sm font-extrabold text-[#0A1628] dark:text-white">Course Dashboard</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Access your training materials, quizzes, and certificates.</p>
                 </div>
-                <Link href="/my-courses" className="px-4 py-2 bg-white border border-slate-300 text-xs font-bold text-slate-800 rounded-xl hover:border-[#1E56A0] hover:text-[#1E56A0] transition-colors">Go to Dashboard →</Link>
+                <Link href="/my-courses" className="px-4 py-2 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-xs font-bold text-slate-800 dark:text-white rounded-xl hover:border-[#1E56A0] hover:text-[#1E56A0] transition-colors">Go to Dashboard →</Link>
               </div>
             </div>
           )}
 
           {/* ── BADGES ────────────────────────────────────────────────────── */}
           {activeTab === "badges" && (
-            <div className="rounded-2xl bg-white border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6">
-              <div className="border-b border-slate-100 pb-4">
-                <h2 className="text-base font-black text-[#0A1628] uppercase tracking-wider flex items-center gap-2"><ShieldCheck className="w-5 h-5 text-emerald-600" /> Badges & Due Diligence</h2>
-                <p className="text-xs text-slate-400 mt-1">Your verified compliance credentials.</p>
+            <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-xs space-y-6">
+              <div className="border-b border-slate-100 dark:border-slate-800 pb-4">
+                <h2 className="text-base font-black text-[#0A1628] dark:text-white uppercase tracking-wider flex items-center gap-2"><ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400" /> Badges & Due Diligence</h2>
+                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Your verified compliance credentials.</p>
               </div>
               <div className="grid sm:grid-cols-2 gap-4">
-                <div className="p-4 rounded-xl bg-emerald-50/50 border border-emerald-200 flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0"><ShieldCheck className="w-6 h-6" /></div>
+                <div className="p-4 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-500/20 flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-xl bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0"><ShieldCheck className="w-6 h-6" /></div>
                   <div>
-                    <h4 className="text-sm font-black text-[#0A1628]">Due Diligence Verified</h4>
-                    <p className="text-xs text-slate-500">Earned by completing compliance training</p>
+                    <h4 className="text-sm font-black text-[#0A1628] dark:text-white">Due Diligence Verified</h4>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Earned by completing compliance training</p>
                   </div>
                 </div>
-                <div className="p-4 rounded-xl bg-blue-50/50 border border-blue-200 flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-xl bg-blue-100 text-[#1E56A0] flex items-center justify-center shrink-0"><Check className="w-6 h-6" /></div>
+                <div className="p-4 rounded-xl bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-500/20 flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-xl bg-blue-100 dark:bg-blue-500/20 text-[#1E56A0] dark:text-blue-400 flex items-center justify-center shrink-0"><Check className="w-6 h-6" /></div>
                   <div>
-                    <h4 className="text-sm font-black text-[#0A1628]">Verified Member</h4>
-                    <p className="text-xs text-slate-500">Account and email verified</p>
+                    <h4 className="text-sm font-black text-[#0A1628] dark:text-white">Verified Member</h4>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Account and email verified</p>
                   </div>
                 </div>
               </div>
@@ -535,11 +535,11 @@ export default function MemberProfile() {
 
           {/* ── PURCHASES ─────────────────────────────────────────────────── */}
           {activeTab === "purchases" && (
-            <div className="rounded-2xl bg-white border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+            <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-xs space-y-6">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
                 <div>
-                  <h2 className="text-base font-black text-[#0A1628] uppercase tracking-wider flex items-center gap-2"><FolderDown className="w-5 h-5 text-[#1E56A0]" /> Purchased Toolkits</h2>
-                  <p className="text-xs text-slate-400 mt-1">Download your IRS compliance toolkits.</p>
+                  <h2 className="text-base font-black text-[#0A1628] dark:text-white uppercase tracking-wider flex items-center gap-2"><FolderDown className="w-5 h-5 text-[#1E56A0] dark:text-[#60a5fa]" /> Purchased Toolkits</h2>
+                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Download your IRS compliance toolkits.</p>
                 </div>
                 <Link href="/toolkits" className="px-4 py-2 rounded-xl bg-[#1E56A0] text-white text-xs font-bold hover:bg-[#16437E] transition-all">Explore Toolkits</Link>
               </div>
@@ -548,12 +548,12 @@ export default function MemberProfile() {
               ) : purchases.length > 0 ? (
                 <div className="grid sm:grid-cols-2 gap-4">
                   {purchases.map((p) => (
-                    <div key={p.id} className="p-4 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-4">
+                    <div key={p.id} className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 flex items-center justify-between gap-4">
                       <div className="flex items-center gap-3">
                         <span className="text-2xl">{p.emoji || "📦"}</span>
                         <div>
-                          <h4 className="text-xs font-bold text-[#0A1628]">{p.name}</h4>
-                          <p className="text-[10px] text-slate-400">{new Date(p.createdAt).toLocaleDateString()}</p>
+                          <h4 className="text-xs font-bold text-[#0A1628] dark:text-white">{p.name}</h4>
+                          <p className="text-[10px] text-slate-400 dark:text-slate-500">{new Date(p.createdAt).toLocaleDateString()}</p>
                         </div>
                       </div>
                       {p.downloadUrl && <a href={p.downloadUrl} target="_blank" rel="noreferrer" className="p-2 bg-[#1E56A0] text-white rounded-xl hover:bg-[#16437E] transition-colors"><Download className="w-4 h-4" /></a>}
@@ -561,23 +561,23 @@ export default function MemberProfile() {
                   ))}
                 </div>
               ) : (
-                <p className="py-8 text-center text-slate-400 text-xs">No toolkits purchased yet.</p>
+                <p className="py-8 text-center text-slate-400 dark:text-slate-500 text-xs">No toolkits purchased yet.</p>
               )}
             </div>
           )}
 
           {/* ── MEMBERSHIP ────────────────────────────────────────────────── */}
           {activeTab === "membership" && (
-            <div className="rounded-2xl bg-white border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6">
-              <div className="border-b border-slate-100 pb-4">
-                <h2 className="text-base font-black text-[#0A1628] uppercase tracking-wider flex items-center gap-2"><Crown className="w-5 h-5 text-amber-500" /> Membership Plan</h2>
-                <p className="text-xs text-slate-400 mt-1">Manage your plan and benefits.</p>
+            <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-xs space-y-6">
+              <div className="border-b border-slate-100 dark:border-slate-800 pb-4">
+                <h2 className="text-base font-black text-[#0A1628] dark:text-white uppercase tracking-wider flex items-center gap-2"><Crown className="w-5 h-5 text-amber-500" /> Membership Plan</h2>
+                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Manage your plan and benefits.</p>
               </div>
-              <div className="p-5 rounded-xl bg-gradient-to-r from-amber-500/10 to-amber-600/10 border border-amber-300/40 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="p-5 rounded-xl bg-gradient-to-r from-amber-500/10 to-amber-600/10 dark:from-amber-500/15 dark:to-amber-600/15 border border-amber-300/40 dark:border-amber-500/30 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div>
-                  <span className="text-[10px] font-black uppercase tracking-wider text-amber-700">CURRENT TIER</span>
-                  <h3 className="text-lg font-black text-[#0A1628]">{stats.tierName}</h3>
-                  <p className="text-xs text-slate-500">Access to standard member features</p>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-amber-700 dark:text-amber-400">CURRENT TIER</span>
+                  <h3 className="text-lg font-black text-[#0A1628] dark:text-white">{stats.tierName}</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Access to standard member features</p>
                 </div>
                 <Link href="/upgrade" className="px-5 py-2.5 bg-gradient-to-r from-amber-400 to-amber-500 text-[#0A1628] font-black text-xs uppercase tracking-wider rounded-xl shadow-md transition-all">UPGRADE TO VIP</Link>
               </div>

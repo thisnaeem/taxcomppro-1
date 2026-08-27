@@ -266,15 +266,15 @@ export default function FindAProPage() {
           <div className="w-14 h-14 bg-amber-400/20 border border-amber-400/40 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
             <BadgeCheck className="w-8 h-8 text-amber-400" />
           </div>
-          <h2 className="text-2xl sm:text-3xl font-black mb-2 tracking-tight">Are you a Tax Professional?</h2>
+          <h2 className="text-2xl sm:text-3xl font-black mb-2 tracking-tight">Are you a Professional?</h2>
           <p className="text-slate-300 text-sm sm:text-base mb-6 max-w-lg mx-auto leading-relaxed">
-            Join the directory and get discovered by clients. Applications reviewed by our admin team.
+            Join the directory and get discovered.
           </p>
           <Link
             href="/apply-professional"
             className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-400 to-amber-500 text-[#0a1628] font-black text-sm px-8 py-3.5 rounded-full hover:shadow-[0_0_25px_rgba(245,158,11,0.4)] hover:scale-105 transition-all"
           >
-            Apply to Become a Professional <ArrowRight className="w-4 h-4" />
+            Get Listed <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
       </div>

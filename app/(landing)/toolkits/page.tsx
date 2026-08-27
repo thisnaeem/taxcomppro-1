@@ -156,7 +156,7 @@ export default function ToolkitsPage() {
             </div>
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black mb-5 leading-[1.05] tracking-tight">
-              The Playbooks <span className="text-amber-400">Top Tax Pros</span> Use to Dominate.
+              The Toolkits <span className="text-amber-400">Top Tax Pros</span> Use to Dominate.
             </h1>
             <p className="text-slate-300 text-base sm:text-lg max-w-xl mx-auto lg:mx-0 mb-8 leading-relaxed">
               Premium digital resources for Tax Professionals — each kit includes exclusive tools,
