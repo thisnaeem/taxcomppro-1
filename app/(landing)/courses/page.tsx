@@ -195,14 +195,14 @@ export default function CoursesPage() {
         <div className="relative max-w-[1680px] mx-auto px-6 sm:px-10 lg:px-14 xl:px-16 pt-20 pb-20 sm:pt-24 sm:pb-24 lg:pt-28 lg:pb-28 flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
           {/* Left: text */}
           <div className="flex-1 text-center lg:text-left">
-            <div className="inline-flex items-center gap-2.5 bg-amber-400/15 border border-amber-400/30 text-amber-300 text-xs sm:text-sm font-extrabold px-5 py-2.5 rounded-full mb-8 uppercase tracking-widest shadow-lg shadow-amber-400/10">
+            <div className="inline-flex items-center gap-2 bg-amber-400/15 border border-amber-400/30 text-amber-300 text-xs font-bold px-4 py-2 rounded-full mb-6 uppercase tracking-widest shadow-md">
               <GraduationCap className="w-4 h-4" /> Atlas Academy · Professional Learning Hub
             </div>
 
-            <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-7xl xl:text-8xl font-black mb-6 leading-[1.02] tracking-tight uppercase">
-              Knowledge is you <span className="text-amber-400">Competetive edge</span>
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black mb-5 leading-[1.08] tracking-tight">
+              Knowledge is Your <span className="text-amber-400">Competitive Edge</span>
             </h1>
-            <p className="text-slate-300 text-base sm:text-lg md:text-xl lg:text-2xl max-w-3xl mx-auto lg:mx-0 mb-10 leading-relaxed font-normal">
+            <p className="text-slate-300 text-base sm:text-lg max-w-2xl mx-auto lg:mx-0 mb-8 leading-relaxed font-normal">
               Atlas Academy equips Tax Professionals with due diligence training, compliance
               strategies, and business skills to help build a stronger, more profitable practice.
             </p>
