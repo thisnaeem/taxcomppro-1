@@ -287,22 +287,13 @@ function MarketplaceContent() {
   }, [search]);
 
   return (
-    <div className="min-h-screen bg-[#f4f6fb] dark:bg-[#0c1527] pt-4 pb-16">
-      <div className="max-w-[1320px] mx-auto px-4">
+    <div className="min-h-screen bg-[#f4f6fb] dark:bg-[#0c1527] pt-6 pb-16">
+      <div className="max-w-[1400px] mx-auto px-4">
 
-        {/* ── Top Hero Banner ── */}
-        <div className="w-full mb-6 rounded-2xl md:rounded-3xl overflow-hidden shadow-sm border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#172135]">
-          <img
-            src="/mrkeplace_cover.png"
-            alt="TaxCompPro Marketplace - Your Marketplace. Your Opportunity."
-            className="w-full h-auto object-cover max-h-[340px] md:max-h-[380px]"
-          />
-        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] xl:grid-cols-[300px_1fr] gap-6 items-start">
 
-        <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-6 items-start">
-
-          {/* Sidebar */}
-          <div className="hidden lg:block self-start sticky top-[100px] h-fit max-h-[calc(100vh-100px)] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          {/* Sidebar - Touching Top */}
+          <div className="hidden lg:block self-start sticky top-[90px] h-fit max-h-[calc(100vh-90px)] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             <MarketplaceSidebar
               user={authedUser ? { ...authedUser, image: authedUser.image ?? null, headline: authedUser.headline ?? null, coverImage: authedUser.coverImage ?? null } : null}
               cat={cat} setCat={c => dispatch({ type: "SET_CAT", payload: c })} canSell={canSell}
@@ -315,8 +306,8 @@ function MarketplaceContent() {
             {/* Header */}
             <div className="flex items-center justify-between gap-3">
               <div>
-                <h1 className="text-2xl md:text-3xl font-black text-[#0a1628] dark:text-white">Marketplace Listings</h1>
-                <p className="text-slate-400 dark:text-slate-500 text-sm md:text-base mt-0.5">
+                <h1 className="text-2xl md:text-3xl font-black text-[#0a1628] dark:text-white">Marketplace</h1>
+                <p className="text-slate-400 dark:text-slate-500 text-sm mt-0.5">
                   {listings.length > 0
                     ? <>{listings.length} listing{listings.length !== 1 ? "s" : ""}{loading && <span className="inline-block w-1.5 h-1.5 bg-slate-400 rounded-full animate-pulse ml-1.5 align-middle" />}</>
                     : loading ? "Loading listings…" : "No listings found"}
@@ -335,7 +326,7 @@ function MarketplaceContent() {
               <Search01Icon className="w-4 h-4 text-slate-400 shrink-0" />
               <input
                 type="text"
-                placeholder="Search services, products, courses, and trainers…"
+                placeholder="Search services, products, trainers…"
                 value={search}
                 onChange={e => dispatch({ type: "SET_SEARCH", payload: e.target.value })}
                 className="flex-1 bg-transparent font-[inherit] text-base text-slate-700 dark:text-white outline-none placeholder-slate-400 dark:placeholder-slate-500"
@@ -350,27 +341,41 @@ function MarketplaceContent() {
               )}
             </div>
 
-            {/* Mobile category chips */}
-            <div className="flex gap-2 overflow-x-auto pb-1 lg:hidden">
-              {CATS.map(c => (
-                <button
-                  key={c}
-                  onClick={() => dispatch({ type: "SET_CAT", payload: c })}
-                  className={`text-xs font-semibold px-3.5 py-2 rounded-full transition-all shrink-0 border ${
-                    cat === c
-                      ? "bg-[#0a1628] dark:bg-white/10 text-white dark:text-[#f0c040] border-transparent"
-                      : "bg-white dark:bg-[#172135] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800"
-                  }`}
-                >
-                  {c === "ALL" ? "All Categories" : CAT_CONFIG[c]?.label}
-                </button>
-              ))}
+            {/* ── Banner Below Search Bar ── */}
+            <div className="w-full rounded-2xl overflow-hidden shadow-sm border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#172135]">
+              <img
+                src="/mrkeplace_cover.png"
+                alt="TaxCompPro Marketplace - Your Marketplace. Your Opportunity."
+                className="w-full h-auto object-cover max-h-[300px]"
+              />
+            </div>
+
+            {/* Category Filter Pills */}
+            <div className="flex gap-2 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+              {CATS.map(c => {
+                const cfg  = c === "ALL" ? null : CAT_CONFIG[c];
+                const Icon = cfg?.icon ?? ShoppingBag01Icon;
+                return (
+                  <button
+                    key={c}
+                    onClick={() => dispatch({ type: "SET_CAT", payload: c })}
+                    className={`flex items-center gap-2 text-xs md:text-sm font-bold px-4 py-2 rounded-full transition-all shrink-0 border ${
+                      cat === c
+                        ? "bg-[#0a1628] dark:bg-[#f0c040] text-white dark:text-[#0a1628] border-transparent shadow-sm"
+                        : "bg-white dark:bg-[#172135] text-slate-600 dark:text-slate-300 border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
+                    }`}
+                  >
+                    <Icon className="w-3.5 h-3.5" />
+                    {c === "ALL" ? "All Categories" : cfg!.label}
+                  </button>
+                );
+              })}
             </div>
 
             {/* Listings Grid */}
             {loading && listings.length === 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                {[1, 2, 3, 4, 5, 6].map(i => <SkeletonCard key={i} />)}
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                {[1, 2, 3, 4, 5, 6, 7, 8].map(i => <SkeletonCard key={i} />)}
               </div>
             ) : !loading && listings.length === 0 ? (
               <div className="bg-white dark:bg-[#172135] rounded-2xl py-24 text-center border border-slate-200/80 dark:border-slate-800">
@@ -389,7 +394,7 @@ function MarketplaceContent() {
                 )}
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
                 {listings.map(l => <GridCard key={l.id} l={l} authed={!!authedUser} />)}
               </div>
             )}
