@@ -241,22 +241,22 @@ export default function MemberProfile() {
 
       <div className="flex flex-col lg:flex-row gap-6">
         {/* ── LEFT SIDEBAR ────────────────────────────────────────────────── */}
-        <aside className="w-full lg:w-64 shrink-0 lg:sticky lg:top-24 self-start space-y-5">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-3 space-y-0.5">
-            <div className="px-3 py-2 text-[10px] font-black uppercase tracking-widest text-slate-400">PROFILE MENU</div>
+        <aside className="w-full lg:w-72 shrink-0 lg:sticky lg:top-24 self-start space-y-5">
+          <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-3.5 space-y-1">
+            <div className="px-3.5 py-2 text-[11px] font-black uppercase tracking-wider text-slate-400">PROFILE MENU</div>
             {MEMBER_SIDEBAR_TABS.map((tab) => {
               const isActive = activeTab === tab.id;
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold tracking-wide transition-all text-left ${isActive ? "bg-[#EAF2FC] text-[#1E56A0]" : "text-slate-600 hover:text-[#0A1628] hover:bg-slate-50"}`}
+                  className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-bold tracking-normal transition-all text-left group ${isActive ? "bg-[#EAF2FC] text-[#1E56A0] shadow-xs" : "text-slate-600 hover:text-[#0A1628] hover:bg-slate-50"}`}
                 >
-                  <div className="flex items-center gap-2.5">
-                    <tab.icon className={`w-4 h-4 ${isActive ? "text-[#1E56A0]" : "text-slate-400"}`} />
-                    <span>{tab.label}</span>
+                  <div className="flex items-center gap-3.5">
+                    <tab.icon className={`w-5 h-5 shrink-0 transition-colors ${isActive ? "text-[#1E56A0]" : "text-slate-400 group-hover:text-slate-600"}`} />
+                    <span className="leading-snug">{tab.label}</span>
                   </div>
-                  {isActive && <ChevronRight className="w-3.5 h-3.5 text-[#1E56A0]" />}
+                  {isActive && <ChevronRight className="w-4 h-4 text-[#1E56A0] shrink-0" />}
                 </button>
               );
             })}
@@ -264,11 +264,11 @@ export default function MemberProfile() {
 
           {/* Become a Pro CTA - only if not already Pro or VIP */}
           {!isProOrVIP && (
-            <div className="rounded-2xl bg-gradient-to-br from-[#0A1628] to-[#1A3A6B] p-5 text-white border border-slate-800">
-              <span className="text-[10px] font-black uppercase tracking-widest text-amber-400">GROW YOUR PRACTICE</span>
-              <h4 className="text-xs font-extrabold text-white leading-snug mt-1 mb-2">Apply as a Verified Tax Pro</h4>
-              <p className="text-[11px] text-slate-300 font-medium mb-4 leading-relaxed">Get client leads, activate your NFC Connect Card, and unlock IRS defense toolkits.</p>
-              <Link href="/apply-professional" className="w-full block text-center py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 text-[#0A1628] font-black text-xs uppercase tracking-wider transition-all active:scale-[0.98]">
+            <div className="rounded-2xl bg-gradient-to-br from-[#0A1628] to-[#1A3A6B] p-5 sm:p-6 text-white border border-slate-800 shadow-md">
+              <span className="text-[11px] font-black uppercase tracking-widest text-amber-400">GROW YOUR PRACTICE</span>
+              <h4 className="text-sm font-extrabold text-white leading-snug mt-1.5 mb-2">Apply as a Verified Tax Pro</h4>
+              <p className="text-xs text-slate-300 font-medium mb-5 leading-relaxed">Get client leads, activate your NFC Connect Card, and unlock IRS defense toolkits.</p>
+              <Link href="/apply-professional" className="w-full block text-center py-3 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-[#0A1628] font-black text-xs uppercase tracking-wider transition-all active:scale-[0.98] shadow-sm">
                 APPLY NOW
               </Link>
             </div>

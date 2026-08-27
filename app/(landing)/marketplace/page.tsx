@@ -1,18 +1,17 @@
 "use client";
 
-import { Suspense, useEffect, useReducer, useRef, useState } from "react";
+import { Suspense, useEffect, useReducer, useRef } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useAppSelector } from "@/store/hooks";
-import { LayoutList, LayoutGrid, X } from "lucide-react";
+import { X } from "lucide-react";
 import {
   Search01Icon, ShoppingBag01Icon, StarIcon, Add01Icon, EyeIcon,
   FilterIcon, BookOpen01Icon, GlobeIcon, Briefcase01Icon, School01Icon,
   UserCircleIcon, Rocket01Icon, ArrowRight01Icon,
 } from "hugeicons-react";
 
-type Category  = "ALL" | "SERVICE" | "PRODUCT" | "NETWORK" | "TRAINING";
-type ViewMode  = "list" | "grid";
+type Category = "ALL" | "SERVICE" | "PRODUCT" | "NETWORK" | "TRAINING";
 
 interface Listing {
   id: string; slug: string | null; title: string; description: string;
@@ -29,7 +28,6 @@ type State = {
   cat:        Category;
   search:     string;     // debounce input value
   query:      string;     // committed search value
-  viewMode:   ViewMode;
   mounted:    boolean;
 };
 type Action =
@@ -39,7 +37,6 @@ type Action =
   | { type: "SET_SEARCH";   payload: string }
   | { type: "COMMIT_QUERY" }
   | { type: "CLEAR_SEARCH" }
-  | { type: "SET_VIEW";     payload: ViewMode }
   | { type: "MOUNTED" };
 
 function reducer(state: State, action: Action): State {
@@ -50,7 +47,6 @@ function reducer(state: State, action: Action): State {
     case "SET_SEARCH":   return { ...state, search: action.payload };
     case "COMMIT_QUERY": return { ...state, query: state.search, loading: true };
     case "CLEAR_SEARCH": return { ...state, search: "", query: "", loading: true };
-    case "SET_VIEW":     return { ...state, viewMode: action.payload };
     case "MOUNTED":      return { ...state, mounted: true };
     default: return state;
   }
@@ -58,120 +54,30 @@ function reducer(state: State, action: Action): State {
 
 /* ── Per-category config ── */
 const CAT_CONFIG: Record<string, { label: string; icon: React.ElementType; pill: string; bg: string }> = {
-  SERVICE:  { label: "Service",  icon: Briefcase01Icon,  pill: "bg-blue-100 text-blue-700",      bg: "bg-blue-50"    },
-  PRODUCT:  { label: "Product",  icon: ShoppingBag01Icon,pill: "bg-amber-100 text-amber-700",    bg: "bg-amber-50"   },
-  NETWORK:  { label: "Network",  icon: GlobeIcon,        pill: "bg-emerald-100 text-emerald-700", bg: "bg-emerald-50" },
-  TRAINING: { label: "Course", icon: School01Icon,     pill: "bg-purple-100 text-purple-700",  bg: "bg-purple-50"  },
+  SERVICE:  { label: "Service",  icon: Briefcase01Icon,  pill: "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300",      bg: "bg-blue-50 dark:bg-blue-950/40"    },
+  PRODUCT:  { label: "Product",  icon: ShoppingBag01Icon,pill: "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300",    bg: "bg-amber-50 dark:bg-amber-950/40"   },
+  NETWORK:  { label: "Network",  icon: GlobeIcon,        pill: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300", bg: "bg-emerald-50 dark:bg-emerald-950/40" },
+  TRAINING: { label: "Course",   icon: School01Icon,     pill: "bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300",  bg: "bg-purple-50 dark:bg-purple-950/40"  },
 };
-const DEFAULT_CFG = { label: "Other", icon: BookOpen01Icon, pill: "bg-slate-100 text-slate-600", bg: "bg-slate-50" };
+const DEFAULT_CFG = { label: "Other", icon: BookOpen01Icon, pill: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300", bg: "bg-slate-50 dark:bg-slate-900" };
 const CATS: Category[] = ["ALL", "SERVICE", "PRODUCT", "NETWORK", "TRAINING"];
 
 /* ── Skeleton ── */
-function SkeletonCard({ grid }: { grid?: boolean }) {
-  return grid ? (
-    <div className="bg-white rounded-2xl overflow-hidden animate-pulse">
-      <div className="h-40 bg-slate-200" />
-      <div className="p-4 space-y-3">
-        <div className="h-3 bg-slate-200 rounded w-16" />
-        <div className="h-4 bg-slate-200 rounded w-3/4" />
-        <div className="h-3 bg-slate-200 rounded w-full" />
-        <div className="h-3 bg-slate-200 rounded w-2/3" />
-        <div className="flex items-center justify-between pt-1">
-          <div className="h-6 bg-slate-200 rounded w-16" />
-          <div className="h-5 bg-slate-200 rounded-full w-20" />
-        </div>
-      </div>
-    </div>
-  ) : (
-    <div className="bg-white rounded-2xl overflow-hidden animate-pulse flex h-32">
-      <div className="w-40 bg-slate-200 shrink-0" />
-      <div className="flex-1 p-4 space-y-3">
-        <div className="flex justify-between">
-          <div className="h-3 bg-slate-200 rounded w-16" />
-          <div className="h-5 bg-slate-200 rounded w-14" />
-        </div>
-        <div className="h-4 bg-slate-200 rounded w-2/3" />
-        <div className="h-3 bg-slate-200 rounded w-full" />
-        <div className="h-3 bg-slate-200 rounded w-3/4" />
-      </div>
-    </div>
-  );
-}
-
-/* ── List card (horizontal) ── */
-function ListCard({ l, authed }: { l: Listing; authed: boolean }) {
-  const cfg      = CAT_CONFIG[l.category] ?? DEFAULT_CFG;
-  const slugOrId = l.slug ?? l.id;
-  const href     = authed ? `/${slugOrId}` : `/login?redirect=/${slugOrId}`;
-  const hasImage = !!(l.images?.[0]);
-
+function SkeletonCard() {
   return (
-    <Link href={href}
-      className="group bg-white rounded-2xl overflow-hidden flex flex-row transition-all hover:-translate-y-0.5 hover:shadow-md min-h-[8.5rem]">
-
-      {/* Left: image or accent */}
-      <div className={`relative shrink-0 w-36 sm:w-44 ${hasImage ? "" : cfg.bg}`}>
-        {hasImage ? (
-          <img src={l.images[0]} alt={l.title}
-            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-5xl font-black opacity-20 select-none">{cfg.label[0]}</span>
-          </div>
-        )}
-        {/* Left accent bar */}
-        <div className={`absolute left-0 inset-y-0 w-1 ${cfg.pill.split(" ")[0].replace("bg-", "bg-").replace("100", "400")}`} />
-        {l.isFeatured && (
-          <span className="absolute top-2 left-3 flex items-center gap-0.5 text-[9px] font-black text-[#d4a017] bg-white/90 px-1.5 py-0.5 rounded-full shadow-sm">
-            <StarIcon className="w-2.5 h-2.5" /> Featured
-          </span>
-        )}
-      </div>
-
-      {/* Right: content */}
-      <div className="flex-1 min-w-0 px-5 py-4 flex flex-col justify-between gap-1.5">
-        {/* Top: pill + price */}
-        <div className="flex items-center justify-between gap-2">
-          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${cfg.pill}`}>{cfg.label}</span>
-          <span className="text-xl font-black text-[#0a1628] leading-none tabular-nums">
-            {l.price != null ? `$${l.price.toLocaleString()}` : <span className="text-base text-emerald-600">Free</span>}
-          </span>
-        </div>
-
-        {/* Title + desc */}
-        <div>
-          <h3 className="font-black text-[#0a1628] text-base leading-snug line-clamp-1 group-hover:text-[#1a3a6b] transition-colors">
-            {l.title}
-          </h3>
-          <p className="text-sm text-slate-400 leading-relaxed line-clamp-2 mt-0.5">{l.description}</p>
-        </div>
-
-        {/* Bottom: tags + seller + views + cta */}
-        <div className="flex items-center justify-between gap-2 mt-auto">
-          <div className="flex items-center gap-1 flex-wrap min-w-0">
-            {l.tags.slice(0, 2).map(t => (
-              <span key={t} className="text-[9px] bg-slate-100 text-slate-400 px-1.5 py-0.5 rounded-full font-medium">#{t}</span>
-            ))}
-          </div>
-          <div className="flex items-center gap-3 shrink-0">
-            <div className="flex items-center gap-1.5">
-              <div className="w-5 h-5 rounded-full bg-[#0a1628] overflow-hidden flex items-center justify-center shrink-0">
-                {l.user.image
-                  ? <img src={l.user.image} alt={l.user.name} referrerPolicy="no-referrer" className="w-full h-full object-cover" />
-                  : <span className="text-white font-bold text-[9px]">{l.user.name?.[0]?.toUpperCase()}</span>}
-              </div>
-              <span className="text-xs font-semibold text-slate-500 max-w-[80px] truncate hidden sm:block">{l.user.name}</span>
-            </div>
-            <span className="flex items-center gap-0.5 text-[10px] text-slate-300">
-              <EyeIcon className="w-3 h-3" />{l.viewCount}
-            </span>
-            <span className="flex items-center gap-0.5 text-xs font-bold text-[#0a1628] group-hover:gap-1 transition-all">
-              View <ArrowRight01Icon className="w-3 h-3" />
-            </span>
-          </div>
+    <div className="bg-white dark:bg-[#172135] rounded-2xl overflow-hidden border border-slate-200/80 dark:border-slate-800 animate-pulse">
+      <div className="h-44 bg-slate-200 dark:bg-slate-800" />
+      <div className="p-4 space-y-3">
+        <div className="h-3 bg-slate-200 dark:bg-slate-800 rounded w-16" />
+        <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-3/4" />
+        <div className="h-3 bg-slate-200 dark:bg-slate-800 rounded w-full" />
+        <div className="h-3 bg-slate-200 dark:bg-slate-800 rounded w-2/3" />
+        <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
+          <div className="h-5 bg-slate-200 dark:bg-slate-800 rounded w-16" />
+          <div className="h-5 bg-slate-200 dark:bg-slate-800 rounded-full w-20" />
         </div>
       </div>
-    </Link>
+    </div>
   );
 }
 
@@ -184,10 +90,10 @@ function GridCard({ l, authed }: { l: Listing; authed: boolean }) {
 
   return (
     <Link href={href}
-      className="group bg-white rounded-2xl overflow-hidden flex flex-col transition-all hover:-translate-y-1 hover:shadow-lg">
+      className="group bg-white dark:bg-[#172135] rounded-2xl overflow-hidden border border-slate-200/80 dark:border-slate-800 flex flex-col transition-all hover:-translate-y-1 hover:shadow-xl dark:hover:shadow-[0_0_25px_rgba(240,192,64,0.12)]">
 
       {/* Image / accent header */}
-      <div className={`relative h-40 shrink-0 ${hasImage ? "" : cfg.bg}`}>
+      <div className={`relative h-44 shrink-0 overflow-hidden ${hasImage ? "bg-slate-900" : cfg.bg}`}>
         {hasImage ? (
           <img src={l.images[0]} alt={l.title}
             className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
@@ -197,10 +103,12 @@ function GridCard({ l, authed }: { l: Listing; authed: boolean }) {
           </div>
         )}
         {/* Category pill overlay */}
-        <span className={`absolute bottom-2 left-3 text-[10px] font-bold px-2 py-0.5 rounded-full ${cfg.pill} shadow-sm`}>{cfg.label}</span>
+        <span className={`absolute bottom-2.5 left-3 text-[10px] font-bold px-2.5 py-0.5 rounded-full ${cfg.pill} shadow-md backdrop-blur-sm`}>
+          {cfg.label}
+        </span>
         {l.isFeatured && (
-          <span className="absolute top-2 right-2 flex items-center gap-0.5 text-[9px] font-black text-[#d4a017] bg-white/90 px-1.5 py-0.5 rounded-full shadow-sm">
-            <StarIcon className="w-2.5 h-2.5" /> Featured
+          <span className="absolute top-2.5 right-2.5 flex items-center gap-1 text-[9px] font-black text-[#d4a017] bg-white/95 dark:bg-[#0a1628]/95 px-2 py-0.5 rounded-full shadow-md">
+            <StarIcon className="w-2.5 h-2.5 fill-[#d4a017]" /> Featured
           </span>
         )}
       </div>
@@ -208,30 +116,30 @@ function GridCard({ l, authed }: { l: Listing; authed: boolean }) {
       {/* Content */}
       <div className="p-4 flex flex-col gap-2 flex-1">
         <div className="flex items-start justify-between gap-2">
-          <h3 className="font-black text-[#0a1628] text-base leading-snug line-clamp-2 group-hover:text-[#1a3a6b] transition-colors flex-1">
+          <h3 className="font-black text-[#0a1628] dark:text-white text-base leading-snug line-clamp-2 group-hover:text-[#f0c040] transition-colors flex-1">
             {l.title}
           </h3>
-          <span className="text-lg font-black text-[#0a1628] shrink-0 tabular-nums">
-            {l.price != null ? `$${l.price.toLocaleString()}` : <span className="text-sm text-emerald-600 font-bold">Free</span>}
+          <span className="text-lg font-black text-[#0a1628] dark:text-white shrink-0 tabular-nums">
+            {l.price != null ? `$${l.price.toLocaleString()}` : <span className="text-sm text-emerald-600 dark:text-emerald-400 font-bold">Free</span>}
           </span>
         </div>
 
-        <p className="text-sm text-slate-400 leading-relaxed line-clamp-2">{l.description}</p>
+        <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-2">{l.description}</p>
 
-        <div className="flex items-center justify-between mt-auto pt-2 border-t border-slate-50">
-          <div className="flex items-center gap-1.5">
-            <div className="w-5 h-5 rounded-full bg-[#0a1628] overflow-hidden flex items-center justify-center shrink-0">
+        <div className="flex items-center justify-between mt-auto pt-3 border-t border-slate-100 dark:border-slate-800/80">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-full bg-[#0a1628] overflow-hidden flex items-center justify-center shrink-0 border border-slate-200 dark:border-slate-700">
               {l.user.image
                 ? <img src={l.user.image} alt={l.user.name} referrerPolicy="no-referrer" className="w-full h-full object-cover" />
                 : <span className="text-white font-bold text-[9px]">{l.user.name?.[0]?.toUpperCase()}</span>}
             </div>
-            <span className="text-xs font-semibold text-slate-400 max-w-[90px] truncate">{l.user.name}</span>
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 max-w-[90px] truncate">{l.user.name}</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="flex items-center gap-0.5 text-[10px] text-slate-300">
+            <span className="flex items-center gap-0.5 text-[10px] text-slate-400 dark:text-slate-500">
               <EyeIcon className="w-3 h-3" />{l.viewCount}
             </span>
-            <span className="text-[11px] font-bold text-[#0a1628] flex items-center gap-0.5 group-hover:gap-1 transition-all">
+            <span className="text-[11px] font-bold text-[#0a1628] dark:text-[#f0c040] flex items-center gap-0.5 group-hover:gap-1 transition-all">
               View <ArrowRight01Icon className="w-3 h-3" />
             </span>
           </div>
@@ -249,9 +157,9 @@ function MarketplaceSidebar({
   cat: Category; setCat: (c: Category) => void; canSell: boolean;
 }) {
   return (
-    <div className="space-y-2.5">
+    <div className="space-y-3">
       {user && (
-        <div className="bg-white rounded-2xl overflow-hidden">
+        <div className="bg-white dark:bg-[#172135] rounded-2xl overflow-hidden border border-slate-200/80 dark:border-slate-800 shadow-sm">
           {/* Banner */}
           <div className="h-24 relative">
             {user.coverImage
@@ -262,7 +170,7 @@ function MarketplaceSidebar({
                 </div>
             }
             <div className="absolute -bottom-9 left-4">
-              <div className="w-[72px] h-[72px] rounded-2xl bg-[#0a1628] border-[3px] border-white overflow-hidden flex items-center justify-center shadow-md">
+              <div className="w-[72px] h-[72px] rounded-2xl bg-[#0a1628] border-[3px] border-white dark:border-[#172135] overflow-hidden flex items-center justify-center shadow-md">
                 {user.image
                   ? <img src={user.image} alt={user.name ?? ""} referrerPolicy="no-referrer" className="w-full h-full object-cover" />
                   : <span className="text-white font-black text-2xl">{user.name?.[0]?.toUpperCase()}</span>}
@@ -270,17 +178,17 @@ function MarketplaceSidebar({
             </div>
           </div>
           <div className="px-4 pt-12 pb-4">
-            <div className="font-black text-[#0a1628] text-base">{user.name}</div>
+            <div className="font-black text-[#0a1628] dark:text-white text-base">{user.name}</div>
             {user.headline
-              ? <div className="text-sm text-slate-500 mt-0.5 line-clamp-2">{user.headline}</div>
-              : <div className="text-sm text-slate-400 italic mt-0.5">No headline</div>}
+              ? <div className="text-sm text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-2">{user.headline}</div>
+              : <div className="text-sm text-slate-400 dark:text-slate-500 italic mt-0.5">No headline</div>}
           </div>
         </div>
       )}
 
       {canSell ? (
         <Link href="/marketplace/create"
-          className="flex items-center justify-center gap-2 bg-[#0a1628] text-white font-bold text-sm px-4 py-3 rounded-xl hover:bg-[#1a3a6b] transition-all w-full">
+          className="flex items-center justify-center gap-2 bg-[#0a1628] dark:bg-[#f0c040] text-white dark:text-[#0a1628] font-bold text-sm px-4 py-3 rounded-xl hover:bg-[#1a3a6b] dark:hover:bg-[#d4a017] transition-all w-full shadow-sm">
           <Add01Icon className="w-4 h-4" /> Create Listing
         </Link>
       ) : user ? (
@@ -290,20 +198,24 @@ function MarketplaceSidebar({
         </Link>
       ) : (
         <Link href="/register"
-          className="flex items-center justify-center gap-2 bg-[#0a1628] text-white font-bold text-sm px-4 py-3 rounded-xl hover:bg-[#1a3a6b] transition-all w-full">
+          className="flex items-center justify-center gap-2 bg-[#0a1628] dark:bg-[#f0c040] text-white dark:text-[#0a1628] font-bold text-sm px-4 py-3 rounded-xl hover:bg-[#1a3a6b] dark:hover:bg-[#d4a017] transition-all w-full">
           <UserCircleIcon className="w-4 h-4" /> Sign up to Sell
         </Link>
       )}
 
-      <div className="bg-white rounded-2xl p-3">
-        <p className="text-sm font-black uppercase tracking-widest text-slate-400 mb-2 px-2">Browse By</p>
-        <div className="space-y-0.5">
+      <div className="bg-white dark:bg-[#172135] rounded-2xl p-3 border border-slate-200/80 dark:border-slate-800 shadow-sm">
+        <p className="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-2 px-2">Browse By</p>
+        <div className="space-y-1">
           {CATS.map(c => {
             const cfg  = c === "ALL" ? null : CAT_CONFIG[c];
             const Icon = cfg?.icon ?? FilterIcon;
             return (
               <button key={c} onClick={() => setCat(c)}
-                className={`flex items-center gap-2.5 w-full text-left text-sm font-semibold px-3 py-2.5 rounded-xl transition-all ${cat === c ? "bg-[#0a1628] text-white" : "text-slate-600 hover:bg-slate-50 hover:text-[#0a1628]"}`}>
+                className={`flex items-center gap-2.5 w-full text-left text-sm font-semibold px-3 py-2.5 rounded-xl transition-all ${
+                  cat === c
+                    ? "bg-[#0a1628] dark:bg-white/10 text-white dark:text-[#f0c040]"
+                    : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-[#0a1628] dark:hover:text-white"
+                }`}>
                 {c === "ALL" ? <ShoppingBag01Icon className="w-4 h-4" /> : <Icon className="w-4 h-4" />}
                 {c === "ALL" ? "All Categories" : cfg!.label}
               </button>
@@ -313,13 +225,13 @@ function MarketplaceSidebar({
       </div>
 
       {canSell && (
-        <div className="space-y-0.5">
+        <div className="space-y-1 bg-white dark:bg-[#172135] rounded-2xl p-2 border border-slate-200/80 dark:border-slate-800 shadow-sm">
           <Link href="/my-listings"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-white hover:text-[#0a1628] transition-all">
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-[#0a1628] dark:hover:text-white transition-all">
             <ShoppingBag01Icon className="w-4 h-4 text-slate-400" /> My Listings
           </Link>
           <Link href="/seller-dashboard"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-white hover:text-[#0a1628] transition-all">
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-[#0a1628] dark:hover:text-white transition-all">
             <Rocket01Icon className="w-4 h-4 text-slate-400" /> Seller Dashboard
           </Link>
         </div>
@@ -339,11 +251,10 @@ function MarketplaceContent() {
     cat:       "ALL",
     search:    searchParams.get("search") ?? "",
     query:     searchParams.get("search") ?? "",
-    viewMode:  "list",
     mounted:   false,
   });
 
-  const { listings, loading, cat, search, query, viewMode, mounted } = state;
+  const { listings, loading, cat, search, query, mounted } = state;
   const authedUser = mounted ? user : null;
   const canSell    = !!(authedUser && (
     authedUser.role === "ADMIN" || authedUser.role === "PROFESSIONAL" ||
@@ -375,11 +286,19 @@ function MarketplaceContent() {
     return () => clearTimeout(t);
   }, [search]);
 
-  const isGrid = viewMode === "grid";
-
   return (
-    <div className="min-h-screen bg-[#f4f6fb] pt-4 pb-12">
+    <div className="min-h-screen bg-[#f4f6fb] dark:bg-[#0c1527] pt-4 pb-16">
       <div className="max-w-[1320px] mx-auto px-4">
+
+        {/* ── Top Hero Banner ── */}
+        <div className="w-full mb-6 rounded-2xl md:rounded-3xl overflow-hidden shadow-sm border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#172135]">
+          <img
+            src="/mrkeplace_cover.png"
+            alt="TaxCompPro Marketplace - Your Marketplace. Your Opportunity."
+            className="w-full h-auto object-cover max-h-[340px] md:max-h-[380px]"
+          />
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-6 items-start">
 
           {/* Sidebar */}
@@ -390,51 +309,42 @@ function MarketplaceContent() {
             />
           </div>
 
-          {/* Main */}
+          {/* Main Content Area */}
           <div className="space-y-4">
 
             {/* Header */}
             <div className="flex items-center justify-between gap-3">
               <div>
-                <h1 className="text-3xl font-black text-[#0a1628]">Marketplace</h1>
-                <p className="text-slate-400 text-base mt-0.5">
+                <h1 className="text-2xl md:text-3xl font-black text-[#0a1628] dark:text-white">Marketplace Listings</h1>
+                <p className="text-slate-400 dark:text-slate-500 text-sm md:text-base mt-0.5">
                   {listings.length > 0
                     ? <>{listings.length} listing{listings.length !== 1 ? "s" : ""}{loading && <span className="inline-block w-1.5 h-1.5 bg-slate-400 rounded-full animate-pulse ml-1.5 align-middle" />}</>
-                    : loading ? "Loading…" : "No listings"}
+                    : loading ? "Loading listings…" : "No listings found"}
                 </p>
               </div>
-              <div className="flex items-center gap-2 shrink-0">
-                {/* View toggle */}
-                <div className="flex items-center bg-white rounded-xl border border-slate-200 p-1 gap-0.5">
-                  <button onClick={() => dispatch({ type: "SET_VIEW", payload: "list" })}
-                    className={`p-2 rounded-lg transition-all ${!isGrid ? "bg-[#0a1628] text-white" : "text-slate-400 hover:text-slate-600"}`}
-                    title="List view">
-                    <LayoutList className="w-4 h-4" />
-                  </button>
-                  <button onClick={() => dispatch({ type: "SET_VIEW", payload: "grid" })}
-                    className={`p-2 rounded-lg transition-all ${isGrid ? "bg-[#0a1628] text-white" : "text-slate-400 hover:text-slate-600"}`}
-                    title="Grid view">
-                    <LayoutGrid className="w-4 h-4" />
-                  </button>
-                </div>
-                {canSell && (
-                  <Link href="/marketplace/create"
-                    className="flex items-center gap-2 bg-[#0a1628] text-white font-bold text-sm px-4 py-2.5 rounded-xl hover:bg-[#1a3a6b] transition-all lg:hidden">
-                    <Add01Icon className="w-4 h-4" /> Create
-                  </Link>
-                )}
-              </div>
+              {canSell && (
+                <Link href="/marketplace/create"
+                  className="flex items-center gap-2 bg-[#0a1628] dark:bg-[#f0c040] text-white dark:text-[#0a1628] font-bold text-sm px-4 py-2.5 rounded-xl hover:bg-[#1a3a6b] dark:hover:bg-[#d4a017] transition-all shadow-sm">
+                  <Add01Icon className="w-4 h-4" /> Create Listing
+                </Link>
+              )}
             </div>
 
-            {/* Search */}
-            <div className="bg-white rounded-xl px-4 py-3.5 flex items-center gap-3">
+            {/* Search Bar */}
+            <div className="bg-white dark:bg-[#172135] rounded-xl px-4 py-3.5 flex items-center gap-3 border border-slate-200/80 dark:border-slate-800 shadow-sm focus-within:border-amber-400 dark:focus-within:border-amber-400 transition-colors">
               <Search01Icon className="w-4 h-4 text-slate-400 shrink-0" />
-              <input type="text" placeholder="Search services, products, trainers…"
-                value={search} onChange={e => dispatch({ type: "SET_SEARCH", payload: e.target.value })}
-                className="flex-1 bg-transparent font-[inherit] text-base text-slate-700 outline-none placeholder-slate-400" />
+              <input
+                type="text"
+                placeholder="Search services, products, courses, and trainers…"
+                value={search}
+                onChange={e => dispatch({ type: "SET_SEARCH", payload: e.target.value })}
+                className="flex-1 bg-transparent font-[inherit] text-base text-slate-700 dark:text-white outline-none placeholder-slate-400 dark:placeholder-slate-500"
+              />
               {search && (
-                <button onClick={() => dispatch({ type: "CLEAR_SEARCH" })}
-                  className="text-slate-400 hover:text-slate-600 transition-colors">
+                <button
+                  onClick={() => dispatch({ type: "CLEAR_SEARCH" })}
+                  className="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors"
+                >
                   <X className="w-4 h-4" />
                 </button>
               )}
@@ -443,45 +353,45 @@ function MarketplaceContent() {
             {/* Mobile category chips */}
             <div className="flex gap-2 overflow-x-auto pb-1 lg:hidden">
               {CATS.map(c => (
-                <button key={c} onClick={() => dispatch({ type: "SET_CAT", payload: c })}
-                  className={`text-xs font-semibold px-3.5 py-2 rounded-full transition-all shrink-0 ${cat === c ? "bg-[#0a1628] text-white" : "bg-white text-slate-600"}`}>
-                  {c === "ALL" ? "All" : CAT_CONFIG[c]?.label}
+                <button
+                  key={c}
+                  onClick={() => dispatch({ type: "SET_CAT", payload: c })}
+                  className={`text-xs font-semibold px-3.5 py-2 rounded-full transition-all shrink-0 border ${
+                    cat === c
+                      ? "bg-[#0a1628] dark:bg-white/10 text-white dark:text-[#f0c040] border-transparent"
+                      : "bg-white dark:bg-[#172135] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800"
+                  }`}
+                >
+                  {c === "ALL" ? "All Categories" : CAT_CONFIG[c]?.label}
                 </button>
               ))}
             </div>
 
-            {/* Cards */}
+            {/* Listings Grid */}
             {loading && listings.length === 0 ? (
-              /* True initial load — show skeletons */
-              isGrid
-                ? <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">{[1,2,3,4,5,6].map(i => <SkeletonCard key={i} grid />)}</div>
-                : <div className="space-y-3">{[1,2,3,4].map(i => <SkeletonCard key={i} />)}</div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                {[1, 2, 3, 4, 5, 6].map(i => <SkeletonCard key={i} />)}
+              </div>
             ) : !loading && listings.length === 0 ? (
-              /* Empty state */
-              <div className="bg-white rounded-2xl py-24 text-center">
-                <ShoppingBag01Icon className="w-12 h-12 text-slate-200 mx-auto mb-4" />
+              <div className="bg-white dark:bg-[#172135] rounded-2xl py-24 text-center border border-slate-200/80 dark:border-slate-800">
+                <ShoppingBag01Icon className="w-12 h-12 text-slate-200 dark:text-slate-700 mx-auto mb-4" />
                 <p className="font-bold text-slate-400 text-lg">No listings found</p>
                 <p className="text-slate-400 text-sm mt-1">
-                  {query ? "Try a different search term" : "Be the first to list your services!"}
+                  {query ? "Try a different search term" : "Be the first to list your services, products, or courses!"}
                 </p>
                 {canSell && (
-                  <Link href="/marketplace/create"
-                    className="inline-flex items-center gap-2 mt-5 bg-[#0a1628] text-white font-bold text-sm px-6 py-3 rounded-full hover:bg-[#1a3a6b] transition-all">
+                  <Link
+                    href="/marketplace/create"
+                    className="inline-flex items-center gap-2 mt-5 bg-[#0a1628] dark:bg-[#f0c040] text-white dark:text-[#0a1628] font-bold text-sm px-6 py-3 rounded-full hover:bg-[#1a3a6b] dark:hover:bg-[#d4a017] transition-all shadow-sm"
+                  >
                     <Add01Icon className="w-4 h-4" /> Create First Listing
                   </Link>
                 )}
               </div>
             ) : (
-              /* Show listings — always fully interactive */
-              isGrid ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                  {listings.map(l => <GridCard key={l.id} l={l} authed={!!authedUser} />)}
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {listings.map(l => <ListCard key={l.id} l={l} authed={!!authedUser} />)}
-                </div>
-              )
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                {listings.map(l => <GridCard key={l.id} l={l} authed={!!authedUser} />)}
+              </div>
             )}
 
           </div>
@@ -493,7 +403,7 @@ function MarketplaceContent() {
 
 export default function MarketplacePage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#f4f6fb]" />}>
+    <Suspense fallback={<div className="min-h-screen bg-[#f4f6fb] dark:bg-[#0c1527]" />}>
       <MarketplaceContent />
     </Suspense>
   );

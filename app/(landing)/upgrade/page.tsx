@@ -65,7 +65,7 @@ const plans = [
     href: null,
   },
   {
-    name: "VIP + Marketplace Plus", price: 109.99, label: "$109.99", period: "/month",
+    name: "VIP + Marketplace Plus", price: 129.99, label: "$129.99", period: "/month",
     img: "/plan-marketplace-plus.webp", tier: "MARKETPLACE_PLUS", popular: true, badge: "Best Value", savings: "Save $131.96/yr",
     features: [
       "Professional marketplace listing",
@@ -77,7 +77,7 @@ const plans = [
       "Enhanced Visibility",
       "Live Audio Session Hosting",
       "Live Video Session Hosting",
-      "Post ads/products/services",
+      "Post Ads/Products/Services",
     ],
     cta: "Upgrade to Plus",
     href: null,
@@ -179,11 +179,19 @@ export default function UpgradePage() {
 
                   {/* Features */}
                   <ul className="space-y-2.5 mb-7 flex-1">
-                    {plan.features.map((f) => (
-                      <li key={f} className="flex gap-2 items-start text-sm text-slate-600">
-                        <CheckCircle2 className="w-4 h-4 shrink-0 mt-px text-emerald-500" />{f}
-                      </li>
-                    ))}
+                    {plan.features.map((f) => {
+                      const isBold =
+                        plan.tier === "MARKETPLACE_PLUS" &&
+                        (f.toLowerCase().includes("live audio") ||
+                         f.toLowerCase().includes("live video") ||
+                         f.toLowerCase().includes("post ads"));
+                      return (
+                        <li key={f} className={`flex gap-2 items-start text-sm ${isBold ? "text-[#0a1628] font-bold" : "text-slate-600"}`}>
+                          <CheckCircle2 className={`w-4 h-4 shrink-0 mt-px ${isBold ? "text-emerald-600 stroke-[2.5]" : "text-emerald-500"}`} />
+                          <span className={isBold ? "font-bold text-[#0a1628]" : ""}>{f}</span>
+                        </li>
+                      );
+                    })}
                   </ul>
 
                   {/* CTA */}

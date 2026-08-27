@@ -13,6 +13,9 @@ export async function GET(req: NextRequest) {
   const courses = await prisma.course.findMany({
     where: {
       status: "PUBLISHED",
+      instructor: {
+        role: "ADMIN",
+      },
       ...(search   ? { OR: [{ title: { contains: search, mode: "insensitive" } }, { description: { contains: search, mode: "insensitive" } }] } : {}),
       ...(category ? { category: { equals: category, mode: "insensitive" } } : {}),
       ...(level    ? { level: level as "BEGINNER" | "INTERMEDIATE" | "ADVANCED" } : {}),

@@ -13,18 +13,18 @@ import {
   UserGroupIcon, Message01Icon, UserAdd01Icon, BookOpen01Icon,
   Store01Icon, Rocket01Icon, Radio01Icon,
 } from "hugeicons-react";
-import { Gift, Shield, GraduationCap, ChevronDown, Megaphone, Sun, Moon, Wrench } from "lucide-react";
+import { Gift, Shield, GraduationCap, ChevronDown, Megaphone, Sun, Moon } from "lucide-react";
 import { useTheme } from "next-themes";
 
 type NavItem =
-  | { type: "link";     label: string; href: string;  icon: React.ElementType }
+  | { type: "link";     label: string; href: string;  icon?: React.ElementType | null; badge?: string }
   | { type: "dropdown"; label: string; icon: React.ElementType; items: { label: string; href: string; icon: React.ElementType; desc: string }[] };
 
 const navItems: NavItem[] = [
   { type: "link",     label: "Home",        href: "/feed",        icon: Home01Icon },
   { type: "link",     label: "Courses",     href: "/courses",    icon: BookOpen01Icon },
   { type: "link",     label: "Toolkits",    href: "/toolkits",   icon: GraduationCap },
-  { type: "link",     label: "Tools",       href: "/tools",      icon: Wrench },
+  { type: "link",     label: "Tools",       href: "/tools",      icon: null, badge: "COMING SOON" },
   { type: "link",     label: "Marketplace", href: "/marketplace",icon: ShoppingBag01Icon },
   {
     type: "dropdown", label: "Pros", icon: UserGroupIcon,
@@ -40,10 +40,12 @@ const navItems: NavItem[] = [
   { type: "link",     label: "Affiliates",  href: "/affiliate",  icon: Gift },
 ];
 
+type MobileNavLink = { label: string; href: string; icon?: React.ElementType | null; badge?: string };
+
 // Flat list for mobile menu — links + all dropdown sub-items
-const navLinks: { label: string; href: string; icon: React.ElementType }[] = navItems.flatMap(item =>
+const navLinks: MobileNavLink[] = navItems.flatMap<MobileNavLink>(item =>
   item.type === "link"
-    ? [{ label: item.label, href: item.href, icon: item.icon }]
+    ? [{ label: item.label, href: item.href, icon: item.icon ?? null, badge: item.badge }]
     : item.items.map(sub => ({ label: sub.label, href: sub.href, icon: sub.icon }))
 );
 
@@ -199,11 +201,19 @@ export default function Navbar() {
               {navItems.map(item => {
                 if (item.type === "link") {
                   const Icon = item.icon;
-                  const href = item.label === "Home" ? (session ? "/feed" : "/") : item.href;
+                  const isHome = item.label === "Home";
+                  const label = isHome ? (session ? "Home" : "Landing Page") : item.label;
+                  const href = isHome ? (session ? "/feed" : "/") : item.href;
                   return (
                     <Link key={item.label} href={href}
                       className="flex items-center gap-1.5 text-xs xl:text-sm font-semibold text-slate-600 hover:text-[#0a1628] hover:bg-slate-50 dark:text-white dark:hover:text-[#f0c040] dark:hover:bg-white/10 px-2.5 py-2 rounded-lg transition-all shrink-0 whitespace-nowrap">
-                      <Icon className="w-3.5 h-3.5 shrink-0" />{item.label}
+                      {Icon && <Icon className="w-3.5 h-3.5 shrink-0" />}
+                      <span>{label}</span>
+                      {item.badge && (
+                        <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-amber-400/20 text-amber-600 dark:text-amber-300 border border-amber-400/40 shadow-[0_0_10px_rgba(245,158,11,0.45)] animate-pulse shrink-0">
+                          {item.badge}
+                        </span>
+                      )}
                     </Link>
                   );
                 }
@@ -448,15 +458,31 @@ export default function Navbar() {
           {/* Nav links */}
           <div className="px-3 pb-2">
             {navLinks.map(l => {
-              const href = l.label === "Home" ? (session ? "/feed" : "/") : l.href;
+              const Icon = l.icon;
+              const isHome = l.label === "Home";
+              const label = isHome ? (session ? "Home" : "Landing Page") : l.label;
+              const href = isHome ? (session ? "/feed" : "/") : l.href;
               return (
                 <Link key={l.label} href={href}
-                  className="flex items-center gap-3 text-slate-700 dark:text-white/85 px-3 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-white/8 font-semibold transition-colors"
+                  className="flex items-center justify-between text-slate-700 dark:text-white/85 px-3 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-white/8 font-semibold transition-colors"
                   onClick={() => setMobileOpen(false)}>
-                  <span className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-white/10 flex items-center justify-center shrink-0">
-                    <l.icon className="w-4 h-4 text-[#0a1628] dark:text-white/80" />
+                  <span className="flex items-center gap-3">
+                    {Icon ? (
+                      <span className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-white/10 flex items-center justify-center shrink-0">
+                        <Icon className="w-4 h-4 text-[#0a1628] dark:text-white/80" />
+                      </span>
+                    ) : (
+                      <span className="w-8 h-8 rounded-lg bg-amber-400/10 flex items-center justify-center shrink-0">
+                        <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse" />
+                      </span>
+                    )}
+                    {label}
                   </span>
-                  {l.label}
+                  {l.badge && (
+                    <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-600 dark:text-amber-300 border border-amber-400/40 shadow-[0_0_10px_rgba(245,158,11,0.45)] animate-pulse">
+                      {l.badge}
+                    </span>
+                  )}
                 </Link>
               );
             })}

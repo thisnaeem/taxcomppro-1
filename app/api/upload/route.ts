@@ -11,13 +11,13 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-function uploadBufferToCloudinary(buffer: Buffer, folder: string): Promise<UploadApiResponse> {
+function uploadBufferToCloudinary(buffer: Buffer, folder: string, isImage: boolean): Promise<UploadApiResponse> {
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
       {
         folder,
-        resource_type: "image",
-        format: "webp",
+        resource_type: isImage ? "image" : "auto",
+        ...(isImage ? { format: "webp" } : {}),
       },
       (error, result) => {
         if (error || !result) {
@@ -39,20 +39,25 @@ export async function POST(req: NextRequest) {
     }
 
     const formData = await req.formData();
-    const files = formData.getAll("files") as File[];
+    let files = formData.getAll("files") as File[];
+    if (!files.length) {
+      files = formData.getAll("file") as File[];
+    }
     const folder = (formData.get("folder") as string | null) ?? "taxcomppro/posts";
 
     const folderMap: Record<string, string> = {
       "course-thumbnails": "taxcomppro/course-thumbnails",
       "course-articles": "taxcomppro/course-articles",
+      "licenses": "taxcomppro/licenses",
+      "documents": "taxcomppro/documents",
     };
-    const cloudFolder = folderMap[folder] ?? `taxcomppro/${folder}`;
+    const cloudFolder = folderMap[folder] ?? (folder.startsWith("taxcomppro/") ? folder : `taxcomppro/${folder}`);
 
     if (!files.length) {
       return NextResponse.json({ error: "No files provided" }, { status: 400 });
     }
     if (files.length > 4) {
-      return NextResponse.json({ error: "Max 4 images allowed per upload" }, { status: 400 });
+      return NextResponse.json({ error: "Max 4 files allowed per upload" }, { status: 400 });
     }
 
     const urls: string[] = [];
@@ -60,28 +65,29 @@ export async function POST(req: NextRequest) {
     for (const file of files) {
       const arrayBuffer = await file.arrayBuffer();
       let buffer: Buffer = Buffer.from(arrayBuffer);
+      const isImage = file.type.startsWith("image/") && !file.type.includes("svg");
 
-      // Automatically optimize & compress image in memory before sending to Cloudinary
-      // This prevents Cloudinary's 10MB file limit errors for high-res images
-      try {
-        const sharpBuffer = await sharp(buffer)
-          .rotate() // Auto-orient based on EXIF
-          .resize({ width: 1920, height: 1920, fit: "inside", withoutEnlargement: true })
-          .webp({ quality: 88 })
-          .toBuffer();
-        buffer = Buffer.from(sharpBuffer);
-      } catch (sharpErr) {
-        console.warn("Sharp optimization skipped, using raw buffer:", sharpErr);
+      if (isImage) {
+        try {
+          const sharpBuffer = await sharp(buffer)
+            .rotate() // Auto-orient based on EXIF
+            .resize({ width: 1920, height: 1920, fit: "inside", withoutEnlargement: true })
+            .webp({ quality: 88 })
+            .toBuffer();
+          buffer = Buffer.from(sharpBuffer);
+        } catch (sharpErr) {
+          console.warn("Sharp optimization skipped, using raw buffer:", sharpErr);
+        }
       }
 
-      const result = await uploadBufferToCloudinary(buffer, cloudFolder);
+      const result = await uploadBufferToCloudinary(buffer, cloudFolder, isImage);
       urls.push(result.secure_url);
     }
 
-    return NextResponse.json({ urls });
+    return NextResponse.json({ url: urls[0], urls });
   } catch (err: unknown) {
     console.error("Cloudinary upload error:", err);
-    const message = err instanceof Error ? err.message : "Failed to upload image";
+    const message = err instanceof Error ? err.message : "Failed to upload file";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

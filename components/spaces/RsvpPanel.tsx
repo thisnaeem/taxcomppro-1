@@ -66,14 +66,14 @@ export default function RsvpPanel({ spaceId, pollMs = 30_000 }: RsvpPanelProps) 
   };
 
   return (
-    <div className="bg-gradient-to-br from-white/6 to-white/3 border border-white/12 rounded-3xl overflow-hidden">
+    <div className="bg-gradient-to-br from-[#061426] to-[#040a14] border border-emerald-500/25 rounded-3xl overflow-hidden shadow-xl">
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
+      <div className="flex items-center justify-between px-5 py-4 border-b border-emerald-950/60">
         <div className="flex items-center gap-2">
-          <UserGroupIcon className="w-4 h-4 text-violet-400" />
+          <UserGroupIcon className="w-4 h-4 text-emerald-400" />
           <span className="text-white font-bold text-sm">Attendees</span>
           {!loading && (
-            <span className="ml-1 px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-300 text-xs font-bold">
+            <span className="ml-1 px-2 py-0.5 rounded-full bg-emerald-500/20 text-lime-300 text-xs font-bold">
               {rsvps.length}
             </span>
           )}
@@ -82,7 +82,7 @@ export default function RsvpPanel({ spaceId, pollMs = 30_000 }: RsvpPanelProps) 
           <button
             onClick={downloadCsv}
             title="Download CSV"
-            className="flex items-center gap-1.5 text-white/40 hover:text-violet-300 text-xs transition-colors"
+            className="flex items-center gap-1.5 text-slate-400 hover:text-lime-300 text-xs transition-colors font-medium"
           >
             <Download className="w-3.5 h-3.5" />
             Export
@@ -91,24 +91,24 @@ export default function RsvpPanel({ spaceId, pollMs = 30_000 }: RsvpPanelProps) 
       </div>
 
       {/* Body */}
-      <div className="max-h-80 overflow-y-auto divide-y divide-white/6">
+      <div className="max-h-80 overflow-y-auto divide-y divide-emerald-950/40">
         {loading ? (
           <div className="flex justify-center py-8">
-            <Loader2 className="w-5 h-5 animate-spin text-violet-400" />
+            <Loader2 className="w-5 h-5 animate-spin text-emerald-400" />
           </div>
         ) : rsvps.length === 0 ? (
           <div className="flex flex-col items-center gap-2 py-10">
-            <Users className="w-8 h-8 text-white/15" />
-            <p className="text-white/30 text-sm">No RSVPs yet</p>
-            <p className="text-white/20 text-xs">Share the invite link to get people to RSVP</p>
+            <Users className="w-8 h-8 text-slate-600" />
+            <p className="text-slate-400 text-sm">No RSVPs yet</p>
+            <p className="text-slate-500 text-xs">Share the invite link to get people to RSVP</p>
           </div>
         ) : (
           rsvps.map(r => (
             <div key={r.id} className="flex items-center gap-3 px-5 py-3">
               {/* Avatar */}
               <div
-                className="w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-white text-xs font-bold overflow-hidden"
-                style={{ background: "linear-gradient(135deg,#1e1b4b,#312e81)" }}
+                className="w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-white text-xs font-bold overflow-hidden border border-emerald-500/40"
+                style={{ background: "linear-gradient(135deg,#06172e,#0a2e4c)" }}
               >
                 {r.user?.image ? (
                   <img src={r.user.image} alt={r.name} referrerPolicy="no-referrer" className="w-full h-full object-cover" />
@@ -121,15 +121,15 @@ export default function RsvpPanel({ spaceId, pollMs = 30_000 }: RsvpPanelProps) 
                 <div className="flex items-center gap-2">
                   <span className="text-white/90 text-sm font-semibold truncate">{r.name}</span>
                   {r.user && (
-                    <span className="shrink-0 px-1.5 py-0.5 rounded-full bg-violet-500/20 text-violet-300 text-[10px] font-bold">
+                    <span className="shrink-0 px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-lime-300 text-[10px] font-bold">
                       Member
                     </span>
                   )}
                 </div>
-                {r.email && <p className="text-white/35 text-xs truncate">{r.email}</p>}
+                {r.email && <p className="text-slate-400 text-xs truncate">{r.email}</p>}
               </div>
               {/* Time */}
-              <span className="shrink-0 text-white/25 text-xs">{timeAgo(r.createdAt)}</span>
+              <span className="shrink-0 text-slate-500 text-xs">{timeAgo(r.createdAt)}</span>
             </div>
           ))
         )}

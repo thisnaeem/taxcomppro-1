@@ -608,7 +608,7 @@ export default function AdminAffiliatePage() {
             {[
               { key: "commissionVip", label: "VIP Plan ($39.99/mo)", price: 39.99 },
               { key: "commissionMarketplace", label: "Marketplace Plan ($79.99/mo)", price: 79.99 },
-              { key: "commissionPlus", label: "Marketplace Plus ($109.99/mo)", price: 109.99 },
+              { key: "commissionPlus", label: "Marketplace Plus ($129.99/mo)", price: 129.99 },
             ].map((f) => (
               <div key={f.key} className="p-3.5 bg-slate-900/60 border border-white/5 rounded-xl">
                 <div className="flex items-center justify-between mb-2">

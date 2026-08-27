@@ -158,7 +158,7 @@ export default function AffiliatePage() {
             {[
               { tier:"VIP", price:39.99, rate:settings?.commissionVip??10, color:"from-slate-700 to-slate-900", badge:"bg-slate-100 text-slate-700", features:["Community access","Pro Talk access","Member badge"] },
               { tier:"Marketplace", price:79.99, rate:settings?.commissionMarketplace??15, color:"from-blue-600 to-blue-800", badge:"bg-blue-100 text-blue-700", features:["Everything in VIP","Marketplace listings","Priority support"] },
-              { tier:"Marketplace Plus", price:109.99, rate:settings?.commissionPlus??20, color:"from-amber-500 to-orange-600", badge:"bg-amber-100 text-amber-700", features:["Everything in Marketplace","Premium analytics","Dedicated account manager"], highlight:true },
+              { tier:"Marketplace Plus", price:129.99, rate:settings?.commissionPlus??20, color:"from-amber-500 to-orange-600", badge:"bg-amber-100 text-amber-700", features:["Everything in Marketplace","Premium analytics","Dedicated account manager"], highlight:true },
             ].map(p => (
               <div key={p.tier} className={`rounded-2xl overflow-hidden border-2 ${p.highlight?"border-amber-400 shadow-lg shadow-amber-100":"border-slate-100"}`}>
                 <div className={`bg-gradient-to-br ${p.color} p-5 text-white`}>
@@ -307,7 +307,7 @@ export default function AffiliatePage() {
               {[
                 {label:"VIP",             rate:settings?.commissionVip??10,         price:39.99},
                 {label:"Marketplace",     rate:settings?.commissionMarketplace??15, price:79.99},
-                {label:"Marketplace Plus",rate:settings?.commissionPlus??20,        price:109.99},
+                {label:"Marketplace Plus",rate:settings?.commissionPlus??20,        price:129.99},
               ].map(r=>(
                 <div key={r.label} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
                   <div><div className="text-sm font-bold text-[#0a1628]">{r.label}</div><div className="text-xs text-slate-400">${r.price}/mo</div></div>

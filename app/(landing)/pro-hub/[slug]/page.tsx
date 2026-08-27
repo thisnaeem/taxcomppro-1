@@ -20,6 +20,37 @@ interface Forum {
   _count: { posts: number };
 }
 
+const DEFAULT_FORUM_IMAGE = "https://images.pexels.com/photos/6863183/pexels-photo-6863183.jpeg?auto=compress&cs=tinysrgb&w=800";
+
+const FORUM_IMAGE_FALLBACKS: Record<string, string> = {
+  "irs-news-room": "https://images.pexels.com/photos/6863183/pexels-photo-6863183.jpeg?auto=compress&cs=tinysrgb&w=800",
+  "irs-updates": "https://images.pexels.com/photos/6863183/pexels-photo-6863183.jpeg?auto=compress&cs=tinysrgb&w=800",
+  "irs-audits--due-diligence": "https://images.pexels.com/photos/6863254/pexels-photo-6863254.jpeg?auto=compress&cs=tinysrgb&w=800",
+  "tax-office-operations--workflow": "https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=800",
+  "compliance--record-retention": "https://images.pexels.com/photos/4386431/pexels-photo-4386431.jpeg?auto=compress&cs=tinysrgb&w=800",
+  "marketplace-announcements": "https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=800",
+  "due-diligence--compliance": "https://images.pexels.com/photos/590022/pexels-photo-590022.jpeg?auto=compress&cs=tinysrgb&w=800",
+  "audit-defense--irs-notices": "https://images.pexels.com/photos/5668858/pexels-photo-5668858.jpeg?auto=compress&cs=tinysrgb&w=800",
+  "marketing--client-acquisition": "https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=800",
+  "hiring-training--staff-management": "https://images.pexels.com/photos/3184325/pexels-photo-3184325.jpeg?auto=compress&cs=tinysrgb&w=800",
+  "tax-software--technology": "https://images.pexels.com/photos/1181675/pexels-photo-1181675.jpeg?auto=compress&cs=tinysrgb&w=800",
+  "banking--refund-products": "https://images.pexels.com/photos/259200/pexels-photo-259200.jpeg?auto=compress&cs=tinysrgb&w=800",
+  "business-growth--expansion": "https://images.pexels.com/photos/7567434/pexels-photo-7567434.jpeg?auto=compress&cs=tinysrgb&w=800",
+  "schedule-c--self-employment-returns": "https://images.pexels.com/photos/6863177/pexels-photo-6863177.jpeg?auto=compress&cs=tinysrgb&w=800",
+  "industry-updates--regulatory-changes": "https://images.pexels.com/photos/5668772/pexels-photo-5668772.jpeg?auto=compress&cs=tinysrgb&w=800",
+  "new-forms": "https://images.pexels.com/photos/6863186/pexels-photo-6863186.jpeg?auto=compress&cs=tinysrgb&w=800",
+};
+
+function getForumImageUrl(forum: { slug?: string; name?: string; image?: string | null }): string {
+  if (forum.image && forum.image.trim() && !forum.image.includes("taxcomppro.com/wp-content")) {
+    return forum.image;
+  }
+  if (forum.slug && FORUM_IMAGE_FALLBACKS[forum.slug]) {
+    return FORUM_IMAGE_FALLBACKS[forum.slug];
+  }
+  return DEFAULT_FORUM_IMAGE;
+}
+
 function timeAgo(dateStr: string) {
   const diff = Date.now() - new Date(dateStr).getTime();
   const m = Math.floor(diff / 60000);
@@ -222,7 +253,12 @@ export default function ForumDetailPage({ params }: { params: Promise<{ slug: st
       )}
       {/* Banner */}
       <div className="relative h-48 bg-gradient-to-br from-[#0a1628] to-[#1a3a6b] overflow-hidden">
-        {forum?.image && <img src={forum.image} alt="" className="absolute inset-0 w-full h-full object-cover opacity-40" />}
+        <img
+          src={forum ? getForumImageUrl(forum) : DEFAULT_FORUM_IMAGE}
+          alt={forum?.name ?? "Forum Banner"}
+          className="absolute inset-0 w-full h-full object-cover opacity-35"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0a1628] via-[#0a1628]/60 to-transparent" />
         <div className="absolute inset-0 flex flex-col justify-end px-6 pb-5">
           <Link href="/pro-hub" className="flex items-center gap-1.5 text-slate-300 hover:text-white text-xs font-semibold mb-3 w-fit transition-colors">
             <ChevronLeft className="w-3.5 h-3.5" /> Pro Hub

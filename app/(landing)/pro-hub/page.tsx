@@ -124,6 +124,37 @@ function ForumModal({ initial, onSave, onClose }: {
   );
 }
 
+const DEFAULT_FORUM_IMAGE = "https://images.pexels.com/photos/6863183/pexels-photo-6863183.jpeg?auto=compress&cs=tinysrgb&w=800";
+
+const FORUM_IMAGE_FALLBACKS: Record<string, string> = {
+  "irs-news-room": "https://images.pexels.com/photos/6863183/pexels-photo-6863183.jpeg?auto=compress&cs=tinysrgb&w=800",
+  "irs-updates": "https://images.pexels.com/photos/6863183/pexels-photo-6863183.jpeg?auto=compress&cs=tinysrgb&w=800",
+  "irs-audits--due-diligence": "https://images.pexels.com/photos/6863254/pexels-photo-6863254.jpeg?auto=compress&cs=tinysrgb&w=800",
+  "tax-office-operations--workflow": "https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=800",
+  "compliance--record-retention": "https://images.pexels.com/photos/4386431/pexels-photo-4386431.jpeg?auto=compress&cs=tinysrgb&w=800",
+  "marketplace-announcements": "https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=800",
+  "due-diligence--compliance": "https://images.pexels.com/photos/590022/pexels-photo-590022.jpeg?auto=compress&cs=tinysrgb&w=800",
+  "audit-defense--irs-notices": "https://images.pexels.com/photos/5668858/pexels-photo-5668858.jpeg?auto=compress&cs=tinysrgb&w=800",
+  "marketing--client-acquisition": "https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=800",
+  "hiring-training--staff-management": "https://images.pexels.com/photos/3184325/pexels-photo-3184325.jpeg?auto=compress&cs=tinysrgb&w=800",
+  "tax-software--technology": "https://images.pexels.com/photos/1181675/pexels-photo-1181675.jpeg?auto=compress&cs=tinysrgb&w=800",
+  "banking--refund-products": "https://images.pexels.com/photos/259200/pexels-photo-259200.jpeg?auto=compress&cs=tinysrgb&w=800",
+  "business-growth--expansion": "https://images.pexels.com/photos/7567434/pexels-photo-7567434.jpeg?auto=compress&cs=tinysrgb&w=800",
+  "schedule-c--self-employment-returns": "https://images.pexels.com/photos/6863177/pexels-photo-6863177.jpeg?auto=compress&cs=tinysrgb&w=800",
+  "industry-updates--regulatory-changes": "https://images.pexels.com/photos/5668772/pexels-photo-5668772.jpeg?auto=compress&cs=tinysrgb&w=800",
+  "new-forms": "https://images.pexels.com/photos/6863186/pexels-photo-6863186.jpeg?auto=compress&cs=tinysrgb&w=800",
+};
+
+function getForumImageUrl(forum: { slug?: string; name?: string; image?: string | null }): string {
+  if (forum.image && forum.image.trim() && !forum.image.includes("taxcomppro.com/wp-content")) {
+    return forum.image;
+  }
+  if (forum.slug && FORUM_IMAGE_FALLBACKS[forum.slug]) {
+    return FORUM_IMAGE_FALLBACKS[forum.slug];
+  }
+  return DEFAULT_FORUM_IMAGE;
+}
+
 /* ─── Hardcoded IRS Updates Card ─── */
 function IrsUpdatesCard() {
   const handleClick = () => {
@@ -136,9 +167,12 @@ function IrsUpdatesCard() {
       className="group block bg-white rounded-2xl overflow-hidden border border-blue-100 hover:border-blue-200 hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-100/60 transition-all duration-300">
       {/* Cover */}
       <div className="h-36 bg-gradient-to-br from-[#0a1628] via-[#0d2d5e] to-[#1a3a6b] relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10"
-          style={{ backgroundImage: "radial-gradient(circle, #fff 1px, transparent 1px)", backgroundSize: "18px 18px" }} />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+        <img
+          src="https://images.pexels.com/photos/6863183/pexels-photo-6863183.jpeg?auto=compress&cs=tinysrgb&w=800"
+          alt="IRS Updates"
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 opacity-60"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
 
         {/* Badges */}
         <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5">
@@ -150,10 +184,9 @@ function IrsUpdatesCard() {
 
         {/* Icon */}
         <div className="absolute bottom-3 left-4 flex items-center gap-2">
-          <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center text-xl">🏛️</div>
+          <div className="w-9 h-9 rounded-xl bg-white/10 backdrop-blur-xs flex items-center justify-center text-xl shadow-sm">🏛️</div>
           <div>
             <div className="font-black text-white text-base leading-tight">IRS Updates</div>
-            
           </div>
         </div>
       </div>
@@ -179,6 +212,12 @@ function ForumCard({ f, isAdmin, onEdit, onDelete }: {
   onDelete: (id: string) => void;
 }) {
   const lastActivity = f.posts[0]?.createdAt;
+  const [imgSrc, setImgSrc] = useState(() => getForumImageUrl(f));
+
+  useEffect(() => {
+    setImgSrc(getForumImageUrl(f));
+  }, [f.image, f.slug]);
+
   return (
     <div className="group relative bg-white rounded-2xl overflow-hidden border border-slate-100 hover:border-slate-200 hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-200/60 transition-all duration-300">
       {isAdmin && (
@@ -193,8 +232,17 @@ function ForumCard({ f, isAdmin, onEdit, onDelete }: {
       )}
       <Link href={`/pro-hub/${f.slug}`} className="block">
         <div className="h-36 bg-gradient-to-br from-[#0a1628] to-[#1a3a6b] relative overflow-hidden">
-          {f.image && <img src={f.image} alt={f.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+          <img
+            src={imgSrc}
+            alt={f.name}
+            onError={() => {
+              if (imgSrc !== DEFAULT_FORUM_IMAGE) {
+                setImgSrc(DEFAULT_FORUM_IMAGE);
+              }
+            }}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
           <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 flex-wrap">
             {f.isPinned && <span className="flex items-center gap-0.5 text-[9px] font-black bg-amber-400 text-amber-900 px-1.5 py-0.5 rounded-full"><Pin className="w-2.5 h-2.5" /> Pinned</span>}
             {f.badge && <span className="text-[9px] font-black bg-[#0a1628] text-[#d4a017] px-2 py-0.5 rounded-full">{f.badge}</span>}

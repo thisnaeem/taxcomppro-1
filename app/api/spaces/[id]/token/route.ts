@@ -26,11 +26,12 @@ export async function POST(req: NextRequest, { params }: Params) {
   });
 
   token.addGrant({
-    roomJoin:     true,
-    room:         space.roomName,
-    canPublish:   true,           // everyone can speak (Twitter Spaces style)
-    canSubscribe: true,
-    roomAdmin:    isHost,
+    roomJoin:       true,
+    room:           space.roomName,
+    canPublish:     true,
+    canPublishData: true,
+    canSubscribe:   true,
+    roomAdmin:      isHost,
   });
 
   const jwt = await token.toJwt();

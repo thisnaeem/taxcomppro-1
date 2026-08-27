@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { Loader2, Calendar, Clock, Users, Check, CheckCheck, Copy, Play } from "lucide-react";
 import { Radio01Icon, Mic01Icon } from "hugeicons-react";
 import SpaceRoom from "@/components/spaces/SpaceRoom";
@@ -58,21 +59,21 @@ function GuestJoinScreen({ space, onJoin }: { space: Space; onJoin: (displayName
   const [joining, setJoining] = useState(false);
   const handleJoin = () => { if (!name.trim() || joining) return; setJoining(true); onJoin(name.trim()); };
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-[#06091a] via-[#0d1635] to-[#0a0e26] flex items-center justify-center p-4">
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-violet-700/10 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full bg-indigo-700/10 blur-[120px] pointer-events-none" />
+    <div className="fixed inset-0 bg-gradient-to-br from-[#040a14] via-[#061224] to-[#0a1c38] flex items-center justify-center p-4">
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-emerald-500/10 blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full bg-blue-600/10 blur-[120px] pointer-events-none" />
       <div className="relative w-full max-w-sm text-center">
-        <div className="inline-flex items-center gap-2 bg-rose-500/20 border border-rose-500/30 text-rose-300 text-xs font-bold px-4 py-1.5 rounded-full mb-6">
-          <span className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse" /> Live Now
+        <div className="inline-flex items-center gap-2 bg-emerald-500/20 border border-emerald-400/40 text-lime-300 text-xs font-bold px-4 py-1.5 rounded-full mb-6">
+          <span className="w-1.5 h-1.5 rounded-full bg-lime-400 animate-pulse" /> Live Now
         </div>
-        <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center mx-auto mb-5 shadow-2xl shadow-violet-500/30">
-          <Radio01Icon className="w-9 h-9 text-white" />
+        <div className="relative w-20 h-20 rounded-3xl overflow-hidden border-2 border-emerald-500/40 mx-auto mb-5 shadow-2xl shadow-emerald-500/30 bg-[#061224]">
+          <Image src="/protalk.png" alt="Pro Talks" fill className="object-cover" />
         </div>
         <h1 className="text-2xl font-black text-white mb-1 leading-tight">{space.name}</h1>
-        {space.description && <p className="text-white/40 text-sm mb-2 leading-relaxed">{space.description}</p>}
-        <p className="text-white/30 text-xs mb-8">Hosted by <span className="text-white/60 font-semibold">{space.host.name}</span></p>
-        <div className="bg-white/6 border border-white/12 rounded-2xl p-5 text-left space-y-3">
-          <label className="block text-white/60 text-xs font-semibold uppercase tracking-wider mb-1">Your display name</label>
+        {space.description && <p className="text-slate-300 text-sm mb-2 leading-relaxed">{space.description}</p>}
+        <p className="text-slate-400 text-xs mb-8">Hosted by <span className="text-emerald-400 font-bold">{space.host.name}</span></p>
+        <div className="bg-[#061426]/90 border border-emerald-500/25 rounded-2xl p-5 text-left space-y-3">
+          <label className="block text-emerald-300/80 text-xs font-semibold uppercase tracking-wider mb-1">Your display name</label>
           <input
             id="guest-name-input"
             value={name}
@@ -81,18 +82,18 @@ function GuestJoinScreen({ space, onJoin }: { space: Space; onJoin: (displayName
             placeholder="Enter your name to join…"
             maxLength={40}
             autoFocus
-            className="w-full bg-white/8 border border-white/15 rounded-xl px-4 py-3 text-white placeholder-white/25 outline-none focus:border-violet-500 transition-all text-sm"
+            className="w-full bg-[#040a14] border border-emerald-500/30 rounded-xl px-4 py-3 text-white placeholder-slate-500 outline-none focus:border-emerald-400 transition-all text-sm"
           />
           <button
             id="guest-join-btn"
             onClick={handleJoin}
             disabled={!name.trim() || joining}
-            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-black text-sm hover:from-violet-500 hover:to-indigo-500 transition-all shadow-xl shadow-violet-500/25 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-gradient-to-r from-lime-400 via-emerald-500 to-teal-500 text-[#060e1a] font-black text-sm hover:scale-[1.02] transition-all shadow-xl shadow-emerald-500/25 disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            {joining ? <><Loader2 className="w-4 h-4 animate-spin" /> Joining…</> : <><Mic01Icon className="w-4 h-4" /> Join Pro Talk</>}
+            {joining ? <><Loader2 className="w-4 h-4 animate-spin text-[#060e1a]" /> Joining…</> : <><Mic01Icon className="w-4 h-4" /> Join Pro Talk</>}
           </button>
         </div>
-        <p className="text-white/20 text-xs mt-4">No account needed · Audio only</p>
+        <p className="text-slate-500 text-xs mt-4">No account needed · Audio only</p>
       </div>
     </div>
   );
@@ -144,27 +145,27 @@ function ScheduledScreen({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#06091a] via-[#0d1635] to-[#0a0e26] flex flex-col">
-      <div className="absolute -top-20 left-1/3 w-96 h-96 rounded-full bg-indigo-600/10 blur-3xl pointer-events-none" />
+    <div className="min-h-screen bg-gradient-to-br from-[#040a14] via-[#061224] to-[#0a1c38] flex flex-col">
+      <div className="absolute -top-20 left-1/3 w-96 h-96 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
 
       <div className="flex-1 flex flex-col items-center justify-center px-4 py-16 gap-8 relative">
         {/* Badge */}
-        <div className="flex items-center gap-2 bg-indigo-500/20 border border-indigo-500/30 rounded-full px-4 py-1.5">
-          <Calendar className="w-3.5 h-3.5 text-indigo-300" />
-          <span className="text-indigo-200 text-xs font-bold uppercase tracking-widest">Scheduled</span>
+        <div className="flex items-center gap-2 bg-blue-500/20 border border-blue-400/30 rounded-full px-4 py-1.5">
+          <Calendar className="w-3.5 h-3.5 text-blue-300" />
+          <span className="text-blue-200 text-xs font-bold uppercase tracking-widest">Scheduled</span>
         </div>
 
         {/* Room icon */}
-        <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-2xl shadow-indigo-500/30">
-          <Radio01Icon className="w-11 h-11 text-white" />
+        <div className="relative w-24 h-24 rounded-3xl overflow-hidden border-2 border-emerald-500/40 shadow-2xl shadow-emerald-500/30 bg-[#061224]">
+          <Image src="/protalk.png" alt="Pro Talks" fill className="object-cover" />
         </div>
 
         {/* Title */}
         <div className="text-center max-w-lg">
           <h1 className="text-3xl sm:text-4xl font-black text-white mb-2 leading-tight">{space.name}</h1>
-          {space.description && <p className="text-white/45 text-sm leading-relaxed mb-3">{space.description}</p>}
-          <div className="flex items-center justify-center gap-2 text-white/40 text-sm">
-            <Clock className="w-4 h-4 text-indigo-400" />
+          {space.description && <p className="text-slate-300 text-sm leading-relaxed mb-3">{space.description}</p>}
+          <div className="flex items-center justify-center gap-2 text-emerald-300 text-sm">
+            <Clock className="w-4 h-4 text-lime-400" />
             {space.scheduledAt ? formatScheduled(space.scheduledAt) : ""}
           </div>
         </div>
@@ -180,11 +181,11 @@ function ScheduledScreen({
           </div>
         )}
         {expired && (
-          <div className="text-emerald-300 font-bold text-lg animate-pulse">Starting any moment…</div>
+          <div className="text-lime-400 font-black text-lg animate-pulse">Starting any moment…</div>
         )}
 
         {/* RSVP count */}
-        <div className="flex items-center gap-1.5 text-white/40 text-sm">
+        <div className="flex items-center gap-1.5 text-slate-400 text-sm">
           <Users className="w-4 h-4" />
           <span>{rsvpCount} {rsvpCount === 1 ? "person" : "people"} RSVP'd</span>
         </div>
@@ -199,8 +200,8 @@ function ScheduledScreen({
               disabled={rsvping}
               className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-sm font-bold transition-all shadow-lg ${
                 rsvped
-                  ? "bg-indigo-500/30 border border-indigo-400/50 text-indigo-200 hover:bg-rose-500/20 hover:border-rose-400/40 hover:text-rose-300"
-                  : "bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:from-indigo-500 hover:to-violet-500 shadow-indigo-500/25"
+                  ? "bg-emerald-500/30 border border-emerald-400/50 text-lime-300"
+                  : "bg-gradient-to-r from-lime-400 via-emerald-500 to-teal-500 text-[#060e1a] font-black hover:scale-105 shadow-emerald-500/25"
               }`}
             >
               {rsvping ? <Loader2 className="w-4 h-4 animate-spin" /> : rsvped ? <><CheckCheck className="w-4 h-4" /> You're in!</> : <><Check className="w-4 h-4" /> RSVP to Attend</>}
@@ -211,9 +212,9 @@ function ScheduledScreen({
           {shareUrl && (
             <button
               onClick={copyLink}
-              className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-white/8 border border-white/12 hover:bg-white/14 text-white/60 hover:text-white text-sm font-semibold transition-all"
+              className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-emerald-950/40 border border-emerald-500/30 hover:bg-emerald-900/40 text-emerald-300 hover:text-white text-sm font-semibold transition-all"
             >
-              {copied ? <CheckCheck className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+              {copied ? <CheckCheck className="w-4 h-4 text-lime-400" /> : <Copy className="w-4 h-4" />}
               {copied ? "Copied!" : "Copy Invite Link"}
             </button>
           )}
@@ -233,7 +234,7 @@ function ScheduledScreen({
         </div>
 
         {/* Back link */}
-        <Link href="/pro-talks" className="text-white/25 hover:text-white/50 text-sm transition-colors">
+        <Link href="/pro-talks" className="text-slate-400 hover:text-white text-sm transition-colors">
           ← Back to Pro Talks
         </Link>
       </div>
@@ -241,7 +242,7 @@ function ScheduledScreen({
       {/* Host RSVP panel */}
       {isHost && (
         <div className="max-w-xl mx-auto w-full px-4 pb-12">
-          <p className="text-white/40 text-xs font-semibold uppercase tracking-wide mb-3">Host View · RSVP List</p>
+          <p className="text-slate-400 text-xs font-semibold uppercase tracking-wide mb-3">Host View · RSVP List</p>
           <RsvpPanel spaceId={space.id} />
         </div>
       )}

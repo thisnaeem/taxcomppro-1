@@ -96,7 +96,7 @@ export async function POST(req: NextRequest) {
           }
 
           const prices: Record<string, number> = {
-            VIP: 39.99, MARKETPLACE: 79.99, MARKETPLACE_PLUS: 109.99,
+            VIP: 39.99, MARKETPLACE: 79.99, MARKETPLACE_PLUS: 129.99,
           };
           const rate       = ratePercent / 100;
           const price      = prices[tier] ?? 39.99;

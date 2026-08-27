@@ -642,11 +642,11 @@ export default function AffiliateDetailPage({
                 </strong>
               </div>
               <div className="bg-slate-900/40 p-3 rounded-xl border border-white/5 flex items-center justify-between">
-                <span className="text-slate-400">Plus ($109.99/mo):</span>
+                <span className="text-slate-400">Plus ($129.99/mo):</span>
                 <strong className="text-emerald-400 font-black">
                   $
                   {(
-                    (109.99 *
+                    (129.99 *
                       (rateInput !== ""
                         ? Number(rateInput)
                         : globalSettings?.commissionPlus ?? 20)) /

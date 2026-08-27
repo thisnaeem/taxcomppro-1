@@ -312,12 +312,12 @@ export default function ProfileDashboardShell({
       <div className="flex-1 max-w-[1440px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex gap-6">
         {/* ── LEFT SIDEBAR NAVIGATION ─────────────────────────────────────────── */}
         <aside
-          className={`fixed lg:static top-20 left-4 h-[calc(100vh-6rem)] lg:h-auto w-64 bg-white rounded-3xl border border-slate-200 shadow-xs shrink-0 z-30 flex flex-col justify-between overflow-y-auto transition-transform duration-200 ${
+          className={`fixed lg:static top-20 left-4 h-[calc(100vh-6rem)] lg:h-auto w-72 bg-white rounded-3xl border border-slate-200/90 shadow-sm shrink-0 z-30 flex flex-col justify-between overflow-y-auto transition-transform duration-200 ${
             mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
           }`}
         >
           {/* Navigation Links */}
-          <div className="p-3.5 space-y-1">
+          <div className="p-4 space-y-1">
             {navItems.map((item) => {
               const isActive =
                 item.label === activeNav ||
@@ -329,23 +329,23 @@ export default function ProfileDashboardShell({
                   key={item.label}
                   href={item.href}
                   onClick={() => setMobileOpen(false)}
-                  className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold tracking-wide transition-all ${
+                  className={`flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-bold tracking-normal transition-all ${
                     isActive
                       ? "bg-[#EAF2FC] text-[#1E56A0] shadow-xs"
                       : "text-slate-600 hover:text-[#0A1628] hover:bg-slate-100/80"
                   }`}
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3.5">
                     <item.icon
-                      className={`w-4 h-4 ${
+                      className={`w-5 h-5 ${
                         isActive ? "text-[#1E56A0]" : "text-slate-400 group-hover:text-slate-600"
                       }`}
                     />
-                    <span>{item.label}</span>
+                    <span className="leading-snug">{item.label}</span>
                   </div>
 
                   {item.badge && (
-                    <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-amber-400 text-[#0A1628]">
+                    <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-amber-400 text-[#0A1628]">
                       {item.badge}
                     </span>
                   )}
@@ -356,47 +356,47 @@ export default function ProfileDashboardShell({
             {/* Log Out */}
             <button
               onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold tracking-wide text-slate-500 hover:text-red-600 hover:bg-red-50/80 transition-all text-left mt-2"
+              className="w-full flex items-center gap-3.5 px-3.5 py-3 rounded-xl text-sm font-bold tracking-normal text-slate-500 hover:text-red-600 hover:bg-red-50/80 transition-all text-left mt-2"
             >
-              <LogOut className="w-4 h-4 text-slate-400" />
+              <LogOut className="w-5 h-5 text-slate-400" />
               <span>LOG OUT</span>
             </button>
           </div>
 
           {/* Bottom Upgrade CTA Box */}
-          <div className="p-3.5 pt-1">
-            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#0A1628] via-[#0E2038] to-[#122A4A] p-4 text-white shadow-lg shadow-[#0a1628]/20 border border-slate-800">
+          <div className="p-4 pt-1">
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#0A1628] via-[#0E2038] to-[#122A4A] p-5 text-white shadow-lg shadow-[#0a1628]/20 border border-slate-800">
               {/* Gold watermark icon */}
               <div className="absolute -right-3 -bottom-4 w-24 h-24 opacity-10 pointer-events-none">
                 <Sparkles className="w-full h-full text-amber-400" />
               </div>
 
               <div className="relative z-10">
-                <span className="inline-block text-[9px] font-black uppercase tracking-widest text-amber-400 mb-1">
+                <span className="inline-block text-[11px] font-black uppercase tracking-widest text-amber-400 mb-1">
                   TAX PROFESSIONAL?
                 </span>
-                <h4 className="text-xs font-extrabold text-white leading-snug mb-3">
+                <h4 className="text-sm font-extrabold text-white leading-snug mb-3">
                   UPGRADE YOUR EXPERIENCE
                 </h4>
 
-                <ul className="space-y-1.5 text-[11px] text-slate-300 font-medium mb-4">
-                  <li className="flex items-center gap-1.5">
-                    <span className="text-amber-400 font-bold">✓</span> Exclusive Toolkits
+                <ul className="space-y-2 text-xs text-slate-300 font-medium mb-4">
+                  <li className="flex items-center gap-2">
+                    <span className="text-amber-400 font-bold text-sm">✓</span> Exclusive Toolkits
                   </li>
-                  <li className="flex items-center gap-1.5">
-                    <span className="text-amber-400 font-bold">✓</span> Advanced Training
+                  <li className="flex items-center gap-2">
+                    <span className="text-amber-400 font-bold text-sm">✓</span> Advanced Training
                   </li>
-                  <li className="flex items-center gap-1.5">
-                    <span className="text-amber-400 font-bold">✓</span> Priority Support
+                  <li className="flex items-center gap-2">
+                    <span className="text-amber-400 font-bold text-sm">✓</span> Priority Support
                   </li>
-                  <li className="flex items-center gap-1.5">
-                    <span className="text-amber-400 font-bold">✓</span> More Connections
+                  <li className="flex items-center gap-2">
+                    <span className="text-amber-400 font-bold text-sm">✓</span> More Connections
                   </li>
                 </ul>
 
                 <Link
                   href="/upgrade"
-                  className="w-full block text-center py-2 px-3 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-[#0A1628] font-black text-xs uppercase tracking-wider shadow-md hover:shadow-amber-400/20 transition-all active:scale-[0.98]"
+                  className="w-full block text-center py-3 px-3 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-[#0A1628] font-black text-xs uppercase tracking-wider shadow-md hover:shadow-amber-400/20 transition-all active:scale-[0.98]"
                 >
                   UPGRADE NOW
                 </Link>

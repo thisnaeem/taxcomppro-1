@@ -41,17 +41,67 @@ export async function POST(req: NextRequest) {
   // Delete any stale/rejected application before creating a new one
   await prisma.professionalApplication.deleteMany({ where: { userId: session.user.id } });
 
-  const { reason, specialty, credentials } = await req.json() as { reason: string; specialty: string; credentials: string };
-  if (!reason?.trim() || !specialty?.trim() || !credentials?.trim())
-    return NextResponse.json({ error: "All fields required" }, { status: 400 });
+  const body = await req.json();
+  const {
+    category,
+    specialty,
+    services,
+    credentials,
+    yearsExperience,
+    businessName,
+    website,
+    serviceArea,
+    serviceModes,
+    languages,
+    email,
+    phone,
+    businessAddress,
+    reason,
+    licenseUrl,
+  } = body;
+
+  const combinedSpecialty = [category, specialty].filter(Boolean).join(" · ") || specialty || "Professional";
+  const combinedCredentials = [
+    credentials,
+    yearsExperience ? `${yearsExperience} experience` : null,
+    Array.isArray(services) && services.length ? `Services: ${services.join(", ")}` : null,
+    serviceArea ? `Area: ${serviceArea} (${Array.isArray(serviceModes) ? serviceModes.join(", ") : "In-Person & Virtual"})` : null,
+    languages ? `Languages: ${languages}` : null,
+  ].filter(Boolean).join(" | ");
+
+  const combinedReason = [
+    reason,
+    "",
+    "--- Contact & Business Details ---",
+    businessName ? `Business Name: ${businessName}` : null,
+    email ? `Email: ${email}` : null,
+    phone ? `Phone: ${phone}` : null,
+    website ? `Website: ${website}` : null,
+    businessAddress ? `Address: ${businessAddress}` : null,
+    licenseUrl ? `License Document: ${licenseUrl}` : null,
+  ].filter(Boolean).join("\n");
+
+  if (!combinedReason.trim() || !combinedSpecialty.trim() || !combinedCredentials.trim()) {
+    return NextResponse.json({ error: "All required fields must be completed." }, { status: 400 });
+  }
 
   const app = await prisma.professionalApplication.create({
     data: {
       userId:      session.user.id,
-      reason:      reason.trim(),
-      specialty:   specialty.trim(),
-      credentials: credentials.trim(),
+      reason:      combinedReason.trim(),
+      specialty:   combinedSpecialty.trim(),
+      credentials: combinedCredentials.trim(),
     },
   });
+
+  // Optionally update user's profile with provided details
+  await prisma.user.update({
+    where: { id: session.user.id },
+    data: {
+      ...(website ? { website: website.trim() } : {}),
+      ...(serviceArea ? { location: serviceArea.trim() } : {}),
+    },
+  }).catch(() => {});
+
   return NextResponse.json(app, { status: 201 });
 }

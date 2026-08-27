@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useAppSelector } from "@/store/hooks";
-import { Scale, ClipboardList, MessageSquare, LifeBuoy, ArrowLeft, CheckCircle2, Loader2 } from "lucide-react";
+import { Scale, ClipboardList, MessageSquare, LifeBuoy, ArrowLeft, CheckCircle2, Loader2, X } from "lucide-react";
 
 type Provider = "openai" | "claude";
 type Mode = "standard" | "compliance";
@@ -23,6 +23,8 @@ const statusConfig = {
 };
 
 const HINTS = ["Schedule C Help", "IRS Audit Defense", "Max My Deductions", "W-2 Question"];
+const WIDGET_SIZE = 104;
+const PADDING = 16;
 
 function TypingDots() {
   return (
@@ -78,8 +80,197 @@ export default function AtlasWidget() {
   const [ticketError, setTicketError] = useState("");
   const [expandedTicketId, setExpandedTicketId] = useState<string | null>(null);
 
+  // Draggable floating positioning state
+  const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartRef = useRef<{ mouseX: number; mouseY: number; posX: number; posY: number } | null>(null);
+  const hasMovedRef = useRef(false);
+
   const bottomRef  = useRef<HTMLDivElement>(null);
   const inputRef   = useRef<HTMLInputElement>(null);
+
+  // Clamp position to viewport bounds
+  const clampPos = useCallback((x: number, y: number) => {
+    if (typeof window === "undefined") return { x, y };
+    const maxX = Math.max(PADDING, window.innerWidth - WIDGET_SIZE - PADDING);
+    const maxY = Math.max(PADDING, window.innerHeight - WIDGET_SIZE - PADDING);
+    return {
+      x: Math.min(Math.max(PADDING, x), maxX),
+      y: Math.min(Math.max(PADDING, y), maxY),
+    };
+  }, []);
+
+  // Initialize position from localStorage or default to bottom-right
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("atlas_widget_pos");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (typeof parsed.x === "number" && typeof parsed.y === "number") {
+          setPos(clampPos(parsed.x, parsed.y));
+          return;
+        }
+      }
+    } catch {}
+
+    setPos(clampPos(window.innerWidth - WIDGET_SIZE - 24, window.innerHeight - WIDGET_SIZE - 24));
+  }, [clampPos]);
+
+  // Keep inside viewport on window resize
+  useEffect(() => {
+    const handleResize = () => {
+      setPos(prev => (prev ? clampPos(prev.x, prev.y) : null));
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [clampPos]);
+
+  // Mouse Drag Handlers
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (e.button !== 0) return; // Left click only
+    if (!pos) return;
+    hasMovedRef.current = false;
+    dragStartRef.current = {
+      mouseX: e.clientX,
+      mouseY: e.clientY,
+      posX: pos.x,
+      posY: pos.y,
+    };
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      if (!dragStartRef.current) return;
+      const dx = moveEvent.clientX - dragStartRef.current.mouseX;
+      const dy = moveEvent.clientY - dragStartRef.current.mouseY;
+
+      if (Math.hypot(dx, dy) > 4) {
+        hasMovedRef.current = true;
+        setIsDragging(true);
+      }
+
+      if (hasMovedRef.current) {
+        const newPos = clampPos(
+          dragStartRef.current.posX + dx,
+          dragStartRef.current.posY + dy
+        );
+        setPos(newPos);
+      }
+    };
+
+    const handleMouseUp = () => {
+      if (hasMovedRef.current) {
+        setPos(currentPos => {
+          if (currentPos) {
+            try {
+              localStorage.setItem("atlas_widget_pos", JSON.stringify(currentPos));
+            } catch {}
+          }
+          return currentPos;
+        });
+      }
+      setIsDragging(false);
+      dragStartRef.current = null;
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+  };
+
+  // Touch Drag Handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length !== 1 || !pos) return;
+    const touch = e.touches[0];
+    hasMovedRef.current = false;
+    dragStartRef.current = {
+      mouseX: touch.clientX,
+      mouseY: touch.clientY,
+      posX: pos.x,
+      posY: pos.y,
+    };
+
+    const handleTouchMove = (moveEvent: TouchEvent) => {
+      if (!dragStartRef.current || moveEvent.touches.length !== 1) return;
+      const t = moveEvent.touches[0];
+      const dx = t.clientX - dragStartRef.current.mouseX;
+      const dy = t.clientY - dragStartRef.current.mouseY;
+
+      if (Math.hypot(dx, dy) > 4) {
+        hasMovedRef.current = true;
+        setIsDragging(true);
+        if (moveEvent.cancelable) moveEvent.preventDefault();
+      }
+
+      if (hasMovedRef.current) {
+        const newPos = clampPos(
+          dragStartRef.current.posX + dx,
+          dragStartRef.current.posY + dy
+        );
+        setPos(newPos);
+      }
+    };
+
+    const handleTouchEnd = () => {
+      if (hasMovedRef.current) {
+        setPos(currentPos => {
+          if (currentPos) {
+            try {
+              localStorage.setItem("atlas_widget_pos", JSON.stringify(currentPos));
+            } catch {}
+          }
+          return currentPos;
+        });
+      }
+      setIsDragging(false);
+      dragStartRef.current = null;
+      window.removeEventListener("touchmove", handleTouchMove);
+      window.removeEventListener("touchend", handleTouchEnd);
+    };
+
+    window.addEventListener("touchmove", handleTouchMove, { passive: false });
+    window.addEventListener("touchend", handleTouchEnd);
+  };
+
+  const handleWidgetClick = () => {
+    if (hasMovedRef.current) return;
+    setOpen(o => !o);
+    if (!open) setView("menu");
+  };
+
+  // Compute panel position dynamically near widget
+  const getPanelStyle = (): React.CSSProperties => {
+    if (!pos || typeof window === "undefined") {
+      return { bottom: 124, right: 24 };
+    }
+
+    const panelWidth = Math.min(380, window.innerWidth - 24);
+    const panelHeight = Math.min(560, window.innerHeight - 100);
+    const widgetSize = WIDGET_SIZE;
+
+    let top: number;
+    if (pos.y > window.innerHeight / 2) {
+      // Position above widget
+      top = Math.max(12, pos.y - panelHeight - 12);
+    } else {
+      // Position below widget
+      top = Math.min(window.innerHeight - panelHeight - 12, pos.y + widgetSize + 12);
+    }
+
+    let left: number;
+    if (pos.x > window.innerWidth / 2) {
+      left = Math.max(12, Math.min(pos.x + widgetSize - panelWidth, window.innerWidth - panelWidth - 12));
+    } else {
+      left = Math.max(12, Math.min(pos.x, window.innerWidth - panelWidth - 12));
+    }
+
+    return {
+      position: "fixed",
+      top: `${top}px`,
+      left: `${left}px`,
+      width: `${panelWidth}px`,
+      height: `${panelHeight}px`,
+    };
+  };
 
   // Autofill name/email if user is loaded
   useEffect(() => {
@@ -206,50 +397,97 @@ export default function AtlasWidget() {
   return (
     <>
       <style>{`
+        @keyframes atlasFloat {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-7px) rotate(1deg); }
+        }
+        .atlas-floating { animation: atlasFloat 3.8s ease-in-out infinite; }
         @keyframes atlasTyping { 0%,80%,100%{transform:scale(0.7);opacity:0.4} 40%{transform:scale(1);opacity:1} }
-        @keyframes atlasPop { from{opacity:0;transform:translateY(20px) scale(0.95)} to{opacity:1;transform:translateY(0) scale(1)} }
+        @keyframes atlasPop { from{opacity:0;transform:translateY(16px) scale(0.96)} to{opacity:1;transform:translateY(0) scale(1)} }
         .atlas-panel { animation: atlasPop 0.22s cubic-bezier(0.34,1.56,0.64,1) both; }
         @keyframes atlasPulse { 0%,100%{box-shadow:0 0 0 0 rgba(212,160,23,0.5)} 50%{box-shadow:0 0 0 8px rgba(212,160,23,0)} }
         .atlas-unread { animation: atlasPulse 1.8s ease-in-out infinite; }
       `}</style>
 
-      {/* ── Floating button ── */}
-      <button
-        onClick={() => {
-          setOpen(o => !o);
-          if (!open) setView("menu"); // Reset to menu when opening
+      {/* ── Draggable Floating Atlas Character ── */}
+      <div
+        onMouseDown={handleMouseDown}
+        onTouchStart={handleTouchStart}
+        onClick={handleWidgetClick}
+        role="button"
+        tabIndex={0}
+        aria-label="Chat with Atlas AI - Click to open, drag to move"
+        title="Chat with Atlas AI · Drag to move anywhere"
+        className={`fixed z-50 select-none touch-none group flex items-center justify-center ${
+          isDragging ? "cursor-grabbing scale-105" : "cursor-grab hover:scale-105"
+        }`}
+        style={{
+          width: WIDGET_SIZE,
+          height: WIDGET_SIZE,
+          left: pos ? `${pos.x}px` : "calc(100vw - 124px)",
+          top: pos ? `${pos.y}px` : "calc(100vh - 124px)",
+          transition: isDragging ? "none" : "transform 0.2s ease, filter 0.2s ease",
         }}
-        aria-label="Open Support & AI Assistant"
-        className={`fixed bottom-6 right-6 z-50 rounded-full overflow-hidden shadow-2xl transition-all hover:scale-105 active:scale-95 ring-2 ring-white/20 ${unread ? "atlas-unread" : ""}`}
-        style={{ background: "linear-gradient(135deg,#0a1628 0%,#173473 100%)", width: 88, height: 88 }}>
-        {open ? (
-          <div className="w-full h-full flex items-center justify-center">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          </div>
-        ) : (
-          <img src="/icon.webp" alt="Atlas AI" className="w-full h-full object-cover" />
-        )}
-        {unread && <span className="absolute top-0 right-0 w-3.5 h-3.5 bg-[#d4a017] rounded-full border-2 border-white" />}
-      </button>
+      >
+        <div className={`w-full h-full relative ${!isDragging ? "atlas-floating" : ""}`}>
+          {/* Full unclipped robot character */}
+          <img
+            src="/icon.webp"
+            alt="Atlas AI"
+            draggable={false}
+            className="w-full h-full object-contain pointer-events-none drop-shadow-[0_12px_24px_rgba(10,22,40,0.28)] group-hover:drop-shadow-[0_18px_32px_rgba(10,22,40,0.4)] transition-all"
+          />
+
+          {/* Unread badge */}
+          {unread && !open && (
+            <span className="absolute top-1 right-2 flex h-4 w-4 pointer-events-none">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-4 w-4 bg-amber-500 border-2 border-white shadow-sm"></span>
+            </span>
+          )}
+
+          {/* Close button indicator when panel is open */}
+          {open && (
+            <div className="absolute top-0 right-0 w-7 h-7 rounded-full bg-[#0a1628] text-white border-2 border-white shadow-xl flex items-center justify-center animate-in zoom-in-50 duration-150 pointer-events-none">
+              <X className="w-3.5 h-3.5 text-white" />
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* ── Chat panel ── */}
       {open && (
-        <div className="atlas-panel fixed right-6 z-50 w-[380px] max-w-[calc(100vw-2rem)] h-[560px] max-h-[calc(100vh-8rem)] flex flex-col rounded-3xl overflow-hidden shadow-2xl"
-          style={{ bottom: 128, background: "#fff", border: "1px solid rgba(10,22,40,0.1)", boxShadow: "0 32px 64px rgba(0,0,0,0.18),0 8px 20px rgba(23,52,115,0.1)" }}>
-
+        <div
+          className="atlas-panel fixed z-50 flex flex-col rounded-3xl overflow-hidden shadow-2xl"
+          style={{
+            ...getPanelStyle(),
+            background: "#fff",
+            border: "1px solid rgba(10,22,40,0.1)",
+            boxShadow: "0 32px 64px rgba(0,0,0,0.18),0 8px 20px rgba(23,52,115,0.1)",
+          }}
+        >
           {/* ── VIEW: MENU ── */}
           {view === "menu" && (
             <div className="flex flex-col h-full bg-white">
               {/* Header */}
-              <div className="flex items-center gap-3 px-5 py-5 flex-shrink-0"
+              <div className="flex items-center justify-between gap-3 px-5 py-5 flex-shrink-0"
                 style={{ background: "linear-gradient(135deg,#060d1a 0%,#0d1e4a 50%,#173473 100%)" }}>
-                <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 ring-2 ring-white/20 flex items-center justify-center bg-white/5">
-                  <MessageSquare className="w-5 h-5 text-white" />
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 ring-2 ring-white/20 flex items-center justify-center bg-white/5">
+                    <MessageSquare className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-sm text-white leading-tight">TaxCompPro Support</p>
+                    <p className="text-[10px] text-slate-300 mt-0.5 font-medium">How can we help you today?</p>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-bold text-sm text-white leading-tight">TaxCompPro Support</p>
-                  <p className="text-[10px] text-slate-300 mt-0.5 font-medium">How can we help you today?</p>
-                </div>
+                <button
+                  onClick={() => setOpen(false)}
+                  className="w-8 h-8 rounded-xl flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition-all flex-shrink-0"
+                  title="Close"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
 
               {/* Menu Content */}
@@ -339,6 +577,13 @@ export default function AtlasWidget() {
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6m4-6v6"/></svg>
                   </button>
                 )}
+                <button
+                  onClick={() => setOpen(false)}
+                  className="w-8 h-8 rounded-xl flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition-all flex-shrink-0"
+                  title="Close"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
 
               {/* Mode bar */}
@@ -418,16 +663,25 @@ export default function AtlasWidget() {
           {view === "support" && (
             <div className="flex flex-col h-full bg-white">
               {/* Header */}
-              <div className="flex items-center gap-3 px-5 py-4 flex-shrink-0"
+              <div className="flex items-center justify-between gap-3 px-5 py-4 flex-shrink-0"
                 style={{ background: "linear-gradient(135deg,#060d1a 0%,#0d1e4a 50%,#173473 100%)" }}>
-                <button onClick={() => setView("menu")}
-                  className="w-8 h-8 rounded-xl flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition-all flex-shrink-0">
-                  <ArrowLeft className="w-5 h-5" />
-                </button>
-                <div className="flex-1 min-w-0">
-                  <p className="font-bold text-sm text-white leading-tight">Submit Support Ticket</p>
-                  <p className="text-[10px] text-slate-300 mt-0.5 font-medium">We're here to help</p>
+                <div className="flex items-center gap-3 min-w-0">
+                  <button onClick={() => setView("menu")}
+                    className="w-8 h-8 rounded-xl flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition-all flex-shrink-0">
+                    <ArrowLeft className="w-5 h-5" />
+                  </button>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-sm text-white leading-tight">Submit Support Ticket</p>
+                    <p className="text-[10px] text-slate-300 mt-0.5 font-medium">We're here to help</p>
+                  </div>
                 </div>
+                <button
+                  onClick={() => setOpen(false)}
+                  className="w-8 h-8 rounded-xl flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition-all flex-shrink-0"
+                  title="Close"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
 
               {/* Form */}
@@ -480,16 +734,25 @@ export default function AtlasWidget() {
           {view === "tickets" && (
             <div className="flex flex-col h-full bg-white">
               {/* Header */}
-              <div className="flex items-center gap-3 px-5 py-4 flex-shrink-0"
+              <div className="flex items-center justify-between gap-3 px-5 py-4 flex-shrink-0"
                 style={{ background: "linear-gradient(135deg,#060d1a 0%,#0d1e4a 50%,#173473 100%)" }}>
-                <button onClick={() => setView("menu")}
-                  className="w-8 h-8 rounded-xl flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition-all flex-shrink-0">
-                  <ArrowLeft className="w-5 h-5" />
-                </button>
-                <div className="flex-1 min-w-0">
-                  <p className="font-bold text-sm text-white leading-tight">My Support Tickets</p>
-                  <p className="text-[10px] text-slate-300 mt-0.5 font-medium">Track your requests</p>
+                <div className="flex items-center gap-3 min-w-0">
+                  <button onClick={() => setView("menu")}
+                    className="w-8 h-8 rounded-xl flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition-all flex-shrink-0">
+                    <ArrowLeft className="w-5 h-5" />
+                  </button>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-sm text-white leading-tight">My Support Tickets</p>
+                    <p className="text-[10px] text-slate-300 mt-0.5 font-medium">Track your requests</p>
+                  </div>
                 </div>
+                <button
+                  onClick={() => setOpen(false)}
+                  className="w-8 h-8 rounded-xl flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition-all flex-shrink-0"
+                  title="Close"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
 
               {/* Tickets List Content */}
@@ -563,11 +826,18 @@ export default function AtlasWidget() {
           {view === "success" && (
             <div className="flex flex-col h-full bg-white">
               {/* Header */}
-              <div className="flex items-center gap-3 px-5 py-4 flex-shrink-0"
+              <div className="flex items-center justify-between gap-3 px-5 py-4 flex-shrink-0"
                 style={{ background: "linear-gradient(135deg,#060d1a 0%,#0d1e4a 50%,#173473 100%)" }}>
                 <div className="flex-1 min-w-0">
                   <p className="font-bold text-sm text-white leading-tight">Ticket Submitted</p>
                 </div>
+                <button
+                  onClick={() => setOpen(false)}
+                  className="w-8 h-8 rounded-xl flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition-all flex-shrink-0"
+                  title="Close"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
 
               {/* Success Content */}

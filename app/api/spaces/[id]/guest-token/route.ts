@@ -30,11 +30,12 @@ export async function POST(req: NextRequest, { params }: Params) {
   });
 
   token.addGrant({
-    roomJoin:     true,
-    room:         space.roomName,
-    canPublish:   true,   // guests can also speak
-    canSubscribe: true,
-    roomAdmin:    false,
+    roomJoin:       true,
+    room:           space.roomName,
+    canPublish:     true,
+    canPublishData: true,
+    canSubscribe:   true,
+    roomAdmin:      false,
   });
 
   const jwt = await token.toJwt();
