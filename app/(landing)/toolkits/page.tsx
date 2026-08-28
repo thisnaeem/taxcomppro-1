@@ -160,7 +160,7 @@ export default function ToolkitsPage() {
             </h1>
             <p className="text-slate-300 text-base sm:text-lg max-w-xl mx-auto lg:mx-0 mb-8 leading-relaxed">
               Premium digital resources for Tax Professionals — each kit includes exclusive tools,
-              templates, courses, and Free Community Membership.
+              templates, courses, and Free Marketplace Membership Plus.
             </p>
 
             <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 mb-8">
@@ -183,7 +183,7 @@ export default function ToolkitsPage() {
                 { icon: ShieldCheck, label: "IRS-Compliant Standards" },
                 { icon: Zap, label: "Instant Access" },
                 { icon: Award, label: "Proven Blueprints" },
-                { icon: Clock, label: "2 Months Free Community Membership" },
+                { icon: Clock, label: "2 Months Free Marketplace Membership Plus" },
               ].map(({ icon: Icon, label }) => (
                 <div key={label} className="flex items-center gap-1.5">
                   <Icon className="w-4 h-4 text-amber-400" /> {label}
@@ -215,7 +215,7 @@ export default function ToolkitsPage() {
               { num: "5", label: "Professional Toolkits" },
               { num: "100%", label: "IRS-Compliant Workpapers" },
               { num: "10+", label: "Templates per Toolkit" },
-              { num: "2 mo", label: "Free Community Membership" },
+              { num: "2 mo", label: "Free Marketplace Membership Plus" },
             ].map((s) => (
               <div key={s.label} className="text-center">
                 <p className="text-2xl font-black text-amber-400 mb-0.5">{s.num}</p>
@@ -314,7 +314,7 @@ export default function ToolkitsPage() {
             },
             {
               icon: Users,
-              title: "2 Months Free Community Membership",
+              title: "2 Months Free Marketplace Membership Plus",
               desc: "Every toolkit purchase includes 2 months of VIP community access — mentorship, networking, and exclusive resources.",
               color: "text-rose-600 dark:text-rose-400",
               bg: "bg-rose-50 dark:bg-rose-400/10",

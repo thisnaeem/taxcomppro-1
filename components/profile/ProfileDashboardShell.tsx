@@ -152,7 +152,7 @@ export default function ProfileDashboardShell({
     { label: "FIND A PRO", icon: Search, href: "/find-a-pro" },
     { label: "MARKETPLACE", icon: ShoppingCart, href: "/marketplace", badge: "PLUS" },
     { label: "PRO CONNECT CARD", icon: Contact2, href: "/profile?tab=card" },
-    { label: "RESOURCES", icon: FileText, href: "/training-center" },
+    { label: "RESOURCES", icon: FileText, href: "/toolkits" },
     { label: "SUPPORT", icon: HelpCircle, href: "/contact" },
     { label: "SETTINGS", icon: Settings, href: "/profile?tab=settings" },
   ];

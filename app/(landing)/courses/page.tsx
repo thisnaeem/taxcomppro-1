@@ -263,7 +263,7 @@ export default function CoursesPage() {
               { num: "6", label: "Professional Masterclasses" },
               { num: "100%", label: "IRS-Compliant Modules" },
               { num: "CPE / CE", label: "Ready Curriculum" },
-              { num: "2 mo", label: "Free VIP Membership" },
+              { num: "2 mo", label: "Free Marketplace Membership Plus" },
             ].map((s) => (
               <div key={s.label} className="text-center">
                 <p className="text-3xl sm:text-4xl lg:text-5xl font-black text-amber-400 mb-1 tracking-tight">{s.num}</p>
