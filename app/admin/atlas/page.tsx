@@ -52,6 +52,8 @@ export default function AdminAtlasSettingsPage() {
         body: JSON.stringify(settings),
       });
       if (res.ok) {
+        const data = await res.json();
+        setSettings(data);
         setSaved(true);
         setTimeout(() => setSaved(false), 3000);
       }

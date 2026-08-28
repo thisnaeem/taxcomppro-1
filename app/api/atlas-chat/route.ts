@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import OpenAI from "openai";
 import Anthropic from "@anthropic-ai/sdk";
+import { prisma } from "@/lib/prisma";
 
 const SYSTEM_PROMPT = `You are Atlas AI, a highly knowledgeable tax assistant for TaxCompPro — a professional platform for CPAs, tax professionals, and taxpayers.
 
@@ -19,19 +20,25 @@ const COMPLIANCE_ADDENDUM = `\n\nYou are currently in COMPLIANCE MODE. Prioritiz
 
 export async function POST(req: NextRequest) {
   try {
-    const { message, history = [], provider = "openai", compliance = false } = await req.json();
+    const { message, history = [], provider, compliance = false } = await req.json();
 
     if (!message?.trim()) {
       return new Response("Message is required", { status: 400 });
     }
 
-    const systemPrompt = SYSTEM_PROMPT + (compliance ? COMPLIANCE_ADDENDUM : "");
+    const settings = await prisma.atlasSettings.findFirst().catch(() => null);
+    const activeProvider = provider || settings?.defaultProvider || "openai";
+    const maxTokens = settings?.maxTokens || 1024;
+    const basePrompt = settings?.systemPromptExtra?.trim()
+      ? `${settings.systemPromptExtra.trim()}\n\n${SYSTEM_PROMPT}`
+      : SYSTEM_PROMPT;
+    const systemPrompt = basePrompt + (compliance ? COMPLIANCE_ADDENDUM : "");
 
     const encoder = new TextEncoder();
     const stream = new ReadableStream({
       async start(controller) {
         try {
-          if (provider === "claude") {
+          if (activeProvider === "claude") {
             // ── Anthropic Claude ──────────────────────────────────────────
             const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
             const msgs: Anthropic.MessageParam[] = [
@@ -44,7 +51,7 @@ export async function POST(req: NextRequest) {
 
             const claudeStream = await client.messages.stream({
               model: "claude-3-haiku-20240307",
-              max_tokens: 1024,
+              max_tokens: maxTokens,
               system: systemPrompt,
               messages: msgs,
             });
@@ -73,7 +80,7 @@ export async function POST(req: NextRequest) {
               model: "gpt-4o",
               messages: msgs,
               stream: true,
-              max_tokens: 1024,
+              max_tokens: maxTokens,
             });
 
             for await (const chunk of openaiStream) {

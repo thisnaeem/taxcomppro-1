@@ -18,10 +18,18 @@ export async function GET() {
   if (!session?.user || session.user.role !== "ADMIN") {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
-  return NextResponse.json(await getSettings());
+  const s = await getSettings();
+  return NextResponse.json({
+    widgetEnabled: s.widgetEnabled,
+    defaultProvider: s.defaultProvider,
+    allowedTiers: s.allowedTiers,
+    maxTokens: s.maxTokens,
+    systemPrompt: s.systemPromptExtra || "",
+    systemPromptExtra: s.systemPromptExtra || "",
+  });
 }
 
-export async function PATCH(req: NextRequest) {
+async function saveSettings(req: NextRequest) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session?.user || session.user.role !== "ADMIN") {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -31,13 +39,28 @@ export async function PATCH(req: NextRequest) {
   const updated = await prisma.atlasSettings.update({
     where: { id: s.id },
     data: {
-      widgetEnabled:    body.widgetEnabled    ?? s.widgetEnabled,
-      defaultProvider:  body.defaultProvider  ?? s.defaultProvider,
-      allowedTiers:     body.allowedTiers     ?? s.allowedTiers,
-      maxTokens:        body.maxTokens        ?? s.maxTokens,
-      systemPromptExtra:body.systemPromptExtra?? s.systemPromptExtra,
+      widgetEnabled: body.widgetEnabled !== undefined ? Boolean(body.widgetEnabled) : s.widgetEnabled,
+      defaultProvider: body.defaultProvider || s.defaultProvider,
+      allowedTiers: Array.isArray(body.allowedTiers) ? body.allowedTiers : s.allowedTiers,
+      maxTokens: typeof body.maxTokens === "number" ? body.maxTokens : s.maxTokens,
+      systemPromptExtra: (body.systemPrompt !== undefined ? body.systemPrompt : body.systemPromptExtra) ?? s.systemPromptExtra,
       updatedAt: new Date(),
     },
   });
-  return NextResponse.json(updated);
+  return NextResponse.json({
+    widgetEnabled: updated.widgetEnabled,
+    defaultProvider: updated.defaultProvider,
+    allowedTiers: updated.allowedTiers,
+    maxTokens: updated.maxTokens,
+    systemPrompt: updated.systemPromptExtra,
+    systemPromptExtra: updated.systemPromptExtra,
+  });
+}
+
+export async function PUT(req: NextRequest) {
+  return saveSettings(req);
+}
+
+export async function PATCH(req: NextRequest) {
+  return saveSettings(req);
 }
