@@ -160,7 +160,7 @@ export const COURSES: CourseOffering[] = [
     enrolledCount: 310,
     price: 299,
     isFree: false,
-    externalUrl: "https://staffauditready.taxcomppro.com/",
+    externalUrl: "https://staffaudit.taxcomppro.com/",
     instructor: {
       name: "Atlas Academy Faculty",
       image: "/fevicon.webp",

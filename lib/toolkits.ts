@@ -60,7 +60,7 @@ export const TOOLKITS: Toolkit[] = [
     downloadEnvKey: "TOOLKIT_DOWNLOAD_DUE_DILIGENCE",
     badgeImage: "/audit-due-diligence.png",
     description: "Train staff, document completion, and maintain stronger office due-diligence records.",
-    externalUrl: "https://staffauditready.taxcomppro.com/",
+    externalUrl: "https://staffaudit.taxcomppro.com/",
     features: [
       "Staff Due Diligence Certification",
       "IRS Due Diligence Workpapers",
