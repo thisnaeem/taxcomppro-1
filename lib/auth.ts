@@ -50,6 +50,7 @@ export const auth = betterAuth({
     "http://localhost:3006",
     "http://localhost:3007",
     "http://localhost:3008",
+    "http://localhost:3009",
     "https://www.taxcomppro.com",
     "https://taxcomppro.com",
     "https://proconnect.taxcomppro.com",
@@ -59,6 +60,7 @@ export const auth = betterAuth({
     "https://irsfinedefense.taxcomppro.com",
     "https://schedulecrecon.taxcomppro.com",
     "https://credits.taxcomppro.com",
+    "https://affiliate.taxcomppro.com",
   ],
   advanced: {
     crossSubdomainCookies: {

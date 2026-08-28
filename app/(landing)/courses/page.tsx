@@ -280,41 +280,20 @@ export default function CoursesPage() {
           BIG COURSES GRID & EXPANDED FILTERS
       ══════════════════════════════════════ */}
       <div className="max-w-[1680px] mx-auto px-6 sm:px-10 lg:px-14 xl:px-16 py-14 sm:py-18">
-        {/* Filters */}
-        <div className="flex flex-col md:flex-row gap-6 mb-12 items-center justify-between">
-          {/* Category chips */}
-          <div className="flex items-center gap-2.5 sm:gap-3 flex-wrap flex-1">
-            <Filter className="w-5 h-5 text-slate-400 shrink-0 mr-1" />
-            {CATEGORIES.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setCategory(cat)}
-                className={`text-xs sm:text-sm font-extrabold px-5 sm:px-6 py-2.5 sm:py-3 rounded-full transition-all border ${
-                  category === cat
-                    ? "bg-[#0a1628] dark:bg-amber-500 text-white dark:text-[#0a1628] border-transparent shadow-lg"
-                    : "bg-white dark:bg-[#172135] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
+        {/* Header matching Toolkits */}
+        <div className="text-center mb-14">
+          <div className="inline-flex items-center gap-2 bg-amber-100 dark:bg-amber-400/10 border border-amber-300 dark:border-amber-400/30 text-amber-800 dark:text-amber-300 text-xs font-bold px-4 py-1.5 rounded-full mb-4">
+            <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" /> Practice Growth &amp; Defense Systems
           </div>
-
-          {/* Level select */}
-          <div className="flex items-center gap-2.5 shrink-0">
-            <SlidersHorizontal className="w-5 h-5 text-slate-400" />
-            <select
-              value={level}
-              onChange={(e) => setLevel(e.target.value)}
-              className="font-[inherit] text-xs sm:text-sm font-extrabold border border-slate-200 dark:border-slate-800 rounded-2xl px-5 py-3 bg-white dark:bg-[#172135] text-slate-700 dark:text-white outline-none focus:border-amber-500 cursor-pointer shadow-sm"
-            >
-              {LEVELS.map((l) => (
-                <option key={l.value} value={l.value}>
-                  {l.label}
-                </option>
-              ))}
-            </select>
-          </div>
+          <h2 className="text-4xl font-black text-[#0a1628] dark:text-white mb-3">
+            Individual Courses
+          </h2>
+          <p className="text-slate-800 dark:text-white text-lg font-medium max-w-4xl mx-auto mb-2">
+            Choose the exact course built for your firm&apos;s launch, due diligence, compliance, and audit defense.
+          </p>
+          <p className="text-red-600 dark:text-red-400 text-base sm:text-lg font-bold tracking-wide">
+            Receive 2 Months FREE Marketplace Membership Plus with the purchase of ANY Toolkit or Course Bundle.
+          </p>
         </div>
 
         {/* Expanded Grid */}

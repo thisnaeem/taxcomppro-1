@@ -240,9 +240,11 @@ export default function ToolkitsPage() {
           <h2 className="text-4xl font-black text-[#0a1628] dark:text-white mb-3">
             Individual Toolkits
           </h2>
-          <p className="text-slate-500 dark:text-slate-300 text-base max-w-xl mx-auto">
-            Choose the exact toolkit built for your firm&apos;s launch, due diligence, compliance,
-            and audit defense.
+          <p className="text-slate-800 dark:text-white text-lg font-medium max-w-4xl mx-auto mb-2">
+            Choose the exact toolkit built for your firm&apos;s launch, due diligence, compliance, and audit defense.
+          </p>
+          <p className="text-red-600 dark:text-red-400 text-base sm:text-lg font-bold tracking-wide">
+            Receive 2 Months FREE Marketplace Membership Plus with the purchase of ANY Toolkit or Course Bundle.
           </p>
         </div>
 
