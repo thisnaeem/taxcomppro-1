@@ -2,25 +2,11 @@ import { NextRequest } from "next/server";
 import OpenAI from "openai";
 import Anthropic from "@anthropic-ai/sdk";
 import { prisma } from "@/lib/prisma";
-
-const SYSTEM_PROMPT = `You are Atlas AI, a highly knowledgeable tax assistant for TaxCompPro — a professional platform for CPAs, tax professionals, and taxpayers.
-
-You provide accurate, concise, and actionable tax guidance. You cover topics including:
-- Federal & state tax filing, deadlines, and extensions
-- IRS regulations, audits, and correspondence
-- Deductions, credits, and tax-saving strategies
-- Schedule C, partnerships, S-corps, and business taxes
-- Capital gains, crypto, real estate, and investment taxes
-- Payroll taxes, estimated payments, and penalties
-- Compliance, record-keeping, and documentation
-
-Always be professional, clear, and precise. Cite relevant IRS codes or publications when helpful. If a question requires a licensed professional's advice, say so clearly but still provide educational context.`;
-
-const COMPLIANCE_ADDENDUM = `\n\nYou are currently in COMPLIANCE MODE. Prioritize regulatory accuracy, cite specific IRS codes and publications, emphasize documentation requirements, and flag any areas requiring professional judgment.`;
+import { ATLAS_SUPPORT_SYSTEM_PROMPT, ATLAS_WEBSITE_QA } from "@/lib/atlas-support-knowledge";
 
 export async function POST(req: NextRequest) {
   try {
-    const { message, history = [], provider, compliance = false } = await req.json();
+    const { message, history = [], provider, userContext, pageUrl } = await req.json();
 
     if (!message?.trim()) {
       return new Response("Message is required", { status: 400 });
@@ -29,10 +15,39 @@ export async function POST(req: NextRequest) {
     const settings = await prisma.atlasSettings.findFirst().catch(() => null);
     const activeProvider = provider || settings?.defaultProvider || "openai";
     const maxTokens = settings?.maxTokens || 1024;
-    const basePrompt = settings?.systemPromptExtra?.trim()
-      ? `${settings.systemPromptExtra.trim()}\n\n${SYSTEM_PROMPT}`
-      : SYSTEM_PROMPT;
-    const systemPrompt = basePrompt + (compliance ? COMPLIANCE_ADDENDUM : "");
+
+    // Fetch custom approved knowledge base items from DB
+    const customItems = await prisma.atlasKnowledgeItem.findMany({
+      where: { active: true },
+      select: { question: true, approvedAnswer: true, category: true },
+    }).catch(() => []);
+
+    const allKnowledge = [
+      ...ATLAS_WEBSITE_QA.map((q) => `Q: ${q.question}\nA: ${q.answer}`),
+      ...customItems.map((k) => `Q: ${k.question}\nA: ${k.approvedAnswer}`),
+    ].join("\n\n");
+
+    const userContextStr = userContext
+      ? `CURRENT USER CONTEXT:
+- Name: ${userContext.name || "Guest / Anonymous"}
+- Email: ${userContext.email || "Not signed in"}
+- Membership Tier: ${userContext.tier || "FREE"}
+- Current Page: ${pageUrl || "/"}
+- Purchased Products: ${userContext.purchases?.join(", ") || "None"}
+`
+      : `CURRENT USER CONTEXT:
+- Visitor is currently exploring the site as a guest.
+- Current Page: ${pageUrl || "/"}`;
+
+    const systemPrompt = `${ATLAS_SUPPORT_SYSTEM_PROMPT}
+
+${userContextStr}
+
+APPROVED WEBSITE SUPPORT KNOWLEDGE BASE:
+${allKnowledge}
+
+${settings?.systemPromptExtra?.trim() ? `ADDITIONAL ADMIN INSTRUCTIONS:\n${settings.systemPromptExtra.trim()}` : ""}
+`;
 
     const encoder = new TextEncoder();
     const stream = new ReadableStream({

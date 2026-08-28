@@ -22,7 +22,7 @@ const statusConfig = {
   RESOLVED: { label: "Resolved", className: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" },
 };
 
-const HINTS = ["Schedule C Help", "IRS Audit Defense", "Max My Deductions", "W-2 Question"];
+const HINTS = ["Where are my Toolkits?", "Upgrade Membership", "Atlas Academy Courses", "About Always Ask Atlas"];
 const DESKTOP_WIDTH = 248;
 const DESKTOP_HEIGHT = 329;
 const MOBILE_WIDTH = 124;
@@ -42,15 +42,51 @@ function TypingDots() {
   );
 }
 
-function MsgBubble({ m }: { m: Msg }) {
+function MsgBubble({
+  m,
+  onOpenTicket,
+  onDeclineTicket,
+}: {
+  m: Msg;
+  onOpenTicket?: () => void;
+  onDeclineTicket?: () => void;
+}) {
   const isUser = m.role === "user";
+  const offersTicket =
+    !isUser &&
+    !m.streaming &&
+    (m.content.toLowerCase().includes("submit a support ticket") ||
+      m.content.toLowerCase().includes("submit a ticket") ||
+      m.content.toLowerCase().includes("create a support ticket"));
+
   return (
-    <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
-      <div className={`max-w-[82%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
-        isUser ? "bg-[#0a1628] text-white rounded-br-none" : "bg-slate-100 text-slate-800 rounded-bl-none"
-      }`}>
+    <div className={`flex flex-col ${isUser ? "items-end" : "items-start"} gap-1.5`}>
+      <div
+        className={`max-w-[85%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
+          isUser
+            ? "bg-[#0a1628] text-white rounded-br-none"
+            : "bg-slate-100 text-slate-800 rounded-bl-none border border-slate-200/50"
+        }`}
+      >
         {m.content || <span className="opacity-40 italic">thinking…</span>}
       </div>
+
+      {offersTicket && (
+        <div className="flex items-center gap-2 mt-1 pl-1">
+          <button
+            onClick={onOpenTicket}
+            className="bg-[#f0c040] hover:bg-amber-400 text-slate-950 font-black text-[11px] px-3 py-1.5 rounded-xl shadow-sm transition-all flex items-center gap-1 active:scale-95"
+          >
+            <LifeBuoy className="w-3.5 h-3.5" /> YES — SUBMIT TICKET
+          </button>
+          <button
+            onClick={onDeclineTicket}
+            className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-[11px] px-3 py-1.5 rounded-xl transition-all active:scale-95"
+          >
+            NO THANKS
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -341,6 +377,27 @@ export default function AtlasWidget() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [msgs, loading]);
 
+  const handleOpenTicketFromChat = () => {
+    const lastUserMsg = msgs.slice().reverse().find(m => m.role === "user");
+    const subject = lastUserMsg ? `Inquiry: ${lastUserMsg.content.slice(0, 50)}...` : "Support Request";
+    const desc = lastUserMsg
+      ? `Question: ${lastUserMsg.content}\nPage: ${typeof window !== "undefined" ? window.location.href : "/"}`
+      : `Inquiry from page: ${typeof window !== "undefined" ? window.location.href : "/"}`;
+    setSupportSubject(subject);
+    setSupportDesc(desc);
+    setView("support");
+  };
+
+  const handleDeclineTicketFromChat = () => {
+    const userMsg: Msg = { id: `u-${Date.now()}`, role: "user", content: "No thanks" };
+    const asstMsg: Msg = {
+      id: `a-${Date.now()}`,
+      role: "assistant",
+      content: "Understood! Let me know if you need help with anything else on Tax Compliance Pro.",
+    };
+    setMsgs(p => [...p, userMsg, asstMsg]);
+  };
+
   const send = useCallback(async (text?: string) => {
     const content = (text ?? input).trim();
     if (!content || loading) return;
@@ -352,10 +409,17 @@ export default function AtlasWidget() {
 
     try {
       const history = msgs.map(m => ({ role: m.role, content: m.content }));
+      const userContext = user ? {
+        name: user.name,
+        email: user.email,
+        tier: user.tier,
+      } : null;
+      const pageUrl = typeof window !== "undefined" ? window.location.pathname : "/";
+
       const res = await fetch("/api/atlas-chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: content, history, provider, compliance: mode === "compliance" }),
+        body: JSON.stringify({ message: content, history, provider, userContext, pageUrl }),
       });
       if (!res.ok || !res.body) throw new Error("Server error");
       const reader = res.body.getReader();
@@ -374,7 +438,7 @@ export default function AtlasWidget() {
     } finally {
       setLoading(false);
     }
-  }, [input, loading, msgs, provider, mode, open]);
+  }, [input, loading, msgs, provider, user, open]);
 
   const fetchMyTickets = async () => {
     setLoadingTickets(true);
@@ -414,6 +478,19 @@ export default function AtlasWidget() {
         const data = await res.json();
         throw new Error(data.error || "Failed to submit ticket");
       }
+
+      // Also record in unanswered questions queue for admin review in background
+      fetch("/api/admin/atlas-unanswered", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          question: `${supportSubject}: ${supportDesc}`,
+          accountEmail: supportEmail,
+          pageUrl: typeof window !== "undefined" ? window.location.href : "/",
+          category: "SUPPORT",
+        })
+      }).catch(() => {});
+
       // Reset input fields but keep name/email
       setSupportSubject("");
       setSupportDesc("");
@@ -516,8 +593,8 @@ export default function AtlasWidget() {
                     <MessageSquare className="w-5 h-5 text-white" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-bold text-sm text-white leading-tight">TaxCompPro Support</p>
-                    <p className="text-[10px] text-slate-300 mt-0.5 font-medium">How can we help you today?</p>
+                    <p className="font-bold text-sm text-white leading-tight">TaxCompPro Concierge</p>
+                    <p className="text-[10px] text-slate-300 mt-0.5 font-medium">Website & Product Support Assistant</p>
                   </div>
                 </div>
                 <button
@@ -539,11 +616,11 @@ export default function AtlasWidget() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-black text-sm text-[#0a1628] flex items-center gap-2">
-                      Chat with Atlas AI
+                      Chat with Atlas Support
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block animate-pulse" />
                     </h3>
                     <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                      Get instant, real-time tax guidance, compliance advice, and CPA intelligence.
+                      Get instant guidance on toolkits, courses, account features, memberships, and site navigation.
                     </p>
                   </div>
                 </button>
@@ -604,10 +681,10 @@ export default function AtlasWidget() {
                   <img src="/icon.webp" alt="Atlas" className="w-full h-full object-cover" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-bold text-sm text-white leading-tight">Atlas AI</p>
+                  <p className="font-bold text-sm text-white leading-tight">Atlas Support</p>
                   <div className="flex items-center gap-1.5 mt-0.5">
                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                    <p className="text-[10px] text-emerald-300 font-semibold">Tax Intelligence Assistant</p>
+                    <p className="text-[10px] text-emerald-300 font-semibold">Website & Product Concierge</p>
                   </div>
                 </div>
                 {msgs.length > 0 && (
@@ -625,20 +702,14 @@ export default function AtlasWidget() {
                 </button>
               </div>
 
-              {/* Mode bar */}
+              {/* Status bar */}
               <div className="flex items-center justify-between px-5 py-2.5 border-b border-slate-100 flex-shrink-0">
                 <span className="text-xs text-slate-400 font-semibold">
-                  {msgs.length === 0 ? "How can I help?" : `${msgs.filter(m=>m.role==="user").length} question${msgs.filter(m=>m.role==="user").length!==1?"s":""}`}
+                  {msgs.length === 0 ? "How can I help with the site today?" : `${msgs.filter(m=>m.role==="user").length} question${msgs.filter(m=>m.role==="user").length!==1?"s":""}`}
                 </span>
-                <button onClick={() => setMode(m => m === "standard" ? "compliance" : "standard")}
-                  className="text-[11px] font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 transition-all"
-                  style={mode === "compliance"
-                    ? { background: "#fbbf24", color: "#78350f" }
-                    : { background: "rgba(10,22,40,0.06)", color: "#64748b" }}>
-                  {mode === "compliance"
-                    ? <><Scale className="w-3 h-3" /> Compliance</>
-                    : <><ClipboardList className="w-3 h-3" /> Standard</>}
-                </button>
+                <span className="text-[11px] font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-600">
+                  Website Concierge
+                </span>
               </div>
 
               {/* Messages */}
@@ -652,9 +723,9 @@ export default function AtlasWidget() {
                       </svg>
                     </div>
                     <div>
-                      <p className="font-black text-lg text-[#0a1628]">Ask Atlas AI</p>
-                      <p className="text-sm text-slate-400 mt-1 max-w-[220px] leading-relaxed">
-                        {user ? "Your always-on tax intelligence assistant." : "Sign in for personalized tax guidance."}
+                      <p className="font-black text-lg text-[#0a1628]">Ask Atlas Support</p>
+                      <p className="text-sm text-slate-400 mt-1 max-w-[240px] leading-relaxed">
+                        {user ? "Your website, toolkits, and account support concierge." : "Explore Tax Compliance Pro tools, toolkits, and features."}
                       </p>
                     </div>
                     <div className="flex flex-wrap gap-2 justify-center">
@@ -667,19 +738,23 @@ export default function AtlasWidget() {
                     </div>
                   </div>
                 )}
-                {msgs.map(m => <MsgBubble key={m.id} m={m} />)}
+                {msgs.map(m => (
+                  <MsgBubble
+                    key={m.id}
+                    m={m}
+                    onOpenTicket={handleOpenTicketFromChat}
+                    onDeclineTicket={handleDeclineTicketFromChat}
+                  />
+                ))}
                 {isLastStreaming && <TypingDots />}
                 <div ref={bottomRef} />
               </div>
 
               {/* Input */}
               <div className="px-4 py-3 border-t border-slate-100 flex-shrink-0">
-                {mode === "compliance" && (
-                  <div className="h-0.5 mb-3 rounded-full" style={{ background: "linear-gradient(90deg,#f59e0b,#fcd34d,#f59e0b)" }} />
-                )}
                 <form onSubmit={e => { e.preventDefault(); send(); }} className="flex items-center gap-2">
                   <input ref={inputRef} value={input} onChange={e => setInput(e.target.value)}
-                    placeholder={mode === "compliance" ? "Ask for compliance guidance…" : "Ask a tax question…"}
+                    placeholder="Ask about website, toolkits, courses, or your account…"
                     disabled={loading}
                     className="flex-1 bg-slate-50 border border-slate-200 rounded-full px-4 py-2.5 text-sm outline-none focus:border-[#0a1628]/30 transition-all disabled:opacity-50 font-[inherit]"
                   />
@@ -691,8 +766,8 @@ export default function AtlasWidget() {
                       : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>}
                   </button>
                 </form>
-                <p className="text-center text-[10px] text-slate-300 mt-2">
-                  Atlas AI · Powered by {provider === "claude" ? "Claude" : "GPT-4o"}
+                <p className="text-center text-[10px] text-slate-400 mt-2">
+                  Website Support Assistant · Powered by {provider === "claude" ? "Claude" : "GPT-4o"}
                 </p>
               </div>
             </div>

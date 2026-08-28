@@ -1536,4 +1536,37 @@ model AcademyCourseDayProgress {
   @@map("academy_course_day_progress")
 }
 
+model AtlasKnowledgeItem {
+  id                 String   @id @default(cuid())
+  question           String   @db.Text
+  alternatePhrasings String[] @default([])
+  approvedAnswer     String   @db.Text
+  category           String   @default("GENERAL")
+  relatedUrl         String?
+  membershipRequired String?
+  productRequired    String?
+  active             Boolean  @default(true)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@map("atlas_knowledge_items")
+}
+
+model AtlasUnansweredQuestion {
+  id                  String   @id @default(cuid())
+  question            String   @db.Text
+  accountEmail        String?
+  userId              String?
+  pageUrl             String?
+  category            String?  @default("GENERAL")
+  conversationContext String?  @db.Text
+  suggestedAnswer     String?  @db.Text
+  status              String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  ticketId            String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@map("atlas_unanswered_questions")
+}
+
 

@@ -104,7 +104,7 @@ function UltimateBundleCard({ bundle }: { bundle: Bundle }) {
 
         {isPlus && (
           <span className="inline-flex items-center gap-1 text-[11px] font-extrabold uppercase tracking-widest text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-400/10 border border-amber-300 dark:border-amber-400/30 px-3 py-1 rounded-full">
-            All Toolkits + All Video Masterclasses
+            All Toolkits + All Video Masterclasses   
           </span>
         )}
       </div>
@@ -241,7 +241,7 @@ export default function ToolkitsPage() {
         <div className="relative border-t border-white/10">
           <div className="max-w-7xl mx-auto px-6 py-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
             {[
-              { num: "5", label: "Professional Toolkits" },
+              { num: "6", label: "Professional Toolkits" },
               { num: "100%", label: "IRS-Compliant Workpapers" },
               { num: "10+", label: "Templates per Toolkit" },
               { num: "2 mo", label: "Free Marketplace Membership Plus" },
