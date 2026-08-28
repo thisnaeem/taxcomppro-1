@@ -172,6 +172,7 @@ function ConnectLandingPage({
               width={640}
               height={400}
               className="w-full rounded-2xl"
+              style={{ height: "auto" }}
               priority
             />
           </div>
@@ -184,6 +185,7 @@ function ConnectLandingPage({
               width={640}
               height={400}
               className="w-full rounded-2xl"
+              style={{ height: "auto" }}
               priority
             />
           </div>

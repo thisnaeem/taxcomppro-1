@@ -126,10 +126,10 @@ export default function Topbar() {
                 className="flex items-center gap-2.5 text-sm font-medium text-slate-700 px-3 py-2.5 rounded-xl hover:bg-slate-50 transition-all">
                 <UserCircle className="w-4 h-4 text-slate-400" /> Profile
               </Link>
-              <Link href="/affiliate" onClick={() => setDropdownOpen(false)}
+              <a href="https://affiliate.taxcomppro.com" target="_blank" rel="noopener noreferrer" onClick={() => setDropdownOpen(false)}
                 className="flex items-center gap-2.5 text-sm font-medium text-slate-700 px-3 py-2.5 rounded-xl hover:bg-slate-50 transition-all">
-                <Gift className="w-4 h-4 text-slate-400" /> Affiliate Program
-              </Link>
+                <Gift className="w-4 h-4 text-slate-400" /> Become an Affiliate
+              </a>
               <Link href="/upgrade" onClick={() => setDropdownOpen(false)}
                 className="flex items-center gap-2.5 text-sm font-medium text-slate-700 px-3 py-2.5 rounded-xl hover:bg-slate-50 transition-all">
                 <ArrowUpCircle className="w-4 h-4 text-slate-400" /> Upgrade Plan

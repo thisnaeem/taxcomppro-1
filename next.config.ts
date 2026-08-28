@@ -27,6 +27,20 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      {
+        source: "/affiliate",
+        destination: "https://affiliate.taxcomppro.com",
+        permanent: false,
+      },
+      {
+        source: "/affiliate/:path*",
+        destination: "https://affiliate.taxcomppro.com/:path*",
+        permanent: false,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

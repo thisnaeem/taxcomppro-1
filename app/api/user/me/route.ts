@@ -7,7 +7,7 @@ export async function GET(req: NextRequest) {
   const session = await auth.api.getSession({ headers: req.headers });
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const [user, completedCourses, totalEnrollments, toolkitPurchases, unreadNotifications, reviewsAggregate, reviewsCount] = await Promise.all([
+  const [user, enrollments, toolkitPurchases, unreadNotifications, reviewsAggregate] = await Promise.all([
     prisma.user.findUnique({
       where: { id: session.user.id },
       select: {
@@ -54,11 +54,9 @@ export async function GET(req: NextRequest) {
         },
       },
     }),
-    prisma.enrollment.count({
-      where: { userId: session.user.id, completedAt: { not: null } },
-    }),
-    prisma.enrollment.count({
+    prisma.enrollment.findMany({
       where: { userId: session.user.id },
+      select: { completedAt: true },
     }),
     prisma.toolkitPurchase.count({
       where: { userId: session.user.id },
@@ -69,14 +67,15 @@ export async function GET(req: NextRequest) {
     prisma.proReview.aggregate({
       where: { proId: session.user.id },
       _avg: { rating: true },
-    }),
-    prisma.proReview.count({
-      where: { proId: session.user.id },
+      _count: { rating: true },
     }),
   ]);
 
   if (!user) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
+  const totalEnrollments = enrollments.length;
+  const completedCourses = enrollments.filter((e) => e.completedAt !== null).length;
+  const reviewsCount = reviewsAggregate._count.rating ?? 0;
   const hasDueDiligenceBadge = completedCourses > 0 || toolkitPurchases > 0;
   const avgRating = reviewsAggregate._avg.rating ?? (user.role === "PROFESSIONAL" || user.role === "ADMIN" ? 5.0 : null);
   const totalReviews = reviewsCount > 0 ? reviewsCount : (user.role === "PROFESSIONAL" || user.role === "ADMIN" ? 128 : 0);

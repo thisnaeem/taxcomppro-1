@@ -8,6 +8,7 @@ import FeedRightPanel from "@/components/feed/FeedRightPanel";
 import ScheduledPostsPanel from "@/components/feed/ScheduledPostsPanel";
 import { PostSkeleton, LeftPanelSkeleton, RightPanelSkeleton } from "@/components/feed/FeedSkeletons";
 import { RefreshCw, MonitorPlay, ExternalLink } from "lucide-react";
+import { NoteEditIcon } from "hugeicons-react";
 import { useAppSelector } from "@/store/hooks";
 
 export default function FeedPage() {
@@ -134,10 +135,12 @@ export default function FeedPage() {
                 <PostSkeleton />
               </div>
             ) : posts.length === 0 ? (
-              <div className="bg-white border border-slate-200 rounded-2xl p-14 text-center">
-                <div className="text-5xl mb-4">📝</div>
-                <h3 className="font-black text-[#0a1628] text-xl mb-2">Nothing in the feed yet</h3>
-                <p className="text-slate-400 text-base">Be the first to share a tax insight with the community!</p>
+              <div className="bg-white dark:bg-[#0c182b] border border-slate-200 dark:border-slate-800 rounded-2xl p-12 text-center flex flex-col items-center shadow-sm">
+                <div className="w-16 h-16 rounded-2xl bg-amber-50 dark:bg-amber-400/10 border border-amber-200/80 dark:border-amber-400/20 flex items-center justify-center mb-4 text-[#d4a017] dark:text-[#f0c040] shadow-sm">
+                  <NoteEditIcon className="w-8 h-8" />
+                </div>
+                <h3 className="font-black text-[#0a1628] dark:text-white text-xl mb-2">Nothing in the feed yet</h3>
+                <p className="text-slate-400 dark:text-slate-500 text-sm max-w-sm">Be the first to share a tax insight with the community!</p>
               </div>
             ) : (
               <>

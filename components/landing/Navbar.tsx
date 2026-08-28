@@ -37,7 +37,7 @@ const navItems: NavItem[] = [
     ],
   },
   { type: "link",     label: "Pricing",     href: "/upgrade",    icon: Rocket01Icon },
-  { type: "link",     label: "Affiliates",  href: "/affiliate",  icon: Gift },
+  { type: "link",     label: "Become an Affiliate", href: "https://affiliate.taxcomppro.com", icon: Gift },
 ];
 
 type MobileNavLink = { label: string; href: string; icon?: React.ElementType | null; badge?: string };
@@ -204,6 +204,28 @@ export default function Navbar() {
                   const isHome = item.label === "Home";
                   const label = isHome ? (session ? "Home" : "Landing Page") : item.label;
                   const href = isHome ? (session ? "/feed" : "/") : item.href;
+                  const isExternal = href.startsWith("http");
+
+                  if (isExternal) {
+                    return (
+                      <a
+                        key={item.label}
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1.5 text-xs xl:text-sm font-semibold text-slate-600 hover:text-[#0a1628] hover:bg-slate-50 dark:text-white dark:hover:text-[#f0c040] dark:hover:bg-white/10 px-2.5 py-2 rounded-lg transition-all shrink-0 whitespace-nowrap"
+                      >
+                        {Icon && <Icon className="w-3.5 h-3.5 shrink-0" />}
+                        <span>{label}</span>
+                        {item.badge && (
+                          <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-amber-400/20 text-amber-600 dark:text-amber-300 border border-amber-400/40 shadow-[0_0_10px_rgba(245,158,11,0.45)] animate-pulse shrink-0">
+                            {item.badge}
+                          </span>
+                        )}
+                      </a>
+                    );
+                  }
+
                   return (
                     <Link key={item.label} href={href}
                       className="flex items-center gap-1.5 text-xs xl:text-sm font-semibold text-slate-600 hover:text-[#0a1628] hover:bg-slate-50 dark:text-white dark:hover:text-[#f0c040] dark:hover:bg-white/10 px-2.5 py-2 rounded-lg transition-all shrink-0 whitespace-nowrap">
@@ -255,15 +277,18 @@ export default function Navbar() {
 
             {/* Desktop right */}
             <div className="hidden lg:flex items-center gap-1.5 xl:gap-2 shrink-0 flex-nowrap">
-              {/* Atlas AI promo button — square, black text */}
+              {/* Atlas AI graphic button */}
               <a
-                href="https://atlas-ai-iota.vercel.app"
+                href="https://alwaysaskatlas.com/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="atlas-btn hidden xl:flex items-center gap-2 !text-black font-black text-xs px-3.5 py-2 rounded-xl transition-all hover:scale-105 active:scale-95 shrink-0"
+                className="hidden xl:inline-flex items-center justify-center shrink-0 transition-transform duration-200 hover:scale-105 active:scale-95 drop-shadow-[0_4px_12px_rgba(212,160,23,0.35)]"
               >
-                <img src="/icon.webp" alt="Atlas AI" className="w-5 h-5 rounded-sm object-contain" />
-                <span className="!text-black font-black">Try Atlas AI</span>
+                <img
+                  src="/atlas-button.webp"
+                  alt="Try Atlas AI"
+                  className="h-13 sm:h-[52px] w-auto object-contain shrink-0"
+                />
               </a>
 
               {/* Theme toggle switch */}
@@ -398,10 +423,10 @@ export default function Navbar() {
                             className="flex items-center gap-2.5 text-sm font-medium text-slate-600 px-3 py-2.5 rounded-xl hover:bg-slate-50 transition-all">
                             <UserAdd01Icon className="w-4 h-4 text-slate-400" /> Connections
                           </Link>
-                          <Link href="/affiliate" onClick={() => setDropdownOpen(false)}
+                          <a href="https://affiliate.taxcomppro.com" target="_blank" rel="noopener noreferrer" onClick={() => setDropdownOpen(false)}
                             className="flex items-center gap-2.5 text-sm font-medium text-slate-600 px-3 py-2.5 rounded-xl hover:bg-slate-50 transition-all">
-                            <Gift className="w-4 h-4 text-slate-400" /> Affiliate Program
-                          </Link>
+                            <Gift className="w-4 h-4 text-slate-400" /> Become an Affiliate
+                          </a>
                           <Link href="/upgrade" onClick={() => setDropdownOpen(false)}
                             className="flex items-center gap-2.5 text-sm font-medium text-[#d4a017] px-3 py-2.5 rounded-xl hover:bg-amber-50 transition-all">
                             <Rocket01Icon className="w-4 h-4" /> Upgrade Plan
@@ -462,6 +487,39 @@ export default function Navbar() {
               const isHome = l.label === "Home";
               const label = isHome ? (session ? "Home" : "Landing Page") : l.label;
               const href = isHome ? (session ? "/feed" : "/") : l.href;
+              const isExternal = href.startsWith("http");
+
+              if (isExternal) {
+                return (
+                  <a
+                    key={l.label}
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between text-slate-700 dark:text-white/85 px-3 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-white/8 font-semibold transition-colors"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    <span className="flex items-center gap-3">
+                      {Icon ? (
+                        <span className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-white/10 flex items-center justify-center shrink-0">
+                          <Icon className="w-4 h-4 text-[#0a1628] dark:text-white/80" />
+                        </span>
+                      ) : (
+                        <span className="w-8 h-8 rounded-lg bg-amber-400/10 flex items-center justify-center shrink-0">
+                          <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse" />
+                        </span>
+                      )}
+                      {label}
+                    </span>
+                    {l.badge && (
+                      <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-600 dark:text-amber-300 border border-amber-400/40 shadow-[0_0_10px_rgba(245,158,11,0.45)] animate-pulse">
+                        {l.badge}
+                      </span>
+                    )}
+                  </a>
+                );
+              }
+
               return (
                 <Link key={l.label} href={href}
                   className="flex items-center justify-between text-slate-700 dark:text-white/85 px-3 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-white/8 font-semibold transition-colors"
@@ -486,16 +544,21 @@ export default function Navbar() {
                 </Link>
               );
             })}
-                    {/* Atlas AI button on mobile */}
-          <div className="px-4 pb-3">
+          </div>
+
+          {/* Atlas AI button on mobile */}
+          <div className="px-4 pb-3 flex justify-center">
             <a
-              href="https://atlas-ai-iota.vercel.app"
+              href="https://alwaysaskatlas.com/"
               target="_blank"
               rel="noopener noreferrer"
-              className="atlas-btn flex items-center justify-center gap-2 !text-black font-black text-sm px-4 py-3 rounded-xl w-full"
+              className="inline-flex items-center justify-center w-full max-w-[280px] transition-transform duration-200 hover:scale-105 active:scale-95 drop-shadow-[0_4px_12px_rgba(212,160,23,0.35)]"
             >
-              <img src="/icon.webp" alt="Atlas AI" className="w-5 h-5 rounded-sm object-contain" />
-              <span className="!text-black font-black">Try Atlas AI</span>
+              <img
+                src="/atlas-button.webp"
+                alt="Try Atlas AI"
+                className="h-13 sm:h-14 w-auto object-contain"
+              />
             </a>
           </div>
 
@@ -560,10 +623,10 @@ export default function Navbar() {
                       className="flex items-center gap-3 text-sm font-semibold text-slate-700 dark:text-white/80 px-3 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-white/8 transition-colors">
                       <UserAdd01Icon className="w-4 h-4 text-slate-400" /> Connections
                     </Link>
-                    <Link href="/affiliate" onClick={() => setMobileOpen(false)}
+                    <a href="https://affiliate.taxcomppro.com" target="_blank" rel="noopener noreferrer" onClick={() => setMobileOpen(false)}
                       className="flex items-center gap-3 text-sm font-semibold text-slate-700 dark:text-white/80 px-3 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-white/8 transition-colors">
-                      <Gift className="w-4 h-4 text-slate-400" /> Affiliate Program
-                    </Link>
+                      <Gift className="w-4 h-4 text-slate-400" /> Become an Affiliate
+                    </a>
                     {(storeUser?.tier === "MARKETPLACE" || storeUser?.tier === "MARKETPLACE_PLUS") && (
                       <Link href="/seller-dashboard" onClick={() => setMobileOpen(false)}
                         className="flex items-center gap-3 text-sm font-semibold text-[#d4a017] px-3 py-3 rounded-xl hover:bg-amber-50 dark:hover:bg-white/8 transition-colors">
@@ -584,18 +647,18 @@ export default function Navbar() {
                 </button>
               </div>
             ) : (
-              <div className="flex flex-col gap-2.5">
-                <Link href="/login"
-                  className="text-center text-sm font-bold text-[#0a1628] dark:text-white border border-slate-300 dark:border-white/25 py-3 rounded-full hover:bg-slate-50 dark:hover:bg-white/10 transition-colors">
+              <div className="flex flex-col gap-2 pt-1">
+                <Link href="/login" onClick={() => setMobileOpen(false)}
+                  className="w-full text-center py-2.5 text-sm font-bold text-[#0a1628] dark:text-white bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/15 rounded-xl transition-colors">
                   Sign In
                 </Link>
-                <Link href="/register"
-                  className="text-center text-sm font-black bg-gradient-to-r from-[#f0c040] to-[#d4a017] !text-black py-3 rounded-full hover:shadow-[0_0_20px_rgba(212,160,23,0.4)] transition-all">
-                  Get Started Free
+                <Link href="/register" onClick={() => setMobileOpen(false)}
+                  className="w-full text-center py-2.5 text-sm font-black text-[#0a1628] bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 rounded-xl transition-all shadow-md">
+                  Join TaxCompPro
                 </Link>
               </div>
             )}
-          </div>    </div>
+          </div>
         </div>
       )}
     </header>

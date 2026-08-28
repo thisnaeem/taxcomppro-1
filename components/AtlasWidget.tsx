@@ -23,8 +23,8 @@ const statusConfig = {
 };
 
 const HINTS = ["Schedule C Help", "IRS Audit Defense", "Max My Deductions", "W-2 Question"];
-const WIDGET_WIDTH = 142;
-const WIDGET_HEIGHT = 188;
+const WIDGET_WIDTH = 248;
+const WIDGET_HEIGHT = 329;
 const PADDING = 16;
 
 function TypingDots() {
@@ -89,6 +89,19 @@ export default function AtlasWidget() {
 
   const bottomRef  = useRef<HTMLDivElement>(null);
   const inputRef   = useRef<HTMLInputElement>(null);
+  const videoRef   = useRef<HTMLVideoElement>(null);
+
+  // Guarantee continuous video playback
+  useEffect(() => {
+    const playVideo = () => {
+      if (videoRef.current) {
+        videoRef.current.play().catch(() => {});
+      }
+    };
+    playVideo();
+    window.addEventListener("focus", playVideo);
+    return () => window.removeEventListener("focus", playVideo);
+  }, []);
 
   // Clamp position to viewport bounds
   const clampPos = useCallback((x: number, y: number) => {
@@ -430,10 +443,14 @@ export default function AtlasWidget() {
         }}
       >
         <div className={`w-full h-full relative flex items-center justify-center ${!isDragging ? "atlas-floating" : ""}`}>
-          {/* Full unclipped transparent robot character - no background box */}
-          <img
-            src="/atlas-bot.webp"
-            alt="Atlas AI"
+          {/* Full unclipped transparent animated character */}
+          <video
+            ref={videoRef}
+            src="/animation.webm"
+            autoPlay
+            loop
+            muted
+            playsInline
             draggable={false}
             className="w-full h-full object-contain pointer-events-none drop-shadow-[0_12px_24px_rgba(0,0,0,0.4)] group-hover:drop-shadow-[0_18px_36px_rgba(240,192,64,0.45)] transition-all"
           />

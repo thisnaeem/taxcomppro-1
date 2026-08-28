@@ -27,7 +27,6 @@ const PUBLIC_PAGES = new Set([
   "/verify-certificate",
   "/security",
   "/apply-professional",
-  "/affiliate",
   "/upgrade",
 ]);
 
@@ -44,7 +43,6 @@ const PUBLIC_PREFIXES = [
   "/connect/",
   "/pro/",
   "/verify-certificate/",
-  "/affiliate/",
   "/upgrade/",
   "/reset-password/",
 ];

@@ -160,7 +160,7 @@ export default function UpgradePage() {
                 <div className="p-7 flex flex-col flex-1">
                   {/* Plan image */}
                   <div className="flex justify-center mb-5">
-                    <Image src={plan.img} alt={plan.name} width={130} height={130} className="object-contain" />
+                    <Image src={plan.img} alt={plan.name} width={130} height={130} className="object-contain" style={{ width: "auto", height: "auto" }} />
                   </div>
 
                   {/* Name */}
