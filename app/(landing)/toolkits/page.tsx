@@ -17,6 +17,7 @@ import {
   Shield,
   Sparkles,
   Check,
+  Crown,
 } from "lucide-react";
 
 /* ─────────────────────────────────────────────────────────
@@ -74,14 +75,41 @@ function ToolkitCard({ tk }: { tk: Toolkit }) {
    ULTIMATE BUNDLE CARD (No Price, Full Included Features)
 ───────────────────────────────────────────────────────── */
 function UltimateBundleCard({ bundle }: { bundle: Bundle }) {
+  const isPlus = bundle.id === "ultimate-bundle-plus";
+
   return (
-    <div className="relative group rounded-3xl overflow-hidden border-2 border-amber-400/40 dark:border-amber-400/60 bg-white dark:bg-gradient-to-b dark:from-[#1b2b48] dark:to-[#0f192b] shadow-xl dark:shadow-[0_0_50px_rgba(245,158,11,0.25)] p-8 sm:p-10 transition-all duration-300 hover:shadow-2xl">
+    <div
+      className={`relative group rounded-3xl overflow-hidden border-2 p-8 sm:p-10 transition-all duration-300 hover:shadow-2xl ${
+        isPlus
+          ? "border-amber-400 dark:border-amber-400/90 bg-gradient-to-b from-amber-50/40 via-white to-amber-50/20 dark:from-[#1d2d4c] dark:to-[#0f192b] shadow-xl dark:shadow-[0_0_55px_rgba(245,158,11,0.28)]"
+          : "border-amber-400/40 dark:border-amber-400/60 bg-white dark:bg-gradient-to-b dark:from-[#1b2b48] dark:to-[#0f192b] shadow-xl dark:shadow-[0_0_50px_rgba(245,158,11,0.25)]"
+      }`}
+    >
       {/* Top ribbon */}
-      <div className="inline-flex items-center gap-1.5 bg-gradient-to-r from-amber-500 to-amber-600 text-[#0a1628] text-xs font-black uppercase tracking-wider px-4 py-1.5 rounded-full shadow-md mb-6">
-        <Sparkles className="w-4 h-4 fill-[#0a1628]" /> {bundle.badge}
+      <div className="flex flex-wrap items-center gap-3 mb-6">
+        <div
+          className={`inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wider px-4 py-1.5 rounded-full shadow-md ${
+            isPlus
+              ? "bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 text-[#0a1628]"
+              : "bg-gradient-to-r from-amber-500 to-amber-600 text-[#0a1628]"
+          }`}
+        >
+          {isPlus ? (
+            <Crown className="w-4 h-4 fill-[#0a1628]" />
+          ) : (
+            <Sparkles className="w-4 h-4 fill-[#0a1628]" />
+          )}
+          <span>{bundle.badge}</span>
+        </div>
+
+        {isPlus && (
+          <span className="inline-flex items-center gap-1 text-[11px] font-extrabold uppercase tracking-widest text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-400/10 border border-amber-300 dark:border-amber-400/30 px-3 py-1 rounded-full">
+            All Toolkits + All Video Masterclasses
+          </span>
+        )}
       </div>
 
-      <div className="flex flex-col lg:flex-row items-center justify-between gap-8 mb-8">
+      <div className="flex flex-col lg:flex-row items-center justify-between gap-8 mb-8 relative z-10">
         {bundle.badgeImage && (
           <div className="w-48 sm:w-56 h-48 sm:h-56 flex items-center justify-center shrink-0">
             <img
@@ -96,7 +124,7 @@ function UltimateBundleCard({ bundle }: { bundle: Bundle }) {
           <h3 className="text-3xl sm:text-4xl font-black text-[#0a1628] dark:text-white mb-2">
             {bundle.name}
           </h3>
-          <p className="text-slate-500 dark:text-slate-300 text-base max-w-2xl leading-relaxed">
+          <p className="text-slate-600 dark:text-slate-300 text-base max-w-2xl leading-relaxed">
             {bundle.description}
           </p>
         </div>
@@ -107,12 +135,13 @@ function UltimateBundleCard({ bundle }: { bundle: Bundle }) {
           rel="noopener noreferrer"
           className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-[#0a1628] font-black text-sm uppercase tracking-wider px-8 py-4 rounded-2xl shadow-xl shadow-amber-500/25 hover:scale-105 active:scale-95 transition-all shrink-0"
         >
-          ACCESS ULTIMATE BUNDLE <ArrowRight className="w-4 h-4" />
+          <span>{isPlus ? "ACCESS ULTIMATE PLUS BUNDLE" : "ACCESS ULTIMATE BUNDLE"}</span>
+          <ArrowRight className="w-4 h-4" />
         </a>
       </div>
 
       {/* Features Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 border-t border-slate-200/80 dark:border-slate-800/80 pt-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 border-t border-slate-200/80 dark:border-slate-800/80 pt-6 relative z-10">
         {bundle.features.map((feat) => (
           <div
             key={feat}
@@ -171,10 +200,10 @@ export default function ToolkitsPage() {
                 Browse Toolkits <ArrowRight className="w-4 h-4" />
               </a>
               <a
-                href="#bundle"
+                href="#bundles"
                 className="inline-flex items-center gap-2 border-2 border-white/20 text-white hover:bg-white/10 font-bold text-sm px-7 py-4 rounded-full transition-all"
               >
-                View Ultimate Bundle
+                View Practice Bundles
               </a>
             </div>
 
@@ -257,11 +286,27 @@ export default function ToolkitsPage() {
       </section>
 
       {/* ══════════════════════════════════════
-          ULTIMATE BUNDLE SECTION
+          ULTIMATE BUNDLES SECTION
       ══════════════════════════════════════ */}
       {BUNDLES.length > 0 && (
-        <section id="bundle" className="max-w-7xl mx-auto px-6 pb-20">
-          <UltimateBundleCard bundle={BUNDLES[0]} />
+        <section id="bundles" className="max-w-7xl mx-auto px-6 pb-20 scroll-mt-20">
+          <div id="bundle" className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 bg-amber-100 dark:bg-amber-400/10 border border-amber-300 dark:border-amber-400/30 text-amber-800 dark:text-amber-300 text-xs font-bold px-4 py-1.5 rounded-full mb-4 uppercase tracking-widest">
+              <Sparkles className="w-3.5 h-3.5 fill-amber-500 text-amber-500" /> Practice Defense Suites
+            </div>
+            <h2 className="text-4xl font-black text-[#0a1628] dark:text-white mb-3">
+              Practice Defense Bundles
+            </h2>
+            <p className="text-slate-600 dark:text-slate-300 text-base sm:text-lg max-w-3xl mx-auto">
+              Get complete practice coverage. Choose between our comprehensive Toolkit Suite or the Flagship Suite with complete Video Masterclasses &amp; Staff Certifications.
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-10">
+            {BUNDLES.map((bundle) => (
+              <UltimateBundleCard key={bundle.id} bundle={bundle} />
+            ))}
+          </div>
         </section>
       )}
 

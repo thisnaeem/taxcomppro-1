@@ -221,7 +221,7 @@ export const BUNDLES: Bundle[] = [
     color: "from-[#0a1628] to-[#1a3a6b]",
     accentColor: "amber",
     icon: "🏆",
-    badgeImage: "/elite-bundle.webp",
+    badgeImage: "/ultimate.webp",
     description: "The complete practice defense suite including all success toolkits, staff due diligence training, posters, and VIP community access.",
     externalUrl: "https://ultimate.taxcomppro.com/",
     features: [
@@ -248,7 +248,7 @@ export const BUNDLES: Bundle[] = [
     color: "from-[#071426] to-[#162e52]",
     accentColor: "amber",
     icon: "👑",
-    badgeImage: "/elite-bundle.webp",
+    badgeImage: "/ultimateplus.webp",
     description: "The premier flagship suite: All 6 success toolkits, all complete video masterclasses on Atlas Academy with 10 staff training licenses, and 6 months of Marketplace Membership Plus.",
     externalUrl: "https://ultimateplus.taxcomppro.com/",
     features: [
@@ -259,6 +259,7 @@ export const BUNDLES: Bundle[] = [
       "IRS Penalty Defense Office Posters",
       "Auto-Launch Atlas Academy Access",
       "Lifetime Form & Course Revisions",
+      "Staff Due Diligence Certification",
     ],
   },
 ];
