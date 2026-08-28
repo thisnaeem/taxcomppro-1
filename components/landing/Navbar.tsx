@@ -198,11 +198,13 @@ export default function Navbar() {
           <>
             {/* Desktop nav */}
             <nav className="hidden lg:flex items-center gap-1 xl:gap-2 shrink-0" ref={navMenuRef}>
-              {navItems.map(item => {
+              {navItems
+                .filter(item => !(session && item.label === "Pricing"))
+                .map(item => {
                 if (item.type === "link") {
                   const Icon = item.icon;
                   const isHome = item.label === "Home";
-                  const label = isHome ? (session ? "Home" : "Landing Page") : item.label;
+                  const label = item.label;
                   const href = isHome ? (session ? "/feed" : "/") : item.href;
                   const isExternal = href.startsWith("http");
 
@@ -482,10 +484,12 @@ export default function Navbar() {
 
           {/* Nav links */}
           <div className="px-3 pb-2">
-            {navLinks.map(l => {
+            {navLinks
+              .filter(l => !(session && l.label === "Pricing"))
+              .map(l => {
               const Icon = l.icon;
               const isHome = l.label === "Home";
-              const label = isHome ? (session ? "Home" : "Landing Page") : l.label;
+              const label = l.label;
               const href = isHome ? (session ? "/feed" : "/") : l.href;
               const isExternal = href.startsWith("http");
 

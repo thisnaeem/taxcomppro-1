@@ -854,6 +854,43 @@ export default function CreateListingPage() {
     );
   }
 
+  const canSell = !!(user && (
+    user.role === "ADMIN" || user.role === "PROFESSIONAL" ||
+    user.tier === "MARKETPLACE" || user.tier === "MARKETPLACE_PLUS"
+  ));
+
+  if (user && !canSell) {
+    return (
+      <div className="min-h-screen bg-[#f8fafc] dark:bg-[#0c1527] py-20 px-4">
+        <div className="max-w-md mx-auto text-center bg-white dark:bg-[#172135] p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl space-y-5">
+          <div className="w-16 h-16 rounded-2xl bg-amber-50 dark:bg-amber-500/10 text-[#d4a017] flex items-center justify-center mx-auto border border-amber-200 dark:border-amber-500/20">
+            <Sparkles className="w-8 h-8" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-black text-[#0a1628] dark:text-white">Upgrade Your Plan to Access This Feature</h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+              Creating listings, selling services, and publishing products or courses requires a <strong>Marketplace</strong> or <strong>Marketplace Plus</strong> membership.
+            </p>
+          </div>
+          <div className="pt-3 flex flex-col gap-3">
+            <Link
+              href="/upgrade"
+              className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-[#f0c040] to-[#d4a017] text-[#0a1628] font-black text-sm hover:shadow-lg transition-all text-center flex items-center justify-center gap-2"
+            >
+              <Sparkles className="w-4 h-4" /> View Upgrade Options
+            </Link>
+            <Link
+              href="/marketplace"
+              className="w-full py-3 px-6 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold text-sm hover:bg-slate-50 dark:hover:bg-white/5 transition-all text-center"
+            >
+              Back to Marketplace
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#f8fafc] dark:bg-[#0c1527] py-10 px-4 sm:px-6">
       <div className="max-w-7xl mx-auto">

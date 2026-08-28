@@ -23,9 +23,11 @@ const statusConfig = {
 };
 
 const HINTS = ["Schedule C Help", "IRS Audit Defense", "Max My Deductions", "W-2 Question"];
-const WIDGET_WIDTH = 248;
-const WIDGET_HEIGHT = 329;
-const PADDING = 16;
+const DESKTOP_WIDTH = 248;
+const DESKTOP_HEIGHT = 329;
+const MOBILE_WIDTH = 124;
+const MOBILE_HEIGHT = 165;
+const PADDING = 12;
 
 function TypingDots() {
   return (
@@ -66,6 +68,7 @@ export default function AtlasWidget() {
   const [mode, setMode]           = useState<Mode>("standard");
   const [unread, setUnread]       = useState(false);
   const [enabled, setEnabled]     = useState(true);
+  const [isMobile, setIsMobile]   = useState(false);
   
   // Support ticket form state
   const [supportName, setSupportName] = useState("");
@@ -91,6 +94,19 @@ export default function AtlasWidget() {
   const inputRef   = useRef<HTMLInputElement>(null);
   const videoRef   = useRef<HTMLVideoElement>(null);
 
+  // Detect mobile screen size
+  useEffect(() => {
+    const updateSize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    updateSize();
+    window.addEventListener("resize", updateSize);
+    return () => window.removeEventListener("resize", updateSize);
+  }, []);
+
+  const curWidth = isMobile ? MOBILE_WIDTH : DESKTOP_WIDTH;
+  const curHeight = isMobile ? MOBILE_HEIGHT : DESKTOP_HEIGHT;
+
   // Guarantee continuous video playback
   useEffect(() => {
     const playVideo = () => {
@@ -106,8 +122,10 @@ export default function AtlasWidget() {
   // Clamp position to viewport bounds
   const clampPos = useCallback((x: number, y: number) => {
     if (typeof window === "undefined") return { x, y };
-    const maxX = Math.max(PADDING, window.innerWidth - WIDGET_WIDTH - PADDING);
-    const maxY = Math.max(PADDING, window.innerHeight - WIDGET_HEIGHT - PADDING);
+    const width = window.innerWidth < 768 ? MOBILE_WIDTH : DESKTOP_WIDTH;
+    const height = window.innerWidth < 768 ? MOBILE_HEIGHT : DESKTOP_HEIGHT;
+    const maxX = Math.max(PADDING, window.innerWidth - width - PADDING);
+    const maxY = Math.max(PADDING, window.innerHeight - height - PADDING);
     return {
       x: Math.min(Math.max(PADDING, x), maxX),
       y: Math.min(Math.max(PADDING, y), maxY),
@@ -116,6 +134,8 @@ export default function AtlasWidget() {
 
   // Initialize position from localStorage or default to bottom-right
   useEffect(() => {
+    const width = window.innerWidth < 768 ? MOBILE_WIDTH : DESKTOP_WIDTH;
+    const height = window.innerWidth < 768 ? MOBILE_HEIGHT : DESKTOP_HEIGHT;
     try {
       const saved = localStorage.getItem("atlas_widget_pos");
       if (saved) {
@@ -127,7 +147,7 @@ export default function AtlasWidget() {
       }
     } catch {}
 
-    setPos(clampPos(window.innerWidth - WIDGET_WIDTH - 24, window.innerHeight - WIDGET_HEIGHT - 24));
+    setPos(clampPos(window.innerWidth - width - 16, window.innerHeight - height - 16));
   }, [clampPos]);
 
   // Keep inside viewport on window resize
@@ -257,6 +277,8 @@ export default function AtlasWidget() {
       return { bottom: 198, right: 24 };
     }
 
+    const width = window.innerWidth < 768 ? MOBILE_WIDTH : DESKTOP_WIDTH;
+    const height = window.innerWidth < 768 ? MOBILE_HEIGHT : DESKTOP_HEIGHT;
     const panelWidth = Math.min(380, window.innerWidth - 24);
     const panelHeight = Math.min(560, window.innerHeight - 100);
 
@@ -266,12 +288,12 @@ export default function AtlasWidget() {
       top = Math.max(12, pos.y - panelHeight - 12);
     } else {
       // Position below widget
-      top = Math.min(window.innerHeight - panelHeight - 12, pos.y + WIDGET_HEIGHT + 12);
+      top = Math.min(window.innerHeight - panelHeight - 12, pos.y + height + 12);
     }
 
     let left: number;
     if (pos.x > window.innerWidth / 2) {
-      left = Math.max(12, Math.min(pos.x + WIDGET_WIDTH - panelWidth, window.innerWidth - panelWidth - 12));
+      left = Math.max(12, Math.min(pos.x + width - panelWidth, window.innerWidth - panelWidth - 12));
     } else {
       left = Math.max(12, Math.min(pos.x, window.innerWidth - panelWidth - 12));
     }
@@ -435,10 +457,10 @@ export default function AtlasWidget() {
           isDragging ? "cursor-grabbing scale-105" : "cursor-grab hover:scale-105"
         }`}
         style={{
-          width: WIDGET_WIDTH,
-          height: WIDGET_HEIGHT,
-          left: pos ? `${pos.x}px` : `calc(100vw - ${WIDGET_WIDTH + 24}px)`,
-          top: pos ? `${pos.y}px` : `calc(100vh - ${WIDGET_HEIGHT + 24}px)`,
+          width: curWidth,
+          height: curHeight,
+          left: pos ? `${pos.x}px` : `calc(100vw - ${curWidth + 16}px)`,
+          top: pos ? `${pos.y}px` : `calc(100vh - ${curHeight + 16}px)`,
           transition: isDragging ? "none" : "transform 0.2s ease, filter 0.2s ease",
         }}
       >

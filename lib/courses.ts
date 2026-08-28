@@ -158,9 +158,9 @@ export const COURSES: CourseOffering[] = [
     duration: "3.0 hrs",
     totalDurationSeconds: 10800,
     enrolledCount: 310,
-    price: 97,
+    price: 299,
     isFree: false,
-    externalUrl: "https://auditplaybook.taxcomppro.com/",
+    externalUrl: "https://staffauditready.taxcomppro.com/",
     instructor: {
       name: "Atlas Academy Faculty",
       image: "/fevicon.webp",

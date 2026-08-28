@@ -5,10 +5,28 @@ import Link from "next/link";
 import {
   ArrowUpRight, ExternalLink, Users, ShoppingBag,
   CheckCircle2, RefreshCw, Newspaper, ChevronRight,
-  Briefcase, Star,
+  Briefcase, Star, Radio, Mic, Calendar, Sparkles,
 } from "lucide-react";
 
 // ── Types ────────────────────────────────────────────────────────────────────
+
+interface SpaceHost {
+  id: string;
+  name: string;
+  image: string | null;
+  headline: string | null;
+}
+
+interface SpaceItem {
+  id: string;
+  name: string;
+  description: string | null;
+  isLive: boolean;
+  scheduledAt: string | null;
+  createdAt: string;
+  host: SpaceHost;
+  _count: { rsvps: number };
+}
 
 interface IrsItem {
   id: string; title: string; link: string;
@@ -51,6 +69,15 @@ function timeAgo(d: string) {
   return `${Math.floor(s / 86400)}d ago`;
 }
 
+function formatScheduledShort(d: string) {
+  const date = new Date(d);
+  const now = new Date();
+  const isToday = date.toDateString() === now.toDateString();
+  const timeStr = date.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+  if (isToday) return `Today at ${timeStr}`;
+  return `${date.toLocaleDateString(undefined, { month: "short", day: "numeric" })} · ${timeStr}`;
+}
+
 // ── Section wrapper ────────────────────────────────────────────────────────
 
 function Section({ title, icon: Icon, href, linkLabel, children }: {
@@ -85,6 +112,146 @@ function SkeletonRow({ lines = 2 }: { lines?: number }) {
       {Array.from({ length: lines }).map((_, i) => (
         <div key={i} className={`h-3 bg-slate-100 rounded ${i === 0 ? "w-3/4" : "w-1/2"}`} />
       ))}
+    </div>
+  );
+}
+
+// ── Live Pro Talks ───────────────────────────────────────────────────────────
+
+function LiveProTalksSection() {
+  const [spaces, setSpaces] = useState<SpaceItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/spaces")
+      .then(r => (r.ok ? r.json() : []))
+      .then((d: SpaceItem[]) => {
+        setSpaces(Array.isArray(d) ? d : []);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const liveSpaces = spaces.filter(s => s.isLive);
+  const upcomingSpaces = spaces.filter(s => !s.isLive && s.scheduledAt);
+
+  return (
+    <div className="bg-gradient-to-b from-[#0a1628] to-[#0f213d] text-white rounded-2xl overflow-hidden shadow-md border border-slate-800/80">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-white/10">
+        <div className="flex items-center gap-2">
+          <div className="relative w-6 h-6 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+            {liveSpaces.length > 0 && (
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping absolute" />
+            )}
+            <Radio className="w-3.5 h-3.5 text-emerald-400" />
+          </div>
+          <div className="flex items-center gap-2">
+            <h3 className="font-black text-white text-sm">Live Pro Talks</h3>
+            {liveSpaces.length > 0 && (
+              <span className="px-1.5 py-0.5 rounded-full text-[9px] font-black tracking-wider uppercase bg-red-500/20 text-red-400 border border-red-500/30 flex items-center gap-1 animate-pulse">
+                <span className="w-1.5 h-1.5 rounded-full bg-red-400" /> LIVE
+              </span>
+            )}
+          </div>
+        </div>
+        <Link
+          href="/pro-talks"
+          className="text-[11px] font-bold text-[#f0c040] hover:text-amber-300 flex items-center gap-0.5 transition-colors"
+        >
+          View all <ChevronRight className="w-3 h-3" />
+        </Link>
+      </div>
+
+      {/* Content */}
+      <div className="p-4 space-y-3">
+        {loading ? (
+          <div className="space-y-2.5 animate-pulse">
+            <div className="h-14 bg-white/5 rounded-xl" />
+            <div className="h-14 bg-white/5 rounded-xl" />
+          </div>
+        ) : liveSpaces.length > 0 ? (
+          <div className="space-y-2.5">
+            {liveSpaces.slice(0, 3).map((space) => (
+              <div
+                key={space.id}
+                className="p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-emerald-500/30 transition-all group"
+              >
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="w-7 h-7 rounded-full bg-emerald-500/20 text-emerald-300 flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden border border-emerald-500/40">
+                      {space.host?.image ? (
+                        <img src={space.host.image} alt={space.host.name} className="w-full h-full object-cover" />
+                      ) : (
+                        space.host?.name?.[0]?.toUpperCase() ?? "P"
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-white truncate">{space.name}</p>
+                      <p className="text-[10px] text-white/60 truncate">Host: {space.host?.name ?? "Tax Pro"}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-1">
+                  <div className="flex items-center gap-1.5 text-[10px] text-emerald-400 font-semibold">
+                    <span className="flex h-2 w-2 relative">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                    <span>Happening Now</span>
+                  </div>
+
+                  <Link
+                    href={`/spaces/${space.id}`}
+                    className="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-[#060e1a] text-xs font-extrabold shadow-[0_0_12px_rgba(16,185,129,0.3)] transition-all group-hover:scale-105"
+                  >
+                    <Radio className="w-3 h-3" /> Join Talk
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : upcomingSpaces.length > 0 ? (
+          <div className="space-y-2.5">
+            <div className="flex items-center gap-1.5 text-[11px] font-bold text-white/50 mb-1">
+              <Calendar className="w-3.5 h-3.5 text-[#f0c040]" />
+              <span>Upcoming Pro Talks</span>
+            </div>
+            {upcomingSpaces.slice(0, 2).map((space) => (
+              <div
+                key={space.id}
+                className="p-3 rounded-xl bg-white/5 hover:bg-white/8 border border-white/10 transition-all"
+              >
+                <p className="text-xs font-bold text-white truncate mb-1">{space.name}</p>
+                <div className="flex items-center justify-between text-[10px] text-white/60">
+                  <span>{space.scheduledAt ? formatScheduledShort(space.scheduledAt) : "Upcoming"}</span>
+                  <Link
+                    href="/pro-talks"
+                    className="text-[#f0c040] hover:text-amber-300 font-bold flex items-center gap-0.5"
+                  >
+                    RSVP <ChevronRight className="w-2.5 h-2.5" />
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-3.5 px-2 bg-white/5 rounded-xl border border-white/5">
+            <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center mx-auto mb-2 text-white/60">
+              <Radio className="w-4 h-4" />
+            </div>
+            <p className="text-xs font-bold text-white mb-0.5">No Live Talks Right Now</p>
+            <p className="text-[11px] text-white/50 mb-3">Join or host live audio & video sessions with fellow tax pros.</p>
+            <Link
+              href="/pro-talks"
+              className="inline-flex items-center justify-center gap-1.5 w-full py-2 rounded-lg bg-gradient-to-r from-[#f0c040] to-[#d4a017] text-[#0a1628] text-xs font-extrabold shadow-sm hover:opacity-95 transition-all"
+            >
+              <Mic className="w-3.5 h-3.5" /> Explore Pro Talks
+            </Link>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -342,6 +509,7 @@ function MarketplaceSection() {
 export default function FeedRightPanel() {
   return (
     <aside className="w-full space-y-3">
+      <LiveProTalksSection />
       <IrsNewsSection />
       <TopProsSection />
       <CommunitiesSection />

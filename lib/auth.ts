@@ -62,6 +62,8 @@ export const auth = betterAuth({
     "https://irsfinedefense.taxcomppro.com",
     "https://schedulecrecon.taxcomppro.com",
     "https://credits.taxcomppro.com",
+    "https://staffauditready.taxcomppro.com",
+    "https://staff-audit-ready.taxcomppro.com",
     "https://affiliate.taxcomppro.com",
     "https://ultimate.taxcomppro.com",
     "https://ultimate.taxcompro.com",

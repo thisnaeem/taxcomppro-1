@@ -14,7 +14,7 @@ import Image from "next/image";
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const nextPath = searchParams.get("next") || "/feed";
+  const nextPath = searchParams.get("next") || searchParams.get("redirect") || "/feed";
   const [serverError, setServerError] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
