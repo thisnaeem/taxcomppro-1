@@ -49,12 +49,37 @@ export async function POST(req: NextRequest) {
               { role: "user", content: message },
             ];
 
-            const claudeStream = await client.messages.stream({
-              model: "claude-3-haiku-20240307",
-              max_tokens: maxTokens,
-              system: systemPrompt,
-              messages: msgs,
-            });
+            const candidateModels = [
+              "claude-haiku-4-5-20251001",
+              "claude-sonnet-4-5-20250929",
+              "claude-3-5-haiku-20241022",
+              "claude-3-haiku-20240307",
+            ];
+
+            let claudeStream = null;
+            let lastErr: unknown = null;
+
+            for (const modelName of candidateModels) {
+              try {
+                claudeStream = await client.messages.stream({
+                  model: modelName,
+                  max_tokens: maxTokens,
+                  system: systemPrompt,
+                  messages: msgs,
+                });
+                break;
+              } catch (e: any) {
+                lastErr = e;
+                if (e?.status === 404 || e?.message?.includes("not_found")) {
+                  continue;
+                }
+                throw e;
+              }
+            }
+
+            if (!claudeStream) {
+              throw lastErr || new Error("No compatible Claude model found");
+            }
 
             for await (const chunk of claudeStream) {
               if (
