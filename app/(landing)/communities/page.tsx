@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { useAppSelector } from "@/store/hooks";
-import { Loader2, LayoutGrid, List, Search, Plus, Globe, Lock, Users, MessageSquare, CheckCircle2, LogOut } from "lucide-react";
+import { Loader2, LayoutGrid, List, Search, Plus, Globe, Lock, Users, MessageSquare, CheckCircle2, LogOut, AlertTriangle, Trash2 } from "lucide-react";
 import { Cancel01Icon, ArrowRight01Icon, UserCircleIcon } from "hugeicons-react";
 
 interface Community {
@@ -233,6 +233,9 @@ export default function CommunitiesPage() {
   const [showCreate,  setShowCreate]  = useState(false);
   const [tab,         setTab]         = useState<Tab>("joined");
   const [view,        setView]        = useState<ViewMode>("grid");
+  const [showClearModal, setShowClearModal] = useState(false);
+  const [clearingCommunities, setClearingCommunities] = useState(false);
+  const [toastMsg,    setToastMsg]    = useState("");
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -256,6 +259,28 @@ export default function CommunitiesPage() {
     const t = setTimeout(() => setQuery(search), 400);
     return () => clearTimeout(t);
   }, [search]);
+
+  const handleClearAllCommunities = async () => {
+    setClearingCommunities(true);
+    try {
+      const res = await fetch("/api/admin/communities", { method: "DELETE" });
+      if (res.ok) {
+        const data = await res.json();
+        setCommunities([]);
+        setJoined({});
+        setShowClearModal(false);
+        setToastMsg(`Successfully cleared ${data.count ?? "all"} communities!`);
+        setTimeout(() => setToastMsg(""), 4000);
+      } else {
+        const err = await res.json();
+        alert(err.error || "Failed to clear communities");
+      }
+    } catch {
+      alert("Error clearing communities");
+    } finally {
+      setClearingCommunities(false);
+    }
+  };
 
   const handleJoin = async (id: string) => {
     if (!user) { window.location.href = "/login?redirect=/communities"; return; }
@@ -303,6 +328,56 @@ export default function CommunitiesPage() {
 
   return (
     <div className="min-h-screen bg-[#f4f6fb] pt-5 pb-14">
+      {/* Toast */}
+      {toastMsg && (
+        <div className="fixed top-20 right-6 z-50 flex items-center gap-2 bg-emerald-600 text-white font-bold text-sm px-5 py-3 rounded-2xl shadow-xl animate-in slide-in-from-top-3 duration-200">
+          <CheckCircle2 className="w-5 h-5 text-white" />
+          <span>{toastMsg}</span>
+        </div>
+      )}
+
+      {/* ── Clear All Confirmation Modal ── */}
+      {showClearModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-150">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-5">
+            <div className="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+            <div className="text-center space-y-2">
+              <h3 className="text-xl font-black text-[#0a1628]">Clear All Communities?</h3>
+              <p className="text-sm text-slate-500 leading-relaxed">
+                This will permanently delete <strong className="text-rose-600">ALL communities</strong>, discussions, posts, comments, and memberships across the platform. This action cannot be undone.
+              </p>
+            </div>
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                type="button"
+                disabled={clearingCommunities}
+                onClick={() => setShowClearModal(false)}
+                className="flex-1 py-3 px-4 rounded-xl border border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-50 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={clearingCommunities}
+                onClick={handleClearAllCommunities}
+                className="flex-1 py-3 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-rose-600/20 active:scale-95 disabled:opacity-50"
+              >
+                {clearingCommunities ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Clearing...
+                  </>
+                ) : (
+                  "Yes, Clear All"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showCreate && isAdmin && (
         <CreateModal
           onClose={() => setShowCreate(false)}
@@ -354,10 +429,25 @@ export default function CommunitiesPage() {
             )}
 
             {isAdmin ? ( 
-              <button onClick={() => setShowCreate(true)}
-                className="flex items-center justify-center gap-2 bg-[#0a1628] text-white font-bold text-sm px-5 py-4 rounded-xl hover:bg-[#1a3a6b] transition-all w-full">
-                <Plus className="w-4 h-4" /> Create Community
-              </button>
+              <div className="space-y-2">
+                <button onClick={() => setShowCreate(true)}
+                  className="flex items-center justify-center gap-2 bg-[#0a1628] text-white font-bold text-sm px-5 py-3.5 rounded-xl hover:bg-[#1a3a6b] transition-all w-full shadow-sm">
+                  <Plus className="w-4 h-4" /> Create Community
+                </button>
+                <div className="bg-rose-50 rounded-2xl p-3 border border-rose-200/80 shadow-sm space-y-2">
+                  <div className="flex items-center justify-between px-1">
+                    <span className="text-[11px] font-black uppercase tracking-wider text-rose-700">Admin Action</span>
+                    <span className="text-[9px] font-bold bg-rose-200 text-rose-800 px-1.5 py-0.5 rounded">ADMIN</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowClearModal(true)}
+                    className="w-full flex items-center justify-center gap-2 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs py-2.5 px-3 rounded-xl transition-all shadow-sm active:scale-95"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" /> Clear All Communities
+                  </button>
+                </div>
+              </div>
             ) : !user ? (
               <Link href="/login"
                 className="flex items-center justify-center gap-2 bg-[#0a1628] text-white font-bold text-sm px-5 py-4 rounded-xl hover:bg-[#1a3a6b] transition-all w-full">

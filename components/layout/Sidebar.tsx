@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAppSelector } from "@/store/hooks";
@@ -7,6 +8,7 @@ import {
   LayoutDashboard, Users, CheckSquare, BookOpen,
   BarChart2, Calendar, Images, Package, Gift, Bot,
   CreditCard, ChevronRight, LifeBuoy, GraduationCap, Ticket,
+  Trash2, AlertTriangle, Loader2, CheckCircle2,
 } from "lucide-react";
 
 type NavLink = { icon: React.ElementType; label: string; href: string; exact?: boolean };
@@ -50,92 +52,207 @@ const navGroups = [
 export default function Sidebar() {
   const pathname = usePathname();
   const user     = useAppSelector(s => s.auth.user);
+
+  const [activeModal, setActiveModal] = useState<"marketplace" | "communities" | null>(null);
+  const [isClearing, setIsClearing] = useState(false);
+  const [toastMsg, setToastMsg] = useState("");
+
   if (!user) return null;
 
   const isAdmin = user.role === "ADMIN";
   const links: NavLink[] = isAdmin ? adminLinks : memberLinks;
 
-  return (
-    <aside className="w-[230px] shrink-0 h-screen sticky top-0 bg-[#0a1628] flex flex-col z-10 shadow-2xl">
-      {/* Logo area */}
-      <div className="px-5 py-5 border-b border-white/10">
-        <Link href="/" className="flex items-center gap-2">
-          <img src="/logo_dark.webp" alt="TaxCompPro" className="h-10 w-auto" />
-        </Link>
-        {isAdmin && (
-          <div className="mt-2.5 inline-flex items-center gap-1.5 bg-amber-400/15 text-amber-300 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full">
-            <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-            Admin Panel
-          </div>
-        )}
-      </div>
+  const handleConfirmClear = async () => {
+    if (!activeModal) return;
+    setIsClearing(true);
+    try {
+      const endpoint = activeModal === "marketplace" ? "/api/admin/listings" : "/api/admin/communities";
+      const res = await fetch(endpoint, { method: "DELETE" });
+      if (res.ok) {
+        const data = await res.json();
+        const typeLabel = activeModal === "marketplace" ? "marketplace listings" : "communities";
+        setToastMsg(`Successfully cleared ${data.count ?? "all"} ${typeLabel}!`);
+        setActiveModal(null);
+        setTimeout(() => setToastMsg(""), 4000);
+      } else {
+        const err = await res.json();
+        alert(err.error || "Failed to clear records");
+      }
+    } catch {
+      alert("Error occurred while clearing records");
+    } finally {
+      setIsClearing(false);
+    }
+  };
 
-      {/* Nav */}
-      <nav className="flex-1 px-3 py-4 flex flex-col gap-5 overflow-y-auto">
-        {isAdmin ? navGroups.map(group => (
-          <div key={group.label}>
-            <p className="text-[10px] font-black uppercase tracking-widest text-white/25 px-2.5 mb-1.5">
-              {group.label}
-            </p>
+  return (
+    <>
+      {/* Toast */}
+      {toastMsg && (
+        <div className="fixed top-6 right-6 z-[100] flex items-center gap-2 bg-emerald-600 text-white font-bold text-sm px-5 py-3 rounded-2xl shadow-2xl animate-in slide-in-from-top-3 duration-200">
+          <CheckCircle2 className="w-5 h-5 text-white" />
+          <span>{toastMsg}</span>
+        </div>
+      )}
+
+      {/* Confirmation Modal */}
+      {activeModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-150">
+          <div className="bg-[#0f1d33] border border-white/10 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5 text-white">
+            <div className="w-12 h-12 rounded-2xl bg-rose-500/20 text-rose-400 flex items-center justify-center mx-auto border border-rose-500/30">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+            <div className="text-center space-y-2">
+              <h3 className="text-xl font-black">
+                {activeModal === "marketplace" ? "Clear All Marketplace Listings?" : "Clear All Communities?"}
+              </h3>
+              <p className="text-sm text-white/65 leading-relaxed">
+                {activeModal === "marketplace"
+                  ? "This will permanently delete all marketplace listings, purchases, and related records across the entire platform. This action cannot be undone."
+                  : "This will permanently delete all communities, member memberships, community discussion posts, and comments across the entire platform. This action cannot be undone."}
+              </p>
+            </div>
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                type="button"
+                disabled={isClearing}
+                onClick={() => setActiveModal(null)}
+                className="flex-1 py-3 px-4 rounded-xl border border-white/15 text-white/80 font-bold text-sm hover:bg-white/10 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isClearing}
+                onClick={handleConfirmClear}
+                className="flex-1 py-3 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-rose-600/30 active:scale-95 disabled:opacity-50"
+              >
+                {isClearing ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Clearing...
+                  </>
+                ) : (
+                  "Yes, Clear All"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <aside className="w-[230px] shrink-0 h-screen sticky top-0 bg-[#0a1628] flex flex-col z-10 shadow-2xl">
+        {/* Logo area */}
+        <div className="px-5 py-5 border-b border-white/10">
+          <Link href="/" className="flex items-center gap-2">
+            <img src="/logo_dark.webp" alt="TaxCompPro" className="h-10 w-auto" />
+          </Link>
+          {isAdmin && (
+            <div className="mt-2.5 inline-flex items-center gap-1.5 bg-amber-400/15 text-amber-300 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full">
+              <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+              Admin Panel
+            </div>
+          )}
+        </div>
+
+        {/* Nav */}
+        <nav className="flex-1 px-3 py-4 flex flex-col gap-5 overflow-y-auto">
+          {isAdmin ? (
+            <>
+              {navGroups.map(group => (
+                <div key={group.label}>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-white/25 px-2.5 mb-1.5">
+                    {group.label}
+                  </p>
+                  <div className="flex flex-col gap-0.5">
+                    {group.items.map(l => {
+                      const isActive =
+                        l.exact
+                          ? pathname === l.href
+                          : pathname === l.href || pathname.startsWith(l.href + "/");
+                      return (
+                        <Link
+                          key={l.href + l.label}
+                          href={l.href}
+                          className={`group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                            isActive
+                              ? "bg-[#f0c040] text-[#0a1628] shadow-lg shadow-amber-400/20"
+                              : "text-white/55 hover:text-white hover:bg-white/8"
+                          }`}
+                        >
+                          <l.icon className={`w-4 h-4 shrink-0 ${isActive ? "text-[#0a1628]" : "text-white/40 group-hover:text-white/70"}`} />
+                          <span className="flex-1">{l.label}</span>
+                          {isActive && <ChevronRight className="w-3.5 h-3.5 text-[#0a1628]/60" />}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+
+              {/* Admin Actions / Danger Zone */}
+              <div className="pt-3 border-t border-white/10">
+                <p className="text-[10px] font-black uppercase tracking-widest text-rose-400/80 px-2.5 mb-2 flex items-center justify-between">
+                  <span>Admin Actions</span>
+                  <span className="bg-rose-500/20 text-rose-300 text-[9px] px-1.5 py-0.5 rounded font-bold">DANGER</span>
+                </p>
+                <div className="flex flex-col gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setActiveModal("marketplace")}
+                    className="flex items-center gap-2.5 w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-rose-300 hover:bg-rose-500/15 hover:text-rose-200 transition-all group"
+                  >
+                    <Trash2 className="w-3.5 h-3.5 text-rose-400 group-hover:scale-110 transition-transform shrink-0" />
+                    <span className="truncate">Clear Marketplace</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveModal("communities")}
+                    className="flex items-center gap-2.5 w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-rose-300 hover:bg-rose-500/15 hover:text-rose-200 transition-all group"
+                  >
+                    <Trash2 className="w-3.5 h-3.5 text-rose-400 group-hover:scale-110 transition-transform shrink-0" />
+                    <span className="truncate">Clear Communities</span>
+                  </button>
+                </div>
+              </div>
+            </>
+          ) : (
             <div className="flex flex-col gap-0.5">
-              {group.items.map(l => {
-                const isActive =
-                  l.exact
-                    ? pathname === l.href
-                    : pathname === l.href || pathname.startsWith(l.href + "/");
+              {links.map(l => {
+                const isActive = l.exact ? pathname === l.href : pathname.startsWith(l.href);
                 return (
                   <Link
-                    key={l.href + l.label}
+                    key={l.href}
                     href={l.href}
-                    className={`group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                      isActive
-                        ? "bg-[#f0c040] text-[#0a1628] shadow-lg shadow-amber-400/20"
-                        : "text-white/55 hover:text-white hover:bg-white/8"
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                      isActive ? "bg-[#f0c040] text-[#0a1628]" : "text-white/55 hover:text-white hover:bg-white/8"
                     }`}
                   >
-                    <l.icon className={`w-4 h-4 shrink-0 ${isActive ? "text-[#0a1628]" : "text-white/40 group-hover:text-white/70"}`} />
-                    <span className="flex-1">{l.label}</span>
-                    {isActive && <ChevronRight className="w-3.5 h-3.5 text-[#0a1628]/60" />}
+                    <l.icon className="w-4 h-4 shrink-0" />
+                    {l.label}
                   </Link>
                 );
               })}
             </div>
-          </div>
-        )) : (
-          <div className="flex flex-col gap-0.5">
-            {links.map(l => {
-              const isActive = l.exact ? pathname === l.href : pathname.startsWith(l.href);
-              return (
-                <Link
-                  key={l.href}
-                  href={l.href}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                    isActive ? "bg-[#f0c040] text-[#0a1628]" : "text-white/55 hover:text-white hover:bg-white/8"
-                  }`}
-                >
-                  <l.icon className="w-4 h-4 shrink-0" />
-                  {l.label}
-                </Link>
-              );
-            })}
-          </div>
-        )}
-      </nav>
+          )}
+        </nav>
 
-      {/* User */}
-      <div className="px-4 py-4 border-t border-white/10 flex items-center gap-3">
-        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shrink-0 overflow-hidden ring-2 ring-amber-400/30">
-          {user.image
-            ? <img src={user.image} alt={user.name} referrerPolicy="no-referrer" className="w-full h-full object-cover" />
-            : <span className="text-[#0a1628] font-black text-sm">{user.name?.[0]?.toUpperCase()}</span>}
+        {/* User */}
+        <div className="px-4 py-4 border-t border-white/10 flex items-center gap-3">
+          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shrink-0 overflow-hidden ring-2 ring-amber-400/30">
+            {user.image
+              ? <img src={user.image} alt={user.name} referrerPolicy="no-referrer" className="w-full h-full object-cover" />
+              : <span className="text-[#0a1628] font-black text-sm">{user.name?.[0]?.toUpperCase()}</span>}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-white text-xs font-bold truncate">{user.name}</div>
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full mt-0.5 inline-block ${tierStyle[user.tier ?? "FREE"] ?? tierStyle.FREE}`}>
+              {tierLabel[user.tier ?? "FREE"]}
+            </span>
+          </div>
         </div>
-        <div className="flex-1 min-w-0">
-          <div className="text-white text-xs font-bold truncate">{user.name}</div>
-          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full mt-0.5 inline-block ${tierStyle[user.tier ?? "FREE"] ?? tierStyle.FREE}`}>
-            {tierLabel[user.tier ?? "FREE"]}
-          </span>
-        </div>
-      </div>
-    </aside>
+      </aside>
+    </>
   );
 }
+

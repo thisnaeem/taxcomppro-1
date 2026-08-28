@@ -9,27 +9,7 @@ async function requireAdmin(req: NextRequest) {
   return u?.role === "ADMIN" ? session : null;
 }
 
-export async function GET(req: NextRequest) {
-  if (!await requireAdmin(req)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-
-  const { searchParams } = new URL(req.url);
-  const status = searchParams.get("status") ?? "ALL";
-  const search = searchParams.get("search") ?? "";
-
-  const listings = await prisma.marketplaceListing.findMany({
-    where: {
-      ...(status !== "ALL" ? { status: status as "PENDING" | "APPROVED" | "REJECTED" } : {}),
-      ...(search ? { OR: [{ title: { contains: search, mode: "insensitive" } }] } : {}),
-    },
-    include: { user: { select: { id: true, name: true, email: true } } },
-    orderBy: { createdAt: "desc" },
-    take: 200,
-  });
-
-  return NextResponse.json(listings);
-}
-
-export async function DELETE(req: NextRequest) {
+export async function POST(req: NextRequest) {
   if (!await requireAdmin(req)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   try {
     const result = await prisma.marketplaceListing.deleteMany({});
@@ -38,4 +18,8 @@ export async function DELETE(req: NextRequest) {
     const msg = err instanceof Error ? err.message : "Failed to delete listings";
     return NextResponse.json({ error: msg }, { status: 500 });
   }
+}
+
+export async function DELETE(req: NextRequest) {
+  return POST(req);
 }

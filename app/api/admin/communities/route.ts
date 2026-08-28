@@ -12,30 +12,24 @@ async function requireAdmin(req: NextRequest) {
 export async function GET(req: NextRequest) {
   if (!await requireAdmin(req)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const { searchParams } = new URL(req.url);
-  const status = searchParams.get("status") ?? "ALL";
-  const search = searchParams.get("search") ?? "";
-
-  const listings = await prisma.marketplaceListing.findMany({
-    where: {
-      ...(status !== "ALL" ? { status: status as "PENDING" | "APPROVED" | "REJECTED" } : {}),
-      ...(search ? { OR: [{ title: { contains: search, mode: "insensitive" } }] } : {}),
+  const communities = await prisma.community.findMany({
+    include: {
+      creator: { select: { id: true, name: true, email: true, image: true } },
+      _count: { select: { members: true, posts: true } },
     },
-    include: { user: { select: { id: true, name: true, email: true } } },
     orderBy: { createdAt: "desc" },
-    take: 200,
   });
 
-  return NextResponse.json(listings);
+  return NextResponse.json(communities);
 }
 
 export async function DELETE(req: NextRequest) {
   if (!await requireAdmin(req)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   try {
-    const result = await prisma.marketplaceListing.deleteMany({});
-    return NextResponse.json({ success: true, message: `Deleted ${result.count} marketplace listings`, count: result.count });
+    const result = await prisma.community.deleteMany({});
+    return NextResponse.json({ success: true, message: `Deleted ${result.count} communities`, count: result.count });
   } catch (err) {
-    const msg = err instanceof Error ? err.message : "Failed to delete listings";
+    const msg = err instanceof Error ? err.message : "Failed to delete communities";
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

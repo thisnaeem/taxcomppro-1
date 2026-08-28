@@ -1,10 +1,10 @@
 "use client";
 
-import { Suspense, useEffect, useReducer, useRef } from "react";
+import { Suspense, useEffect, useReducer, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useAppSelector } from "@/store/hooks";
-import { X } from "lucide-react";
+import { X, Trash2, AlertTriangle, Loader2, CheckCircle2 } from "lucide-react";
 import {
   Search01Icon, ShoppingBag01Icon, StarIcon, Add01Icon, EyeIcon,
   FilterIcon, BookOpen01Icon, GlobeIcon, Briefcase01Icon, School01Icon,
@@ -119,24 +119,28 @@ function GridCard({ l, authed }: { l: Listing; authed: boolean }) {
           <h3 className="font-black text-[#0a1628] dark:text-white text-base leading-snug line-clamp-2 group-hover:text-[#f0c040] transition-colors flex-1">
             {l.title}
           </h3>
-          <span className="text-lg font-black text-[#0a1628] dark:text-white shrink-0 tabular-nums">
-            {l.price != null ? `$${l.price.toLocaleString()}` : <span className="text-sm text-emerald-600 dark:text-emerald-400 font-bold">Free</span>}
+          <span className="font-black text-[#0a1628] dark:text-white text-base shrink-0">
+            {l.price ? `$${l.price.toLocaleString()}` : <span className="text-emerald-600 dark:text-emerald-400 text-xs">Free</span>}
           </span>
         </div>
 
-        <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-2">{l.description}</p>
+        <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed flex-1">
+          {l.description}
+        </p>
 
-        <div className="flex items-center justify-between mt-auto pt-3 border-t border-slate-100 dark:border-slate-800/80">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-[#0a1628] overflow-hidden flex items-center justify-center shrink-0 border border-slate-200 dark:border-slate-700">
+        {/* Footer */}
+        <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2 mt-auto">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-6 h-6 rounded-full bg-[#0a1628] overflow-hidden flex items-center justify-center shrink-0">
               {l.user.image
                 ? <img src={l.user.image} alt={l.user.name} referrerPolicy="no-referrer" className="w-full h-full object-cover" />
-                : <span className="text-white font-bold text-[9px]">{l.user.name?.[0]?.toUpperCase()}</span>}
+                : <span className="text-white font-bold text-[10px]">{l.user.name[0]?.toUpperCase()}</span>}
             </div>
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 max-w-[90px] truncate">{l.user.name}</span>
+            <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 truncate">{l.user.name}</span>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="flex items-center gap-0.5 text-[10px] text-slate-400 dark:text-slate-500">
+
+          <div className="flex items-center gap-2.5 shrink-0">
+            <span className="text-[11px] text-slate-400 dark:text-slate-500 flex items-center gap-1">
               <EyeIcon className="w-3 h-3" />{l.viewCount}
             </span>
             <span className="text-[11px] font-bold text-[#0a1628] dark:text-[#f0c040] flex items-center gap-0.5 group-hover:gap-1 transition-all">
@@ -151,10 +155,11 @@ function GridCard({ l, authed }: { l: Listing; authed: boolean }) {
 
 /* ── Sidebar ── */
 function MarketplaceSidebar({
-  user, cat, setCat, canSell,
+  user, cat, setCat, canSell, onClearAllListings,
 }: {
-  user: { name: string | null; image?: string | null; headline?: string | null; coverImage?: string | null; tier: string } | null;
+  user: { name: string | null; image?: string | null; headline?: string | null; coverImage?: string | null; tier: string; role?: string } | null;
   cat: Category; setCat: (c: Category) => void; canSell: boolean;
+  onClearAllListings?: () => void;
 }) {
   return (
     <div className="space-y-3">
@@ -201,6 +206,23 @@ function MarketplaceSidebar({
           className="flex items-center justify-center gap-2 bg-[#0a1628] dark:bg-[#f0c040] text-white dark:text-[#0a1628] font-bold text-sm px-4 py-3 rounded-xl hover:bg-[#1a3a6b] dark:hover:bg-[#d4a017] transition-all w-full">
           <UserCircleIcon className="w-4 h-4" /> Sign up to Sell
         </Link>
+      )}
+
+      {/* Admin Action Button */}
+      {user?.role === "ADMIN" && onClearAllListings && (
+        <div className="bg-rose-50 dark:bg-rose-950/30 rounded-2xl p-3 border border-rose-200/80 dark:border-rose-900/50 shadow-sm space-y-2">
+          <div className="flex items-center justify-between px-1">
+            <span className="text-[11px] font-black uppercase tracking-wider text-rose-700 dark:text-rose-400">Admin Action</span>
+            <span className="text-[9px] font-bold bg-rose-200/60 dark:bg-rose-900/60 text-rose-800 dark:text-rose-300 px-1.5 py-0.5 rounded">ADMIN</span>
+          </div>
+          <button
+            type="button"
+            onClick={onClearAllListings}
+            className="w-full flex items-center justify-center gap-2 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs py-2.5 px-3 rounded-xl transition-all shadow-sm active:scale-95"
+          >
+            <Trash2 className="w-3.5 h-3.5" /> Clear All Listings
+          </button>
+        </div>
       )}
 
       <div className="bg-white dark:bg-[#172135] rounded-2xl p-3 border border-slate-200/80 dark:border-slate-800 shadow-sm">
@@ -254,6 +276,10 @@ function MarketplaceContent() {
     mounted:   false,
   });
 
+  const [showClearModal, setShowClearModal] = useState(false);
+  const [clearingListings, setClearingListings] = useState(false);
+  const [toastMsg, setToastMsg] = useState("");
+
   const { listings, loading, cat, search, query, mounted } = state;
   const authedUser = mounted ? user : null;
   const canSell    = !!(authedUser && (
@@ -286,8 +312,79 @@ function MarketplaceContent() {
     return () => clearTimeout(t);
   }, [search]);
 
+  const handleClearAllListings = async () => {
+    setClearingListings(true);
+    try {
+      const res = await fetch("/api/admin/listings", { method: "DELETE" });
+      if (res.ok) {
+        const data = await res.json();
+        dispatch({ type: "SET_LISTINGS", payload: [] });
+        setShowClearModal(false);
+        setToastMsg(`Successfully cleared ${data.count ?? "all"} marketplace listings!`);
+        setTimeout(() => setToastMsg(""), 4000);
+      } else {
+        const err = await res.json();
+        alert(err.error || "Failed to clear listings");
+      }
+    } catch {
+      alert("Error clearing listings");
+    } finally {
+      setClearingListings(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#f4f6fb] dark:bg-[#0c1527] pt-6 pb-16">
+      {/* Toast */}
+      {toastMsg && (
+        <div className="fixed top-20 right-6 z-50 flex items-center gap-2 bg-emerald-600 text-white font-bold text-sm px-5 py-3 rounded-2xl shadow-xl animate-in slide-in-from-top-3 duration-200">
+          <CheckCircle2 className="w-5 h-5 text-white" />
+          <span>{toastMsg}</span>
+        </div>
+      )}
+
+      {/* ── Clear All Confirmation Modal ── */}
+      {showClearModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-150">
+          <div className="bg-white dark:bg-[#172135] rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-5">
+            <div className="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-950/50 text-rose-600 flex items-center justify-center mx-auto">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+            <div className="text-center space-y-2">
+              <h3 className="text-xl font-black text-[#0a1628] dark:text-white">Clear All Marketplace Listings?</h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+                This will permanently delete <strong className="text-rose-600 dark:text-rose-400">ALL marketplace listings</strong> across the platform. This action cannot be undone.
+              </p>
+            </div>
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                type="button"
+                disabled={clearingListings}
+                onClick={() => setShowClearModal(false)}
+                className="flex-1 py-3 px-4 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold text-sm hover:bg-slate-50 dark:hover:bg-white/5 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={clearingListings}
+                onClick={handleClearAllListings}
+                className="flex-1 py-3 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-rose-600/20 active:scale-95 disabled:opacity-50"
+              >
+                {clearingListings ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Clearing...
+                  </>
+                ) : (
+                  "Yes, Clear All"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-[1400px] mx-auto px-4">
 
         <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] xl:grid-cols-[300px_1fr] gap-6 items-start">
@@ -295,8 +392,9 @@ function MarketplaceContent() {
           {/* Sidebar - Touching Top */}
           <div className="hidden lg:block self-start sticky top-[90px] h-fit max-h-[calc(100vh-90px)] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             <MarketplaceSidebar
-              user={authedUser ? { ...authedUser, image: authedUser.image ?? null, headline: authedUser.headline ?? null, coverImage: authedUser.coverImage ?? null } : null}
+              user={authedUser ? { ...authedUser, image: authedUser.image ?? null, headline: authedUser.headline ?? null, coverImage: authedUser.coverImage ?? null, role: authedUser.role } : null}
               cat={cat} setCat={c => dispatch({ type: "SET_CAT", payload: c })} canSell={canSell}
+              onClearAllListings={() => setShowClearModal(true)}
             />
           </div>
 
