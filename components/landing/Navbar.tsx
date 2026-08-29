@@ -468,7 +468,7 @@ export default function Navbar() {
 
       {/* Mobile menu — full-width panel below header */}
       {mobileOpen && !searchOpen && (
-        <div className="lg:hidden bg-white dark:bg-[#172135] border-t border-slate-200 dark:border-[#243550] shadow-lg">
+        <div className="lg:hidden bg-white dark:bg-[#172135] border-t border-slate-200 dark:border-[#243550] shadow-lg max-h-[calc(100vh-80px)] overflow-y-auto">
           <div className="px-4 pt-4 pb-2">
             {/* Mobile search */}
             <form onSubmit={handleSearch} className="flex items-center gap-2 bg-slate-100 dark:bg-white/10 border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2.5 mb-3">

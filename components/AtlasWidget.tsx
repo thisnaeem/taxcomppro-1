@@ -23,8 +23,8 @@ const statusConfig = {
 };
 
 const HINTS = ["Where are my Toolkits?", "Upgrade Membership", "Atlas Academy Courses", "About Always Ask Atlas"];
-const DESKTOP_WIDTH = 248;
-const DESKTOP_HEIGHT = 329;
+const DESKTOP_WIDTH = 200;
+const DESKTOP_HEIGHT = 265;
 const MOBILE_WIDTH = 124;
 const MOBILE_HEIGHT = 165;
 const PADDING = 12;
