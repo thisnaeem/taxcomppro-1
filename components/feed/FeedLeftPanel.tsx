@@ -209,29 +209,34 @@ export default function FeedLeftPanel() {
             { icon: Notification01Icon,   label: "Notifications",           href: "/notifications" },
             { icon: UserAdd01Icon,        label: "Connections",             href: "/connections" },
             { icon: BookOpen01Icon,       label: "Marketplace Purchases",   href: "/marketplace-purchases", isExternal: false },
-            { icon: BookOpen01Icon,       label: "Access Academy",          href: "https://academy.taxcomppro.com", isExternal: true },
             ...(canSell ? [{ icon: ShoppingBag01Icon, label: "My Listings",  href: "/my-listings", isExternal: false }] : []),
             ...(!canSell ? [{ icon: Rocket01Icon,     label: "Upgrade Plan", href: "/upgrade", isExternal: false }] : []),
             ...(user.role === "ADMIN" ? [{ icon: Chart01Icon, label: "Admin Panel", href: "/admin", isExternal: false }] : []),
-          ].map(l => {
-            if (l.isExternal) {
-              return (
-                <a key={l.href} href={l.href} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-3 px-3 py-3 rounded-xl text-slate-600 text-base font-medium hover:bg-slate-50 hover:text-[#0a1628] transition-all group">
-                  <l.icon className="w-5 h-5 text-slate-400 group-hover:text-[#0a1628] transition-colors" />
-                  {l.label}
-                  <ExternalLink className="w-3.5 h-3.5 ml-auto opacity-40" />
-                </a>
-              );
-            }
-            return (
-              <Link key={l.href} href={l.href}
-                className="flex items-center gap-3 px-3 py-3 rounded-xl text-slate-600 text-base font-medium hover:bg-slate-50 hover:text-[#0a1628] transition-all group">
-                <l.icon className="w-5 h-5 text-slate-400 group-hover:text-[#0a1628] transition-colors" />
-                {l.label}
-              </Link>
-            );
-          })}
+          ].map(l => (
+            <Link key={l.href} href={l.href}
+              className="flex items-center gap-3 px-3 py-3 rounded-xl text-slate-600 text-base font-medium hover:bg-slate-50 hover:text-[#0a1628] transition-all group">
+              <l.icon className="w-5 h-5 text-slate-400 group-hover:text-[#0a1628] transition-colors" />
+              {l.label}
+            </Link>
+          ))}
+          
+          {/* Access Academy with custom icon */}
+          <a
+            href="https://academy.taxcomppro.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 px-3 py-3 rounded-xl text-slate-600 text-base font-medium hover:bg-slate-50 hover:text-[#0a1628] transition-all group"
+          >
+            <div className="w-7 h-7 flex items-center justify-center flex-shrink-0">
+              <img 
+                src="/icon.png" 
+                alt="Academy" 
+                className="w-full h-full object-contain"
+              />
+            </div>
+            Access Academy
+            <ExternalLink className="w-3.5 h-3.5 ml-auto opacity-40" />
+          </a>
         </div>
       </div>
 
