@@ -124,33 +124,87 @@ function ForumModal({ initial, onSave, onClose }: {
   );
 }
 
-const DEFAULT_FORUM_IMAGE = "https://images.pexels.com/photos/6863183/pexels-photo-6863183.jpeg?auto=compress&cs=tinysrgb&w=800";
+const DEFAULT_FORUM_IMAGE = "/prohub/LATEST%20UPDATES.png";
 
 const FORUM_IMAGE_FALLBACKS: Record<string, string> = {
-  "irs-news-room": "https://images.pexels.com/photos/6863183/pexels-photo-6863183.jpeg?auto=compress&cs=tinysrgb&w=800",
-  "irs-updates": "https://images.pexels.com/photos/6863183/pexels-photo-6863183.jpeg?auto=compress&cs=tinysrgb&w=800",
-  "irs-audits--due-diligence": "https://images.pexels.com/photos/6863254/pexels-photo-6863254.jpeg?auto=compress&cs=tinysrgb&w=800",
-  "tax-office-operations--workflow": "https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=800",
-  "compliance--record-retention": "https://images.pexels.com/photos/4386431/pexels-photo-4386431.jpeg?auto=compress&cs=tinysrgb&w=800",
-  "marketplace-announcements": "https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=800",
-  "due-diligence--compliance": "https://images.pexels.com/photos/590022/pexels-photo-590022.jpeg?auto=compress&cs=tinysrgb&w=800",
-  "audit-defense--irs-notices": "https://images.pexels.com/photos/5668858/pexels-photo-5668858.jpeg?auto=compress&cs=tinysrgb&w=800",
-  "marketing--client-acquisition": "https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=800",
-  "hiring-training--staff-management": "https://images.pexels.com/photos/3184325/pexels-photo-3184325.jpeg?auto=compress&cs=tinysrgb&w=800",
-  "tax-software--technology": "https://images.pexels.com/photos/1181675/pexels-photo-1181675.jpeg?auto=compress&cs=tinysrgb&w=800",
-  "banking--refund-products": "https://images.pexels.com/photos/259200/pexels-photo-259200.jpeg?auto=compress&cs=tinysrgb&w=800",
-  "business-growth--expansion": "https://images.pexels.com/photos/7567434/pexels-photo-7567434.jpeg?auto=compress&cs=tinysrgb&w=800",
-  "schedule-c--self-employment-returns": "https://images.pexels.com/photos/6863177/pexels-photo-6863177.jpeg?auto=compress&cs=tinysrgb&w=800",
-  "industry-updates--regulatory-changes": "https://images.pexels.com/photos/5668772/pexels-photo-5668772.jpeg?auto=compress&cs=tinysrgb&w=800",
-  "new-forms": "https://images.pexels.com/photos/6863186/pexels-photo-6863186.jpeg?auto=compress&cs=tinysrgb&w=800",
+  // IRS & Updates
+  "irs-news-room": "/prohub/LATEST%20UPDATES.png",
+  "irs-newsroom": "/prohub/LATEST%20UPDATES.png",
+  "irs-updates": "/prohub/LATEST%20UPDATES.png",
+  "industry-updates--regulatory-changes": "/prohub/LATEST%20UPDATES.png",
+  "industry-updates": "/prohub/LATEST%20UPDATES.png",
+
+  // Audits & Due Diligence
+  "irs-audits--due-diligence": "/prohub/IRS%20AUDITS%20_%20DUE.png",
+  "irs-audits-due-diligence": "/prohub/IRS%20AUDITS%20_%20DUE.png",
+  "irs-audits": "/prohub/IRS%20AUDITS%20_%20DUE.png",
+  "audit-defense--irs-notices": "/prohub/Marketplace%20Announcements%20(6).png",
+  "audit-defense-irs-notices": "/prohub/Marketplace%20Announcements%20(6).png",
+  "audit-defense": "/prohub/Marketplace%20Announcements%20(6).png",
+
+  // Operations & Workflow
+  "tax-office-operations--workflow": "/prohub/TAX%20OFFICE%20OPERATIONS.png",
+  "tax-office-operations-workflow": "/prohub/TAX%20OFFICE%20OPERATIONS.png",
+  "tax-office-operations": "/prohub/TAX%20OFFICE%20OPERATIONS.png",
+
+  // Compliance & Record Retention
+  "compliance--record-retention": "/prohub/RECORD%20RETENSION.png",
+  "compliance-record-retention": "/prohub/RECORD%20RETENSION.png",
+  "compliance--record-retension": "/prohub/RECORD%20RETENSION.png",
+  "due-diligence--compliance": "/prohub/DUE%20DILIGENCE.png",
+  "due-diligence-compliance": "/prohub/DUE%20DILIGENCE.png",
+  "due-diligence": "/prohub/DUE%20DILIGENCE.png",
+
+  // Marketplace Announcements
+  "marketplace-announcements": "/prohub/Marketplace%20Announcements%20(3).png",
+  "marketplace": "/prohub/Marketplace%20Announcements%20(3).png",
+
+  // Marketing & Client Acquisition
+  "marketing--client-acquisition": "/prohub/MARKETING.png",
+  "marketing-client-acquisition": "/prohub/MARKETING.png",
+  "marketing": "/prohub/MARKETING.png",
+
+  // Hiring, Training & Staff Management
+  "hiring-training--staff-management": "/prohub/HIRING%20TRAINING.png",
+  "hiring-training-staff-management": "/prohub/HIRING%20TRAINING.png",
+  "hiring-training": "/prohub/HIRING%20TRAINING.png",
+
+  // Tax Software & Technology
+  "tax-software--technology": "/prohub/TAX%20SOFTWARE.png",
+  "tax-software-technology": "/prohub/TAX%20SOFTWARE.png",
+  "tax-software": "/prohub/TAX%20SOFTWARE.png",
+
+  // Banking & Refund Products
+  "banking--refund-products": "/prohub/BAKING%20_%20REFUND.png",
+  "banking-refund-products": "/prohub/BAKING%20_%20REFUND.png",
+  "baking--refund-products": "/prohub/BAKING%20_%20REFUND.png",
+
+  // Business Growth & Expansion
+  "business-growth--expansion": "/prohub/BUSINESS%20GROWTH).png",
+  "business-growth-expansion": "/prohub/BUSINESS%20GROWTH).png",
+  "business-growth": "/prohub/BUSINESS%20GROWTH).png",
+
+  // Schedule C & Self Employment
+  "schedule-c--self-employment-returns": "/prohub/SCHEDULE%20C(12).png",
+  "schedule-c-self-employment-returns": "/prohub/SCHEDULE%20C(12).png",
+  "schedule-c": "/prohub/SCHEDULE%20C(12).png",
+
+  // Forms
+  "new-forms": "/prohub/FORMS.png",
+  "forms": "/prohub/FORMS.png",
 };
 
 function getForumImageUrl(forum: { slug?: string; name?: string; image?: string | null }): string {
-  if (forum.image && forum.image.trim() && !forum.image.includes("taxcomppro.com/wp-content")) {
-    return forum.image;
-  }
   if (forum.slug && FORUM_IMAGE_FALLBACKS[forum.slug]) {
     return FORUM_IMAGE_FALLBACKS[forum.slug];
+  }
+  if (
+    forum.image &&
+    forum.image.trim() &&
+    !forum.image.includes("taxcomppro.com/wp-content") &&
+    !forum.image.includes("pexels.com")
+  ) {
+    return forum.image;
   }
   return DEFAULT_FORUM_IMAGE;
 }
@@ -168,9 +222,9 @@ function IrsUpdatesCard() {
       {/* Cover */}
       <div className="h-36 bg-gradient-to-br from-[#0a1628] via-[#0d2d5e] to-[#1a3a6b] relative overflow-hidden">
         <img
-          src="https://images.pexels.com/photos/6863183/pexels-photo-6863183.jpeg?auto=compress&cs=tinysrgb&w=800"
+          src="/prohub/LATEST%20UPDATES.png"
           alt="IRS Updates"
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 opacity-60"
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
 
