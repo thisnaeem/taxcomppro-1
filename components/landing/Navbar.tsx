@@ -417,9 +417,9 @@ export default function Navbar() {
                               <Rocket01Icon className="w-4 h-4 text-[#d4a017]" /> Seller Dashboard
                             </Link>
                           )}
-                          <Link href="/my-courses" onClick={() => setDropdownOpen(false)}
+                          <Link href="/marketplace-purchases" onClick={() => setDropdownOpen(false)}
                             className="flex items-center gap-2.5 text-sm font-medium text-slate-600 px-3 py-2.5 rounded-xl hover:bg-slate-50 transition-all">
-                            <BookOpen01Icon className="w-4 h-4 text-slate-400" /> My Courses
+                            <BookOpen01Icon className="w-4 h-4 text-slate-400" /> Marketplace Purchases
                           </Link>
                           <Link href="/connections" onClick={() => setDropdownOpen(false)}
                             className="flex items-center gap-2.5 text-sm font-medium text-slate-600 px-3 py-2.5 rounded-xl hover:bg-slate-50 transition-all">
@@ -619,9 +619,9 @@ export default function Navbar() {
                       className="flex items-center gap-3 text-sm font-semibold text-slate-700 dark:text-white/80 px-3 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-white/8 transition-colors">
                       <Store01Icon className="w-4 h-4 text-slate-400" /> My Listings
                     </Link>
-                    <Link href="/my-courses" onClick={() => setMobileOpen(false)}
+                    <Link href="/marketplace-purchases" onClick={() => setMobileOpen(false)}
                       className="flex items-center gap-3 text-sm font-semibold text-slate-700 dark:text-white/80 px-3 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-white/8 transition-colors">
-                      <BookOpen01Icon className="w-4 h-4 text-slate-400" /> My Courses
+                      <BookOpen01Icon className="w-4 h-4 text-slate-400" /> Marketplace Purchases
                     </Link>
                     <Link href="/connections" onClick={() => setMobileOpen(false)}
                       className="flex items-center gap-3 text-sm font-semibold text-slate-700 dark:text-white/80 px-3 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-white/8 transition-colors">
