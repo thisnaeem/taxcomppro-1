@@ -128,7 +128,6 @@ export default function AtlasWidget() {
 
   const bottomRef  = useRef<HTMLDivElement>(null);
   const inputRef   = useRef<HTMLInputElement>(null);
-  const videoRef   = useRef<HTMLVideoElement>(null);
 
   // Detect mobile screen size
   useEffect(() => {
@@ -143,47 +142,42 @@ export default function AtlasWidget() {
   const curWidth = isMobile ? MOBILE_WIDTH : DESKTOP_WIDTH;
   const curHeight = isMobile ? MOBILE_HEIGHT : DESKTOP_HEIGHT;
 
-  // Guarantee continuous video playback
-  useEffect(() => {
-    const playVideo = () => {
-      if (videoRef.current) {
-        videoRef.current.play().catch(() => {});
-      }
-    };
-    playVideo();
-    window.addEventListener("focus", playVideo);
-    return () => window.removeEventListener("focus", playVideo);
-  }, []);
-
-  // Clamp position to viewport bounds
+  // Clamp position to viewport bounds safely using documentElement width
   const clampPos = useCallback((x: number, y: number) => {
     if (typeof window === "undefined") return { x, y };
-    const width = window.innerWidth < 768 ? MOBILE_WIDTH : DESKTOP_WIDTH;
-    const height = window.innerWidth < 768 ? MOBILE_HEIGHT : DESKTOP_HEIGHT;
-    const maxX = Math.max(PADDING, window.innerWidth - width - PADDING);
-    const maxY = Math.max(PADDING, window.innerHeight - height - PADDING);
+    const docWidth = document.documentElement.clientWidth || window.innerWidth;
+    const docHeight = document.documentElement.clientHeight || window.innerHeight;
+    const isMob = docWidth < 768;
+    const width = isMob ? MOBILE_WIDTH : DESKTOP_WIDTH;
+    const height = isMob ? MOBILE_HEIGHT : DESKTOP_HEIGHT;
+    const maxX = Math.max(PADDING, docWidth - width - PADDING);
+    const maxY = Math.max(PADDING, docHeight - height - PADDING);
     return {
       x: Math.min(Math.max(PADDING, x), maxX),
       y: Math.min(Math.max(PADDING, y), maxY),
     };
   }, []);
 
-  // Initialize position from localStorage or default to bottom-right
+  // Initialize position from localStorage or default to bottom-right safely
   useEffect(() => {
-    const width = window.innerWidth < 768 ? MOBILE_WIDTH : DESKTOP_WIDTH;
-    const height = window.innerWidth < 768 ? MOBILE_HEIGHT : DESKTOP_HEIGHT;
+    const docWidth = document.documentElement.clientWidth || window.innerWidth;
+    const docHeight = document.documentElement.clientHeight || window.innerHeight;
+    const isMob = docWidth < 768;
+    const width = isMob ? MOBILE_WIDTH : DESKTOP_WIDTH;
+    const height = isMob ? MOBILE_HEIGHT : DESKTOP_HEIGHT;
     try {
       const saved = localStorage.getItem("atlas_widget_pos");
       if (saved) {
         const parsed = JSON.parse(saved);
         if (typeof parsed.x === "number" && typeof parsed.y === "number") {
+          // If stored on a wider desktop screen, safely re-clamp to current viewport
           setPos(clampPos(parsed.x, parsed.y));
           return;
         }
       }
     } catch {}
 
-    setPos(clampPos(window.innerWidth - width - 16, window.innerHeight - height - 16));
+    setPos(clampPos(docWidth - width - 16, docHeight - height - 16));
   }, [clampPos]);
 
   // Keep inside viewport on window resize
@@ -309,29 +303,43 @@ export default function AtlasWidget() {
 
   // Compute panel position dynamically near widget
   const getPanelStyle = (): React.CSSProperties => {
-    if (!pos || typeof window === "undefined") {
+    if (typeof window === "undefined") {
       return { bottom: 198, right: 24 };
     }
 
-    const width = window.innerWidth < 768 ? MOBILE_WIDTH : DESKTOP_WIDTH;
-    const height = window.innerWidth < 768 ? MOBILE_HEIGHT : DESKTOP_HEIGHT;
-    const panelWidth = Math.min(380, window.innerWidth - 24);
-    const panelHeight = Math.min(560, window.innerHeight - 100);
+    const docWidth = document.documentElement.clientWidth || window.innerWidth;
+    const docHeight = document.documentElement.clientHeight || window.innerHeight;
+    const isMob = docWidth < 768;
+    const panelWidth = Math.min(380, docWidth - 24);
+    const panelHeight = Math.min(560, docHeight - (isMob ? 80 : 100));
+
+    if (!pos) {
+      return {
+        position: "fixed",
+        bottom: `${(isMob ? MOBILE_HEIGHT : DESKTOP_HEIGHT) + 20}px`,
+        right: "12px",
+        width: `${panelWidth}px`,
+        height: `${panelHeight}px`,
+        maxWidth: "calc(100vw - 24px)",
+        maxHeight: "calc(100dvh - 80px)",
+      };
+    }
+
+    const width = isMob ? MOBILE_WIDTH : DESKTOP_WIDTH;
+    const height = isMob ? MOBILE_HEIGHT : DESKTOP_HEIGHT;
 
     let top: number;
-    if (pos.y > window.innerHeight / 2) {
-      // Position above widget
+    if (pos.y > docHeight / 2) {
       top = Math.max(12, pos.y - panelHeight - 12);
     } else {
-      // Position below widget
-      top = Math.min(window.innerHeight - panelHeight - 12, pos.y + height + 12);
+      top = Math.min(docHeight - panelHeight - 12, pos.y + height + 12);
     }
 
     let left: number;
-    if (pos.x > window.innerWidth / 2) {
-      left = Math.max(12, Math.min(pos.x + width - panelWidth, window.innerWidth - panelWidth - 12));
+    if (pos.x > docWidth / 2) {
+      left = Math.max(12, Math.min(pos.x + width - panelWidth, docWidth - panelWidth - 12));
     } else {
-      left = Math.max(12, Math.min(pos.x, window.innerWidth - panelWidth - 12));
+      left = Math.max(12, Math.min(pos.x, docWidth - panelWidth - 12));
     }
 
     return {
@@ -340,6 +348,8 @@ export default function AtlasWidget() {
       left: `${left}px`,
       width: `${panelWidth}px`,
       height: `${panelHeight}px`,
+      maxWidth: "calc(100vw - 24px)",
+      maxHeight: "calc(100dvh - 80px)",
     };
   };
 
@@ -536,22 +546,22 @@ export default function AtlasWidget() {
         style={{
           width: curWidth,
           height: curHeight,
-          left: pos ? `${pos.x}px` : `calc(100vw - ${curWidth + 16}px)`,
-          top: pos ? `${pos.y}px` : `calc(100vh - ${curHeight + 16}px)`,
+          left: pos ? `${pos.x}px` : undefined,
+          top: pos ? `${pos.y}px` : undefined,
+          right: pos ? undefined : "16px",
+          bottom: pos ? undefined : "16px",
+          maxWidth: "calc(100vw - 24px)",
+          maxHeight: "calc(100vh - 24px)",
           transition: isDragging ? "none" : "transform 0.2s ease, filter 0.2s ease",
         }}
       >
         <div className={`w-full h-full relative flex items-center justify-center ${!isDragging ? "atlas-floating" : ""}`}>
-          {/* Full unclipped transparent animated character */}
-          <video
-            ref={videoRef}
-            src="/animation.webm"
-            autoPlay
-            loop
-            muted
-            playsInline
+          {/* Full transparent animated character - works on iOS Safari, Chrome, Firefox, Edge */}
+          <img
+            src="/animation.webp"
+            alt="Atlas AI Assistant"
             draggable={false}
-            className="w-full h-full object-contain pointer-events-none drop-shadow-[0_12px_24px_rgba(0,0,0,0.4)] group-hover:drop-shadow-[0_18px_36px_rgba(240,192,64,0.45)] transition-all"
+            className="w-full h-full object-contain pointer-events-none drop-shadow-[0_12px_24px_rgba(0,0,0,0.4)] group-hover:drop-shadow-[0_18px_36px_rgba(240,192,64,0.45)] transition-all select-none"
           />
 
           {/* Unread badge */}

@@ -119,7 +119,7 @@ export default function LandingPage() {
       <Navbar />
 
       {/* ── HERO SECTION (Sharp bottom border, vibrant glow, no fading gradient, no stats ribbon) ── */}
-      <section className="relative pt-[72px] pb-16 md:pb-24 bg-gradient-to-br from-[#060e1a] via-[#0a1628] to-[#102444] text-white border-b border-slate-800">
+      <section className="relative pt-[72px] pb-16 md:pb-24 bg-gradient-to-br from-[#060e1a] via-[#0a1628] to-[#102444] text-white border-b border-slate-800 overflow-hidden">
         {/* Glow ambient meshes */}
         <div className="absolute -top-32 left-1/4 w-[500px] h-[500px] bg-[#d4a017]/15 rounded-full blur-[120px] pointer-events-none" />
         <div className="absolute top-1/3 -right-32 w-[550px] h-[550px] bg-[#1a3a6b]/40 rounded-full blur-[140px] pointer-events-none" />

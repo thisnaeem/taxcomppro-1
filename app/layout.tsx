@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Urbanist } from "next/font/google";
 import dynamic from "next/dynamic";
 import { Suspense } from "react";
@@ -13,6 +13,13 @@ const urbanist = Urbanist({
   variable: "--font-urbanist",
   display: "swap",
 });
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  viewportFit: "cover",
+};
 
 export const metadata: Metadata = {
   title: "TaxCompPro — Professional Tax Community",
