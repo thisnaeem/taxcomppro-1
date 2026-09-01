@@ -12,7 +12,7 @@ import {
   Shield, Link2, Eye as EyeIcon,
 } from "lucide-react";
 import { signUp, useSession } from "@/lib/auth-client";
-import { CARD_THEMES, type Visibility } from "@/lib/connectCard";
+import { CARD_THEMES, qrCodeUrl, type Visibility } from "@/lib/connectCard";
 import Navbar from "@/components/landing/Navbar";
 
 /* â”€â”€â”€ Inline SVG Icons â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
@@ -933,9 +933,33 @@ function ConnectWizard({ onBack }: { onBack: () => void }) {
                   <div className="text-xs h-5 flex items-center mt-1">
                     {usernameStatus === "checking" && <span className="text-slate-400 flex items-center gap-1"><Loader2 className="w-3.5 h-3.5 animate-spin" /> Checking availability...</span>}
                     {usernameStatus === "ok" && <span className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1"><CheckCircle2 className="w-4 h-4" /> Handle available!</span>}
-                    {usernameStatus === "taken" && <span className="text-red-500 font-bold">Handle taken â€” try another</span>}
+                    {usernameStatus === "taken" && <span className="text-red-500 font-bold">Handle taken — try another</span>}
                   </div>
                 </div>
+
+                {/* QR Code display */}
+                {username && (
+                  <div className="bg-slate-50 dark:bg-[#1e2e45] rounded-2xl p-4 border border-slate-200/60 dark:border-slate-800 flex items-center gap-4 animate-in fade-in duration-300">
+                    <div className="bg-white p-2 rounded-xl shadow-sm border border-slate-200/80 dark:border-slate-700 shrink-0">
+                      <img
+                        src={qrCodeUrl(`https://taxcomppro.com/connect/${username}?src=qr`, 160)}
+                        alt={`QR code for taxcomppro.com/connect/${username}`}
+                        className="w-20 h-20 object-contain rounded-lg"
+                      />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider mb-1">
+                        <QrCode className="w-3.5 h-3.5" /> Your Profile QR Code
+                      </div>
+                      <p className="text-xs font-bold text-slate-800 dark:text-white truncate font-mono">
+                        taxcomppro.com/connect/{username}
+                      </p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-normal">
+                        Anyone can scan this QR code with their phone camera to open your live profile immediately.
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 {!loggedIn && (
                   <div className="border-t border-slate-100 dark:border-slate-800 pt-5 space-y-4">
@@ -1001,8 +1025,28 @@ function ConnectWizard({ onBack }: { onBack: () => void }) {
                     ))}
                   </div>
                 </div>
-                <div className="pt-4 border-t border-white/10 mt-4 text-[9px] opacity-60 font-mono">
-                  taxcomppro.com/connect/{username || "username"}
+                <div className="pt-3 border-t border-white/10 mt-4 flex flex-col items-center">
+                  {username ? (
+                    <div className="flex items-center gap-2.5 bg-black/20 backdrop-blur-sm rounded-xl p-2 w-full text-left">
+                      <img
+                        src={qrCodeUrl(`https://taxcomppro.com/connect/${username}?src=qr`, 90)}
+                        alt="QR code preview"
+                        className="w-11 h-11 bg-white p-1 rounded-lg shrink-0 shadow"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[9px] font-extrabold uppercase tracking-wider opacity-90 flex items-center gap-1">
+                          <QrCode className="w-2.5 h-2.5" /> Tap or Scan
+                        </p>
+                        <p className="text-[8px] font-mono opacity-70 truncate">
+                          taxcomppro.com/connect/{username}
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-[9px] opacity-60 font-mono">
+                      taxcomppro.com/connect/{username || "username"}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

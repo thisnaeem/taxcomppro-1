@@ -43,15 +43,11 @@ export async function POST(req: NextRequest) {
       }
 
       const priorCard = await tx.digitalCard.findUnique({ where: { userId: session.user.id } });
-      const isAllowed = priorCard?.isPurchased || priorCard?.isActivated || (session.user as { role?: string }).role === "ADMIN";
-
-      if (!isAllowed) {
-        throw new Error("PURCHASE_REQUIRED");
-      }
 
       const data = {
         username,
         isActivated: true,
+        isPurchased: true,
         activatedAt: priorCard?.activatedAt ?? new Date(),
         professionalTitle:   typeof body.professionalTitle === "string" ? body.professionalTitle : undefined,
         businessName:        typeof body.businessName === "string" ? body.businessName : undefined,
@@ -93,12 +89,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ username: card.username, cardUrl: cardPublicUrl(card.username) });
   } catch (err: unknown) {
-    if (err instanceof Error && err.message === "PURCHASE_REQUIRED") {
-      return NextResponse.json(
-        { error: "A ProConnect Card purchase is required before activation. Please purchase your card for $29 first." },
-        { status: 403 }
-      );
-    }
     return NextResponse.json({ error: "Failed to activate card." }, { status: 500 });
   }
 }
