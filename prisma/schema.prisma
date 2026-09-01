@@ -1569,4 +1569,24 @@ model AtlasUnansweredQuestion {
   @@map("atlas_unanswered_questions")
 }
 
+// ── NFC Physical Card Programmer ─────────────────────────────────────────────
+// Maps a unique short cardId (written to the physical NFC tag URL) to a
+// TaxCompPro Connect Card username. The username is mutable — the card URL
+// never needs to be rewritten if a user changes their username.
+//
+// Physical NFC tag stores:   https://taxcomppro.com/c/ABC123
+// /c/[cardId] → looks up ABC123 → finds username "naeem" → redirects to
+// /connect/naeem (existing public TapCard profile page).
+model NfcCard {
+  id        String   @id @default(cuid())
+  cardId    String   @unique              // e.g. "ABC123" — URL-safe short ID
+  username  String                        // DigitalCard username (reassignable)
+  url       String                        // https://taxcomppro.com/c/ABC123
+  status    String   @default("ACTIVE")  // ACTIVE | REASSIGNED | DEACTIVATED
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("nfc_cards")
+}
+
 

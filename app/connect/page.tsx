@@ -69,14 +69,8 @@ async function uploadImage(file: File, type: "avatar" | "logo"): Promise<string 
 â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 function ConnectLandingPage({
   onStart,
-  hasPurchased,
-  onBuy,
-  buying,
 }: {
   onStart: () => void;
-  hasPurchased: boolean;
-  onBuy: () => void;
-  buying: boolean;
 }) {
   return (
     <div className="bg-[#f5f0e8] dark:bg-[#0a1628] min-h-screen proconnect-landing">
@@ -90,7 +84,7 @@ function ConnectLandingPage({
       <div className="bg-[#0a1628] text-white text-center text-xs font-semibold py-2.5 px-4 tracking-wide">
         <span className="opacity-70">A smarter first impression for professionals</span>
         <span className="mx-3 opacity-30">·</span>
-        <span className="text-amber-400 font-black uppercase tracking-widest">Introducing ProConnect — $29 One-Time</span>
+        <span className="text-amber-400 font-black uppercase tracking-widest">Introducing ProConnect — Included with your membership</span>
       </div>
 
       {/* ── HERO ── */}
@@ -114,30 +108,12 @@ function ConnectLandingPage({
           </p>
 
           <div className="flex flex-wrap items-center gap-3 mb-8">
-            {hasPurchased ? (
-              <button
-                onClick={onStart}
-                className="flex items-center gap-2 bg-[#0a1628] dark:bg-amber-500 text-white dark:text-[#0a1628] font-black text-sm px-7 py-3.5 rounded-full hover:bg-[#1a3a6b] dark:hover:bg-amber-400 transition-all shadow-xl hover:scale-[1.02] active:scale-[0.98]"
-              >
-                Set Up Your Card <ArrowRight className="w-4 h-4" />
-              </button>
-            ) : (
-              <>
-                <button
-                  onClick={onBuy}
-                  disabled={buying}
-                  className="flex items-center gap-2 bg-[#0a1628] dark:bg-amber-500 text-white dark:text-[#0a1628] font-black text-sm px-7 py-3.5 rounded-full hover:bg-[#1a3a6b] dark:hover:bg-amber-400 transition-all shadow-xl hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
-                >
-                  {buying ? "Opening Checkout..." : "Buy ProConnect — $29"} <ArrowRight className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={onStart}
-                  className="flex items-center gap-1.5 border-2 border-[#0a1628]/20 dark:border-white/20 text-[#0a1628] dark:text-white font-bold text-sm px-6 py-3.5 rounded-full hover:bg-[#0a1628]/5 dark:hover:bg-white/10 transition-all"
-                >
-                  Activate Existing Card
-                </button>
-              </>
-            )}
+            <button
+              onClick={onStart}
+              className="flex items-center gap-2 bg-[#0a1628] dark:bg-amber-500 text-white dark:text-[#0a1628] font-black text-sm px-7 py-3.5 rounded-full hover:bg-[#1a3a6b] dark:hover:bg-amber-400 transition-all shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+            >
+              Set Up Your Card <ArrowRight className="w-4 h-4" />
+            </button>
             <a href="#how-it-works" className="flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white px-4 py-2 transition-colors">
               See How It Works ↓
             </a>
@@ -145,7 +121,7 @@ function ConnectLandingPage({
 
           <div className="flex items-center gap-2 mb-8">
             <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-            <span className="text-sm text-slate-600 dark:text-slate-300">$29 one-time · No monthly fee · You control what people see</span>
+            <span className="text-sm text-slate-600 dark:text-slate-300">No monthly fee · You control what people see</span>
           </div>
 
           <div className="flex items-center gap-8 pt-6 border-t border-[#0a1628]/10 dark:border-white/10">
@@ -219,25 +195,13 @@ function ConnectLandingPage({
         </div>
       </section>
 
-      {/* â”€â”€ Ticker strip â”€â”€ */}
-      <div className="border-t border-b border-[#0a1628]/10 dark:border-white/10 py-4 overflow-hidden bg-[#f0ece2] dark:bg-[#0a1628]/60">
-        <div className="flex gap-12 animate-[marquee_20s_linear_infinite] whitespace-nowrap text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
-          {["Client Meetings","Networking Events","Referral Partners","Everyday Connections","IRS Consultations","Tax Conferences"].map((t, i) => (
-            <span key={i} className="shrink-0">{t} <span className="text-amber-500 mx-3">Â·</span></span>
-          ))}
-          {["Client Meetings","Networking Events","Referral Partners","Everyday Connections","IRS Consultations","Tax Conferences"].map((t, i) => (
-            <span key={`r-${i}`} className="shrink-0">{t} <span className="text-amber-500 mx-3">Â·</span></span>
-          ))}
-        </div>
-      </div>
-
-      {/* â”€â”€ Value Proposition / Pricing â”€â”€ */}
+      {/* ── Value Proposition / Pricing ── */}
       <section className="bg-[#0a1628] dark:bg-[#050d1a] py-16 px-6">
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-10 items-center">
           <div>
             <div className="flex items-center gap-2 mb-4">
               <div className="w-6 h-0.5 bg-amber-500" />
-              <span className="text-amber-400 text-xs font-bold uppercase tracking-widest" style={{ fontFamily: "'Playfair Display', serif" }}>Premium Value</span>
+              <span className="text-amber-400 text-xs font-bold uppercase tracking-widest" style={{ fontFamily: "'Playfair Display', serif" }}>Included With Your Membership</span>
             </div>
             <h2 className="text-4xl font-bold text-white leading-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
               Professional connection<br />without the premium price.
@@ -259,7 +223,7 @@ function ConnectLandingPage({
           <div className="bg-amber-500/10 border border-amber-400/20 rounded-2xl p-6">
             <p className="text-amber-400 text-3xl font-black mb-1">Save $50+</p>
             <p className="text-white/80 text-sm leading-relaxed">
-              ProConnect gives you a fully activated digital identity at no cost â€” included with your Tax Compliance Pro membership.
+              ProConnect gives you a fully activated digital identity at no cost — included with your Tax Compliance Pro membership.
             </p>
           </div>
         </div>
@@ -514,25 +478,15 @@ function ConnectLandingPage({
           <span className="italic text-amber-600 dark:text-amber-400">one tap away.</span>
         </h2>
         <p className="text-slate-600 dark:text-slate-300 text-lg mb-10 max-w-xl mx-auto">
-          Get your ProConnect NFC digital business card for a one-time $29 purchase and start sharing a professional profile that works for you 24/7.
+          Set up your ProConnect card and start sharing a professional profile that works for you 24/7 — included with your membership.
         </p>
         <div className="flex flex-wrap items-center justify-center gap-4">
-          {hasPurchased ? (
-            <button
-              onClick={onStart}
-              className="flex items-center gap-2 bg-[#0a1628] dark:bg-amber-500 text-white dark:text-[#0a1628] font-black text-base px-10 py-4 rounded-full hover:bg-[#1a3a6b] dark:hover:bg-amber-400 transition-all shadow-2xl hover:scale-[1.02] active:scale-[0.98]"
-            >
-              Set Up Your Card <Zap className="w-5 h-5 fill-white dark:fill-[#0a1628]" />
-            </button>
-          ) : (
-            <button
-              onClick={onBuy}
-              disabled={buying}
-              className="flex items-center gap-2 bg-[#0a1628] dark:bg-amber-500 text-white dark:text-[#0a1628] font-black text-base px-10 py-4 rounded-full hover:bg-[#1a3a6b] dark:hover:bg-amber-400 transition-all shadow-2xl hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
-            >
-              {buying ? "Opening Checkout..." : "Buy ProConnect Card — $29"} <Zap className="w-5 h-5 fill-white dark:fill-[#0a1628]" />
-            </button>
-          )}
+          <button
+            onClick={onStart}
+            className="flex items-center gap-2 bg-[#0a1628] dark:bg-amber-500 text-white dark:text-[#0a1628] font-black text-base px-10 py-4 rounded-full hover:bg-[#1a3a6b] dark:hover:bg-amber-400 transition-all shadow-2xl hover:scale-[1.02] active:scale-[0.98]"
+          >
+            Set Up Your Card <Zap className="w-5 h-5 fill-white dark:fill-[#0a1628]" />
+          </button>
           <Link href="/login?next=/connect" className="text-sm font-bold text-slate-500 dark:text-slate-400 hover:text-[#0a1628] dark:hover:text-white transition-colors">
             Already have an account? Log in →
           </Link>
@@ -660,17 +614,24 @@ function ConnectWizard({ onBack }: { onBack: () => void }) {
   const selectedThemeObj = CARD_THEMES.find(t => t.value === theme) || CARD_THEMES[0];
   const progressPercent = Math.round(((step + 1) / STEP_LABELS.length) * 100);
 
-  const Nav = ({ back, next, nextLabel = "Continue", canNext = true }: { back?: () => void; next?: () => void; nextLabel?: string; canNext?: boolean }) => (
+  const Nav = ({ back, next, nextLabel = "Continue", canNext = true, showSkip = false }: { back?: () => void; next?: () => void; nextLabel?: string; canNext?: boolean; showSkip?: boolean }) => (
     <div className="flex items-center justify-between pt-6 mt-8 border-t border-slate-100 dark:border-slate-800">
-      {back ? (
-        <button type="button" onClick={back} className="flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white px-5 py-3 rounded-full transition-all hover:bg-slate-100 dark:hover:bg-slate-800">
-          <ArrowLeft className="w-4 h-4" /> Back
-        </button>
-      ) : (
-        <button type="button" onClick={onBack} className="flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white px-5 py-3 rounded-full transition-all hover:bg-slate-100 dark:hover:bg-slate-800">
-          <ArrowLeft className="w-4 h-4" /> Overview
-        </button>
-      )}
+      <div className="flex items-center gap-2">
+        {back ? (
+          <button type="button" onClick={back} className="flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white px-5 py-3 rounded-full transition-all hover:bg-slate-100 dark:hover:bg-slate-800">
+            <ArrowLeft className="w-4 h-4" /> Back
+          </button>
+        ) : (
+          <button type="button" onClick={onBack} className="flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white px-5 py-3 rounded-full transition-all hover:bg-slate-100 dark:hover:bg-slate-800">
+            <ArrowLeft className="w-4 h-4" /> Overview
+          </button>
+        )}
+        {showSkip && (
+          <button type="button" onClick={() => setStep(12)} className="text-xs font-bold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 px-4 py-3 rounded-full transition-all hover:bg-slate-100 dark:hover:bg-slate-800">
+            Skip to activate →
+          </button>
+        )}
+      </div>
       {next && (
         <button type="button" onClick={next} disabled={!canNext} className="flex items-center gap-2 bg-[#0a1628] dark:bg-amber-500 hover:bg-[#1a3a6b] dark:hover:bg-amber-400 text-white dark:text-[#0a1628] font-extrabold text-sm px-8 py-3.5 rounded-full shadow-lg transition-all disabled:opacity-40 hover:scale-[1.02] active:scale-[0.98]">
           {nextLabel} <ArrowRight className="w-4 h-4" />
@@ -735,7 +696,7 @@ function ConnectWizard({ onBack }: { onBack: () => void }) {
                     );
                   })}
                 </div>
-                <Nav next={() => setStep(1)} />
+                <Nav next={() => setStep(1)} showSkip />
               </div>
             )}
 
@@ -753,7 +714,7 @@ function ConnectWizard({ onBack }: { onBack: () => void }) {
                     <input autoFocus value={name} onChange={e => setName(e.target.value)} onKeyDown={e => handleKeyDown(e, () => { if (name.trim()) setStep(2); })} placeholder="Jane Smith, EA" className={`${inp} pl-12`} />
                   </div>
                 </div>
-                <Nav back={() => setStep(0)} next={() => setStep(2)} canNext={!!name.trim()} />
+                <Nav back={() => setStep(0)} next={() => setStep(2)} canNext={!!name.trim()} showSkip />
               </div>
             )}
 
@@ -779,7 +740,7 @@ function ConnectWizard({ onBack }: { onBack: () => void }) {
                     </div>
                   </div>
                 </div>
-                <Nav back={() => setStep(1)} next={() => setStep(3)} />
+                <Nav back={() => setStep(1)} next={() => setStep(3)} showSkip />
               </div>
             )}
 
@@ -794,7 +755,7 @@ function ConnectWizard({ onBack }: { onBack: () => void }) {
                   <label className={lbl}>Business / Firm Name</label>
                   <input autoFocus value={biz.businessName} onChange={e => setBiz(b => ({ ...b, businessName: e.target.value }))} onKeyDown={e => handleKeyDown(e, () => setStep(4))} placeholder="Smith Tax Solutions LLC" className={inp} />
                 </div>
-                <Nav back={() => setStep(2)} next={() => setStep(4)} />
+                <Nav back={() => setStep(2)} next={() => setStep(4)} showSkip />
               </div>
             )}
 
@@ -812,7 +773,7 @@ function ConnectWizard({ onBack }: { onBack: () => void }) {
                   </div>
                   <textarea autoFocus value={biz.businessDescription} onChange={e => setBiz(b => ({ ...b, businessDescription: e.target.value.slice(0, 160) }))} rows={4} maxLength={160} placeholder="Helping individuals and small businesses navigate IRS audits, tax prep & representation..." className={`${inp} resize-none`} />
                 </div>
-                <Nav back={() => setStep(3)} next={() => setStep(5)} />
+                <Nav back={() => setStep(3)} next={() => setStep(5)} showSkip />
               </div>
             )}
 
@@ -831,7 +792,7 @@ function ConnectWizard({ onBack }: { onBack: () => void }) {
                   <button type="button" onClick={() => document.getElementById("connect-avatar-input")?.click()} className="text-xs font-extrabold text-[#0a1628] dark:text-amber-400 hover:underline">{imagePreview ? "Change Photo" : "Upload Profile Photo"}</button>
                   <input id="connect-avatar-input" type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (!f) return; setImageFile(f); setImagePreview(URL.createObjectURL(f)); }} />
                 </div>
-                <Nav back={() => setStep(4)} next={() => setStep(6)} />
+                <Nav back={() => setStep(4)} next={() => setStep(6)} showSkip />
               </div>
             )}
 
@@ -850,7 +811,7 @@ function ConnectWizard({ onBack }: { onBack: () => void }) {
                   <button type="button" onClick={() => document.getElementById("connect-logo-input")?.click()} className="text-xs font-extrabold text-[#0a1628] dark:text-amber-400 hover:underline">{logoPreview ? "Change Logo" : "Upload Company Logo"}</button>
                   <input id="connect-logo-input" type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (!f) return; setLogoFile(f); setLogoPreview(URL.createObjectURL(f)); }} />
                 </div>
-                <Nav back={() => setStep(5)} next={() => setStep(7)} nextLabel={logoPreview ? "Continue" : "Skip for Now"} />
+                <Nav back={() => setStep(5)} next={() => setStep(7)} nextLabel={logoPreview ? "Continue" : "Skip for Now"} showSkip />
               </div>
             )}
 
@@ -871,7 +832,7 @@ function ConnectWizard({ onBack }: { onBack: () => void }) {
                     <div className="relative"><Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" /><input value={contact.website} onChange={e => setContact(c => ({ ...c, website: e.target.value }))} placeholder="https://yourfirm.com" className={`${inp} pl-12`} /></div>
                   </div>
                 </div>
-                <Nav back={() => setStep(6)} next={() => setStep(8)} />
+                <Nav back={() => setStep(6)} next={() => setStep(8)} showSkip />
               </div>
             )}
 
@@ -886,7 +847,7 @@ function ConnectWizard({ onBack }: { onBack: () => void }) {
                   <label className={lbl}>Calendly / Booking Link</label>
                   <div className="relative"><Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" /><input autoFocus value={contact.bookingUrl} onChange={e => setContact(c => ({ ...c, bookingUrl: e.target.value }))} onKeyDown={e => handleKeyDown(e, () => setStep(9))} placeholder="https://calendly.com/your-name/consultation" className={`${inp} pl-12`} /></div>
                 </div>
-                <Nav back={() => setStep(7)} next={() => setStep(9)} nextLabel={contact.bookingUrl ? "Continue" : "Skip for Now"} />
+                <Nav back={() => setStep(7)} next={() => setStep(9)} nextLabel={contact.bookingUrl ? "Continue" : "Skip for Now"} showSkip />
               </div>
             )}
 
@@ -902,7 +863,7 @@ function ConnectWizard({ onBack }: { onBack: () => void }) {
                   <div><label className={lbl}>Instagram @handle</label><div className="relative"><InstagramIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" /><input value={social.instagram} onChange={e => setSocial(s => ({ ...s, instagram: e.target.value }))} placeholder="@username" className={`${inp} pl-12`} /></div></div>
                   <div><label className={lbl}>Twitter / X @handle</label><div className="relative"><TwitterIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" /><input value={social.twitter} onChange={e => setSocial(s => ({ ...s, twitter: e.target.value }))} placeholder="@handle" className={`${inp} pl-12`} /></div></div>
                 </div>
-                <Nav back={() => setStep(8)} next={() => setStep(10)} />
+                <Nav back={() => setStep(8)} next={() => setStep(10)} showSkip />
               </div>
             )}
 
@@ -932,7 +893,7 @@ function ConnectWizard({ onBack }: { onBack: () => void }) {
                     </div>
                   )}
                 </div>
-                <Nav back={() => setStep(9)} next={() => setStep(11)} />
+                <Nav back={() => setStep(9)} next={() => setStep(11)} showSkip />
               </div>
             )}
 
@@ -1060,76 +1021,35 @@ function ConnectRoot() {
   const router = useRouter();
   const { data: session, isPending } = useSession();
   const [mode, setMode] = useState<"landing" | "wizard">("landing");
-  const [hasPurchased, setHasPurchased] = useState(false);
-  const [showPurchaseModal, setShowPurchaseModal] = useState(false);
-  const [buying, setBuying] = useState(false);
 
-  // Check purchase status and handle Stripe redirect
+  // Handle Stripe redirect / already-activated check
   useEffect(() => {
-    if (isPending) return;
-
-    if (!session?.user) {
-      setHasPurchased(false);
-      return;
-    }
+    if (isPending || !session?.user) return;
 
     const params = new URLSearchParams(window.location.search);
     const sessionId = params.get("session_id");
-    const isPurchasedRedirect = params.get("purchased") === "1";
-    const wantsActivate = params.get("activate") === "1";
+    const wantsActivate = params.get("activate") === "1" || params.get("purchased") === "1";
 
     fetch(`/api/connect/verify-purchase${sessionId ? `?session_id=${sessionId}` : ""}`)
       .then((r) => r.json())
       .then((data: { hasPurchased?: boolean; isActivated?: boolean; username?: string | null }) => {
-        if (data.hasPurchased) {
-          setHasPurchased(true);
-          if (data.isActivated && data.username) {
-            router.replace(`/connect/${data.username}`);
-            return;
-          }
-          if (isPurchasedRedirect || wantsActivate) {
-            setMode("wizard");
-          }
-        } else {
-          setHasPurchased(false);
+        if (data.isActivated && data.username) {
+          router.replace(`/connect/${data.username}`);
+          return;
+        }
+        if (wantsActivate) {
+          setMode("wizard");
         }
       })
       .catch(() => {});
   }, [session, isPending, router]);
-
-  async function handleBuy() {
-    if (!session?.user) {
-      router.push("/login?next=/connect");
-      return;
-    }
-
-    setBuying(true);
-    try {
-      const res = await fetch("/api/stripe/proconnect-checkout", { method: "POST" });
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        alert(data.error || "Could not start checkout. Please try again.");
-      }
-    } catch {
-      alert("Network error. Please try again.");
-    } finally {
-      setBuying(false);
-    }
-  }
 
   function handleStart() {
     if (!session?.user) {
       router.push("/login?next=/connect?activate=1");
       return;
     }
-
-    if (hasPurchased || (session.user as { role?: string }).role === "ADMIN") {
-      setMode("wizard");
-    } else {
-      setShowPurchaseModal(true);
-    }
+    setMode("wizard");
   }
 
   if (mode === "wizard") {
@@ -1137,74 +1057,7 @@ function ConnectRoot() {
   }
 
   return (
-    <>
-      <ConnectLandingPage
-        onStart={handleStart}
-        hasPurchased={hasPurchased}
-        onBuy={handleBuy}
-        buying={buying}
-      />
-
-      {/* Modal shown if user tries to activate without purchasing */}
-      {showPurchaseModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className="relative w-full max-w-md bg-white dark:bg-[#172135] rounded-3xl p-8 border border-slate-200 dark:border-slate-800 shadow-2xl text-center">
-            <button
-              type="button"
-              onClick={() => setShowPurchaseModal(false)}
-              className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white rounded-full transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="w-14 h-14 rounded-2xl bg-amber-400/20 text-amber-600 dark:text-amber-400 mx-auto flex items-center justify-center mb-4">
-              <CreditCard className="w-7 h-7" />
-            </div>
-
-            <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-2">
-              ProConnect Card Required
-            </h3>
-            <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed mb-6">
-              To activate your verified public profile and link your NFC card, a one-time <strong>$29</strong> card purchase is required.
-            </p>
-
-            <div className="bg-slate-50 dark:bg-[#1e2e45] rounded-2xl p-4 mb-6 text-left space-y-2.5 text-xs text-slate-600 dark:text-slate-300">
-              <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-white">
-                <Check className="w-4 h-4 text-emerald-500 shrink-0" />
-                <span>Physical Premium NFC Tap Card shipped to you</span>
-              </div>
-              <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-white">
-                <Check className="w-4 h-4 text-emerald-500 shrink-0" />
-                <span>Instant Digital Business Card &amp; Marketplace profile</span>
-              </div>
-              <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-white">
-                <Check className="w-4 h-4 text-emerald-500 shrink-0" />
-                <span>No monthly or recurring card fees</span>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <button
-                type="button"
-                onClick={handleBuy}
-                disabled={buying}
-                className="w-full bg-[#0a1628] dark:bg-amber-500 text-white dark:text-[#0a1628] font-black text-sm py-4 rounded-full hover:bg-[#1a3a6b] dark:hover:bg-amber-400 transition-all shadow-lg hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {buying ? "Redirecting to Stripe..." : "Buy ProConnect Card — $29"}
-                <ArrowRight className="w-4 h-4" />
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowPurchaseModal(false)}
-                className="w-full text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white py-2"
-              >
-                Maybe later
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
+    <ConnectLandingPage onStart={handleStart} />
   );
 }
 
