@@ -294,20 +294,35 @@ export async function POST(req: NextRequest) {
           },
         });
 
-        await prisma.proNetwork.update({
+        const updatedNetwork = await prisma.proNetwork.update({
           where: { id: networkId },
           data: { memberCount: { increment: 1 } },
+          select: { ownerId: true, name: true, slug: true },
         });
 
+        // Notify member
         await prisma.notification.create({
           data: {
             userId,
             type: "SYSTEM",
             title: "🌟 Pro Network Membership Active!",
             message: "Welcome to your new Pro Network! Your custom member badge, private feeds, discussion vault, and exclusive resources are now unlocked.",
-            link: `/pro-networks/${networkSlug ?? ""}`,
+            link: `/pro-networks/${networkSlug ?? updatedNetwork.slug}`,
           },
         }).catch(() => {});
+
+        // Notify owner
+        if (updatedNetwork.ownerId) {
+          await prisma.notification.create({
+            data: {
+              userId: updatedNetwork.ownerId,
+              type: "SYSTEM",
+              title: "🎉 New Paying Member Subscribed!",
+              message: `A new member subscribed to your Pro Network: ${updatedNetwork.name}. Subscription payout is routed directly to your Stripe account.`,
+              link: `/pro-networks/${networkSlug ?? updatedNetwork.slug}`,
+            },
+          }).catch(() => {});
+        }
       }
     }
 

@@ -19,14 +19,11 @@ export async function GET() {
   });
   if (!user) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const canSell = ALLOWED_TIERS.includes(user.tier) || user.role === "ADMIN";
-  if (!canSell) return NextResponse.json({ error: "Upgrade required" }, { status: 403 });
-
   let accountDetails = null;
   if (user.stripeAccountId) {
     try {
       const acct = await stripe.accounts.retrieve(user.stripeAccountId);
-      const onboarded = acct.charges_enabled && acct.details_submitted;
+      const onboarded = !!(acct.charges_enabled && acct.details_submitted);
 
       // Sync onboarding status to DB if it changed
       if (onboarded !== user.stripeOnboarded) {
@@ -62,18 +59,22 @@ export async function GET() {
 }
 
 // POST — create Express account + return onboarding link
-export async function POST() {
+export async function POST(req: NextRequest) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  let body: { returnUrl?: string } = {};
+  try {
+    body = await req.json();
+  } catch {
+    // empty body is acceptable
+  }
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
     select: { stripeAccountId: true, stripeOnboarded: true, tier: true, role: true, email: true, name: true },
   });
   if (!user) return NextResponse.json({ error: "Not found" }, { status: 404 });
-
-  const canSell = ALLOWED_TIERS.includes(user.tier) || user.role === "ADMIN";
-  if (!canSell) return NextResponse.json({ error: "Upgrade required" }, { status: 403 });
 
   let accountId = user.stripeAccountId;
 
@@ -97,11 +98,14 @@ export async function POST() {
     });
   }
 
+  const targetReturnPath = body.returnUrl || "/seller-dashboard";
+  const separator = targetReturnPath.includes("?") ? "&" : "?";
+
   // Generate a fresh Account Link for onboarding
   const accountLink = await stripe.accountLinks.create({
     account: accountId,
-    refresh_url: `${APP_URL}/seller-dashboard?stripe=refresh`,
-    return_url:  `${APP_URL}/seller-dashboard?stripe=success`,
+    refresh_url: `${APP_URL}${targetReturnPath}${separator}stripe=refresh`,
+    return_url:  `${APP_URL}${targetReturnPath}${separator}stripe=success`,
     type: "account_onboarding",
   });
 

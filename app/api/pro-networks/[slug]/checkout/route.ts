@@ -28,6 +28,8 @@ export async function POST(
             name: true,
             email: true,
             stripeAccountId: true,
+            stripeOnboarded: true,
+            role: true,
           },
         },
       },
@@ -109,10 +111,10 @@ export async function POST(
       });
     }
 
-    // If Stripe is configured, create Checkout Session (0% TCP platform fee)
+    // If Stripe is configured, create Checkout Session (0% TCP platform fee -> 100% to Host)
     if (stripe) {
       try {
-        const stripeSession = await stripe.checkout.sessions.create({
+        const sessionParams: Stripe.Checkout.SessionCreateParams = {
           payment_method_types: ["card"],
           mode: "subscription",
           customer_email: session.user.email,
@@ -138,11 +140,29 @@ export async function POST(
             networkId: network.id,
             networkSlug: network.slug,
             userId,
+            ownerId: network.ownerId,
           },
           success_url: `${appUrl}/pro-networks/${slug}?joined=1&session_id={CHECKOUT_SESSION_ID}`,
           cancel_url: `${appUrl}/pro-networks/${slug}`,
-        });
+        };
 
+        // If the host has connected their Stripe account, route payouts directly to them
+        if (network.owner?.stripeAccountId && network.owner.stripeOnboarded && network.owner.role !== "ADMIN") {
+          sessionParams.subscription_data = {
+            transfer_data: {
+              destination: network.owner.stripeAccountId,
+            },
+            metadata: {
+              type: "pro_network_sub",
+              networkId: network.id,
+              networkSlug: network.slug,
+              userId,
+              ownerId: network.ownerId,
+            },
+          };
+        }
+
+        const stripeSession = await stripe.checkout.sessions.create(sessionParams);
         return NextResponse.json({ url: stripeSession.url });
       } catch (stripeError) {
         console.warn("Stripe checkout creation failed, falling back to direct enrollment for demo/dev:", stripeError);

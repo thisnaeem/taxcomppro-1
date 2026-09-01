@@ -322,12 +322,14 @@ export default function CreateProNetworkPage() {
                   />
                 </div>
 
-                <div className="mt-2.5 p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs flex items-center gap-2 font-medium">
-                  <CheckCircle2 className="w-4 h-4 shrink-0" />
-                  <span>
-                    <strong>0% TCP Platform Fee:</strong> You keep 100% of your subscription
-                    revenue. TCP does not take a percentage or cut.
-                  </span>
+                <div className="mt-3 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-xs space-y-1.5">
+                  <div className="flex items-center gap-2 font-bold">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                    <span>0% TCP Platform Fee • Direct Stripe Host Payouts</span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                    You keep <strong>100% of recurring member subscriptions</strong>. Connect your Stripe account in your network dashboard after creation, and all member payments will transfer directly to your bank account.
+                  </p>
                 </div>
               </div>
 

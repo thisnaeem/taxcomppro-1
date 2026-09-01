@@ -110,6 +110,20 @@ interface ProNetworkDetails {
   };
 }
 
+interface StripeStatus {
+  connected: boolean;
+  onboarded: boolean;
+  accountId: string | null;
+  accountDetails: {
+    id: string;
+    email: string | null;
+    country: string | null;
+    chargesEnabled: boolean;
+    payoutsEnabled: boolean;
+    onboarded: boolean;
+  } | null;
+}
+
 export default function ProNetworkHubPage({
   params,
 }: {
@@ -124,6 +138,11 @@ export default function ProNetworkHubPage({
   const [activeTab, setActiveTab] = useState<
     "home" | "discussions" | "media" | "resources" | "protalks" | "events" | "members" | "chat" | "manage"
   >("home");
+
+  // Host Stripe Connect State
+  const [stripeStatus, setStripeStatus] = useState<StripeStatus | null>(null);
+  const [connectingStripe, setConnectingStripe] = useState(false);
+  const [disconnectingStripe, setDisconnectingStripe] = useState(false);
 
   // Dynamic Data States (100% from Database)
   const [announcements, setAnnouncements] = useState<any[]>([]);
@@ -176,6 +195,63 @@ export default function ProNetworkHubPage({
   const [joining, setJoining] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
+  const fetchStripeStatus = async () => {
+    try {
+      const res = await fetch("/api/seller/stripe-connect");
+      if (res.ok) {
+        const data = await res.json();
+        setStripeStatus(data);
+      }
+    } catch (err) {
+      console.error("Failed to load Stripe status:", err);
+    }
+  };
+
+  const handleConnectStripe = async () => {
+    setConnectingStripe(true);
+    try {
+      const res = await fetch("/api/seller/stripe-connect", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ returnUrl: `/pro-networks/${slug}?tab=manage` }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert("Failed to start Stripe onboarding.");
+      }
+    } catch {
+      alert("Network error. Please try again.");
+    } finally {
+      setConnectingStripe(false);
+    }
+  };
+
+  const handleDisconnectStripe = async () => {
+    if (!confirm("Disconnect your Stripe account? Member subscription payments won't be transferred directly to you.")) return;
+    setDisconnectingStripe(true);
+    try {
+      await fetch("/api/seller/stripe-connect", { method: "DELETE" });
+      setStripeStatus({ connected: false, onboarded: false, accountId: null, accountDetails: null });
+    } finally {
+      setDisconnectingStripe(false);
+    }
+  };
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("tab") === "manage") {
+        setActiveTab("manage");
+      }
+      if (params.get("stripe") === "success" || params.get("stripe") === "refresh") {
+        setActiveTab("manage");
+        fetchStripeStatus();
+      }
+    }
+  }, []);
+
   useEffect(() => {
     fetchNetworkDetails();
   }, [slug]);
@@ -187,6 +263,9 @@ export default function ProNetworkHubPage({
       if (res.ok) {
         const data = await res.json();
         setNetwork(data.network);
+        if (data.network?.isOwner) {
+          fetchStripeStatus();
+        }
         fetchAllTabData();
       } else {
         router.push("/pro-networks");
@@ -285,6 +364,108 @@ export default function ProNetworkHubPage({
       setJoining(false);
     }
   };
+
+  const renderPaywall = (title?: string, desc?: string) => (
+    <div className="bg-gradient-to-b from-[#0a1628] via-[#0f1d33] to-[#0a1628] border border-amber-400/30 rounded-3xl p-6 sm:p-10 shadow-2xl text-white space-y-8 relative overflow-hidden">
+      <div className="absolute -right-16 -top-16 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -left-16 -bottom-16 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+
+      {/* Header */}
+      <div className="text-center max-w-2xl mx-auto space-y-3 relative z-10">
+        <div className="inline-flex items-center gap-2 bg-amber-400/15 border border-amber-400/30 text-amber-300 text-xs font-black uppercase tracking-widest px-4 py-1.5 rounded-full shadow-md">
+          <Lock className="w-3.5 h-3.5 text-amber-400" />
+          <span>Members-Only Access Required</span>
+        </div>
+        <h2 className="text-2xl sm:text-3xl font-black text-white leading-tight">
+          Join <span className="text-amber-400">{network?.name}</span> to Unlock {title || "Full Access"}
+        </h2>
+        <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+          {desc || network?.tagline || network?.description || "Join fellow tax practitioners and gain direct access to private feeds, document vaults, live Pro Talks, and exclusive templates."}
+        </p>
+      </div>
+
+      {/* Pricing and Host Direct Payout Guarantee */}
+      <div className="max-w-xl mx-auto bg-white/5 border border-white/10 rounded-2xl p-5 text-center space-y-2 relative z-10 backdrop-blur-md">
+        <div className="flex items-baseline justify-center gap-1.5">
+          <span className="text-3xl sm:text-4xl font-black text-amber-400">
+            ${network?.monthlyPrice.toFixed(2)}
+          </span>
+          <span className="text-xs font-bold text-slate-300">/ month</span>
+        </div>
+        <div className="flex items-center justify-center gap-2 text-xs font-semibold text-emerald-400">
+          <CheckCircle2 className="w-4 h-4 shrink-0" />
+          <span>0% Platform Commission — 100% of your membership goes directly to host <strong>{network?.owner.name}</strong></span>
+        </div>
+      </div>
+
+      {/* Unlocked Member Benefits Grid */}
+      <div className="max-w-2xl mx-auto space-y-3 relative z-10">
+        <h4 className="text-xs font-black uppercase tracking-wider text-slate-300 text-center">
+          Everything Included In Your Membership:
+        </h4>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          {((network?.memberBenefits && network.memberBenefits.length > 0) ? network.memberBenefits : [
+            "Private Network Discussion Board & Audit Q&A",
+            "Members-Only Resource & Workpaper Vault",
+            "Exclusive Live Pro Talks & Strategy Workshops",
+            "Direct Messaging & Consultation Access to Host",
+            "Private Member Directory & Network Chat",
+            "Custom Verified Pro Network Member Badge",
+          ]).map((b, idx) => (
+            <div key={idx} className="flex items-center gap-2.5 p-3 rounded-xl bg-white/5 border border-white/5 text-xs font-bold text-slate-200">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span className="truncate">{b}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Member Badge Preview */}
+      {network && (
+        <div className="max-w-md mx-auto bg-white/5 border border-white/10 rounded-2xl p-4 flex items-center justify-between gap-4 relative z-10">
+          <div className="space-y-0.5">
+            <div className="text-xs font-bold text-white">Your Custom Member Badge</div>
+            <div className="text-[11px] text-slate-400">Displayed across Tax Compliance Pro</div>
+          </div>
+          <NetworkBadge
+            shape={network.badgeShape}
+            initials={network.badgeInitials || "PRO"}
+            text={network.badgeText || "MEMBER"}
+            icon={network.badgeIcon || "Star"}
+            bgColor={network.badgeBgColor || "#0a1628"}
+            textColor={network.badgeTextColor || "#f0c040"}
+            borderColor={network.badgeBorderColor || "#d4a017"}
+            customImage={network.badgeCustomImage}
+          />
+        </div>
+      )}
+
+      {/* Big Checkout CTA Button */}
+      <div className="text-center relative z-10">
+        <button
+          type="button"
+          disabled={joining}
+          onClick={handleJoinNetwork}
+          className="bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-[#0a1628] font-black text-sm sm:text-base px-10 py-4 rounded-full transition-all shadow-2xl hover:scale-105 active:scale-95 disabled:opacity-50 inline-flex items-center gap-2.5"
+        >
+          {joining ? (
+            <>
+              <Loader2 className="w-5 h-5 animate-spin" />
+              <span>Connecting to Checkout...</span>
+            </>
+          ) : (
+            <>
+              <Crown className="w-5 h-5" />
+              <span>Join Now &amp; Unlock Access — ${network?.monthlyPrice.toFixed(2)}/mo</span>
+            </>
+          )}
+        </button>
+        <p className="text-[11px] text-slate-400 mt-2">
+          Secure Stripe checkout • Cancel anytime • Instant access
+        </p>
+      </div>
+    </div>
+  );
 
   const handleToggleFollow = async () => {
     if (!session?.user) {
@@ -887,6 +1068,11 @@ export default function ProNetworkHubPage({
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
               {/* Left 2/3 Column */}
               <div className="xl:col-span-2 space-y-6">
+                {/* Non-Member Paywall Banner */}
+                {!network.isMember && !network.isOwner && (
+                  renderPaywall()
+                )}
+
                 {/* 1. ANNOUNCEMENT CARD */}
                 {announcements.length > 0 && (
                   <div className="bg-white dark:bg-[#121e33] border border-slate-200 dark:border-white/10 rounded-3xl p-6 shadow-sm space-y-3">
@@ -1381,6 +1567,9 @@ export default function ProNetworkHubPage({
 
           {/* ── TAB 2: DISCUSSIONS FULL TAB ── */}
           {activeTab === "discussions" && (
+            !network.isMember && !network.isOwner ? (
+              renderPaywall("Private Discussions Board", "Ask questions, share audit findings, and collaborate with network peers.")
+            ) : (
             <div className="bg-white dark:bg-[#121e33] border border-slate-200 dark:border-white/10 rounded-3xl p-6 shadow-sm space-y-6">
               <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-4">
                 <div>
@@ -1468,10 +1657,14 @@ export default function ProNetworkHubPage({
                 </div>
               )}
             </div>
+            )
           )}
 
           {/* ── TAB 3: MEDIA GALLERY FULL TAB ── */}
           {activeTab === "media" && (
+            !network.isMember && !network.isOwner ? (
+              renderPaywall("Media & Video Recordings", "Recorded workshops, backstage recaps, and video breakdowns.")
+            ) : (
             <div className="bg-white dark:bg-[#121e33] border border-slate-200 dark:border-white/10 rounded-3xl p-6 shadow-sm space-y-6">
               <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-4">
                 <div>
@@ -1553,10 +1746,14 @@ export default function ProNetworkHubPage({
                 </div>
               )}
             </div>
+            )
           )}
 
           {/* ── TAB 4: RESOURCES FULL TAB ── */}
           {activeTab === "resources" && (
+            !network.isMember && !network.isOwner ? (
+              renderPaywall("Exclusive Resource Vault", "Download proprietary guides, questionnaires, checklists, and templates.")
+            ) : (
             <div className="bg-white dark:bg-[#121e33] border border-slate-200 dark:border-white/10 rounded-3xl p-6 shadow-sm space-y-6">
               <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-4">
                 <div>
@@ -1630,10 +1827,14 @@ export default function ProNetworkHubPage({
                 </div>
               )}
             </div>
+            )
           )}
 
           {/* ── TAB 5: PRO TALKS & EVENTS FULL TAB ── */}
           {(activeTab === "protalks" || activeTab === "events") && (
+            !network.isMember && !network.isOwner ? (
+              renderPaywall("Live Pro Talks & Events", "Live audio rooms, training masterclasses, and Q&A sessions.")
+            ) : (
             <div className="bg-white dark:bg-[#121e33] border border-slate-200 dark:border-white/10 rounded-3xl p-6 shadow-sm space-y-6">
               <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-4">
                 <div>
@@ -1739,10 +1940,14 @@ export default function ProNetworkHubPage({
                 </div>
               )}
             </div>
+            )
           )}
 
           {/* ── TAB 6: MEMBERS CHAT ── */}
           {activeTab === "chat" && (
+            !network.isMember && !network.isOwner ? (
+              renderPaywall("Members Live Chat", "Chat in real-time with verified network members.")
+            ) : (
             <div className="bg-white dark:bg-[#121e33] border border-slate-200 dark:border-white/10 rounded-3xl overflow-hidden shadow-sm flex flex-col h-[650px]">
               {/* Channel Header Bar */}
               <div className="p-4 bg-slate-100 dark:bg-slate-900/60 border-b border-slate-200 dark:border-white/10 flex items-center justify-between gap-3">
@@ -1839,10 +2044,14 @@ export default function ProNetworkHubPage({
                 </button>
               </form>
             </div>
+            )
           )}
 
           {/* ── TAB 7: MEMBERS DIRECTORY ── */}
           {activeTab === "members" && (
+            !network.isMember && !network.isOwner ? (
+              renderPaywall("Members Directory", "Connect and collaborate directly with fellow network members.")
+            ) : (
             <div className="bg-white dark:bg-[#121e33] border border-slate-200 dark:border-white/10 rounded-3xl p-6 shadow-sm space-y-6">
               <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-4">
                 <div>
@@ -1899,6 +2108,7 @@ export default function ProNetworkHubPage({
                 ))}
               </div>
             </div>
+            )
           )}
 
           {/* ── TAB 8: OWNER MANAGEMENT DASHBOARD ── */}
@@ -1946,6 +2156,110 @@ export default function ProNetworkHubPage({
                   <div className="text-2xl font-black text-amber-500">
                     ${network.monthlyPrice.toFixed(2)}/mo
                   </div>
+                </div>
+              </div>
+
+              {/* ── Host Stripe Connect Integration Card (0% Platform Fee) ── */}
+              <div className="bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-6 space-y-5">
+                <div className="flex items-start sm:items-center justify-between gap-4 flex-col sm:flex-row border-b border-slate-200/60 dark:border-white/10 pb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-[#6772e5]/15 flex items-center justify-center shrink-0">
+                      <svg viewBox="0 0 24 24" className="w-5 h-5 fill-[#6772e5]">
+                        <path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.667 0 7.589.654 6.104 1.872 4.56 3.147 3.757 4.992 3.757 7.218c0 4.039 2.467 5.76 6.476 7.219 2.585.92 3.445 1.574 3.445 2.583 0 .98-.84 1.545-2.354 1.545-1.875 0-4.965-.921-6.99-2.109l-.9 5.555C5.175 22.99 8.385 24 11.714 24c2.641 0 4.843-.624 6.328-1.813 1.664-1.305 2.525-3.236 2.525-5.732 0-4.128-2.524-5.851-6.591-7.305z"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h4 className="font-black text-slate-900 dark:text-white text-base">Host Stripe Connect Account</h4>
+                        {stripeStatus?.connected && stripeStatus?.onboarded ? (
+                          <span className="flex items-center gap-1 text-[11px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-0.5 rounded-full">
+                            <CheckCircle2 className="w-3 h-3" /> Connected &amp; Active
+                          </span>
+                        ) : stripeStatus?.connected && !stripeStatus?.onboarded ? (
+                          <span className="flex items-center gap-1 text-[11px] font-bold text-amber-600 bg-amber-50 dark:bg-amber-500/10 px-2.5 py-0.5 rounded-full">
+                            <AlertCircle className="w-3 h-3" /> Incomplete Onboarding
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-1 text-[11px] font-bold text-rose-600 bg-rose-50 dark:bg-rose-500/10 px-2.5 py-0.5 rounded-full">
+                            <AlertCircle className="w-3 h-3" /> Not Connected
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                        Receive 100% of member subscription payments directly into your bank account (0% TCP platform cut).
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Warning if not connected */}
+                {(!stripeStatus?.connected || !stripeStatus?.onboarded) && (
+                  <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-300 text-xs font-semibold flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                    <div>
+                      <div className="font-bold text-sm text-amber-900 dark:text-amber-200">
+                        Connect your Stripe account to receive direct member payouts
+                      </div>
+                      <p className="mt-0.5 text-xs text-slate-600 dark:text-slate-300">
+                        When members pay ${network.monthlyPrice.toFixed(2)}/mo to join your Pro Network, Stripe routes 100% of the recurring membership revenue directly into your connected bank account.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Account Details if connected */}
+                {stripeStatus?.connected && stripeStatus?.accountDetails && (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {[
+                      { label: "Stripe Email", value: stripeStatus.accountDetails.email ?? "—" },
+                      { label: "Charges", value: stripeStatus.accountDetails.chargesEnabled ? "Enabled" : "Disabled" },
+                      { label: "Payouts", value: stripeStatus.accountDetails.payoutsEnabled ? "Enabled" : "Disabled" },
+                      { label: "Account ID", value: (stripeStatus.accountId?.slice(0, 16) ?? "—") + "…" },
+                    ].map((s) => (
+                      <div key={s.label} className="bg-white dark:bg-black/20 rounded-xl px-3.5 py-2.5 border border-slate-200/60 dark:border-white/5">
+                        <div className="text-[10px] text-slate-400 font-semibold">{s.label}</div>
+                        <div className="text-xs font-bold text-slate-900 dark:text-white truncate">{s.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Action Buttons */}
+                <div className="flex items-center gap-3 flex-wrap pt-1">
+                  {!stripeStatus?.connected ? (
+                    <button
+                      type="button"
+                      onClick={handleConnectStripe}
+                      disabled={connectingStripe}
+                      className="inline-flex items-center gap-2 bg-[#6772e5] hover:bg-[#5469d4] text-white font-black text-xs px-5 py-2.5 rounded-xl transition-all shadow-md disabled:opacity-60"
+                    >
+                      {connectingStripe ? <Loader2 className="w-4 h-4 animate-spin" /> : <ExternalLink className="w-4 h-4" />}
+                      <span>{connectingStripe ? "Connecting..." : "Connect Stripe Account"}</span>
+                    </button>
+                  ) : (
+                    <>
+                      {!stripeStatus?.onboarded && (
+                        <button
+                          type="button"
+                          onClick={handleConnectStripe}
+                          disabled={connectingStripe}
+                          className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs px-5 py-2.5 rounded-xl transition-all disabled:opacity-60"
+                        >
+                          {connectingStripe ? <Loader2 className="w-4 h-4 animate-spin" /> : <AlertCircle className="w-4 h-4" />}
+                          <span>{connectingStripe ? "Loading..." : "Complete Stripe Onboarding"}</span>
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={handleDisconnectStripe}
+                        disabled={disconnectingStripe}
+                        className="inline-flex items-center gap-2 text-rose-500 bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20 font-bold text-xs px-4 py-2.5 rounded-xl transition-all disabled:opacity-60"
+                      >
+                        {disconnectingStripe ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                        <span>{disconnectingStripe ? "Disconnecting..." : "Disconnect Stripe"}</span>
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
 
