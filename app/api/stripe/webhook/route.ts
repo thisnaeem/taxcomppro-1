@@ -272,8 +272,47 @@ export async function POST(req: NextRequest) {
       }).catch(() => {});
     }
 
+    // ── Pro Network Monthly Membership Subscription ──────
+    if (type === "pro_network_sub" && userId) {
+      const { networkId, networkSlug } = session.metadata ?? {};
+      if (networkId) {
+        await prisma.proNetworkMember.upsert({
+          where: { networkId_userId: { networkId, userId } },
+          create: {
+            networkId,
+            userId,
+            role: "MEMBER",
+            status: "ACTIVE",
+            stripeCustomerId: session.customer as string,
+            stripeSubscriptionId: session.subscription as string,
+          },
+          update: {
+            status: "ACTIVE",
+            stripeCustomerId: session.customer as string,
+            stripeSubscriptionId: session.subscription as string,
+            joinedAt: new Date(),
+          },
+        });
+
+        await prisma.proNetwork.update({
+          where: { id: networkId },
+          data: { memberCount: { increment: 1 } },
+        });
+
+        await prisma.notification.create({
+          data: {
+            userId,
+            type: "SYSTEM",
+            title: "🌟 Pro Network Membership Active!",
+            message: "Welcome to your new Pro Network! Your custom member badge, private feeds, discussion vault, and exclusive resources are now unlocked.",
+            link: `/pro-networks/${networkSlug ?? ""}`,
+          },
+        }).catch(() => {});
+      }
+    }
+
     // ── Subscription upgrade ──────────────────────────────
-    if (type !== "toolkit" && type !== "proconnect_card" && session.metadata?.product !== "proconnect_card" && userId && tier) {
+    if (type !== "toolkit" && type !== "proconnect_card" && type !== "pro_network_sub" && session.metadata?.product !== "proconnect_card" && userId && tier) {
       const t = tier as SubscriptionTier;
       await prisma.user.update({ where: { id: userId }, data: { tier: t } });
       await prisma.subscription.upsert({
@@ -290,6 +329,22 @@ export async function POST(req: NextRequest) {
     if (existingSub) {
       await prisma.user.update({ where: { id: existingSub.userId }, data: { tier: "FREE" } });
       await prisma.subscription.update({ where: { id: existingSub.id }, data: { status: "canceled", plan: "FREE" } });
+    }
+
+    // Pro Network membership cancellation
+    const networkMember = await prisma.proNetworkMember.findFirst({
+      where: { stripeSubscriptionId: sub.id },
+      include: { network: true },
+    });
+    if (networkMember) {
+      await prisma.proNetworkMember.update({
+        where: { id: networkMember.id },
+        data: { status: "CANCELED" },
+      });
+      await prisma.proNetwork.update({
+        where: { id: networkMember.networkId },
+        data: { memberCount: { decrement: 1 } },
+      });
     }
   }
 

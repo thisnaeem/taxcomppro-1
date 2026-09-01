@@ -187,6 +187,18 @@ model User {
   trainingLicenses     TrainingLicense[]
   eroInvitationsSent   StaffInvitation[] @relation("EroInvitations")
   preparerInvitations  StaffInvitation[] @relation("PreparerInvitations")
+  ownedNetworks        ProNetwork[]      @relation("OwnedNetworks")
+  networkMemberships   ProNetworkMember[]
+  networkFollows       ProNetworkFollower[]
+  networkAnnouncements ProNetworkAnnouncement[]
+  networkDiscussions   ProNetworkDiscussion[]
+  networkReplies       ProNetworkDiscussionReply[]
+  networkMedia         ProNetworkMedia[]
+  networkResources     ProNetworkResource[]
+  networkEvents        ProNetworkEvent[]
+  networkEventRsvps    ProNetworkEventRsvp[]
+  networkChatMessages  ProNetworkChatMessage[]
+  networkQuestions     ProNetworkQuestion[]
 
   @@map("users")
 }
@@ -1588,5 +1600,263 @@ model NfcCard {
 
   @@map("nfc_cards")
 }
+
+// ── Pro Networks (Private Subscription Communities) ─────────────────────────
+model ProNetwork {
+  id                  String   @id @default(cuid())
+  name                String
+  slug                String   @unique
+  tagline             String?
+  description         String   @db.Text
+  category            String   @default("General")
+  coverImage          String?
+  logoImage           String?
+  monthlyPrice        Float    @default(19.99)
+  isPublished         Boolean  @default(true)
+  memberCount         Int      @default(1)
+  followerCount       Int      @default(0)
+
+  // Creator / Owner
+  ownerId             String
+  owner               User     @relation("OwnedNetworks", fields: [ownerId], references: [id], onDelete: Cascade)
+
+  // Rules, welcome & benefits
+  rules               String?  @db.Text
+  welcomeMessage      String?  @db.Text
+  previewContent      String?  @db.Text
+  memberBenefits      String[] @default([])
+
+  // Custom Badge Creator fields
+  badgeShape          String   @default("rounded") // rounded, shield, hexagon, circle, pill
+  badgeInitials       String?
+  badgeText           String   @default("MEMBER")
+  badgeIcon           String   @default("Star")
+  badgeBgColor        String   @default("#0a1628")
+  badgeTextColor      String   @default("#f0c040")
+  badgeBorderColor    String   @default("#d4a017")
+  badgeCustomImage    String?
+
+  // Direct Access Settings
+  allowDirectMessage  Boolean  @default(true)
+  allowDirectText     Boolean  @default(false)
+  directTextPhone     String?
+  allowQuestions      Boolean  @default(true)
+  allowConsultations  Boolean  @default(true)
+  consultationUrl     String?
+
+  // Notifications default settings
+  notifyAnnouncements Boolean  @default(true)
+  notifyResources     Boolean  @default(true)
+  notifyLiveEvents    Boolean  @default(true)
+  notifyNewTraining   Boolean  @default(true)
+  notifyNewPosts      Boolean  @default(true)
+  notifyDiscussions   Boolean  @default(true)
+  notifyEvents        Boolean  @default(true)
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  members             ProNetworkMember[]
+  followers           ProNetworkFollower[]
+  announcements       ProNetworkAnnouncement[]
+  discussions         ProNetworkDiscussion[]
+  media               ProNetworkMedia[]
+  resources           ProNetworkResource[]
+  events              ProNetworkEvent[]
+  chatMessages        ProNetworkChatMessage[]
+  questions           ProNetworkQuestion[]
+
+  @@map("pro_networks")
+}
+
+model ProNetworkMember {
+  id                   String     @id @default(cuid())
+  networkId            String
+  userId               String
+  role                 String     @default("MEMBER") // OWNER, ADMIN, MODERATOR, MEMBER
+  status               String     @default("ACTIVE") // ACTIVE, CANCELED, EXPIRED, PAST_DUE
+  stripeSubscriptionId String?
+  stripeCustomerId     String?
+  joinedAt             DateTime   @default(now())
+  expiresAt            DateTime?
+  showInDirectory      Boolean    @default(true)
+  notifications        Json?
+
+  network              ProNetwork @relation(fields: [networkId], references: [id], onDelete: Cascade)
+  user                 User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([networkId, userId])
+  @@map("pro_network_members")
+}
+
+model ProNetworkFollower {
+  id         String     @id @default(cuid())
+  networkId  String
+  userId     String
+  followedAt DateTime   @default(now())
+
+  network    ProNetwork @relation(fields: [networkId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([networkId, userId])
+  @@map("pro_network_followers")
+}
+
+model ProNetworkAnnouncement {
+  id        String     @id @default(cuid())
+  networkId String
+  authorId  String
+  title     String
+  content   String     @db.Text
+  isPinned  Boolean    @default(false)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  network   ProNetwork @relation(fields: [networkId], references: [id], onDelete: Cascade)
+  author    User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@map("pro_network_announcements")
+}
+
+model ProNetworkDiscussion {
+  id            String                       @id @default(cuid())
+  networkId     String
+  authorId      String
+  title         String
+  content       String                       @db.Text
+  category      String                       @default("General")
+  isPinned      Boolean                      @default(false)
+  isMembersOnly Boolean                      @default(true)
+  replyCount    Int                          @default(0)
+  viewsCount    Int                          @default(0)
+  createdAt     DateTime                     @default(now())
+  updatedAt     DateTime                     @updatedAt
+
+  network       ProNetwork                   @relation(fields: [networkId], references: [id], onDelete: Cascade)
+  author        User                         @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  replies       ProNetworkDiscussionReply[]
+
+  @@map("pro_network_discussions")
+}
+
+model ProNetworkDiscussionReply {
+  id           String               @id @default(cuid())
+  discussionId String
+  authorId     String
+  content      String               @db.Text
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+
+  discussion   ProNetworkDiscussion @relation(fields: [discussionId], references: [id], onDelete: Cascade)
+  author       User                 @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@map("pro_network_discussion_replies")
+}
+
+model ProNetworkMedia {
+  id            String     @id @default(cuid())
+  networkId     String
+  uploaderId    String
+  title         String
+  type          String     @default("PHOTO") // PHOTO, VIDEO, FILE, AUDIO
+  url           String
+  thumbnailUrl  String?
+  duration      String?
+  isMembersOnly Boolean    @default(true)
+  createdAt     DateTime   @default(now())
+
+  network       ProNetwork @relation(fields: [networkId], references: [id], onDelete: Cascade)
+  uploader      User       @relation(fields: [uploaderId], references: [id], onDelete: Cascade)
+
+  @@map("pro_network_media")
+}
+
+model ProNetworkResource {
+  id             String     @id @default(cuid())
+  networkId      String
+  uploaderId     String
+  title          String
+  description    String?
+  fileType       String     @default("PDF") // PDF, DOCX, XLSX, VIDEO, ZIP, LINK
+  fileUrl        String
+  fileSize       String?
+  isMembersOnly  Boolean    @default(true)
+  downloadsCount Int        @default(0)
+  createdAt      DateTime   @default(now())
+
+  network        ProNetwork @relation(fields: [networkId], references: [id], onDelete: Cascade)
+  uploader       User       @relation(fields: [uploaderId], references: [id], onDelete: Cascade)
+
+  @@map("pro_network_resources")
+}
+
+model ProNetworkEvent {
+  id              String                @id @default(cuid())
+  networkId       String
+  hostId          String
+  title           String
+  description     String?               @db.Text
+  eventType       String                @default("PRO_TALK") // PRO_TALK, LIVE_CLASS, WORKSHOP, WEBINAR, QA_SESSION
+  scheduledAt     DateTime
+  durationMinutes Int                   @default(60)
+  isLive          Boolean               @default(false)
+  liveUrl         String?
+  roomName        String?
+  isMembersOnly   Boolean               @default(true)
+  createdAt       DateTime              @default(now())
+
+  network         ProNetwork            @relation(fields: [networkId], references: [id], onDelete: Cascade)
+  host            User                  @relation(fields: [hostId], references: [id], onDelete: Cascade)
+  rsvps           ProNetworkEventRsvp[]
+
+  @@map("pro_network_events")
+}
+
+model ProNetworkEventRsvp {
+  id        String          @id @default(cuid())
+  eventId   String
+  userId    String
+  status    String          @default("REGISTERED") // REGISTERED, ATTENDED
+  createdAt DateTime        @default(now())
+
+  event     ProNetworkEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, userId])
+  @@map("pro_network_event_rsvps")
+}
+
+model ProNetworkChatMessage {
+  id          String     @id @default(cuid())
+  networkId   String
+  channel     String     @default("general") // general, tax-season, due-diligence, marketing, software, owner-qa
+  senderId    String
+  content     String     @db.Text
+  attachments String[]   @default([])
+  createdAt   DateTime   @default(now())
+
+  network     ProNetwork @relation(fields: [networkId], references: [id], onDelete: Cascade)
+  sender      User       @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@map("pro_network_chat_messages")
+}
+
+model ProNetworkQuestion {
+  id          String     @id @default(cuid())
+  networkId   String
+  userId      String
+  question    String     @db.Text
+  answer      String?    @db.Text
+  isAnswered  Boolean    @default(false)
+  answeredAt  DateTime?
+  isPublic    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+
+  network     ProNetwork @relation(fields: [networkId], references: [id], onDelete: Cascade)
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("pro_network_questions")
+}
+
 
 

@@ -13,7 +13,7 @@ import {
   UserGroupIcon, Message01Icon, UserAdd01Icon, BookOpen01Icon,
   Store01Icon, Rocket01Icon, Radio01Icon,
 } from "hugeicons-react";
-import { Gift, Shield, GraduationCap, ChevronDown, Megaphone, Sun, Moon } from "lucide-react";
+import { Gift, Shield, GraduationCap, ChevronDown, Megaphone, Sun, Moon, Network } from "lucide-react";
 import { useTheme } from "next-themes";
 
 type NavItem =
@@ -33,6 +33,7 @@ const navItems: NavItem[] = [
       { label: "Pro Talks",    href: "/pro-talks",    icon: Radio01Icon,   desc: "" },
       { label: "Communities",  href: "/communities",  icon: Rocket01Icon,  desc: "" },
       { label: "Pro Hub",      href: "/pro-hub",      icon: UserGroupIcon, desc: "" },
+      { label: "Pro Network",  href: "/pro-networks", icon: Network,       desc: "" },
       { label: "Pro Marketing",href: "/pro-marketing",icon: Megaphone,     desc: "" },
     ],
   },
