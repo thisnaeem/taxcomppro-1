@@ -6,7 +6,7 @@ import { markAllRead } from "@/store/slices/notificationSlice";
 import { signOut } from "@/lib/auth-client";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import { Bell, LogOut, UserCircle, ArrowUpCircle, ChevronDown, Gift } from "lucide-react";
+import { Bell, LogOut, UserCircle, ArrowUpCircle, ChevronDown, Gift, Menu } from "lucide-react";
 
 const pageTitles: Record<string, string> = {
   "/feed":                   "Feed",
@@ -33,9 +33,15 @@ const pageTitles: Record<string, string> = {
   "/admin/toolkit-assets":       "Toolkit Assets",
   "/admin/content-calendar":     "Content Calendar",
   "/admin/atlas":                "Atlas AI Settings",
+  "/admin/training":             "Staff Training",
+  "/admin/support":              "Support Tickets",
 };
 
-export default function Topbar() {
+interface TopbarProps {
+  onMenuClick?: () => void;
+}
+
+export default function Topbar({ onMenuClick }: TopbarProps) {
   const user     = useAppSelector((s) => s.auth.user);
   const unread   = useAppSelector((s) => s.notifications.unreadCount);
   const dispatch = useAppDispatch();
@@ -67,13 +73,29 @@ export default function Topbar() {
   const isAdmin = pathname.startsWith("/admin");
 
   return (
-    <header className={`h-16 flex items-center justify-between px-7 border-b sticky top-0 z-50 ${
+    <header className={`h-16 flex items-center justify-between px-3.5 sm:px-7 border-b sticky top-0 z-40 ${
       isAdmin
-        ? "bg-[#0a1628]/80 backdrop-blur-md border-white/10"
+        ? "bg-[#0a1628]/90 backdrop-blur-md border-white/10"
         : "bg-white border-slate-200"
     }`}>
-      <div className="flex items-center gap-4">
-        {title && <h1 className={`text-xl font-bold ${isAdmin ? "text-white" : "text-[#0a1628]"}`}>{title}</h1>}
+      <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+        {/* Mobile Hamburger Button */}
+        {isAdmin && onMenuClick && (
+          <button
+            type="button"
+            onClick={onMenuClick}
+            className="lg:hidden p-2 rounded-xl text-white/70 hover:text-white hover:bg-white/10 transition-colors shrink-0"
+            title="Open navigation menu"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+        )}
+
+        {title && (
+          <h1 className={`text-base sm:text-xl font-black truncate ${isAdmin ? "text-white" : "text-[#0a1628]"}`}>
+            {title}
+          </h1>
+        )}
       </div>
 
       <div className="flex items-center gap-1.5">

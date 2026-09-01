@@ -651,23 +651,23 @@ export default function PaymentsPage() {
       )}
 
       {/* ── Header ── */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-black text-white">Payments &amp; Revenue</h1>
-          <p className="text-slate-400 text-sm mt-1">
+          <h1 className="text-xl sm:text-2xl font-black text-white">Payments &amp; Revenue</h1>
+          <p className="text-slate-400 text-xs sm:text-sm mt-0.5 sm:mt-1">
             Active subscriptions, recurring revenue metrics, and full toolkit transaction logs
           </p>
         </div>
         <button
           onClick={fetchData}
-          className="flex items-center gap-2 bg-slate-700/60 hover:bg-slate-700 text-slate-300 text-sm font-semibold px-4 py-2.5 rounded-xl transition-all border border-white/8 shadow-md"
+          className="self-start sm:self-auto flex items-center gap-2 bg-slate-700/60 hover:bg-slate-700 text-slate-300 text-xs sm:text-sm font-semibold px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl transition-all border border-white/8 shadow-md"
         >
           <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} /> Refresh
         </button>
       </div>
 
       {/* ── KPI Cards ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
         {loading ? (
           [1, 2, 3, 4].map((i) => <div key={i} className="rounded-2xl h-[130px] bg-slate-800 animate-pulse" />)
         ) : (
@@ -863,7 +863,7 @@ export default function PaymentsPage() {
         {/* ── Subscriptions Table View ── */}
         {activeTab === "subscriptions" && (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm min-w-[700px]">
               <thead>
                 <tr className="border-b border-white/8">
                   <th className="text-left text-[10px] font-black uppercase tracking-widest text-slate-500 px-5 py-3">
@@ -1012,7 +1012,7 @@ export default function PaymentsPage() {
         {/* ── Toolkit & Course Transactions Table View ── */}
         {activeTab === "transactions" && (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm min-w-[700px]">
               <thead>
                 <tr className="border-b border-white/8">
                   <th className="text-left text-[10px] font-black uppercase tracking-widest text-slate-500 px-5 py-3">

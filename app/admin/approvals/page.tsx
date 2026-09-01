@@ -247,10 +247,10 @@ export default function AdminApprovalsPage() {
       </div>
 
       {/* Tab switch */}
-      <div className="flex gap-2 bg-slate-800/80 border border-white/10 rounded-2xl p-1.5 w-fit flex-wrap backdrop-blur-sm shadow-xl">
+      <div className="flex gap-2 bg-slate-800/80 border border-white/10 rounded-2xl p-1.5 w-full sm:w-fit overflow-x-auto backdrop-blur-sm shadow-xl">
         <button
           onClick={() => setActiveTab("pros")}
-          className={`flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-bold transition-all ${
+          className={`flex items-center gap-2 px-4 sm:px-5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap shrink-0 ${
             activeTab === "pros"
               ? "bg-[#f0c040] text-[#0a1628] shadow-md shadow-amber-400/20"
               : "text-slate-400 hover:text-white"
@@ -265,7 +265,7 @@ export default function AdminApprovalsPage() {
         </button>
         <button
           onClick={() => setActiveTab("blasts")}
-          className={`flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-bold transition-all ${
+          className={`flex items-center gap-2 px-4 sm:px-5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap shrink-0 ${
             activeTab === "blasts"
               ? "bg-[#f0c040] text-[#0a1628] shadow-md shadow-amber-400/20"
               : "text-slate-400 hover:text-white"
@@ -280,13 +280,13 @@ export default function AdminApprovalsPage() {
         </button>
         <button
           onClick={() => setActiveTab("proads")}
-          className={`flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-bold transition-all ${
+          className={`flex items-center gap-2 px-4 sm:px-5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap shrink-0 ${
             activeTab === "proads"
               ? "bg-[#f0c040] text-[#0a1628] shadow-md shadow-amber-400/20"
               : "text-slate-400 hover:text-white"
           }`}
         >
-          <MonitorPlay className="w-4 h-4" /> Pro Ads
+          <MonitorPlay className="w-4 h-4" /> Banner Pro Ads
           {proAds.length > 0 && (
             <span className="bg-red-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full">
               {proAds.length}
@@ -295,7 +295,7 @@ export default function AdminApprovalsPage() {
         </button>
         <button
           onClick={() => setActiveTab("featured")}
-          className={`flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-bold transition-all ${
+          className={`flex items-center gap-2 px-4 sm:px-5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap shrink-0 ${
             activeTab === "featured"
               ? "bg-[#f0c040] text-[#0a1628] shadow-md shadow-amber-400/20"
               : "text-slate-400 hover:text-white"

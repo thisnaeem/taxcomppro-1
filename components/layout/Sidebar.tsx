@@ -49,7 +49,12 @@ const navGroups = [
   { label: "Tools",      items: adminLinks.slice(7) },
 ];
 
-export default function Sidebar() {
+interface SidebarProps {
+  mobileOpen?: boolean;
+  onClose?: () => void;
+}
+
+export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname();
   const user     = useAppSelector(s => s.auth.user);
 
@@ -84,6 +89,134 @@ export default function Sidebar() {
       setIsClearing(false);
     }
   };
+
+  const renderContent = (isMobile = false) => (
+    <>
+      {/* Logo area */}
+      <div className="px-5 py-5 border-b border-white/10 flex items-center justify-between">
+        <div>
+          <Link href="/" onClick={() => isMobile && onClose?.()} className="flex items-center gap-2">
+            <img src="/logo_dark.webp" alt="TaxCompPro" className="h-10 w-auto" />
+          </Link>
+          {isAdmin && (
+            <div className="mt-2.5 inline-flex items-center gap-1.5 bg-amber-400/15 text-amber-300 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full">
+              <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+              Admin Panel
+            </div>
+          )}
+        </div>
+        {isMobile && (
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-2 rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+            title="Close menu"
+          >
+            <span className="text-xl leading-none">✕</span>
+          </button>
+        )}
+      </div>
+
+      {/* Nav */}
+      <nav className="flex-1 px-3 py-4 flex flex-col gap-5 overflow-y-auto">
+        {isAdmin ? (
+          <>
+            {navGroups.map(group => (
+              <div key={group.label}>
+                <p className="text-[10px] font-black uppercase tracking-widest text-white/25 px-2.5 mb-1.5">
+                  {group.label}
+                </p>
+                <div className="flex flex-col gap-0.5">
+                  {group.items.map(l => {
+                    const isActive =
+                      l.exact
+                        ? pathname === l.href
+                        : pathname === l.href || pathname.startsWith(l.href + "/");
+                    return (
+                      <Link
+                        key={l.href + l.label}
+                        href={l.href}
+                        onClick={() => isMobile && onClose?.()}
+                        className={`group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                          isActive
+                            ? "bg-[#f0c040] text-[#0a1628] shadow-lg shadow-amber-400/20"
+                            : "text-white/55 hover:text-white hover:bg-white/8"
+                        }`}
+                      >
+                        <l.icon className={`w-4 h-4 shrink-0 ${isActive ? "text-[#0a1628]" : "text-white/40 group-hover:text-white/70"}`} />
+                        <span className="flex-1">{l.label}</span>
+                        {isActive && <ChevronRight className="w-3.5 h-3.5 text-[#0a1628]/60" />}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+
+            {/* Admin Actions / Danger Zone */}
+            <div className="pt-3 border-t border-white/10">
+              <p className="text-[10px] font-black uppercase tracking-widest text-rose-400/80 px-2.5 mb-2 flex items-center justify-between">
+                <span>Admin Actions</span>
+                <span className="bg-rose-500/20 text-rose-300 text-[9px] px-1.5 py-0.5 rounded font-bold">DANGER</span>
+              </p>
+              <div className="flex flex-col gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setActiveModal("marketplace")}
+                  className="flex items-center gap-2.5 w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-rose-300 hover:bg-rose-500/15 hover:text-rose-200 transition-all group"
+                >
+                  <Trash2 className="w-3.5 h-3.5 text-rose-400 group-hover:scale-110 transition-transform shrink-0" />
+                  <span className="truncate">Clear Marketplace</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveModal("communities")}
+                  className="flex items-center gap-2.5 w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-rose-300 hover:bg-rose-500/15 hover:text-rose-200 transition-all group"
+                >
+                  <Trash2 className="w-3.5 h-3.5 text-rose-400 group-hover:scale-110 transition-transform shrink-0" />
+                  <span className="truncate">Clear Communities</span>
+                </button>
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="flex flex-col gap-0.5">
+            {links.map(l => {
+              const isActive = l.exact ? pathname === l.href : pathname.startsWith(l.href);
+              return (
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  onClick={() => isMobile && onClose?.()}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                    isActive ? "bg-[#f0c040] text-[#0a1628]" : "text-white/55 hover:text-white hover:bg-white/8"
+                  }`}
+                >
+                  <l.icon className="w-4 h-4 shrink-0" />
+                  {l.label}
+                </Link>
+              );
+            })}
+          </div>
+        )}
+      </nav>
+
+      {/* User */}
+      <div className="px-4 py-4 border-t border-white/10 flex items-center gap-3">
+        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shrink-0 overflow-hidden ring-2 ring-amber-400/30">
+          {user.image
+            ? <img src={user.image} alt={user.name} referrerPolicy="no-referrer" className="w-full h-full object-cover" />
+            : <span className="text-[#0a1628] font-black text-sm">{user.name?.[0]?.toUpperCase()}</span>}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="text-white text-xs font-bold truncate">{user.name}</div>
+          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full mt-0.5 inline-block ${tierStyle[user.tier ?? "FREE"] ?? tierStyle.FREE}`}>
+            {tierLabel[user.tier ?? "FREE"]}
+          </span>
+        </div>
+      </div>
+    </>
+  );
 
   return (
     <>
@@ -141,117 +274,25 @@ export default function Sidebar() {
         </div>
       )}
 
-      <aside className="w-[230px] shrink-0 h-screen sticky top-0 bg-[#0a1628] flex flex-col z-10 shadow-2xl">
-        {/* Logo area */}
-        <div className="px-5 py-5 border-b border-white/10">
-          <Link href="/" className="flex items-center gap-2">
-            <img src="/logo_dark.webp" alt="TaxCompPro" className="h-10 w-auto" />
-          </Link>
-          {isAdmin && (
-            <div className="mt-2.5 inline-flex items-center gap-1.5 bg-amber-400/15 text-amber-300 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full">
-              <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-              Admin Panel
-            </div>
-          )}
-        </div>
-
-        {/* Nav */}
-        <nav className="flex-1 px-3 py-4 flex flex-col gap-5 overflow-y-auto">
-          {isAdmin ? (
-            <>
-              {navGroups.map(group => (
-                <div key={group.label}>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-white/25 px-2.5 mb-1.5">
-                    {group.label}
-                  </p>
-                  <div className="flex flex-col gap-0.5">
-                    {group.items.map(l => {
-                      const isActive =
-                        l.exact
-                          ? pathname === l.href
-                          : pathname === l.href || pathname.startsWith(l.href + "/");
-                      return (
-                        <Link
-                          key={l.href + l.label}
-                          href={l.href}
-                          className={`group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                            isActive
-                              ? "bg-[#f0c040] text-[#0a1628] shadow-lg shadow-amber-400/20"
-                              : "text-white/55 hover:text-white hover:bg-white/8"
-                          }`}
-                        >
-                          <l.icon className={`w-4 h-4 shrink-0 ${isActive ? "text-[#0a1628]" : "text-white/40 group-hover:text-white/70"}`} />
-                          <span className="flex-1">{l.label}</span>
-                          {isActive && <ChevronRight className="w-3.5 h-3.5 text-[#0a1628]/60" />}
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
-
-              {/* Admin Actions / Danger Zone */}
-              <div className="pt-3 border-t border-white/10">
-                <p className="text-[10px] font-black uppercase tracking-widest text-rose-400/80 px-2.5 mb-2 flex items-center justify-between">
-                  <span>Admin Actions</span>
-                  <span className="bg-rose-500/20 text-rose-300 text-[9px] px-1.5 py-0.5 rounded font-bold">DANGER</span>
-                </p>
-                <div className="flex flex-col gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => setActiveModal("marketplace")}
-                    className="flex items-center gap-2.5 w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-rose-300 hover:bg-rose-500/15 hover:text-rose-200 transition-all group"
-                  >
-                    <Trash2 className="w-3.5 h-3.5 text-rose-400 group-hover:scale-110 transition-transform shrink-0" />
-                    <span className="truncate">Clear Marketplace</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveModal("communities")}
-                    className="flex items-center gap-2.5 w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-rose-300 hover:bg-rose-500/15 hover:text-rose-200 transition-all group"
-                  >
-                    <Trash2 className="w-3.5 h-3.5 text-rose-400 group-hover:scale-110 transition-transform shrink-0" />
-                    <span className="truncate">Clear Communities</span>
-                  </button>
-                </div>
-              </div>
-            </>
-          ) : (
-            <div className="flex flex-col gap-0.5">
-              {links.map(l => {
-                const isActive = l.exact ? pathname === l.href : pathname.startsWith(l.href);
-                return (
-                  <Link
-                    key={l.href}
-                    href={l.href}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                      isActive ? "bg-[#f0c040] text-[#0a1628]" : "text-white/55 hover:text-white hover:bg-white/8"
-                    }`}
-                  >
-                    <l.icon className="w-4 h-4 shrink-0" />
-                    {l.label}
-                  </Link>
-                );
-              })}
-            </div>
-          )}
-        </nav>
-
-        {/* User */}
-        <div className="px-4 py-4 border-t border-white/10 flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shrink-0 overflow-hidden ring-2 ring-amber-400/30">
-            {user.image
-              ? <img src={user.image} alt={user.name} referrerPolicy="no-referrer" className="w-full h-full object-cover" />
-              : <span className="text-[#0a1628] font-black text-sm">{user.name?.[0]?.toUpperCase()}</span>}
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="text-white text-xs font-bold truncate">{user.name}</div>
-            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full mt-0.5 inline-block ${tierStyle[user.tier ?? "FREE"] ?? tierStyle.FREE}`}>
-              {tierLabel[user.tier ?? "FREE"]}
-            </span>
-          </div>
-        </div>
+      {/* Desktop Sticky Sidebar (Hidden on mobile) */}
+      <aside className="hidden lg:flex w-[240px] shrink-0 h-screen sticky top-0 bg-[#0a1628] flex-col z-30 shadow-2xl border-r border-white/10">
+        {renderContent(false)}
       </aside>
+
+      {/* Mobile Drawer Sidebar (Shown when mobileOpen is true) */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/75 backdrop-blur-sm transition-opacity"
+            onClick={onClose}
+          />
+          {/* Drawer Panel */}
+          <aside className="fixed top-0 bottom-0 left-0 w-[280px] bg-[#0a1628] z-50 flex flex-col shadow-2xl border-r border-white/10 animate-in slide-in-from-left duration-200">
+            {renderContent(true)}
+          </aside>
+        </div>
+      )}
     </>
   );
 }

@@ -573,8 +573,8 @@ export default function AdminUsersPage() {
           <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
         </div>
       ) : (
-        <div className="bg-slate-900/40 border border-slate-800 rounded-2xl overflow-hidden">
-          <table className="w-full border-collapse">
+        <div className="bg-slate-900/40 border border-slate-800 rounded-2xl overflow-x-auto">
+          <table className="w-full min-w-[700px] border-collapse">
             <thead className="bg-slate-900/60 border-b border-slate-800">
               <tr>
                 <th className="text-left text-xs font-bold text-slate-400 px-5 py-3.5 uppercase tracking-wider">

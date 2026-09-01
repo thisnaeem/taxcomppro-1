@@ -150,16 +150,17 @@ export default function AdminToolkitAssetsPage() {
               key={row.toolkitId}
               className="bg-slate-800/60 rounded-2xl border border-white/8 shadow-xl overflow-hidden backdrop-blur-sm"
             >
-              <div className="p-5 flex items-start gap-4">
+              <div className="p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 {/* Emoji + info */}
-                <div className="w-12 h-12 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center text-2xl shrink-0">
-                  {row.emoji}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="font-black text-white text-sm">{row.name}</div>
-                  <div className="text-xs text-slate-400 mt-0.5">
-                    ${row.price} · ID: <code className="bg-slate-900 border border-white/5 px-1.5 py-0.5 rounded text-amber-300 font-mono">{row.toolkitId}</code>
+                <div className="flex items-start gap-4 flex-1 min-w-0 w-full">
+                  <div className="w-12 h-12 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center text-2xl shrink-0">
+                    {row.emoji}
                   </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-black text-white text-sm">{row.name}</div>
+                    <div className="text-xs text-slate-400 mt-0.5">
+                      ${row.price} · ID: <code className="bg-slate-900 border border-white/5 px-1.5 py-0.5 rounded text-amber-300 font-mono">{row.toolkitId}</code>
+                    </div>
 
                   {/* Current file */}
                   {row.asset ? (
@@ -189,8 +190,9 @@ export default function AdminToolkitAssetsPage() {
                     </div>
                   )}
                 </div>
+              </div>
 
-                {/* Upload button */}
+              {/* Upload button */}
                 <div className="shrink-0 flex items-center gap-2">
                   <input
                     ref={(el) => {
