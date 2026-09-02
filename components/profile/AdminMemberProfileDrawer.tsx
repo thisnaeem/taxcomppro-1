@@ -316,6 +316,10 @@ export function AdminMemberProfileDrawer({
                         <span className="text-white font-medium select-all">{user.email}</span>
                       </div>
                       <div>
+                        <span className="text-slate-400 block mb-0.5">Phone Number</span>
+                        <span className="text-white font-medium select-all">{user.phone || "Not provided"}</span>
+                      </div>
+                      <div>
                         <span className="text-slate-400 block mb-0.5">Location</span>
                         <span className="text-slate-200">{user.location || "Not specified"}</span>
                       </div>

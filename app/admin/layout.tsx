@@ -7,6 +7,7 @@ import { useAppDispatch } from "@/store/hooks";
 import { setUser, setLoading } from "@/store/slices/authSlice";
 import Sidebar from "@/components/layout/Sidebar";
 import Topbar from "@/components/layout/Topbar";
+import { SidebarProvider } from "@/components/layout/SidebarContext";
 import type { AuthUser } from "@/store/slices/authSlice";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -57,10 +58,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (isPending) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#060f1e]">
         <div className="flex flex-col items-center gap-4">
           <div className="w-10 h-10 border-4 border-[#d4a017] border-t-transparent rounded-full animate-spin" />
-          <p className="text-slate-500 text-sm font-medium">Loading…</p>
+          <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Loading…</p>
         </div>
       </div>
     );
@@ -69,14 +70,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (!session) return null;
 
   return (
-    <div className="flex h-screen bg-[#060f1e] font-sans">
-      <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Topbar />
-        <main className="flex-1 overflow-y-auto p-6 bg-[#060f1e]">
-          {children}
-        </main>
+    <SidebarProvider>
+      <div className="flex h-screen bg-slate-100 dark:bg-[#060f1e] font-sans transition-colors duration-200">
+        <Sidebar />
+        <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+          <Topbar />
+          <main className="flex-1 overflow-y-auto p-6 bg-slate-50 dark:bg-[#060f1e] text-slate-800 dark:text-slate-100 transition-colors duration-200">
+            {children}
+          </main>
+        </div>
       </div>
-    </div>
+    </SidebarProvider>
   );
 }

@@ -4,6 +4,7 @@ export interface AuthUser {
   id: string;
   email: string;
   name: string;
+  phone?: string | null;
   role: "MEMBER" | "PROFESSIONAL" | "ADMIN";
   tier: "FREE" | "VIP" | "MARKETPLACE" | "MARKETPLACE_PLUS";
   image?: string | null;

@@ -5,11 +5,25 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAppSelector } from "@/store/hooks";
 import {
-  LayoutDashboard, Users, CheckSquare, BookOpen,
-  BarChart2, Calendar, Images, Package, Gift, Bot,
-  CreditCard, ChevronRight, LifeBuoy, GraduationCap, Ticket,
-  Trash2, AlertTriangle, Loader2, CheckCircle2,
+  LayoutDashboard,
+  Users,
+  CheckSquare,
+  BookOpen,
+  BarChart2,
+  Calendar,
+  Images,
+  Gift,
+  Bot,
+  CreditCard,
+  ChevronRight,
+  LifeBuoy,
+  Ticket,
+  Trash2,
+  AlertTriangle,
+  Loader2,
+  CheckCircle2,
 } from "lucide-react";
+import { useSidebar } from "@/components/layout/SidebarContext";
 
 type NavLink = { icon: React.ElementType; label: string; href: string; exact?: boolean };
 
@@ -36,8 +50,6 @@ const adminLinks: NavLink[] = [
   { icon: BarChart2,       label: "Analytics",         href: "/admin/analytics" },
   { icon: Calendar,        label: "Content Calendar",  href: "/admin/content-calendar" },
   { icon: Images,          label: "Media Gallery",     href: "/admin/media-gallery" },
-  { icon: Package,         label: "Toolkit Downloads", href: "/admin/toolkit-assets" },
-  { icon: GraduationCap,   label: "Staff Training",    href: "/admin/training" },
   { icon: Gift,            label: "Affiliate",         href: "/admin/affiliate" },
   { icon: Bot,             label: "Atlas AI",          href: "/admin/atlas" },
   { icon: LifeBuoy,        label: "Support Tickets",   href: "/admin/support" },
@@ -51,7 +63,8 @@ const navGroups = [
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const user     = useAppSelector(s => s.auth.user);
+  const user     = useAppSelector((s) => s.auth.user);
+  const { collapsed } = useSidebar();
 
   const [activeModal, setActiveModal] = useState<"marketplace" | "communities" | null>(null);
   const [isClearing, setIsClearing] = useState(false);
@@ -117,7 +130,7 @@ export default function Sidebar() {
                 type="button"
                 disabled={isClearing}
                 onClick={() => setActiveModal(null)}
-                className="flex-1 py-3 px-4 rounded-xl border border-white/15 text-white/80 font-bold text-sm hover:bg-white/10 transition-all"
+                className="flex-1 py-3 px-4 rounded-xl border border-white/15 text-white/80 font-bold text-sm hover:bg-white/10 transition-all cursor-pointer"
               >
                 Cancel
               </button>
@@ -125,7 +138,7 @@ export default function Sidebar() {
                 type="button"
                 disabled={isClearing}
                 onClick={handleConfirmClear}
-                className="flex-1 py-3 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-rose-600/30 active:scale-95 disabled:opacity-50"
+                className="flex-1 py-3 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-rose-600/30 active:scale-95 disabled:opacity-50 cursor-pointer"
               >
                 {isClearing ? (
                   <>
@@ -141,48 +154,91 @@ export default function Sidebar() {
         </div>
       )}
 
-      <aside className="w-[230px] shrink-0 h-screen sticky top-0 bg-[#0a1628] flex flex-col z-10 shadow-2xl">
+      <aside
+        className={`shrink-0 h-screen sticky top-0 bg-[#0a1628] border-r border-white/10 flex flex-col z-20 shadow-2xl transition-all duration-300 ease-in-out ${
+          collapsed ? "w-[72px]" : "w-[230px]"
+        }`}
+      >
         {/* Logo area */}
-        <div className="px-5 py-5 border-b border-white/10">
-          <Link href="/" className="flex items-center gap-2">
-            <img src="/logo_dark.webp" alt="TaxCompPro" className="h-10 w-auto" />
-          </Link>
-          {isAdmin && (
-            <div className="mt-2.5 inline-flex items-center gap-1.5 bg-amber-400/15 text-amber-300 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full">
-              <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-              Admin Panel
-            </div>
+        <div className={`border-b border-white/10 flex flex-col justify-center transition-all ${
+          collapsed ? "py-4 px-2 items-center min-h-[73px]" : "px-5 py-5 min-h-[73px]"
+        }`}>
+          {collapsed ? (
+            <Link href="/" title="Tax Compliance Pro" className="flex items-center justify-center group">
+              <img
+                src="/fevicon.webp"
+                alt="TaxCompPro"
+                className="h-9 w-9 object-contain group-hover:scale-105 transition-transform"
+              />
+            </Link>
+          ) : (
+            <>
+              <Link href="/" className="flex items-center gap-2">
+                <img src="/logo_dark.webp" alt="TaxCompPro" className="h-10 w-auto" />
+              </Link>
+              {isAdmin && (
+                <div className="mt-2.5 inline-flex items-center gap-1.5 bg-amber-400/15 text-amber-300 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full w-fit">
+                  <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                  Admin Panel
+                </div>
+              )}
+            </>
           )}
         </div>
 
-        {/* Nav */}
-        <nav className="flex-1 px-3 py-4 flex flex-col gap-5 overflow-y-auto">
+        {/* Nav list */}
+        <nav className={`flex-1 py-4 flex flex-col gap-4 overflow-y-auto overflow-x-hidden ${
+          collapsed ? "px-2" : "px-3"
+        }`}>
           {isAdmin ? (
             <>
-              {navGroups.map(group => (
+              {navGroups.map((group) => (
                 <div key={group.label}>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-white/25 px-2.5 mb-1.5">
-                    {group.label}
-                  </p>
-                  <div className="flex flex-col gap-0.5">
-                    {group.items.map(l => {
-                      const isActive =
-                        l.exact
-                          ? pathname === l.href
-                          : pathname === l.href || pathname.startsWith(l.href + "/");
+                  {!collapsed ? (
+                    <p className="text-[10px] font-black uppercase tracking-widest text-white/30 px-2.5 mb-1.5 select-none">
+                      {group.label}
+                    </p>
+                  ) : (
+                    <div className="h-px bg-white/10 my-1 mx-2" />
+                  )}
+                  <div className="flex flex-col gap-1">
+                    {group.items.map((l) => {
+                      const isActive = l.exact
+                        ? pathname === l.href
+                        : pathname === l.href || pathname.startsWith(l.href + "/");
+
                       return (
                         <Link
                           key={l.href + l.label}
                           href={l.href}
-                          className={`group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                          title={collapsed ? l.label : undefined}
+                          className={`group relative flex items-center rounded-xl font-semibold transition-all ${
+                            collapsed
+                              ? "justify-center px-0 py-2.5 w-full"
+                              : "gap-3 px-3 py-2.5 text-sm"
+                          } ${
                             isActive
-                              ? "bg-[#f0c040] text-[#0a1628] shadow-lg shadow-amber-400/20"
-                              : "text-white/55 hover:text-white hover:bg-white/8"
+                              ? "bg-[#f0c040] text-[#0a1628] shadow-lg shadow-amber-400/20 font-bold"
+                              : "text-white/60 hover:text-white hover:bg-white/10"
                           }`}
                         >
-                          <l.icon className={`w-4 h-4 shrink-0 ${isActive ? "text-[#0a1628]" : "text-white/40 group-hover:text-white/70"}`} />
-                          <span className="flex-1">{l.label}</span>
-                          {isActive && <ChevronRight className="w-3.5 h-3.5 text-[#0a1628]/60" />}
+                          <l.icon
+                            className={`shrink-0 transition-transform ${
+                              collapsed ? "w-5 h-5" : "w-4 h-4"
+                            } ${
+                              isActive
+                                ? "text-[#0a1628]"
+                                : "text-white/40 group-hover:text-white/80 group-hover:scale-105"
+                            }`}
+                          />
+                          {!collapsed && (
+                            <>
+                              <span className="flex-1 truncate">{l.label}</span>
+                              {isActive && (
+                                <ChevronRight className="w-3.5 h-3.5 text-[#0a1628]/60" />
+                              )}
+                            </>
+                          )}
                         </Link>
                       );
                     })}
@@ -191,45 +247,67 @@ export default function Sidebar() {
               ))}
 
               {/* Admin Actions / Danger Zone */}
-              <div className="pt-3 border-t border-white/10">
-                <p className="text-[10px] font-black uppercase tracking-widest text-rose-400/80 px-2.5 mb-2 flex items-center justify-between">
-                  <span>Admin Actions</span>
-                  <span className="bg-rose-500/20 text-rose-300 text-[9px] px-1.5 py-0.5 rounded font-bold">DANGER</span>
-                </p>
+              <div className={`pt-3 border-t border-white/10 ${collapsed ? "px-0" : ""}`}>
+                {!collapsed ? (
+                  <p className="text-[10px] font-black uppercase tracking-widest text-rose-400/80 px-2.5 mb-2 flex items-center justify-between select-none">
+                    <span>Admin Actions</span>
+                    <span className="bg-rose-500/20 text-rose-300 text-[9px] px-1.5 py-0.5 rounded font-bold">
+                      DANGER
+                    </span>
+                  </p>
+                ) : (
+                  <div className="h-px bg-rose-500/20 my-1 mx-2" />
+                )}
+
                 <div className="flex flex-col gap-1.5">
                   <button
                     type="button"
                     onClick={() => setActiveModal("marketplace")}
-                    className="flex items-center gap-2.5 w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-rose-300 hover:bg-rose-500/15 hover:text-rose-200 transition-all group"
+                    title={collapsed ? "Clear Marketplace" : undefined}
+                    className={`flex items-center rounded-xl font-semibold text-rose-300 hover:bg-rose-500/15 hover:text-rose-200 transition-all group cursor-pointer ${
+                      collapsed
+                        ? "justify-center px-0 py-2.5 w-full"
+                        : "gap-2.5 w-full text-left px-3 py-2 text-xs"
+                    }`}
                   >
-                    <Trash2 className="w-3.5 h-3.5 text-rose-400 group-hover:scale-110 transition-transform shrink-0" />
-                    <span className="truncate">Clear Marketplace</span>
+                    <Trash2 className="w-4 h-4 text-rose-400 group-hover:scale-110 transition-transform shrink-0" />
+                    {!collapsed && <span className="truncate">Clear Marketplace</span>}
                   </button>
                   <button
                     type="button"
                     onClick={() => setActiveModal("communities")}
-                    className="flex items-center gap-2.5 w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-rose-300 hover:bg-rose-500/15 hover:text-rose-200 transition-all group"
+                    title={collapsed ? "Clear Communities" : undefined}
+                    className={`flex items-center rounded-xl font-semibold text-rose-300 hover:bg-rose-500/15 hover:text-rose-200 transition-all group cursor-pointer ${
+                      collapsed
+                        ? "justify-center px-0 py-2.5 w-full"
+                        : "gap-2.5 w-full text-left px-3 py-2 text-xs"
+                    }`}
                   >
-                    <Trash2 className="w-3.5 h-3.5 text-rose-400 group-hover:scale-110 transition-transform shrink-0" />
-                    <span className="truncate">Clear Communities</span>
+                    <Trash2 className="w-4 h-4 text-rose-400 group-hover:scale-110 transition-transform shrink-0" />
+                    {!collapsed && <span className="truncate">Clear Communities</span>}
                   </button>
                 </div>
               </div>
             </>
           ) : (
-            <div className="flex flex-col gap-0.5">
-              {links.map(l => {
+            <div className="flex flex-col gap-1">
+              {links.map((l) => {
                 const isActive = l.exact ? pathname === l.href : pathname.startsWith(l.href);
                 return (
                   <Link
                     key={l.href}
                     href={l.href}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                      isActive ? "bg-[#f0c040] text-[#0a1628]" : "text-white/55 hover:text-white hover:bg-white/8"
+                    title={collapsed ? l.label : undefined}
+                    className={`flex items-center rounded-xl font-semibold transition-all ${
+                      collapsed ? "justify-center px-0 py-2.5" : "gap-3 px-3 py-2.5 text-sm"
+                    } ${
+                      isActive
+                        ? "bg-[#f0c040] text-[#0a1628]"
+                        : "text-white/60 hover:text-white hover:bg-white/10"
                     }`}
                   >
-                    <l.icon className="w-4 h-4 shrink-0" />
-                    {l.label}
+                    <l.icon className="w-5 h-5 shrink-0" />
+                    {!collapsed && <span>{l.label}</span>}
                   </Link>
                 );
               })}
@@ -237,22 +315,44 @@ export default function Sidebar() {
           )}
         </nav>
 
-        {/* User */}
-        <div className="px-4 py-4 border-t border-white/10 flex items-center gap-3">
+        {/* User Footer */}
+        <div
+          className={`border-t border-white/10 transition-all ${
+            collapsed
+              ? "p-3 flex items-center justify-center"
+              : "px-4 py-4 flex items-center gap-3"
+          }`}
+          title={collapsed ? `${user.name} (${tierLabel[user.tier ?? "FREE"]})` : undefined}
+        >
           <div className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shrink-0 overflow-hidden ring-2 ring-amber-400/30">
-            {user.image
-              ? <img src={user.image} alt={user.name} referrerPolicy="no-referrer" className="w-full h-full object-cover" />
-              : <span className="text-[#0a1628] font-black text-sm">{user.name?.[0]?.toUpperCase()}</span>}
+            {user.image ? (
+              <img
+                src={user.image}
+                alt={user.name}
+                referrerPolicy="no-referrer"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <span className="text-[#0a1628] font-black text-sm">
+                {user.name?.[0]?.toUpperCase()}
+              </span>
+            )}
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="text-white text-xs font-bold truncate">{user.name}</div>
-            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full mt-0.5 inline-block ${tierStyle[user.tier ?? "FREE"] ?? tierStyle.FREE}`}>
-              {tierLabel[user.tier ?? "FREE"]}
-            </span>
-          </div>
+
+          {!collapsed && (
+            <div className="flex-1 min-w-0">
+              <div className="text-white text-xs font-bold truncate">{user.name}</div>
+              <span
+                className={`text-[10px] font-bold px-2 py-0.5 rounded-full mt-0.5 inline-block ${
+                  tierStyle[user.tier ?? "FREE"] ?? tierStyle.FREE
+                }`}
+              >
+                {tierLabel[user.tier ?? "FREE"]}
+              </span>
+            </div>
+          )}
         </div>
       </aside>
     </>
   );
 }
-

@@ -32,6 +32,7 @@ export const auth = betterAuth({
   },
   user: {
     additionalFields: {
+      phone:     { type: "string", required: false, input: true  },
       role:      { type: "string", required: false, defaultValue: "MEMBER", input: false },
       tier:      { type: "string", required: false, defaultValue: "FREE",   input: false },
       bio:       { type: "string", required: false, input: true  },

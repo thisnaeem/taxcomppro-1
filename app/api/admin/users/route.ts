@@ -16,16 +16,20 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const search = searchParams.get("search") ?? "";
   const role   = searchParams.get("role") ?? "ALL";
+  const tier   = searchParams.get("tier") ?? "ALL";
+  const limit  = Math.min(Math.max(parseInt(searchParams.get("limit") ?? "1000", 10) || 1000, 1), 5000);
 
   const users = await prisma.user.findMany({
     where: {
       ...(search ? { OR: [{ name: { contains: search, mode: "insensitive" } }, { email: { contains: search, mode: "insensitive" } }] } : {}),
       ...(role !== "ALL" ? { role: role as "MEMBER" | "PROFESSIONAL" | "ADMIN" } : {}),
+      ...(tier !== "ALL" ? { tier: tier as "FREE" | "VIP" | "MARKETPLACE" | "MARKETPLACE_PLUS" } : {}),
     },
     select: {
       id: true,
       name: true,
       email: true,
+      phone: true,
       role: true,
       tier: true,
       image: true,
@@ -46,7 +50,7 @@ export async function GET(req: NextRequest) {
       },
     },
     orderBy: { createdAt: "desc" },
-    take: 100,
+    take: limit,
   });
 
   return NextResponse.json(users);

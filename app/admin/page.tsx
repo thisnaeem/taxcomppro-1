@@ -347,10 +347,6 @@ export default function AdminPage() {
                 className="flex items-center gap-2.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 font-semibold text-sm px-4 py-2.5 rounded-xl transition-all border border-blue-500/20">
                 📅 Content Calendar
               </Link>
-              <Link href="/admin/toolkit-assets"
-                className="flex items-center gap-2.5 bg-amber-400/10 hover:bg-amber-400/20 text-amber-300 font-semibold text-sm px-4 py-2.5 rounded-xl transition-all border border-amber-400/20">
-                📦 Toolkit Assets
-              </Link>
               <Link href="/marketplace/create"
                 className="flex items-center gap-2 bg-[#f0c040] text-[#0a1628] font-black text-sm px-4 py-2.5 rounded-xl hover:bg-amber-400 transition-all">
                 <Plus className="w-4 h-4" /> Create Featured Listing
