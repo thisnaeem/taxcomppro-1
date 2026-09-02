@@ -2,10 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-// Always returns fresh user data from DB (not from session cache)
 export async function GET(req: NextRequest) {
   const session = await auth.api.getSession({ headers: req.headers });
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
   const [
     user,
@@ -14,6 +16,7 @@ export async function GET(req: NextRequest) {
     unreadNotifications,
     reviewsAggregate,
     ownedNetworks,
+    memberNetworks,
     discussionsStarted,
     proTalksHosted,
   ] = await Promise.all([
@@ -21,22 +24,22 @@ export async function GET(req: NextRequest) {
       where: { id: session.user.id },
       select: {
         id: true,
-        email: true,
         name: true,
+        email: true,
         phone: true,
         role: true,
         tier: true,
-        image: true,
-        coverImage: true,
-        bio: true,
         headline: true,
+        bio: true,
+        mission: true,
         location: true,
         yearsExperience: true,
-        mission: true,
         website: true,
         linkedIn: true,
         twitter: true,
         facebook: true,
+        image: true,
+        coverImage: true,
         specialties: true,
         certifications: true,
         languages: true,
@@ -85,14 +88,65 @@ export async function GET(req: NextRequest) {
         id: true,
         name: true,
         slug: true,
+        tagline: true,
+        description: true,
+        category: true,
+        monthlyPrice: true,
         memberCount: true,
         followerCount: true,
+        logoImage: true,
+        coverImage: true,
+        memberBenefits: true,
+        badgeShape: true,
+        badgeInitials: true,
+        badgeText: true,
+        badgeIcon: true,
+        badgeBgColor: true,
+        badgeTextColor: true,
+        badgeBorderColor: true,
+        badgeCustomImage: true,
         _count: {
           select: {
             members: { where: { status: "ACTIVE" } },
             followers: true,
             discussions: true,
             events: true,
+          },
+        },
+      },
+    }),
+    prisma.proNetworkMember.findMany({
+      where: { userId: session.user.id, status: "ACTIVE" },
+      select: {
+        id: true,
+        role: true,
+        joinedAt: true,
+        network: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            tagline: true,
+            description: true,
+            monthlyPrice: true,
+            memberCount: true,
+            logoImage: true,
+            coverImage: true,
+            memberBenefits: true,
+            badgeShape: true,
+            badgeInitials: true,
+            badgeText: true,
+            badgeIcon: true,
+            badgeBgColor: true,
+            badgeTextColor: true,
+            badgeBorderColor: true,
+            badgeCustomImage: true,
+            ownerId: true,
+            _count: {
+              select: {
+                members: { where: { status: "ACTIVE" } },
+              },
+            },
           },
         },
       },
@@ -126,16 +180,85 @@ export async function GET(req: NextRequest) {
   );
   const primaryNetwork = ownedNetworks[0] || null;
 
+  // Format Owned Networks list
+  const formattedOwnedNetworks = ownedNetworks.map((n) => ({
+    id: n.id,
+    name: n.name,
+    slug: n.slug,
+    tagline: n.tagline,
+    description: n.description,
+    category: n.category,
+    monthlyPrice: n.monthlyPrice,
+    memberCount: Math.max(n._count.members, n.memberCount || 0),
+    followerCount: Math.max(n._count.followers, n.followerCount || 0),
+    logoImage: n.logoImage,
+    coverImage: n.coverImage,
+    memberBenefits: n.memberBenefits,
+    badgeShape: n.badgeShape,
+    badgeInitials: n.badgeInitials,
+    badgeText: n.badgeText,
+    badgeIcon: n.badgeIcon,
+    badgeBgColor: n.badgeBgColor,
+    badgeTextColor: n.badgeTextColor,
+    badgeBorderColor: n.badgeBorderColor,
+    badgeCustomImage: n.badgeCustomImage,
+    role: "OWNER",
+  }));
+
+  // Format Badges (Owned Networks + Joined Member Networks)
+  const myBadges = [
+    ...ownedNetworks.map((n) => ({
+      id: `owned-${n.id}`,
+      networkId: n.id,
+      networkName: n.name,
+      networkSlug: n.slug,
+      role: "OWNER",
+      shape: n.badgeShape || "circle",
+      initials: n.badgeInitials || n.name.slice(0, 3).toUpperCase(),
+      text: n.badgeText || "OWNER",
+      icon: n.badgeIcon || "Crown",
+      bgColor: n.badgeBgColor || "#0a1628",
+      textColor: n.badgeTextColor || "#f0c040",
+      borderColor: n.badgeBorderColor || "#d4a017",
+      customImage: n.badgeCustomImage || null,
+    })),
+    ...memberNetworks
+      .filter((m) => m.network.ownerId !== session.user.id)
+      .map((m) => ({
+        id: `member-${m.id}`,
+        networkId: m.network.id,
+        networkName: m.network.name,
+        networkSlug: m.network.slug,
+        role: m.role || "MEMBER",
+        shape: m.network.badgeShape || "circle",
+        initials: m.network.badgeInitials || m.network.name.slice(0, 3).toUpperCase(),
+        text: m.network.badgeText || "MEMBER",
+        icon: m.network.badgeIcon || "Star",
+        bgColor: m.network.badgeBgColor || "#0a1628",
+        textColor: m.network.badgeTextColor || "#f0c040",
+        borderColor: m.network.badgeBorderColor || "#d4a017",
+        customImage: m.network.badgeCustomImage || null,
+      })),
+  ];
+
   return NextResponse.json({
     ...user,
     hasDueDiligenceBadge,
-    proNetworks: ownedNetworks.map((n) => ({
-      id: n.id,
-      name: n.name,
-      slug: n.slug,
-      memberCount: Math.max(n._count.members, n.memberCount || 0),
-      followerCount: Math.max(n._count.followers, n.followerCount || 0),
-    })),
+    proNetworks: formattedOwnedNetworks,
+    myBadges,
+    primaryNetwork: primaryNetwork
+      ? {
+          id: primaryNetwork.id,
+          name: primaryNetwork.name,
+          slug: primaryNetwork.slug,
+          tagline: primaryNetwork.tagline,
+          description: primaryNetwork.description,
+          monthlyPrice: primaryNetwork.monthlyPrice,
+          memberCount: Math.max(primaryNetwork._count.members, primaryNetwork.memberCount || 0),
+          logoImage: primaryNetwork.logoImage,
+          memberBenefits: primaryNetwork.memberBenefits,
+        }
+      : null,
     stats: {
       completedCourses,
       totalEnrollments,

@@ -42,8 +42,23 @@ export async function GET(_req: NextRequest, { params }: Params) {
         id: true,
         name: true,
         slug: true,
+        tagline: true,
+        description: true,
+        category: true,
+        monthlyPrice: true,
         memberCount: true,
         followerCount: true,
+        logoImage: true,
+        coverImage: true,
+        memberBenefits: true,
+        badgeShape: true,
+        badgeInitials: true,
+        badgeText: true,
+        badgeIcon: true,
+        badgeBgColor: true,
+        badgeTextColor: true,
+        badgeBorderColor: true,
+        badgeCustomImage: true,
         _count: {
           select: {
             members: { where: { status: "ACTIVE" } },
@@ -75,8 +90,63 @@ export async function GET(_req: NextRequest, { params }: Params) {
   );
   const primaryNetwork = ownedNetworks[0] || null;
 
+  const formattedOwnedNetworks = ownedNetworks.map((n) => ({
+    id: n.id,
+    name: n.name,
+    slug: n.slug,
+    tagline: n.tagline,
+    description: n.description,
+    category: n.category,
+    monthlyPrice: n.monthlyPrice,
+    memberCount: Math.max(n._count.members, n.memberCount || 0),
+    followerCount: Math.max(n._count.followers, n.followerCount || 0),
+    logoImage: n.logoImage,
+    coverImage: n.coverImage,
+    memberBenefits: n.memberBenefits,
+    badgeShape: n.badgeShape,
+    badgeInitials: n.badgeInitials,
+    badgeText: n.badgeText,
+    badgeIcon: n.badgeIcon,
+    badgeBgColor: n.badgeBgColor,
+    badgeTextColor: n.badgeTextColor,
+    badgeBorderColor: n.badgeBorderColor,
+    badgeCustomImage: n.badgeCustomImage,
+    role: "OWNER",
+  }));
+
+  const myBadges = ownedNetworks.map((n) => ({
+    id: `owned-${n.id}`,
+    networkId: n.id,
+    networkName: n.name,
+    networkSlug: n.slug,
+    role: "OWNER",
+    shape: n.badgeShape || "circle",
+    initials: n.badgeInitials || n.name.slice(0, 3).toUpperCase(),
+    text: n.badgeText || "OWNER",
+    icon: n.badgeIcon || "Crown",
+    bgColor: n.badgeBgColor || "#0a1628",
+    textColor: n.badgeTextColor || "#f0c040",
+    borderColor: n.badgeBorderColor || "#d4a017",
+    customImage: n.badgeCustomImage || null,
+  }));
+
   return NextResponse.json({
     ...pro,
+    proNetworks: formattedOwnedNetworks,
+    myBadges,
+    primaryNetwork: primaryNetwork
+      ? {
+          id: primaryNetwork.id,
+          name: primaryNetwork.name,
+          slug: primaryNetwork.slug,
+          tagline: primaryNetwork.tagline,
+          description: primaryNetwork.description,
+          monthlyPrice: primaryNetwork.monthlyPrice,
+          memberCount: Math.max(primaryNetwork._count.members, primaryNetwork.memberCount || 0),
+          logoImage: primaryNetwork.logoImage,
+          memberBenefits: primaryNetwork.memberBenefits,
+        }
+      : null,
     networkStats: {
       followers,
       proNetworkMembers,

@@ -31,6 +31,8 @@ import {
   Megaphone,
   Copy,
   ExternalLink,
+  Plus,
+  Info,
 } from "lucide-react";
 import EditProfileModal, { type ProfileFormData } from "@/components/profile/EditProfileModal";
 
@@ -115,6 +117,57 @@ export default function MemberProfile() {
   const [promoteModalOpen, setPromoteModalOpen] = useState(false);
   const [networkCopied, setNetworkCopied] = useState(false);
 
+  // Pro Networks, Badges, and Primary Network
+  const [proNetworks, setProNetworks] = useState<Array<{
+    id: string;
+    name: string;
+    slug: string;
+    tagline?: string | null;
+    description?: string | null;
+    monthlyPrice?: number;
+    memberCount: number;
+    followerCount?: number;
+    logoImage?: string | null;
+    coverImage?: string | null;
+    memberBenefits?: string[];
+    badgeShape?: string;
+    badgeInitials?: string | null;
+    badgeText?: string;
+    badgeIcon?: string;
+    badgeBgColor?: string;
+    badgeTextColor?: string;
+    badgeBorderColor?: string;
+    badgeCustomImage?: string | null;
+  }>>([]);
+
+  const [myBadges, setMyBadges] = useState<Array<{
+    id: string;
+    networkId: string;
+    networkName: string;
+    networkSlug: string;
+    role: string;
+    shape: string;
+    initials: string | null;
+    text: string;
+    icon: string;
+    bgColor: string;
+    textColor: string;
+    borderColor: string;
+    customImage: string | null;
+  }>>([]);
+
+  const [primaryNetwork, setPrimaryNetwork] = useState<{
+    id: string;
+    name: string;
+    slug: string;
+    tagline?: string | null;
+    description?: string | null;
+    monthlyPrice?: number;
+    memberCount: number;
+    logoImage?: string | null;
+    memberBenefits?: string[];
+  } | null>(null);
+
   const loadUserData = useCallback(async () => {
     try {
       setLoading(true);
@@ -171,6 +224,16 @@ export default function MemberProfile() {
             primaryNetworkSlug: u.stats.primaryNetworkSlug ?? null,
             primaryNetworkName: u.stats.primaryNetworkName ?? null,
           });
+        }
+
+        if (Array.isArray(u.proNetworks)) {
+          setProNetworks(u.proNetworks);
+        }
+        if (Array.isArray(u.myBadges)) {
+          setMyBadges(u.myBadges);
+        }
+        if (u.primaryNetwork) {
+          setPrimaryNetwork(u.primaryNetwork);
         }
       }
     } catch (e) {
@@ -480,7 +543,8 @@ export default function MemberProfile() {
 
           {/* ── OVERVIEW ──────────────────────────────────────────────────── */}
           {activeTab === "overview" && (
-            <div className="grid lg:grid-cols-12 gap-6">
+            <div className="space-y-6">
+              <div className="grid lg:grid-cols-12 gap-6">
               <div className="lg:col-span-7 space-y-6">
                 {/* ABOUT ME */}
                 <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
@@ -528,6 +592,90 @@ export default function MemberProfile() {
                   )}
                 </div>
 
+                {/* ── JOIN MY PRO NETWORK (MATCHES SCREENSHOT) ── */}
+                <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
+                  <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                    <h3 className="text-xs font-black text-[#0A1628] dark:text-white uppercase tracking-widest flex items-center gap-2">
+                      <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                      JOIN MY PRO NETWORK
+                    </h3>
+                    {primaryNetwork && (
+                      <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+                        {primaryNetwork.name}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="rounded-2xl bg-gradient-to-br from-[#0a1628] via-[#102038] to-[#182f50] border border-slate-700/80 p-5 sm:p-6 text-white shadow-xl space-y-4 relative overflow-hidden">
+                    {/* Background accent glow */}
+                    <div className="absolute -top-12 -right-12 w-36 h-36 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
+
+                    {/* Network header */}
+                    <div className="flex items-start gap-3.5 relative z-10">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500/20 to-blue-500/20 border border-amber-500/30 flex items-center justify-center font-black text-amber-400 text-sm shrink-0 shadow-inner overflow-hidden">
+                        {primaryNetwork?.logoImage ? (
+                          <img src={primaryNetwork.logoImage} alt={primaryNetwork.name} className="w-full h-full object-cover rounded-xl" />
+                        ) : (
+                          (primaryNetwork?.name || "PRO").slice(0, 3).toUpperCase()
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-base font-black text-white leading-snug truncate">
+                            {primaryNetwork?.name || "RedLine1 Tax Network"}
+                          </h4>
+                          <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-amber-400 text-[#0a1628] shrink-0">
+                            PRO
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-300 font-medium line-clamp-2 mt-0.5">
+                          {primaryNetwork?.tagline || primaryNetwork?.description || "Premium network for serious tax professionals."}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Benefits checklist with gold checkmarks */}
+                    <ul className="space-y-2 text-xs font-semibold text-slate-200 relative z-10 pt-1">
+                      {(primaryNetwork?.memberBenefits && primaryNetwork.memberBenefits.length > 0
+                        ? primaryNetwork.memberBenefits
+                        : [
+                            "Exclusive Training & Workshops",
+                            "Private Pro Talks",
+                            "Resource Library Access",
+                            "Members-Only Discussions",
+                            "Live Q&A Sessions",
+                          ]
+                      ).slice(0, 5).map((benefit, idx) => (
+                        <li key={idx} className="flex items-center gap-2.5">
+                          <span className="w-4 h-4 rounded-full bg-amber-400/20 text-amber-400 flex items-center justify-center text-[10px] font-black shrink-0">
+                            ✓
+                          </span>
+                          <span className="truncate">{benefit}</span>
+                        </li>
+                      ))}
+                    </ul>
+
+                    {/* Join button */}
+                    <div className="pt-2 relative z-10 space-y-2">
+                      <Link
+                        href={primaryNetwork ? `/pro-networks/${primaryNetwork.slug}` : "/pro-networks/create"}
+                        className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-gradient-to-r from-[#f0c040] via-[#e6b325] to-[#d4a017] hover:from-[#f5c955] hover:to-[#e0ab20] text-[#0a1628] font-black text-xs uppercase tracking-wider shadow-lg hover:shadow-xl transition-all cursor-pointer"
+                      >
+                        <span>
+                          {primaryNetwork
+                            ? `JOIN NOW - $${(primaryNetwork.monthlyPrice || 19.99).toFixed(2)}/MONTH`
+                            : "LAUNCH YOUR PRO NETWORK"}
+                        </span>
+                      </Link>
+                      <p className="text-[11px] font-bold text-center text-slate-400">
+                        {primaryNetwork
+                          ? `${primaryNetwork.memberCount || 1} Members • Cancel Anytime`
+                          : "Monetize your expertise with zero platform fees"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
                 {/* FOCUS AREAS */}
                 {profile.specialties.length > 0 && (
                   <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
@@ -545,6 +693,77 @@ export default function MemberProfile() {
 
               {/* RIGHT COLUMN */}
               <div className="lg:col-span-5 space-y-6">
+                {/* ── MY PRO NETWORKS (MATCHES SCREENSHOT) ── */}
+                <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
+                  <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                    <h3 className="text-xs font-black text-[#0A1628] dark:text-white uppercase tracking-widest flex items-center gap-2">
+                      <Crown className="w-4 h-4 text-amber-500" />
+                      MY PRO NETWORKS
+                    </h3>
+                    <Link href="/pro-networks" className="text-xs font-bold text-[#1E56A0] dark:text-[#60a5fa] hover:underline">
+                      View All
+                    </Link>
+                  </div>
+
+                  {proNetworks.length > 0 ? (
+                    <div className="space-y-3">
+                      {proNetworks.map((net) => (
+                        <div
+                          key={net.id}
+                          className="p-3.5 rounded-xl border border-slate-200/90 dark:border-slate-700/80 bg-slate-50/70 dark:bg-slate-800/60 hover:bg-white dark:hover:bg-slate-800 transition-all flex items-center justify-between gap-3"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-11 h-11 rounded-xl bg-[#0a1628] border border-amber-500/30 text-amber-400 font-black text-xs flex items-center justify-center shrink-0 shadow-xs overflow-hidden">
+                              {net.logoImage ? (
+                                <img src={net.logoImage} alt={net.name} className="w-full h-full object-cover" />
+                              ) : (
+                                net.name.slice(0, 3).toUpperCase()
+                              )}
+                            </div>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-1.5">
+                                <h4 className="text-xs font-black text-[#0A1628] dark:text-white truncate">
+                                  {net.name}
+                                </h4>
+                                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-black bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 shrink-0">
+                                  👑 Owner
+                                </span>
+                              </div>
+                              <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5">
+                                {net.tagline || net.description || "Advanced strategies, resources, and training for tax professionals."}
+                              </p>
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">
+                                  +{net.memberCount} Members
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <Link
+                            href={`/pro-networks/${net.slug}`}
+                            className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:border-[#1E56A0] hover:text-[#1E56A0] text-xs font-bold transition-all shrink-0 uppercase tracking-wider"
+                          >
+                            MANAGE
+                          </Link>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-4 space-y-2">
+                      <p className="text-xs text-slate-400">You haven&apos;t created any Pro Networks yet.</p>
+                    </div>
+                  )}
+
+                  {/* Create New Pro Network Button */}
+                  <Link
+                    href="/pro-networks/create"
+                    className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#1E56A0] hover:bg-[#16437E] text-white text-xs font-black uppercase tracking-wider transition-all shadow-sm"
+                  >
+                    <span>+ CREATE NEW PRO NETWORK</span>
+                  </Link>
+                </div>
+
                 {/* MEMBERSHIP */}
                 <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
                   <h3 className="text-xs font-black text-[#0A1628] dark:text-white uppercase tracking-widest flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
@@ -580,7 +799,99 @@ export default function MemberProfile() {
                 )}
               </div>
             </div>
-          )}
+
+            {/* ── MY BADGES & NOTE (MATCHES SCREENSHOT) ── */}
+            <div className="grid lg:grid-cols-12 gap-6 pt-2">
+              {/* Left: MY BADGES (7 cols) */}
+              <div className="lg:col-span-7 rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                  <h3 className="text-xs font-black text-[#0A1628] dark:text-white uppercase tracking-widest flex items-center gap-2">
+                    <Crown className="w-4 h-4 text-amber-500" />
+                    MY BADGES
+                  </h3>
+                  <Link
+                    href={primaryNetwork ? `/pro-networks/${primaryNetwork.slug}` : "/pro-networks/create"}
+                    className="text-xs font-bold text-[#1E56A0] dark:text-[#60a5fa] hover:underline"
+                  >
+                    Manage Badges
+                  </Link>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-6 pt-2">
+                  {myBadges.map((badge) => (
+                    <Link
+                      key={badge.id}
+                      href={`/pro-networks/${badge.networkSlug}`}
+                      className="flex flex-col items-center gap-2 group cursor-pointer"
+                    >
+                      <div
+                        className="w-18 h-18 rounded-full border-2 p-1 flex items-center justify-center shadow-md group-hover:scale-105 transition-transform relative overflow-hidden"
+                        style={{
+                          borderColor: badge.borderColor || "#d4a017",
+                          backgroundColor: badge.bgColor || "#0a1628",
+                        }}
+                      >
+                        {badge.customImage ? (
+                          <img src={badge.customImage} alt={badge.networkName} className="w-full h-full object-cover rounded-full" />
+                        ) : (
+                          <div className="flex flex-col items-center justify-center text-center p-1">
+                            <span
+                              className="font-black text-[11px] leading-tight tracking-wider"
+                              style={{ color: badge.textColor || "#f0c040" }}
+                            >
+                              {badge.initials || badge.networkName.slice(0, 4).toUpperCase()}
+                            </span>
+                            <span
+                              className="text-[8px] font-extrabold uppercase tracking-widest opacity-80 mt-0.5"
+                              style={{ color: badge.textColor || "#f0c040" }}
+                            >
+                              {badge.role === "OWNER" ? "OWNER" : "MEMBER"}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      <span className="text-xs font-black text-center text-[#0A1628] dark:text-white line-clamp-1 max-w-[110px] group-hover:text-[#1E56A0] transition-colors">
+                        {badge.networkName}
+                      </span>
+                    </Link>
+                  ))}
+
+                  {/* Plus / Add Badge circle */}
+                  <Link
+                    href="/pro-networks/create"
+                    className="flex flex-col items-center gap-2 group cursor-pointer"
+                    title="Create New Pro Network / Badge"
+                  >
+                    <div className="w-18 h-18 rounded-full border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-[#1E56A0] dark:hover:border-blue-400 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-center text-slate-400 hover:text-[#1E56A0] dark:hover:text-blue-400 group-hover:scale-105 transition-all">
+                      <Plus className="w-6 h-6 stroke-[1.5]" />
+                    </div>
+                    <span className="text-xs font-bold text-slate-400 group-hover:text-[#1E56A0] transition-colors">
+                      Add Network
+                    </span>
+                  </Link>
+                </div>
+              </div>
+
+              {/* Right: NOTE Disclaimer (5 cols) */}
+              <div className="lg:col-span-5 rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-3">
+                <h3 className="text-xs font-black text-[#0A1628] dark:text-white uppercase tracking-widest flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
+                  <Info className="w-4 h-4 text-slate-400" />
+                  NOTE
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                  All services and resources offered on the{" "}
+                  <span className="font-bold text-slate-700 dark:text-slate-300">
+                    {primaryNetwork?.name || "RedLine1 Tax Network"}
+                  </span>{" "}
+                  are independent offerings by{" "}
+                  <span className="font-bold text-slate-700 dark:text-slate-300">{profile.name || "this member"}</span>.{" "}
+                  <span className="font-semibold text-slate-700 dark:text-slate-300">Tax Compliance Pro</span>{" "}
+                  does not endorse or moderate these services.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
           {/* ── BASIC INFO ────────────────────────────────────────────────── */}
           {activeTab === "basic" && (

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { MapPin, Briefcase, Globe, ArrowLeft, Loader2, MessageSquare, Users, Users2, Video, BadgeCheck, Star, ExternalLink, ChevronRight } from "lucide-react";
+import { MapPin, Briefcase, Globe, ArrowLeft, Loader2, MessageSquare, Users, Users2, Video, BadgeCheck, Star, ExternalLink, ChevronRight, Crown, Info } from "lucide-react";
 import { Linkedin02Icon, NewTwitterIcon } from "hugeicons-react";
 import { VoiceMemoPlayer } from "@/components/profile/VoiceMemo";
 
@@ -26,6 +26,42 @@ interface Pro {
     primaryNetworkSlug: string | null;
     primaryNetworkName: string | null;
   };
+  proNetworks?: Array<{
+    id: string;
+    name: string;
+    slug: string;
+    tagline?: string | null;
+    description?: string | null;
+    monthlyPrice?: number;
+    memberCount: number;
+    logoImage?: string | null;
+  }>;
+  myBadges?: Array<{
+    id: string;
+    networkId: string;
+    networkName: string;
+    networkSlug: string;
+    role: string;
+    shape: string;
+    initials: string | null;
+    text: string;
+    icon: string;
+    bgColor: string;
+    textColor: string;
+    borderColor: string;
+    customImage: string | null;
+  }>;
+  primaryNetwork?: {
+    id: string;
+    name: string;
+    slug: string;
+    tagline?: string | null;
+    description?: string | null;
+    monthlyPrice?: number;
+    memberCount: number;
+    logoImage?: string | null;
+    memberBenefits?: string[];
+  } | null;
 }
 
 const levelColors: Record<string,string> = { BEGINNER:"bg-emerald-100 text-emerald-700", INTERMEDIATE:"bg-blue-100 text-blue-700", ADVANCED:"bg-purple-100 text-purple-700" };
@@ -327,6 +363,50 @@ export default function ProProfilePage() {
 
           {/* RIGHT sidebar */}
           <div className="space-y-5">
+            {/* ── JOIN MY PRO NETWORK ── */}
+            {pro.primaryNetwork && (
+              <div className="rounded-2xl bg-gradient-to-br from-[#0a1628] via-[#102038] to-[#182f50] border border-slate-800 p-5 text-white shadow-xl space-y-3.5 relative overflow-hidden">
+                <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-amber-400">
+                  <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                  <span>JOIN MY PRO NETWORK</span>
+                </div>
+                <div>
+                  <h4 className="text-base font-black text-white">{pro.primaryNetwork.name}</h4>
+                  <p className="text-xs text-slate-300 font-medium line-clamp-2 mt-0.5">
+                    {pro.primaryNetwork.tagline || pro.primaryNetwork.description || "Premium mastermind network for tax professionals."}
+                  </p>
+                </div>
+                <ul className="space-y-2 text-xs font-semibold text-slate-200">
+                  {(pro.primaryNetwork.memberBenefits && pro.primaryNetwork.memberBenefits.length > 0
+                    ? pro.primaryNetwork.memberBenefits
+                    : [
+                        "Exclusive Training & Workshops",
+                        "Private Pro Talks",
+                        "Resource Library Access",
+                        "Members-Only Discussions",
+                        "Live Q&A Sessions",
+                      ]
+                  ).slice(0, 4).map((b, idx) => (
+                    <li key={idx} className="flex items-center gap-2">
+                      <span className="w-3.5 h-3.5 rounded-full bg-amber-400/20 text-amber-400 flex items-center justify-center text-[9px] font-black shrink-0">✓</span>
+                      <span className="truncate">{b}</span>
+                    </li>
+                  ))}
+                </ul>
+                <div className="pt-1 space-y-1.5">
+                  <Link
+                    href={`/pro-networks/${pro.primaryNetwork.slug}`}
+                    className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#f0c040] via-[#e6b325] to-[#d4a017] hover:from-[#f5c955] hover:to-[#e0ab20] text-[#0a1628] font-black text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition-all"
+                  >
+                    JOIN NOW - ${(pro.primaryNetwork.monthlyPrice || 19.99).toFixed(2)}/MO
+                  </Link>
+                  <p className="text-[10px] font-bold text-center text-slate-400">
+                    {pro.primaryNetwork.memberCount} Members • Cancel Anytime
+                  </p>
+                </div>
+              </div>
+            )}
+
             <div className="bg-white rounded-2xl border border-slate-100 p-5">
               <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Overview</h3>
               <div className="space-y-3">
@@ -356,6 +436,73 @@ export default function ProProfilePage() {
             </div>
           </div>
         </div>
+
+        {/* ── MY BADGES & NOTE (MATCHES SCREENSHOT) ── */}
+        {pro.myBadges && pro.myBadges.length > 0 && (
+          <div className="grid lg:grid-cols-12 gap-6 pb-16">
+            {/* Left: MY BADGES (7 cols) */}
+            <div className="lg:col-span-7 bg-white rounded-2xl border border-slate-100 p-6 shadow-xs space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 className="text-xs font-black text-[#0A1628] uppercase tracking-widest flex items-center gap-2">
+                  <Crown className="w-4 h-4 text-amber-500" />
+                  BADGES &amp; NETWORKS
+                </h3>
+              </div>
+              <div className="flex flex-wrap items-center gap-6 pt-2">
+                {pro.myBadges.map((badge) => (
+                  <Link
+                    key={badge.id}
+                    href={`/pro-networks/${badge.networkSlug}`}
+                    className="flex flex-col items-center gap-2 group cursor-pointer"
+                  >
+                    <div
+                      className="w-18 h-18 rounded-full border-2 p-1 flex items-center justify-center shadow-md group-hover:scale-105 transition-transform relative overflow-hidden"
+                      style={{
+                        borderColor: badge.borderColor || "#d4a017",
+                        backgroundColor: badge.bgColor || "#0a1628",
+                      }}
+                    >
+                      {badge.customImage ? (
+                        <img src={badge.customImage} alt={badge.networkName} className="w-full h-full object-cover rounded-full" />
+                      ) : (
+                        <div className="flex flex-col items-center justify-center text-center p-1">
+                          <span
+                            className="font-black text-[11px] leading-tight tracking-wider"
+                            style={{ color: badge.textColor || "#f0c040" }}
+                          >
+                            {badge.initials || badge.networkName.slice(0, 4).toUpperCase()}
+                          </span>
+                          <span
+                            className="text-[8px] font-extrabold uppercase tracking-widest opacity-80 mt-0.5"
+                            style={{ color: badge.textColor || "#f0c040" }}
+                          >
+                            {badge.role === "OWNER" ? "OWNER" : "MEMBER"}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <span className="text-xs font-black text-center text-[#0A1628] line-clamp-1 max-w-[110px] group-hover:text-[#1E56A0] transition-colors">
+                      {badge.networkName}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            {/* Right: NOTE Disclaimer (5 cols) */}
+            <div className="lg:col-span-5 bg-white rounded-2xl border border-slate-100 p-6 shadow-xs space-y-3">
+              <h3 className="text-xs font-black text-[#0A1628] uppercase tracking-widest flex items-center gap-2 border-b border-slate-100 pb-3">
+                <Info className="w-4 h-4 text-slate-400" />
+                NOTE
+              </h3>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                All services and resources offered on {pro.primaryNetwork?.name || "this Pro Network"} are independent offerings by{" "}
+                <span className="font-bold text-slate-700">{pro.name}</span>.{" "}
+                <span className="font-semibold text-slate-700">Tax Compliance Pro</span> does not endorse or moderate these services.
+              </p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
