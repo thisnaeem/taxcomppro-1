@@ -334,9 +334,9 @@ export default function MemberProfile() {
       <input type="file" ref={avatarInputRef} onChange={handleAvatarUpload} accept="image/*" className="hidden" />
       <input type="file" ref={coverInputRef} onChange={handleCoverUpload} accept="image/*" className="hidden" />
 
-      <div className="flex flex-col lg:flex-row gap-6">
+      <div className="flex flex-col lg:flex-row gap-6 items-start">
         {/* ── LEFT SIDEBAR ────────────────────────────────────────────────── */}
-        <aside className="w-full lg:w-72 shrink-0 lg:sticky lg:top-24 self-start space-y-5">
+        <aside className="w-full lg:w-72 shrink-0 lg:sticky lg:top-[92px] lg:max-h-[calc(100vh-104px)] lg:overflow-y-auto scrollbar-none self-start space-y-5 z-20">
           <div className="bg-white dark:bg-[#172135] rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-sm p-3.5 space-y-1">
             <div className="px-3.5 py-2 text-[11px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">PROFILE MENU</div>
             {MEMBER_SIDEBAR_TABS.map((tab) => {
