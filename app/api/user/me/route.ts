@@ -7,7 +7,16 @@ export async function GET(req: NextRequest) {
   const session = await auth.api.getSession({ headers: req.headers });
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const [user, enrollments, toolkitPurchases, unreadNotifications, reviewsAggregate] = await Promise.all([
+  const [
+    user,
+    enrollments,
+    toolkitPurchases,
+    unreadNotifications,
+    reviewsAggregate,
+    ownedNetworks,
+    discussionsStarted,
+    proTalksHosted,
+  ] = await Promise.all([
     prisma.user.findUnique({
       where: { id: session.user.id },
       select: {
@@ -70,6 +79,30 @@ export async function GET(req: NextRequest) {
       _avg: { rating: true },
       _count: { rating: true },
     }),
+    prisma.proNetwork.findMany({
+      where: { ownerId: session.user.id },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        memberCount: true,
+        followerCount: true,
+        _count: {
+          select: {
+            members: { where: { status: "ACTIVE" } },
+            followers: true,
+            discussions: true,
+            events: true,
+          },
+        },
+      },
+    }),
+    prisma.proNetworkDiscussion.count({
+      where: { authorId: session.user.id },
+    }),
+    prisma.proNetworkEvent.count({
+      where: { hostId: session.user.id },
+    }),
   ]);
 
   if (!user) return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -81,9 +114,28 @@ export async function GET(req: NextRequest) {
   const avgRating = reviewsAggregate._avg.rating ?? (user.role === "PROFESSIONAL" || user.role === "ADMIN" ? 5.0 : null);
   const totalReviews = reviewsCount > 0 ? reviewsCount : (user.role === "PROFESSIONAL" || user.role === "ADMIN" ? 128 : 0);
 
+  // Pro Network metrics (100% dynamic from DB)
+  const proNetworksOwned = ownedNetworks.length;
+  const proNetworkMembers = ownedNetworks.reduce(
+    (sum, net) => sum + Math.max(net._count.members, net.memberCount || 0),
+    0
+  );
+  const followers = ownedNetworks.reduce(
+    (sum, net) => sum + Math.max(net._count.followers, net.followerCount || 0),
+    0
+  );
+  const primaryNetwork = ownedNetworks[0] || null;
+
   return NextResponse.json({
     ...user,
     hasDueDiligenceBadge,
+    proNetworks: ownedNetworks.map((n) => ({
+      id: n.id,
+      name: n.name,
+      slug: n.slug,
+      memberCount: Math.max(n._count.members, n.memberCount || 0),
+      followerCount: Math.max(n._count.followers, n.followerCount || 0),
+    })),
     stats: {
       completedCourses,
       totalEnrollments,
@@ -91,6 +143,14 @@ export async function GET(req: NextRequest) {
       unreadNotifications,
       avgRating,
       reviewsCount: totalReviews,
+      // Dynamic Pro Network Stats
+      followers,
+      proNetworkMembers,
+      proNetworksOwned,
+      discussionsStarted,
+      proTalksHosted,
+      primaryNetworkSlug: primaryNetwork?.slug ?? null,
+      primaryNetworkName: primaryNetwork?.name ?? null,
     },
   });
 }

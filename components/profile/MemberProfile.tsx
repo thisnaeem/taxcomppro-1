@@ -23,6 +23,14 @@ import {
   X,
   Link2,
   Mail,
+  Users,
+  Users2,
+  Star,
+  MessageSquare,
+  Video,
+  Megaphone,
+  Copy,
+  ExternalLink,
 } from "lucide-react";
 import EditProfileModal, { type ProfileFormData } from "@/components/profile/EditProfileModal";
 
@@ -95,6 +103,18 @@ export default function MemberProfile() {
     validThru: "",
   });
 
+  const [proStats, setProStats] = useState({
+    followers: 0,
+    proNetworkMembers: 0,
+    proNetworksOwned: 0,
+    discussionsStarted: 0,
+    proTalksHosted: 0,
+    primaryNetworkSlug: null as string | null,
+    primaryNetworkName: null as string | null,
+  });
+  const [promoteModalOpen, setPromoteModalOpen] = useState(false);
+  const [networkCopied, setNetworkCopied] = useState(false);
+
   const loadUserData = useCallback(async () => {
     try {
       setLoading(true);
@@ -140,6 +160,18 @@ export default function MemberProfile() {
             ? new Date(u.subscription.currentPeriodEnd).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
             : "",
         });
+
+        if (u.stats) {
+          setProStats({
+            followers: u.stats.followers ?? 0,
+            proNetworkMembers: u.stats.proNetworkMembers ?? 0,
+            proNetworksOwned: u.stats.proNetworksOwned ?? 0,
+            discussionsStarted: u.stats.discussionsStarted ?? 0,
+            proTalksHosted: u.stats.proTalksHosted ?? 0,
+            primaryNetworkSlug: u.stats.primaryNetworkSlug ?? null,
+            primaryNetworkName: u.stats.primaryNetworkName ?? null,
+          });
+        }
       }
     } catch (e) {
       console.error(e);
@@ -338,22 +370,109 @@ export default function MemberProfile() {
 
                   {/* Actions */}
                   <div className="flex flex-wrap items-center gap-2.5 pt-3">
-                    <button onClick={() => setEditModalOpen(true)} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#1E56A0] hover:bg-[#16437E] text-white text-xs font-bold transition-all shadow-sm">
+                    <button onClick={() => setEditModalOpen(true)} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#1E56A0] hover:bg-[#16437E] text-white text-xs font-bold transition-all shadow-sm cursor-pointer">
                       <Edit3 className="w-3.5 h-3.5" /> EDIT PROFILE
                     </button>
                     {!isProOrVIP && (
-                      <Link href="/apply-professional" className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-[#0A1628] text-xs font-black uppercase tracking-wider transition-all shadow-sm">
+                      <Link href="/apply-professional" className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-[#0A1628] text-xs font-black uppercase tracking-wider transition-all shadow-sm cursor-pointer">
                         <Sparkles className="w-3.5 h-3.5" /> APPLY FOR PRO
                       </Link>
                     )}
                     <button
                       onClick={() => setShareDialogOpen(true)}
-                      className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-[#1E56A0] hover:text-[#1E56A0] bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-200 text-xs font-bold transition-all"
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-[#1E56A0] hover:text-[#1E56A0] bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-200 text-xs font-bold transition-all cursor-pointer"
                     >
                       <Share2 className="w-3.5 h-3.5" />
                       SHARE
                     </button>
+                    <button
+                      onClick={() => setPromoteModalOpen(true)}
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-[#1E56A0] hover:text-[#1E56A0] bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-200 text-xs font-bold transition-all shadow-sm cursor-pointer"
+                    >
+                      <Megaphone className="w-3.5 h-3.5 text-amber-500" />
+                      PROMOTE NETWORK
+                    </button>
                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── PRO NETWORK STATS BAR (100% DYNAMIC) ────────────────────────── */}
+          <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200/90 dark:border-slate-800 p-4 sm:p-5 shadow-xs mb-6 transition-colors">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-y sm:divide-y-0 sm:divide-x divide-slate-100 dark:divide-slate-800/80 gap-y-4">
+              {/* 1. FOLLOWERS */}
+              <div className="flex items-center gap-3.5 px-3 sm:first:pl-2">
+                <div className="w-11 h-11 rounded-full border border-blue-500/25 bg-blue-500/10 dark:bg-blue-500/20 text-[#1E56A0] dark:text-blue-400 flex items-center justify-center shrink-0">
+                  <Users className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xl sm:text-2xl font-black text-[#0A1628] dark:text-white leading-tight tracking-tight">
+                    {proStats.followers.toLocaleString()}
+                  </p>
+                  <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mt-0.5">
+                    FOLLOWERS
+                  </p>
+                </div>
+              </div>
+
+              {/* 2. PRO NETWORK MEMBERS */}
+              <div className="flex items-center gap-3.5 px-3 sm:pl-4">
+                <div className="w-11 h-11 rounded-full border border-blue-500/25 bg-blue-500/10 dark:bg-blue-500/20 text-[#1E56A0] dark:text-blue-400 flex items-center justify-center shrink-0">
+                  <Users2 className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xl sm:text-2xl font-black text-[#0A1628] dark:text-white leading-tight tracking-tight">
+                    {proStats.proNetworkMembers.toLocaleString()}
+                  </p>
+                  <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mt-0.5">
+                    PRO NETWORK MEMBERS
+                  </p>
+                </div>
+              </div>
+
+              {/* 3. PRO NETWORKS OWNED */}
+              <div className="flex items-center gap-3.5 px-3 sm:pl-4">
+                <div className="w-11 h-11 rounded-full border border-blue-500/25 bg-blue-500/10 dark:bg-blue-500/20 text-[#1E56A0] dark:text-blue-400 flex items-center justify-center shrink-0">
+                  <Star className="w-5 h-5 fill-[#1E56A0]/20 dark:fill-blue-400/20" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xl sm:text-2xl font-black text-[#0A1628] dark:text-white leading-tight tracking-tight">
+                    {proStats.proNetworksOwned.toLocaleString()}
+                  </p>
+                  <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mt-0.5">
+                    PRO NETWORKS OWNED
+                  </p>
+                </div>
+              </div>
+
+              {/* 4. DISCUSSIONS STARTED */}
+              <div className="flex items-center gap-3.5 px-3 sm:pl-4">
+                <div className="w-11 h-11 rounded-full border border-blue-500/25 bg-blue-500/10 dark:bg-blue-500/20 text-[#1E56A0] dark:text-blue-400 flex items-center justify-center shrink-0">
+                  <MessageSquare className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xl sm:text-2xl font-black text-[#0A1628] dark:text-white leading-tight tracking-tight">
+                    {proStats.discussionsStarted.toLocaleString()}
+                  </p>
+                  <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mt-0.5">
+                    DISCUSSIONS STARTED
+                  </p>
+                </div>
+              </div>
+
+              {/* 5. PRO TALKS HOSTED */}
+              <div className="flex items-center gap-3.5 px-3 sm:pl-4 sm:last:pr-2">
+                <div className="w-11 h-11 rounded-full border border-blue-500/25 bg-blue-500/10 dark:bg-blue-500/20 text-[#1E56A0] dark:text-blue-400 flex items-center justify-center shrink-0">
+                  <Video className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xl sm:text-2xl font-black text-[#0A1628] dark:text-white leading-tight tracking-tight">
+                    {proStats.proTalksHosted.toLocaleString()}
+                  </p>
+                  <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mt-0.5">
+                    PRO TALKS HOSTED
+                  </p>
                 </div>
               </div>
             </div>
@@ -682,6 +801,149 @@ export default function MemberProfile() {
                 <span className="text-[11px] font-bold text-slate-600">{copied ? "Copied!" : "Copy Link"}</span>
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── PROMOTE NETWORK MODAL ────────────────────────────────────────── */}
+      {promoteModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+          <div className="bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
+                  <Megaphone className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-[#0A1628] dark:text-white">Promote Pro Network</h3>
+                  <p className="text-[11px] font-bold text-slate-400">Share your network with clients &amp; peers</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setPromoteModalOpen(false)}
+                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {proStats.proNetworksOwned > 0 && proStats.primaryNetworkSlug ? (
+              <div className="space-y-4">
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black text-[#0A1628] dark:text-white truncate">
+                      {proStats.primaryNetworkName || "Your Pro Network"}
+                    </span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 uppercase">
+                      ACTIVE
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Invite professionals and clients to join your private mastermind, unlock your resources, and attend your live Pro Talks.
+                  </p>
+                </div>
+
+                {/* Direct Link box */}
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    Direct Network Link
+                  </label>
+                  <div className="flex items-center gap-2 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50">
+                    <input
+                      type="text"
+                      readOnly
+                      value={`${typeof window !== "undefined" ? window.location.origin : "https://taxcomppro.com"}/pro-networks/${proStats.primaryNetworkSlug}`}
+                      className="flex-1 bg-transparent text-xs font-mono font-medium text-slate-700 dark:text-slate-300 outline-none truncate select-all"
+                    />
+                    <button
+                      onClick={() => {
+                        const url = `${window.location.origin}/pro-networks/${proStats.primaryNetworkSlug}`;
+                        navigator.clipboard.writeText(url);
+                        setNetworkCopied(true);
+                        setTimeout(() => setNetworkCopied(false), 2000);
+                      }}
+                      className="px-3 py-1.5 rounded-lg bg-[#1E56A0] hover:bg-[#16437E] text-white text-xs font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1.5"
+                    >
+                      {networkCopied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                      <span>{networkCopied ? "Copied!" : "Copy"}</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Quick Social Share Buttons */}
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    Share Instantly
+                  </label>
+                  <div className="grid grid-cols-4 gap-2">
+                    <a
+                      href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(`${typeof window !== "undefined" ? window.location.origin : "https://taxcomppro.com"}/pro-networks/${proStats.primaryNetworkSlug}`)}&text=${encodeURIComponent(`Join my private Pro Network "${proStats.primaryNetworkName || "on Tax Compliance Pro"}" for exclusive compliance tools and masterclasses:`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex flex-col items-center gap-1.5 p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all text-slate-700 dark:text-slate-300"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center">
+                        <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
+                      </div>
+                      <span className="text-[10px] font-bold">X</span>
+                    </a>
+
+                    <a
+                      href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(`${typeof window !== "undefined" ? window.location.origin : "https://taxcomppro.com"}/pro-networks/${proStats.primaryNetworkSlug}`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex flex-col items-center gap-1.5 p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950/30 transition-all text-slate-700 dark:text-slate-300"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-[#0A66C2] text-white flex items-center justify-center">
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" /></svg>
+                      </div>
+                      <span className="text-[10px] font-bold">LinkedIn</span>
+                    </a>
+
+                    <a
+                      href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Join my private Pro Network "${proStats.primaryNetworkName || "on Tax Compliance Pro"}": ${typeof window !== "undefined" ? window.location.origin : "https://taxcomppro.com"}/pro-networks/${proStats.primaryNetworkSlug}`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex flex-col items-center gap-1.5 p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-all text-slate-700 dark:text-slate-300"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-[#25D366] text-white flex items-center justify-center">
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" /></svg>
+                      </div>
+                      <span className="text-[10px] font-bold">WhatsApp</span>
+                    </a>
+
+                    <Link
+                      href={`/pro-networks/${proStats.primaryNetworkSlug}`}
+                      className="flex flex-col items-center gap-1.5 p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-all text-slate-700 dark:text-slate-300"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-amber-500 text-[#0A1628] flex items-center justify-center">
+                        <ExternalLink className="w-4 h-4" />
+                      </div>
+                      <span className="text-[10px] font-bold">Open Hub</span>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-6 space-y-4">
+                <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto">
+                  <Star className="w-6 h-6" />
+                </div>
+                <div className="space-y-1">
+                  <h4 className="text-sm font-black text-[#0A1628] dark:text-white">You haven&apos;t created a Pro Network yet</h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto">
+                    Launch your private subscription mastermind with custom badges, live Pro Talks, and discussion feeds.
+                  </p>
+                </div>
+                <Link
+                  href="/pro-networks/create"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#f0c040] to-[#d4a017] text-[#0a1628] font-black text-xs shadow-md hover:shadow-lg transition-all"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Launch Pro Network</span>
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       )}

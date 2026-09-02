@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { MapPin, Briefcase, Globe, ArrowLeft, Loader2, MessageSquare, Users, BadgeCheck, Star, ExternalLink, ChevronRight } from "lucide-react";
+import { MapPin, Briefcase, Globe, ArrowLeft, Loader2, MessageSquare, Users, Users2, Video, BadgeCheck, Star, ExternalLink, ChevronRight } from "lucide-react";
 import { Linkedin02Icon, NewTwitterIcon } from "hugeicons-react";
 import { VoiceMemoPlayer } from "@/components/profile/VoiceMemo";
 
@@ -17,6 +17,15 @@ interface Pro {
   specialties: string[]; certifications: string[]; languages: string[]; mediaPhotos: string[];
   voiceMemoUrl: string | null;
   createdAt: string; instructorCourses: Course[];
+  networkStats?: {
+    followers: number;
+    proNetworkMembers: number;
+    proNetworksOwned: number;
+    discussionsStarted: number;
+    proTalksHosted: number;
+    primaryNetworkSlug: string | null;
+    primaryNetworkName: string | null;
+  };
 }
 
 const levelColors: Record<string,string> = { BEGINNER:"bg-emerald-100 text-emerald-700", INTERMEDIATE:"bg-blue-100 text-blue-700", ADVANCED:"bg-purple-100 text-purple-700" };
@@ -115,6 +124,83 @@ export default function ProProfilePage() {
             </div>
           </div>
         </div>
+
+        {/* Pro Network Stats Card (Dynamic) */}
+        {pro.networkStats && (
+          <div className="bg-white rounded-2xl border border-slate-100 p-4 sm:p-5 shadow-xs mb-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-y sm:divide-y-0 sm:divide-x divide-slate-100 gap-y-4">
+              <div className="flex items-center gap-3.5 px-3 sm:first:pl-2">
+                <div className="w-11 h-11 rounded-full border border-blue-500/25 bg-blue-500/10 text-[#1E56A0] flex items-center justify-center shrink-0">
+                  <Users className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-xl sm:text-2xl font-black text-[#0A1628] leading-tight tracking-tight">
+                    {pro.networkStats.followers.toLocaleString()}
+                  </p>
+                  <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-400 mt-0.5">
+                    FOLLOWERS
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3.5 px-3 sm:pl-4">
+                <div className="w-11 h-11 rounded-full border border-blue-500/25 bg-blue-500/10 text-[#1E56A0] flex items-center justify-center shrink-0">
+                  <Users2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-xl sm:text-2xl font-black text-[#0A1628] leading-tight tracking-tight">
+                    {pro.networkStats.proNetworkMembers.toLocaleString()}
+                  </p>
+                  <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-400 mt-0.5">
+                    PRO NETWORK MEMBERS
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3.5 px-3 sm:pl-4">
+                <div className="w-11 h-11 rounded-full border border-blue-500/25 bg-blue-500/10 text-[#1E56A0] flex items-center justify-center shrink-0">
+                  <Star className="w-5 h-5 fill-[#1E56A0]/20" />
+                </div>
+                <div>
+                  <p className="text-xl sm:text-2xl font-black text-[#0A1628] leading-tight tracking-tight">
+                    {pro.networkStats.proNetworksOwned.toLocaleString()}
+                  </p>
+                  <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-400 mt-0.5">
+                    PRO NETWORKS OWNED
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3.5 px-3 sm:pl-4">
+                <div className="w-11 h-11 rounded-full border border-blue-500/25 bg-blue-500/10 text-[#1E56A0] flex items-center justify-center shrink-0">
+                  <MessageSquare className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-xl sm:text-2xl font-black text-[#0A1628] leading-tight tracking-tight">
+                    {pro.networkStats.discussionsStarted.toLocaleString()}
+                  </p>
+                  <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-400 mt-0.5">
+                    DISCUSSIONS STARTED
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3.5 px-3 sm:pl-4 sm:last:pr-2">
+                <div className="w-11 h-11 rounded-full border border-blue-500/25 bg-blue-500/10 text-[#1E56A0] flex items-center justify-center shrink-0">
+                  <Video className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-xl sm:text-2xl font-black text-[#0A1628] leading-tight tracking-tight">
+                    {pro.networkStats.proTalksHosted.toLocaleString()}
+                  </p>
+                  <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-400 mt-0.5">
+                    PRO TALKS HOSTED
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="grid lg:grid-cols-3 gap-6 pb-20">
           {/* LEFT */}
