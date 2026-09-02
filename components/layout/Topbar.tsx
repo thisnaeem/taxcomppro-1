@@ -17,6 +17,7 @@ import {
   PanelLeftOpen,
   Sun,
   Moon,
+  Menu,
 } from "lucide-react";
 import { useSidebar } from "@/components/layout/SidebarContext";
 import { useTheme } from "next-themes";
@@ -48,7 +49,11 @@ const pageTitles: Record<string, string> = {
   "/admin/support":          "Support Tickets",
 };
 
-export default function Topbar() {
+interface TopbarProps {
+  onMenuClick?: () => void;
+}
+
+export default function Topbar({ onMenuClick }: TopbarProps) {
   const user     = useAppSelector((s) => s.auth.user);
   const unread   = useAppSelector((s) => s.notifications.unreadCount);
   const dispatch = useAppDispatch();
@@ -87,19 +92,32 @@ export default function Topbar() {
 
   return (
     <header
-      className={`h-16 flex items-center justify-between px-5 sm:px-7 border-b sticky top-0 z-40 transition-colors duration-200 ${
+      className={`h-16 flex items-center justify-between px-3.5 sm:px-7 border-b sticky top-0 z-40 transition-colors duration-200 ${
         isAdmin
           ? "bg-white/95 dark:bg-[#0a1628]/85 backdrop-blur-md border-slate-200 dark:border-white/10"
           : "bg-white dark:bg-[#0a1628] border-slate-200 dark:border-white/10"
       }`}
     >
-      {/* Left section: Collapse Button + Page Title */}
-      <div className="flex items-center gap-3">
+      {/* Left section: Mobile Hamburger + Desktop Collapse Button + Page Title */}
+      <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+        {/* Mobile Hamburger Button */}
+        {isAdmin && onMenuClick && (
+          <button
+            type="button"
+            onClick={onMenuClick}
+            className="lg:hidden p-2 rounded-xl text-slate-600 dark:text-white/70 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-colors shrink-0 cursor-pointer"
+            title="Open navigation menu"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+        )}
+
+        {/* Desktop Collapse Button */}
         {isAdmin && (
           <button
             type="button"
             onClick={toggleCollapsed}
-            className="flex items-center justify-center w-9 h-9 rounded-xl border border-slate-200 dark:border-white/10 text-slate-600 dark:text-white/70 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-all cursor-pointer shadow-sm active:scale-95"
+            className="hidden lg:flex items-center justify-center w-9 h-9 rounded-xl border border-slate-200 dark:border-white/10 text-slate-600 dark:text-white/70 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-all cursor-pointer shadow-sm active:scale-95 shrink-0"
             title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
             aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
@@ -113,7 +131,7 @@ export default function Topbar() {
 
         {title && (
           <h1
-            className={`text-lg sm:text-xl font-bold tracking-tight transition-colors ${
+            className={`text-base sm:text-xl font-bold tracking-tight truncate transition-colors ${
               isAdmin
                 ? "text-slate-900 dark:text-white"
                 : "text-[#0a1628] dark:text-white"
@@ -125,7 +143,7 @@ export default function Topbar() {
       </div>
 
       {/* Right section: Theme Toggle + Notifications + User profile */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 shrink-0">
         {/* Dark / Light Mode Toggle Pill Switch */}
         <button
           type="button"

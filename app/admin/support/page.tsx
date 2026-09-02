@@ -151,7 +151,7 @@ export default function AdminSupportPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
         {[
           { label: "Total Tickets", count: tickets.length, color: "border-slate-800 text-white bg-slate-900/50" },
           { label: "Open", count: tickets.filter(t => t.status === "OPEN").length, color: "border-rose-900/30 text-rose-400 bg-rose-950/20" },

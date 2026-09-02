@@ -265,7 +265,7 @@ export default function AdminAffiliatePage() {
       </div>
 
       {/* ── TABS SWITCHER ── */}
-      <div className="flex gap-1.5 bg-slate-800/80 border border-white/10 rounded-2xl p-1.5 w-fit shadow-xl">
+      <div className="flex gap-1.5 bg-slate-800/80 border border-white/10 rounded-2xl p-1.5 w-full sm:w-fit overflow-x-auto shadow-xl">
         {[
           { id: "affiliates", label: `All Affiliates (${affiliates.length})`, icon: UserGroupIcon },
           { id: "payouts", label: `Payout Requests (${payouts.length})`, icon: DollarCircleIcon },
@@ -277,7 +277,7 @@ export default function AdminAffiliatePage() {
             <button
               key={t.id}
               onClick={() => setTab(t.id as any)}
-              className={`px-4 py-2.5 rounded-xl text-xs font-black transition-all flex items-center gap-2 ${
+              className={`px-4 py-2.5 rounded-xl text-xs font-black transition-all flex items-center gap-2 whitespace-nowrap shrink-0 ${
                 active
                   ? "bg-[#f0c040] text-slate-950 shadow-md shadow-amber-400/20"
                   : "text-slate-400 hover:text-white hover:bg-white/5"

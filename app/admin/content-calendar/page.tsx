@@ -466,54 +466,56 @@ export default function AdminContentCalendarPage() {
         <div className="flex justify-center py-24"><Loader2 className="w-8 h-8 text-blue-500 animate-spin" /></div>
       ) : view === "calendar" ? (
         /* ── CALENDAR VIEW ── */
-        <div className="bg-white rounded-2xl overflow-hidden border border-slate-100">
-          {/* Day headers */}
-          <div className="grid grid-cols-7 border-b border-slate-100">
-            {DAYS.map(d => (
-              <div key={d} className="py-3 text-center text-xs font-black text-slate-400 uppercase tracking-widest">{d}</div>
-            ))}
-          </div>
-          {/* Calendar grid */}
-          <div className="grid grid-cols-7">
-            {/* Empty cells before first day */}
-            {Array.from({ length: firstDay }).map((_, i) => (
-              <div key={`empty-${i}`} className="min-h-[120px] bg-slate-50/50 border-r border-b border-slate-100" />
-            ))}
-            {/* Day cells */}
-            {Array.from({ length: daysInMonth }).map((_, i) => {
-              const day      = i + 1;
-              const dayPosts = byDay[day] ?? [];
-              const isToday  = year === now.getFullYear() && month === now.getMonth() + 1 && day === now.getDate();
-              const isPast   = new Date(year, month - 1, day) < new Date(now.getFullYear(), now.getMonth(), now.getDate());
-              const isoDate  = `${year}-${pad(month)}-${pad(day)}`;
-              return (
-                <div key={day}
-                  onClick={() => !isPast && setSelectedDay(isoDate)}
-                  className={`min-h-[120px] border-r border-b border-slate-100 p-1.5 flex flex-col gap-1 transition-all
-                    ${isPast ? "bg-slate-50/60" : "bg-white hover:bg-blue-50/30 cursor-pointer"}`}>
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black mb-0.5 self-start ${
-                    isToday ? "bg-[#0a1628] text-white" : "text-slate-400"
-                  }`}>{day}</div>
-                  {!isPast && dayPosts.length === 0 && (
-                    <div className="flex items-center gap-1 text-[10px] text-slate-300 opacity-0 group-hover:opacity-100 px-1">
-                      <Plus className="w-3 h-3"/> Add post
-                    </div>
-                  )}
-                  {dayPosts.slice(0, 3).map(p => (
-                    <div key={p.id} onClick={e => e.stopPropagation()}>
-                      <PostPill post={p} onDelete={removePost} onPublish={publishPost} />
-                    </div>
-                  ))}
-                  {dayPosts.length > 3 && (
-                    <div className="text-[10px] font-bold text-slate-400 px-1">+{dayPosts.length - 3} more</div>
-                  )}
-                </div>
-              );
-            })}
-            {/* Fill remaining cells */}
-            {Array.from({ length: (7 - (firstDay + daysInMonth) % 7) % 7 }).map((_, i) => (
-              <div key={`trail-${i}`} className="min-h-[120px] bg-slate-50/50 border-r border-b border-slate-100" />
-            ))}
+        <div className="bg-white rounded-2xl overflow-x-auto border border-slate-100 shadow-xl">
+          <div className="min-w-[640px]">
+            {/* Day headers */}
+            <div className="grid grid-cols-7 border-b border-slate-100">
+              {DAYS.map(d => (
+                <div key={d} className="py-3 text-center text-xs font-black text-slate-400 uppercase tracking-widest">{d}</div>
+              ))}
+            </div>
+            {/* Calendar grid */}
+            <div className="grid grid-cols-7">
+              {/* Empty cells before first day */}
+              {Array.from({ length: firstDay }).map((_, i) => (
+                <div key={`empty-${i}`} className="min-h-[120px] bg-slate-50/50 border-r border-b border-slate-100" />
+              ))}
+              {/* Day cells */}
+              {Array.from({ length: daysInMonth }).map((_, i) => {
+                const day      = i + 1;
+                const dayPosts = byDay[day] ?? [];
+                const isToday  = year === now.getFullYear() && month === now.getMonth() + 1 && day === now.getDate();
+                const isPast   = new Date(year, month - 1, day) < new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                const isoDate  = `${year}-${pad(month)}-${pad(day)}`;
+                return (
+                  <div key={day}
+                    onClick={() => !isPast && setSelectedDay(isoDate)}
+                    className={`min-h-[120px] border-r border-b border-slate-100 p-1.5 flex flex-col gap-1 transition-all
+                      ${isPast ? "bg-slate-50/60" : "bg-white hover:bg-blue-50/30 cursor-pointer"}`}>
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black mb-0.5 self-start ${
+                      isToday ? "bg-[#0a1628] text-white" : "text-slate-400"
+                    }`}>{day}</div>
+                    {!isPast && dayPosts.length === 0 && (
+                      <div className="flex items-center gap-1 text-[10px] text-slate-300 opacity-0 group-hover:opacity-100 px-1">
+                        <Plus className="w-3 h-3"/> Add post
+                      </div>
+                    )}
+                    {dayPosts.slice(0, 3).map(p => (
+                      <div key={p.id} onClick={e => e.stopPropagation()}>
+                        <PostPill post={p} onDelete={removePost} onPublish={publishPost} />
+                      </div>
+                    ))}
+                    {dayPosts.length > 3 && (
+                      <div className="text-[10px] font-bold text-slate-400 px-1">+{dayPosts.length - 3} more</div>
+                    )}
+                  </div>
+                );
+              })}
+              {/* Fill remaining cells */}
+              {Array.from({ length: (7 - (firstDay + daysInMonth) % 7) % 7 }).map((_, i) => (
+                <div key={`trail-${i}`} className="min-h-[120px] bg-slate-50/50 border-r border-b border-slate-100" />
+              ))}
+            </div>
           </div>
         </div>
       ) : (

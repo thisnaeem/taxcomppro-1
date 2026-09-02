@@ -340,10 +340,10 @@ export default function AdminAtlasSettingsPage() {
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex items-center gap-1 bg-slate-900/80 p-1 rounded-2xl border border-white/10">
+        <div className="flex items-center gap-1 bg-slate-900/80 p-1 rounded-2xl border border-white/10 w-full sm:w-fit overflow-x-auto">
           <button
             onClick={() => setActiveTab("knowledge")}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+            className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
               activeTab === "knowledge"
                 ? "bg-amber-400 text-slate-950 shadow-md font-black"
                 : "text-slate-400 hover:text-white"
@@ -353,7 +353,7 @@ export default function AdminAtlasSettingsPage() {
           </button>
           <button
             onClick={() => setActiveTab("unanswered")}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+            className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
               activeTab === "unanswered"
                 ? "bg-amber-400 text-slate-950 shadow-md font-black"
                 : "text-slate-400 hover:text-white"
@@ -368,7 +368,7 @@ export default function AdminAtlasSettingsPage() {
           </button>
           <button
             onClick={() => setActiveTab("settings")}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+            className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
               activeTab === "settings"
                 ? "bg-amber-400 text-slate-950 shadow-md font-black"
                 : "text-slate-400 hover:text-white"

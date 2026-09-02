@@ -330,13 +330,13 @@ export default function AdminCouponsPage() {
       </div>
 
       {/* Main Category Switcher Tabs */}
-      <div className="flex items-center gap-2 border-b border-slate-800 pb-2">
+      <div className="flex items-center gap-2 border-b border-slate-800 pb-2 overflow-x-auto">
         <button
           onClick={() => {
             setMainTab("ADMIN_PROMOS");
             setSubFilter("ALL");
           }}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
             mainTab === "ADMIN_PROMOS"
               ? "bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20"
               : "bg-slate-900/80 text-slate-400 hover:text-white border border-slate-800 hover:bg-slate-800"
@@ -358,7 +358,7 @@ export default function AdminCouponsPage() {
             setMainTab("SELLER_COUPONS");
             setSubFilter("ALL");
           }}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
             mainTab === "SELLER_COUPONS"
               ? "bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20"
               : "bg-slate-900/80 text-slate-400 hover:text-white border border-slate-800 hover:bg-slate-800"
@@ -449,22 +449,19 @@ export default function AdminCouponsPage() {
                   { id: "TOOLKITS", label: "Toolkits" },
                 ]
               : []),
-          ].map((tab) => {
-            const active = subFilter === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setSubFilter(tab.id as any)}
-                className={`text-xs font-semibold px-3.5 py-2 rounded-xl transition-all cursor-pointer ${
-                  active
-                    ? "bg-amber-500 text-slate-950 font-bold shadow-md shadow-amber-500/20"
-                    : "bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700/50"
-                }`}
-              >
-                {tab.label}
-              </button>
-            );
-          })}
+          ].map((f) => (
+            <button
+              key={f.id}
+              onClick={() => setSubFilter(f.id as any)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                subFilter === f.id
+                  ? "bg-amber-500 text-slate-950 font-bold"
+                  : "bg-slate-800/80 text-slate-400 hover:text-white hover:bg-slate-700"
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -484,8 +481,8 @@ export default function AdminCouponsPage() {
           <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
         </div>
       ) : (
-        <div className="bg-slate-900/40 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-          <table className="w-full border-collapse text-left">
+        <div className="bg-slate-900/40 border border-slate-800 rounded-2xl overflow-x-auto shadow-xl">
+          <table className="w-full min-w-[750px] border-collapse text-left">
             <thead className="bg-slate-900/80 border-b border-slate-800">
               <tr>
                 <th className="text-xs font-bold text-slate-400 px-5 py-3.5 uppercase tracking-wider">Coupon Code</th>

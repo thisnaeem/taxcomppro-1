@@ -22,6 +22,7 @@ import {
   AlertTriangle,
   Loader2,
   CheckCircle2,
+  X,
 } from "lucide-react";
 import { useSidebar } from "@/components/layout/SidebarContext";
 
@@ -61,7 +62,12 @@ const navGroups = [
   { label: "Tools",      items: adminLinks.slice(7) },
 ];
 
-export default function Sidebar() {
+interface SidebarProps {
+  mobileOpen?: boolean;
+  onClose?: () => void;
+}
+
+export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname();
   const user     = useAppSelector((s) => s.auth.user);
   const { collapsed } = useSidebar();
@@ -96,6 +102,231 @@ export default function Sidebar() {
     } finally {
       setIsClearing(false);
     }
+  };
+
+  const renderSidebarContent = (isMobile: boolean) => {
+    const isCollapsed = !isMobile && collapsed;
+
+    return (
+      <div className="flex flex-col h-full overflow-hidden">
+        {/* Logo area */}
+        <div
+          className={`border-b border-white/10 flex items-center transition-all ${
+            isCollapsed
+              ? "py-4 px-2 justify-center min-h-[73px]"
+              : "px-5 py-5 justify-between min-h-[73px]"
+          }`}
+        >
+          {isCollapsed ? (
+            <Link href="/" title="Tax Compliance Pro" className="flex items-center justify-center group">
+              <img
+                src="/fevicon.webp"
+                alt="TaxCompPro"
+                className="h-9 w-9 object-contain group-hover:scale-105 transition-transform"
+              />
+            </Link>
+          ) : (
+            <>
+              <div>
+                <Link href="/" className="flex items-center gap-2">
+                  <img src="/logo_dark.webp" alt="TaxCompPro" className="h-10 w-auto" />
+                </Link>
+                {isAdmin && (
+                  <div className="mt-2.5 inline-flex items-center gap-1.5 bg-amber-400/15 text-amber-300 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full w-fit">
+                    <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                    Admin Panel
+                  </div>
+                )}
+              </div>
+              {isMobile && onClose && (
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="p-1.5 rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Nav list */}
+        <nav
+          className={`flex-1 py-4 flex flex-col gap-4 overflow-y-auto overflow-x-hidden ${
+            isCollapsed ? "px-2" : "px-3"
+          }`}
+        >
+          {isAdmin ? (
+            <>
+              {navGroups.map((group) => (
+                <div key={group.label}>
+                  {!isCollapsed ? (
+                    <p className="text-[10px] font-black uppercase tracking-widest text-white/30 px-2.5 mb-1.5 select-none">
+                      {group.label}
+                    </p>
+                  ) : (
+                    <div className="h-px bg-white/10 my-1 mx-2" />
+                  )}
+                  <div className="flex flex-col gap-1">
+                    {group.items.map((l) => {
+                      const isActive = l.exact
+                        ? pathname === l.href
+                        : pathname === l.href || pathname.startsWith(l.href + "/");
+
+                      return (
+                        <Link
+                          key={l.href + l.label}
+                          href={l.href}
+                          onClick={() => {
+                            if (isMobile && onClose) onClose();
+                          }}
+                          title={isCollapsed ? l.label : undefined}
+                          className={`group relative flex items-center rounded-xl font-semibold transition-all ${
+                            isCollapsed
+                              ? "justify-center px-0 py-2.5 w-full"
+                              : "gap-3 px-3 py-2.5 text-sm"
+                          } ${
+                            isActive
+                              ? "bg-[#f0c040] text-[#0a1628] shadow-lg shadow-amber-400/20 font-bold"
+                              : "text-white/60 hover:text-white hover:bg-white/10"
+                          }`}
+                        >
+                          <l.icon
+                            className={`shrink-0 transition-transform ${
+                              isCollapsed ? "w-5 h-5" : "w-4 h-4"
+                            } ${
+                              isActive
+                                ? "text-[#0a1628]"
+                                : "text-white/40 group-hover:text-white/80 group-hover:scale-105"
+                            }`}
+                          />
+                          {!isCollapsed && (
+                            <>
+                              <span className="flex-1 truncate">{l.label}</span>
+                              {isActive && (
+                                <ChevronRight className="w-3.5 h-3.5 text-[#0a1628]/60" />
+                              )}
+                            </>
+                          )}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+
+              {/* Admin Actions / Danger Zone */}
+              <div className={`pt-3 border-t border-white/10 ${isCollapsed ? "px-0" : ""}`}>
+                {!isCollapsed ? (
+                  <p className="text-[10px] font-black uppercase tracking-widest text-rose-400/80 px-2.5 mb-2 flex items-center justify-between select-none">
+                    <span>Admin Actions</span>
+                    <span className="bg-rose-500/20 text-rose-300 text-[9px] px-1.5 py-0.5 rounded font-bold">
+                      DANGER
+                    </span>
+                  </p>
+                ) : (
+                  <div className="h-px bg-rose-500/20 my-1 mx-2" />
+                )}
+
+                <div className="flex flex-col gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setActiveModal("marketplace")}
+                    title={isCollapsed ? "Clear Marketplace" : undefined}
+                    className={`flex items-center rounded-xl font-semibold text-rose-300 hover:bg-rose-500/15 hover:text-rose-200 transition-all group cursor-pointer ${
+                      isCollapsed
+                        ? "justify-center px-0 py-2.5 w-full"
+                        : "gap-2.5 w-full text-left px-3 py-2 text-xs"
+                    }`}
+                  >
+                    <Trash2 className="w-4 h-4 text-rose-400 group-hover:scale-110 transition-transform shrink-0" />
+                    {!isCollapsed && <span className="truncate">Clear Marketplace</span>}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveModal("communities")}
+                    title={isCollapsed ? "Clear Communities" : undefined}
+                    className={`flex items-center rounded-xl font-semibold text-rose-300 hover:bg-rose-500/15 hover:text-rose-200 transition-all group cursor-pointer ${
+                      isCollapsed
+                        ? "justify-center px-0 py-2.5 w-full"
+                        : "gap-2.5 w-full text-left px-3 py-2 text-xs"
+                    }`}
+                  >
+                    <Trash2 className="w-4 h-4 text-rose-400 group-hover:scale-110 transition-transform shrink-0" />
+                    {!isCollapsed && <span className="truncate">Clear Communities</span>}
+                  </button>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="flex flex-col gap-1">
+              {links.map((l) => {
+                const isActive = l.exact ? pathname === l.href : pathname.startsWith(l.href);
+                return (
+                  <Link
+                    key={l.href}
+                    href={l.href}
+                    onClick={() => {
+                      if (isMobile && onClose) onClose();
+                    }}
+                    title={isCollapsed ? l.label : undefined}
+                    className={`flex items-center rounded-xl font-semibold transition-all ${
+                      isCollapsed ? "justify-center px-0 py-2.5" : "gap-3 px-3 py-2.5 text-sm"
+                    } ${
+                      isActive
+                        ? "bg-[#f0c040] text-[#0a1628]"
+                        : "text-white/60 hover:text-white hover:bg-white/10"
+                    }`}
+                  >
+                    <l.icon className="w-5 h-5 shrink-0" />
+                    {!isCollapsed && <span>{l.label}</span>}
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </nav>
+
+        {/* User Footer */}
+        <div
+          className={`border-t border-white/10 transition-all ${
+            isCollapsed
+              ? "p-3 flex items-center justify-center"
+              : "px-4 py-4 flex items-center gap-3"
+          }`}
+          title={isCollapsed ? `${user.name} (${tierLabel[user.tier ?? "FREE"]})` : undefined}
+        >
+          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shrink-0 overflow-hidden ring-2 ring-amber-400/30">
+            {user.image ? (
+              <img
+                src={user.image}
+                alt={user.name}
+                referrerPolicy="no-referrer"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <span className="text-[#0a1628] font-black text-sm">
+                {user.name?.[0]?.toUpperCase()}
+              </span>
+            )}
+          </div>
+
+          {!isCollapsed && (
+            <div className="flex-1 min-w-0">
+              <div className="text-white text-xs font-bold truncate">{user.name}</div>
+              <span
+                className={`text-[10px] font-bold px-2 py-0.5 rounded-full mt-0.5 inline-block ${
+                  tierStyle[user.tier ?? "FREE"] ?? tierStyle.FREE
+                }`}
+              >
+                {tierLabel[user.tier ?? "FREE"]}
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -154,205 +385,29 @@ export default function Sidebar() {
         </div>
       )}
 
+      {/* Desktop Sticky Sidebar (Collapsible) */}
       <aside
-        className={`shrink-0 h-screen sticky top-0 bg-[#0a1628] border-r border-white/10 flex flex-col z-20 shadow-2xl transition-all duration-300 ease-in-out ${
+        className={`hidden lg:flex shrink-0 h-screen sticky top-0 bg-[#0a1628] border-r border-white/10 flex-col z-20 shadow-2xl transition-all duration-300 ease-in-out ${
           collapsed ? "w-[72px]" : "w-[230px]"
         }`}
       >
-        {/* Logo area */}
-        <div className={`border-b border-white/10 flex flex-col justify-center transition-all ${
-          collapsed ? "py-4 px-2 items-center min-h-[73px]" : "px-5 py-5 min-h-[73px]"
-        }`}>
-          {collapsed ? (
-            <Link href="/" title="Tax Compliance Pro" className="flex items-center justify-center group">
-              <img
-                src="/fevicon.webp"
-                alt="TaxCompPro"
-                className="h-9 w-9 object-contain group-hover:scale-105 transition-transform"
-              />
-            </Link>
-          ) : (
-            <>
-              <Link href="/" className="flex items-center gap-2">
-                <img src="/logo_dark.webp" alt="TaxCompPro" className="h-10 w-auto" />
-              </Link>
-              {isAdmin && (
-                <div className="mt-2.5 inline-flex items-center gap-1.5 bg-amber-400/15 text-amber-300 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full w-fit">
-                  <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-                  Admin Panel
-                </div>
-              )}
-            </>
-          )}
-        </div>
-
-        {/* Nav list */}
-        <nav className={`flex-1 py-4 flex flex-col gap-4 overflow-y-auto overflow-x-hidden ${
-          collapsed ? "px-2" : "px-3"
-        }`}>
-          {isAdmin ? (
-            <>
-              {navGroups.map((group) => (
-                <div key={group.label}>
-                  {!collapsed ? (
-                    <p className="text-[10px] font-black uppercase tracking-widest text-white/30 px-2.5 mb-1.5 select-none">
-                      {group.label}
-                    </p>
-                  ) : (
-                    <div className="h-px bg-white/10 my-1 mx-2" />
-                  )}
-                  <div className="flex flex-col gap-1">
-                    {group.items.map((l) => {
-                      const isActive = l.exact
-                        ? pathname === l.href
-                        : pathname === l.href || pathname.startsWith(l.href + "/");
-
-                      return (
-                        <Link
-                          key={l.href + l.label}
-                          href={l.href}
-                          title={collapsed ? l.label : undefined}
-                          className={`group relative flex items-center rounded-xl font-semibold transition-all ${
-                            collapsed
-                              ? "justify-center px-0 py-2.5 w-full"
-                              : "gap-3 px-3 py-2.5 text-sm"
-                          } ${
-                            isActive
-                              ? "bg-[#f0c040] text-[#0a1628] shadow-lg shadow-amber-400/20 font-bold"
-                              : "text-white/60 hover:text-white hover:bg-white/10"
-                          }`}
-                        >
-                          <l.icon
-                            className={`shrink-0 transition-transform ${
-                              collapsed ? "w-5 h-5" : "w-4 h-4"
-                            } ${
-                              isActive
-                                ? "text-[#0a1628]"
-                                : "text-white/40 group-hover:text-white/80 group-hover:scale-105"
-                            }`}
-                          />
-                          {!collapsed && (
-                            <>
-                              <span className="flex-1 truncate">{l.label}</span>
-                              {isActive && (
-                                <ChevronRight className="w-3.5 h-3.5 text-[#0a1628]/60" />
-                              )}
-                            </>
-                          )}
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
-
-              {/* Admin Actions / Danger Zone */}
-              <div className={`pt-3 border-t border-white/10 ${collapsed ? "px-0" : ""}`}>
-                {!collapsed ? (
-                  <p className="text-[10px] font-black uppercase tracking-widest text-rose-400/80 px-2.5 mb-2 flex items-center justify-between select-none">
-                    <span>Admin Actions</span>
-                    <span className="bg-rose-500/20 text-rose-300 text-[9px] px-1.5 py-0.5 rounded font-bold">
-                      DANGER
-                    </span>
-                  </p>
-                ) : (
-                  <div className="h-px bg-rose-500/20 my-1 mx-2" />
-                )}
-
-                <div className="flex flex-col gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => setActiveModal("marketplace")}
-                    title={collapsed ? "Clear Marketplace" : undefined}
-                    className={`flex items-center rounded-xl font-semibold text-rose-300 hover:bg-rose-500/15 hover:text-rose-200 transition-all group cursor-pointer ${
-                      collapsed
-                        ? "justify-center px-0 py-2.5 w-full"
-                        : "gap-2.5 w-full text-left px-3 py-2 text-xs"
-                    }`}
-                  >
-                    <Trash2 className="w-4 h-4 text-rose-400 group-hover:scale-110 transition-transform shrink-0" />
-                    {!collapsed && <span className="truncate">Clear Marketplace</span>}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveModal("communities")}
-                    title={collapsed ? "Clear Communities" : undefined}
-                    className={`flex items-center rounded-xl font-semibold text-rose-300 hover:bg-rose-500/15 hover:text-rose-200 transition-all group cursor-pointer ${
-                      collapsed
-                        ? "justify-center px-0 py-2.5 w-full"
-                        : "gap-2.5 w-full text-left px-3 py-2 text-xs"
-                    }`}
-                  >
-                    <Trash2 className="w-4 h-4 text-rose-400 group-hover:scale-110 transition-transform shrink-0" />
-                    {!collapsed && <span className="truncate">Clear Communities</span>}
-                  </button>
-                </div>
-              </div>
-            </>
-          ) : (
-            <div className="flex flex-col gap-1">
-              {links.map((l) => {
-                const isActive = l.exact ? pathname === l.href : pathname.startsWith(l.href);
-                return (
-                  <Link
-                    key={l.href}
-                    href={l.href}
-                    title={collapsed ? l.label : undefined}
-                    className={`flex items-center rounded-xl font-semibold transition-all ${
-                      collapsed ? "justify-center px-0 py-2.5" : "gap-3 px-3 py-2.5 text-sm"
-                    } ${
-                      isActive
-                        ? "bg-[#f0c040] text-[#0a1628]"
-                        : "text-white/60 hover:text-white hover:bg-white/10"
-                    }`}
-                  >
-                    <l.icon className="w-5 h-5 shrink-0" />
-                    {!collapsed && <span>{l.label}</span>}
-                  </Link>
-                );
-              })}
-            </div>
-          )}
-        </nav>
-
-        {/* User Footer */}
-        <div
-          className={`border-t border-white/10 transition-all ${
-            collapsed
-              ? "p-3 flex items-center justify-center"
-              : "px-4 py-4 flex items-center gap-3"
-          }`}
-          title={collapsed ? `${user.name} (${tierLabel[user.tier ?? "FREE"]})` : undefined}
-        >
-          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shrink-0 overflow-hidden ring-2 ring-amber-400/30">
-            {user.image ? (
-              <img
-                src={user.image}
-                alt={user.name}
-                referrerPolicy="no-referrer"
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <span className="text-[#0a1628] font-black text-sm">
-                {user.name?.[0]?.toUpperCase()}
-              </span>
-            )}
-          </div>
-
-          {!collapsed && (
-            <div className="flex-1 min-w-0">
-              <div className="text-white text-xs font-bold truncate">{user.name}</div>
-              <span
-                className={`text-[10px] font-bold px-2 py-0.5 rounded-full mt-0.5 inline-block ${
-                  tierStyle[user.tier ?? "FREE"] ?? tierStyle.FREE
-                }`}
-              >
-                {tierLabel[user.tier ?? "FREE"]}
-              </span>
-            </div>
-          )}
-        </div>
+        {renderSidebarContent(false)}
       </aside>
+
+      {/* Mobile Drawer Sidebar */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/75 backdrop-blur-sm transition-opacity"
+            onClick={onClose}
+          />
+          {/* Drawer Panel */}
+          <aside className="fixed top-0 bottom-0 left-0 w-[280px] bg-[#0a1628] z-50 flex flex-col shadow-2xl border-r border-white/10 animate-in slide-in-from-left duration-200">
+            {renderSidebarContent(true)}
+          </aside>
+        </div>
+      )}
     </>
   );
 }

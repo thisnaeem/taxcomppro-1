@@ -15,7 +15,11 @@ export async function POST(req: NextRequest) {
   const session = await auth.api.getSession({ headers: req.headers });
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { tier, couponCode } = (await req.json()) as { tier: string; couponCode?: string };
+  const { tier, couponCode, redirectUrl } = (await req.json()) as {
+    tier: string;
+    couponCode?: string;
+    redirectUrl?: string;
+  };
   const priceId = PRICE_IDS[tier];
   if (!priceId) return NextResponse.json({ error: "Invalid tier" }, { status: 400 });
 
@@ -75,7 +79,7 @@ export async function POST(req: NextRequest) {
             data: { usedCount: { increment: 1 } },
           });
 
-          return NextResponse.json({ url: "/profile?upgraded=1&free=1" });
+          return NextResponse.json({ url: redirectUrl || "/feed?welcome=1" });
         }
 
         await prisma.marketplaceCoupon.update({
@@ -97,14 +101,19 @@ export async function POST(req: NextRequest) {
   // Read referral code from cookie
   const refCode = req.cookies.get("ref_code")?.value ?? null;
 
+  const targetPath = redirectUrl || "/feed?welcome=1";
+  const successUrl = `${process.env.NEXT_PUBLIC_APP_URL}${
+    targetPath.includes("?") ? targetPath + "&" : targetPath + "?"
+  }session_id={CHECKOUT_SESSION_ID}`;
+
   const checkoutSession = await stripe.checkout.sessions.create({
     customer: customerId,
     mode: "subscription",
     allow_promotion_codes: true,
     payment_method_types: ["card"],
     line_items: [{ price: priceId, quantity: 1 }],
-    success_url: `${process.env.NEXT_PUBLIC_APP_URL}/profile?upgraded=1&session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/upgrade`,
+    success_url: successUrl,
+    cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/register?step=membership&canceled=1`,
     metadata: {
       userId: user.id,
       tier,

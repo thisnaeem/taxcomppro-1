@@ -1,17 +1,21 @@
 "use client";
 
-import { Fragment, useEffect, useState, useCallback, useRef } from "react";
+import { Fragment, useEffect, useState, useCallback, useRef, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import PostComposer from "@/components/feed/PostComposer";
 import PostCard, { type FeedPost } from "@/components/feed/PostCard";
 import FeedLeftPanel from "@/components/feed/FeedLeftPanel";
 import FeedRightPanel from "@/components/feed/FeedRightPanel";
 import ScheduledPostsPanel from "@/components/feed/ScheduledPostsPanel";
 import { PostSkeleton, LeftPanelSkeleton, RightPanelSkeleton } from "@/components/feed/FeedSkeletons";
-import { RefreshCw, MonitorPlay, ExternalLink } from "lucide-react";
+import { RefreshCw, MonitorPlay, ExternalLink, Sparkles, X } from "lucide-react";
 import { NoteEditIcon } from "hugeicons-react";
 import { useAppSelector } from "@/store/hooks";
 
-export default function FeedPage() {
+function FeedContent() {
+  const searchParams = useSearchParams();
+  const isWelcome = searchParams.get("welcome") === "1" || searchParams.get("registered") === "1" || searchParams.get("upgraded") === "1";
+  const [showWelcomeBanner, setShowWelcomeBanner] = useState(isWelcome);
   const user = useAppSelector(s => s.auth.user);
   const [posts, setPosts]             = useState<FeedPost[]>([]);
   const [loading, setLoading]         = useState(true);
@@ -104,6 +108,31 @@ export default function FeedPage() {
   return (
     <div className="min-h-screen bg-slate-100 pt-5 pb-12">
       <div className="max-w-[1320px] mx-auto px-4">
+        {/* Welcome Celebration Banner */}
+        {showWelcomeBanner && (
+          <div className="mb-6 bg-gradient-to-r from-amber-500 via-[#f0c040] to-amber-600 rounded-3xl p-5 sm:p-6 text-[#0a1628] shadow-xl flex items-center justify-between gap-4 animate-in fade-in slide-in-from-top-4 duration-300">
+            <div className="flex items-start sm:items-center gap-3.5">
+              <div className="w-12 h-12 rounded-2xl bg-[#0a1628] text-amber-400 flex items-center justify-center shrink-0 shadow-lg">
+                <Sparkles className="w-6 h-6" />
+              </div>
+              <div>
+                <h2 className="text-lg sm:text-xl font-black leading-tight">
+                  Welcome to Tax Compliance Pro! 🎉
+                </h2>
+                <p className="text-xs sm:text-sm font-semibold opacity-90 mt-0.5 max-w-2xl">
+                  Your membership is activated. You now have full access to professional tax feeds, due diligence toolkits, directory networking, and discussions.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowWelcomeBanner(false)}
+              className="p-2 rounded-xl bg-[#0a1628]/10 hover:bg-[#0a1628]/20 transition-all text-[#0a1628] shrink-0"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr_300px] gap-6">
 
           {/* LEFT — profile panel */}
@@ -202,5 +231,13 @@ export default function FeedPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function FeedPage() {
+  return (
+    <Suspense>
+      <FeedContent />
+    </Suspense>
   );
 }

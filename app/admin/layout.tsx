@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/lib/auth-client";
 import { useAppDispatch } from "@/store/hooks";
@@ -14,6 +14,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { data: session, isPending } = useSession();
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (isPending) return;
@@ -32,10 +33,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           id:       u.id,
           email:    u.email,
           name:     u.name,
-          role:     u.role  ?? "MEMBER",
-          tier:     u.tier  ?? "FREE",
-          image:    u.image ?? null,
-          bio:      u.bio   ?? null,
+          phone:    u.phone   ?? null,
+          role:     u.role    ?? "MEMBER",
+          tier:     u.tier    ?? "FREE",
+          image:    u.image   ?? null,
+          bio:      u.bio     ?? null,
           headline: u.headline ?? null,
         }));
       })
@@ -46,6 +48,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           id:       u.id,
           email:    u.email,
           name:     u.name,
+          phone:    (u.phone as string) ?? null,
           role:     (u.role as AuthUser["role"]) ?? "MEMBER",
           tier:     (u.tier as AuthUser["tier"]) ?? "FREE",
           image:    u.image as string | null,
@@ -71,11 +74,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <SidebarProvider>
-      <div className="flex h-screen bg-slate-100 dark:bg-[#060f1e] font-sans transition-colors duration-200">
-        <Sidebar />
-        <div className="flex-1 flex flex-col overflow-hidden min-w-0">
-          <Topbar />
-          <main className="flex-1 overflow-y-auto p-6 bg-slate-50 dark:bg-[#060f1e] text-slate-800 dark:text-slate-100 transition-colors duration-200">
+      <div className="flex h-screen bg-slate-100 dark:bg-[#060f1e] font-sans transition-colors duration-200 overflow-hidden">
+        <Sidebar
+          mobileOpen={mobileSidebarOpen}
+          onClose={() => setMobileSidebarOpen(false)}
+        />
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+          <Topbar onMenuClick={() => setMobileSidebarOpen(true)} />
+          <main className="flex-1 overflow-y-auto p-3.5 sm:p-6 bg-slate-50 dark:bg-[#060f1e] text-slate-800 dark:text-slate-100 transition-colors duration-200">
             {children}
           </main>
         </div>
