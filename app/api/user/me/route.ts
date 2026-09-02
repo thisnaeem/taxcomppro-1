@@ -105,6 +105,13 @@ export async function GET(req: NextRequest) {
         badgeTextColor: true,
         badgeBorderColor: true,
         badgeCustomImage: true,
+        owner: {
+          select: {
+            id: true,
+            name: true,
+            image: true,
+          },
+        },
         _count: {
           select: {
             members: { where: { status: "ACTIVE" } },
@@ -142,6 +149,13 @@ export async function GET(req: NextRequest) {
             badgeBorderColor: true,
             badgeCustomImage: true,
             ownerId: true,
+            owner: {
+              select: {
+                id: true,
+                name: true,
+                image: true,
+              },
+            },
             _count: {
               select: {
                 members: { where: { status: "ACTIVE" } },
@@ -181,64 +195,81 @@ export async function GET(req: NextRequest) {
   const primaryNetwork = ownedNetworks[0] || null;
 
   // Format Owned Networks list
-  const formattedOwnedNetworks = ownedNetworks.map((n) => ({
-    id: n.id,
-    name: n.name,
-    slug: n.slug,
-    tagline: n.tagline,
-    description: n.description,
-    category: n.category,
-    monthlyPrice: n.monthlyPrice,
-    memberCount: Math.max(n._count.members, n.memberCount || 0),
-    followerCount: Math.max(n._count.followers, n.followerCount || 0),
-    logoImage: n.logoImage,
-    coverImage: n.coverImage,
-    memberBenefits: n.memberBenefits,
-    badgeShape: n.badgeShape,
-    badgeInitials: n.badgeInitials,
-    badgeText: n.badgeText,
-    badgeIcon: n.badgeIcon,
-    badgeBgColor: n.badgeBgColor,
-    badgeTextColor: n.badgeTextColor,
-    badgeBorderColor: n.badgeBorderColor,
-    badgeCustomImage: n.badgeCustomImage,
-    role: "OWNER",
-  }));
+  const formattedOwnedNetworks = ownedNetworks.map((n) => {
+    const logo = n.logoImage || n.badgeCustomImage || n.owner?.image || user.image || null;
+    return {
+      id: n.id,
+      name: n.name,
+      slug: n.slug,
+      tagline: n.tagline,
+      description: n.description,
+      category: n.category,
+      monthlyPrice: n.monthlyPrice,
+      memberCount: Math.max(n._count.members, n.memberCount || 0),
+      followerCount: Math.max(n._count.followers, n.followerCount || 0),
+      logoImage: logo,
+      coverImage: n.coverImage,
+      memberBenefits: n.memberBenefits,
+      badgeShape: n.badgeShape,
+      badgeInitials: n.badgeInitials,
+      badgeText: n.badgeText,
+      badgeIcon: n.badgeIcon,
+      badgeBgColor: n.badgeBgColor,
+      badgeTextColor: n.badgeTextColor,
+      badgeBorderColor: n.badgeBorderColor,
+      badgeCustomImage: logo,
+      role: "OWNER",
+      ownerName: n.owner?.name || user.name || "Owner",
+      ownerImage: n.owner?.image || user.image || null,
+    };
+  });
 
   // Format Badges (Owned Networks + Joined Member Networks)
   const myBadges = [
-    ...ownedNetworks.map((n) => ({
-      id: `owned-${n.id}`,
-      networkId: n.id,
-      networkName: n.name,
-      networkSlug: n.slug,
-      role: "OWNER",
-      shape: n.badgeShape || "circle",
-      initials: n.badgeInitials || n.name.slice(0, 3).toUpperCase(),
-      text: n.badgeText || "OWNER",
-      icon: n.badgeIcon || "Crown",
-      bgColor: n.badgeBgColor || "#0a1628",
-      textColor: n.badgeTextColor || "#f0c040",
-      borderColor: n.badgeBorderColor || "#d4a017",
-      customImage: n.badgeCustomImage || null,
-    })),
+    ...ownedNetworks.map((n) => {
+      const logo = n.badgeCustomImage || n.logoImage || n.owner?.image || user.image || null;
+      return {
+        id: `owned-${n.id}`,
+        networkId: n.id,
+        networkName: n.name,
+        networkSlug: n.slug,
+        role: "OWNER",
+        ownerName: n.owner?.name || user.name || "Owner",
+        ownerImage: n.owner?.image || user.image || null,
+        shape: n.badgeShape || "circle",
+        initials: n.badgeInitials || n.name.slice(0, 3).toUpperCase(),
+        text: n.badgeText || "OWNER",
+        icon: n.badgeIcon || "Crown",
+        bgColor: n.badgeBgColor || "#0a1628",
+        textColor: n.badgeTextColor || "#f0c040",
+        borderColor: n.badgeBorderColor || "#d4a017",
+        customImage: logo,
+        logoImage: logo,
+      };
+    }),
     ...memberNetworks
       .filter((m) => m.network.ownerId !== session.user.id)
-      .map((m) => ({
-        id: `member-${m.id}`,
-        networkId: m.network.id,
-        networkName: m.network.name,
-        networkSlug: m.network.slug,
-        role: m.role || "MEMBER",
-        shape: m.network.badgeShape || "circle",
-        initials: m.network.badgeInitials || m.network.name.slice(0, 3).toUpperCase(),
-        text: m.network.badgeText || "MEMBER",
-        icon: m.network.badgeIcon || "Star",
-        bgColor: m.network.badgeBgColor || "#0a1628",
-        textColor: m.network.badgeTextColor || "#f0c040",
-        borderColor: m.network.badgeBorderColor || "#d4a017",
-        customImage: m.network.badgeCustomImage || null,
-      })),
+      .map((m) => {
+        const logo = m.network.badgeCustomImage || m.network.logoImage || m.network.owner?.image || null;
+        return {
+          id: `member-${m.id}`,
+          networkId: m.network.id,
+          networkName: m.network.name,
+          networkSlug: m.network.slug,
+          role: m.role || "MEMBER",
+          ownerName: m.network.owner?.name || "Network Owner",
+          ownerImage: m.network.owner?.image || null,
+          shape: m.network.badgeShape || "circle",
+          initials: m.network.badgeInitials || m.network.name.slice(0, 3).toUpperCase(),
+          text: m.network.badgeText || "MEMBER",
+          icon: m.network.badgeIcon || "Star",
+          bgColor: m.network.badgeBgColor || "#0a1628",
+          textColor: m.network.badgeTextColor || "#f0c040",
+          borderColor: m.network.badgeBorderColor || "#d4a017",
+          customImage: logo,
+          logoImage: logo,
+        };
+      }),
   ];
 
   return NextResponse.json({
@@ -255,7 +286,8 @@ export async function GET(req: NextRequest) {
           description: primaryNetwork.description,
           monthlyPrice: primaryNetwork.monthlyPrice,
           memberCount: Math.max(primaryNetwork._count.members, primaryNetwork.memberCount || 0),
-          logoImage: primaryNetwork.logoImage,
+          logoImage: primaryNetwork.logoImage || primaryNetwork.badgeCustomImage || primaryNetwork.owner?.image || user.image || null,
+          ownerName: primaryNetwork.owner?.name || user.name || "Owner",
           memberBenefits: primaryNetwork.memberBenefits,
         }
       : null,

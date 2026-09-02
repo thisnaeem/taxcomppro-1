@@ -42,6 +42,8 @@ interface Pro {
     networkName: string;
     networkSlug: string;
     role: string;
+    ownerName?: string | null;
+    ownerImage?: string | null;
     shape: string;
     initials: string | null;
     text: string;
@@ -50,6 +52,7 @@ interface Pro {
     textColor: string;
     borderColor: string;
     customImage: string | null;
+    logoImage?: string | null;
   }>;
   primaryNetwork?: {
     id: string;
@@ -60,6 +63,8 @@ interface Pro {
     monthlyPrice?: number;
     memberCount: number;
     logoImage?: string | null;
+    ownerName?: string | null;
+    ownerImage?: string | null;
     memberBenefits?: string[];
   } | null;
 }
@@ -370,11 +375,29 @@ export default function ProProfilePage() {
                   <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
                   <span>JOIN MY PRO NETWORK</span>
                 </div>
-                <div>
-                  <h4 className="text-base font-black text-white">{pro.primaryNetwork.name}</h4>
-                  <p className="text-xs text-slate-300 font-medium line-clamp-2 mt-0.5">
-                    {pro.primaryNetwork.tagline || pro.primaryNetwork.description || "Premium mastermind network for tax professionals."}
-                  </p>
+                <div className="flex items-start gap-3 relative z-10">
+                  <div className="w-12 h-12 rounded-xl bg-white border border-amber-400/40 p-1 flex items-center justify-center font-black text-amber-500 text-sm shrink-0 shadow-md overflow-hidden">
+                    {(pro.primaryNetwork.logoImage || pro.primaryNetwork.ownerImage || pro.image) ? (
+                      <img
+                        src={pro.primaryNetwork.logoImage || pro.primaryNetwork.ownerImage || pro.image || ""}
+                        alt={pro.primaryNetwork.name}
+                        className="w-full h-full object-contain rounded-lg"
+                      />
+                    ) : (
+                      pro.primaryNetwork.name.slice(0, 3).toUpperCase()
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-base font-black text-white truncate">{pro.primaryNetwork.name}</h4>
+                      <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-amber-400 text-[#0a1628] shrink-0">
+                        PRO
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-300 font-medium line-clamp-2 mt-0.5">
+                      {pro.primaryNetwork.tagline || pro.primaryNetwork.description || "Premium mastermind network for tax professionals."}
+                    </p>
+                  </div>
                 </div>
                 <ul className="space-y-2 text-xs font-semibold text-slate-200">
                   {(pro.primaryNetwork.memberBenefits && pro.primaryNetwork.memberBenefits.length > 0
@@ -456,34 +479,57 @@ export default function ProProfilePage() {
                     className="flex flex-col items-center gap-2 group cursor-pointer"
                   >
                     <div
-                      className="w-18 h-18 rounded-full border-2 p-1 flex items-center justify-center shadow-md group-hover:scale-105 transition-transform relative overflow-hidden"
+                      className="w-20 h-20 rounded-full border-[3px] p-1.5 flex items-center justify-center shadow-md group-hover:scale-105 group-hover:shadow-lg transition-all relative bg-white"
                       style={{
                         borderColor: badge.borderColor || "#d4a017",
-                        backgroundColor: badge.bgColor || "#0a1628",
                       }}
                     >
-                      {badge.customImage ? (
-                        <img src={badge.customImage} alt={badge.networkName} className="w-full h-full object-cover rounded-full" />
+                      {(badge.customImage || badge.logoImage || pro.image) ? (
+                        <img
+                          src={badge.customImage || badge.logoImage || pro.image || ""}
+                          alt={badge.networkName}
+                          className="w-full h-full object-contain rounded-full"
+                        />
                       ) : (
-                        <div className="flex flex-col items-center justify-center text-center p-1">
+                        <div
+                          className="w-full h-full rounded-full flex flex-col items-center justify-center text-center p-1"
+                          style={{ backgroundColor: badge.bgColor || "#0a1628" }}
+                        >
                           <span
                             className="font-black text-[11px] leading-tight tracking-wider"
                             style={{ color: badge.textColor || "#f0c040" }}
                           >
                             {badge.initials || badge.networkName.slice(0, 4).toUpperCase()}
                           </span>
-                          <span
-                            className="text-[8px] font-extrabold uppercase tracking-widest opacity-80 mt-0.5"
-                            style={{ color: badge.textColor || "#f0c040" }}
-                          >
-                            {badge.role === "OWNER" ? "OWNER" : "MEMBER"}
-                          </span>
                         </div>
                       )}
+
+                      {/* Role pill tag pinned at bottom */}
+                      <span
+                        className={`absolute -bottom-1 px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider shadow-sm border ${
+                          badge.role === "OWNER"
+                            ? "bg-gradient-to-r from-amber-400 to-amber-500 text-[#0a1628] border-amber-300"
+                            : "bg-blue-600 text-white border-blue-400"
+                        }`}
+                      >
+                        {badge.role === "OWNER" ? "OWNER" : "MEMBER"}
+                      </span>
                     </div>
-                    <span className="text-xs font-black text-center text-[#0A1628] line-clamp-1 max-w-[110px] group-hover:text-[#1E56A0] transition-colors">
-                      {badge.networkName}
-                    </span>
+
+                    <div className="flex flex-col items-center text-center max-w-[125px] pt-1">
+                      <span className="text-xs font-black text-[#0A1628] line-clamp-1 group-hover:text-[#1E56A0] transition-colors">
+                        {badge.networkName}
+                      </span>
+                      {badge.role === "OWNER" ? (
+                        <span className="text-[10px] font-bold text-amber-600 line-clamp-1">
+                          Owner: {badge.ownerName || pro.name}
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-semibold text-slate-500 line-clamp-1">
+                          Member • {badge.ownerName ? `By ${badge.ownerName}` : "Active"}
+                        </span>
+                      )}
+                    </div>
                   </Link>
                 ))}
               </div>

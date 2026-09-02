@@ -121,6 +121,8 @@ export default function ProProfileEditor() {
     networkName: string;
     networkSlug: string;
     role: string;
+    ownerName?: string | null;
+    ownerImage?: string | null;
     shape: string;
     initials: string | null;
     text: string;
@@ -129,6 +131,7 @@ export default function ProProfileEditor() {
     textColor: string;
     borderColor: string;
     customImage: string | null;
+    logoImage?: string | null;
   }>>([]);
 
   const [primaryNetwork, setPrimaryNetwork] = useState<{
@@ -140,6 +143,8 @@ export default function ProProfileEditor() {
     monthlyPrice?: number;
     memberCount: number;
     logoImage?: string | null;
+    ownerName?: string | null;
+    ownerImage?: string | null;
     memberBenefits?: string[];
   } | null>(null);
 
@@ -736,9 +741,13 @@ export default function ProProfileEditor() {
 
                     {/* Network header */}
                     <div className="flex items-start gap-3.5 relative z-10">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500/20 to-blue-500/20 border border-amber-500/30 flex items-center justify-center font-black text-amber-400 text-sm shrink-0 shadow-inner overflow-hidden">
-                        {primaryNetwork?.logoImage ? (
-                          <img src={primaryNetwork.logoImage} alt={primaryNetwork.name} className="w-full h-full object-cover rounded-xl" />
+                      <div className="w-13 h-13 rounded-2xl bg-white dark:bg-[#0a1628] border-2 border-amber-400/40 p-1 flex items-center justify-center font-black text-amber-500 text-sm shrink-0 shadow-md overflow-hidden">
+                        {(primaryNetwork?.logoImage || primaryNetwork?.ownerImage || profile.image) ? (
+                          <img
+                            src={primaryNetwork?.logoImage || primaryNetwork?.ownerImage || profile.image || ""}
+                            alt={primaryNetwork?.name || "Pro Network"}
+                            className="w-full h-full object-contain rounded-xl"
+                          />
                         ) : (
                           (primaryNetwork?.name || "PRO").slice(0, 3).toUpperCase()
                         )}
@@ -1046,34 +1055,57 @@ export default function ProProfileEditor() {
                       className="flex flex-col items-center gap-2 group cursor-pointer"
                     >
                       <div
-                        className="w-18 h-18 rounded-full border-2 p-1 flex items-center justify-center shadow-md group-hover:scale-105 transition-transform relative overflow-hidden"
+                        className="w-20 h-20 rounded-full border-[3px] p-1.5 flex items-center justify-center shadow-md group-hover:scale-105 group-hover:shadow-lg transition-all relative bg-white dark:bg-[#0a1628]"
                         style={{
                           borderColor: badge.borderColor || "#d4a017",
-                          backgroundColor: badge.bgColor || "#0a1628",
                         }}
                       >
-                        {badge.customImage ? (
-                          <img src={badge.customImage} alt={badge.networkName} className="w-full h-full object-cover rounded-full" />
+                        {(badge.customImage || badge.logoImage || badge.ownerImage || profile.image) ? (
+                          <img
+                            src={badge.customImage || badge.logoImage || badge.ownerImage || profile.image || ""}
+                            alt={badge.networkName}
+                            className="w-full h-full object-contain rounded-full"
+                          />
                         ) : (
-                          <div className="flex flex-col items-center justify-center text-center p-1">
+                          <div
+                            className="w-full h-full rounded-full flex flex-col items-center justify-center text-center p-1"
+                            style={{ backgroundColor: badge.bgColor || "#0a1628" }}
+                          >
                             <span
                               className="font-black text-[11px] leading-tight tracking-wider"
                               style={{ color: badge.textColor || "#f0c040" }}
                             >
                               {badge.initials || badge.networkName.slice(0, 4).toUpperCase()}
                             </span>
-                            <span
-                              className="text-[8px] font-extrabold uppercase tracking-widest opacity-80 mt-0.5"
-                              style={{ color: badge.textColor || "#f0c040" }}
-                            >
-                              {badge.role === "OWNER" ? "OWNER" : "MEMBER"}
-                            </span>
                           </div>
                         )}
+
+                        {/* Role pill tag pinned at bottom */}
+                        <span
+                          className={`absolute -bottom-1 px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider shadow-sm border ${
+                            badge.role === "OWNER"
+                              ? "bg-gradient-to-r from-amber-400 to-amber-500 text-[#0a1628] border-amber-300"
+                              : "bg-blue-600 text-white border-blue-400"
+                          }`}
+                        >
+                          {badge.role === "OWNER" ? "OWNER" : "MEMBER"}
+                        </span>
                       </div>
-                      <span className="text-xs font-black text-center text-[#0A1628] dark:text-white line-clamp-1 max-w-[110px] group-hover:text-[#1E56A0] transition-colors">
-                        {badge.networkName}
-                      </span>
+
+                      <div className="flex flex-col items-center text-center max-w-[125px] pt-1">
+                        <span className="text-xs font-black text-[#0A1628] dark:text-white line-clamp-1 group-hover:text-[#1E56A0] dark:group-hover:text-[#60a5fa] transition-colors">
+                          {badge.networkName}
+                        </span>
+                        {badge.role === "OWNER" ? (
+                          <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 line-clamp-1">
+                            Owner: {badge.ownerName || displayName}
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 line-clamp-1">
+                            Member • {badge.ownerName ? `By ${badge.ownerName}` : "Active"}
+                          </span>
+                        )}
+                      </div>
                     </Link>
                   ))}
 
@@ -1083,12 +1115,14 @@ export default function ProProfileEditor() {
                     className="flex flex-col items-center gap-2 group cursor-pointer"
                     title="Create New Pro Network / Badge"
                   >
-                    <div className="w-18 h-18 rounded-full border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-[#1E56A0] dark:hover:border-blue-400 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-center text-slate-400 hover:text-[#1E56A0] dark:hover:text-blue-400 group-hover:scale-105 transition-all">
+                    <div className="w-20 h-20 rounded-full border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-[#1E56A0] dark:hover:border-blue-400 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-center text-slate-400 hover:text-[#1E56A0] dark:hover:text-blue-400 group-hover:scale-105 transition-all">
                       <Plus className="w-6 h-6 stroke-[1.5]" />
                     </div>
-                    <span className="text-xs font-bold text-slate-400 group-hover:text-[#1E56A0] transition-colors">
-                      Add Network
-                    </span>
+                    <div className="flex flex-col items-center text-center max-w-[125px] pt-1">
+                      <span className="text-xs font-bold text-slate-400 group-hover:text-[#1E56A0] transition-colors">
+                        Add Network
+                      </span>
+                    </div>
                   </Link>
                 </div>
               </div>

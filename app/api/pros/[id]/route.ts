@@ -59,6 +59,13 @@ export async function GET(_req: NextRequest, { params }: Params) {
         badgeTextColor: true,
         badgeBorderColor: true,
         badgeCustomImage: true,
+        owner: {
+          select: {
+            id: true,
+            name: true,
+            image: true,
+          },
+        },
         _count: {
           select: {
             members: { where: { status: "ACTIVE" } },
@@ -90,45 +97,56 @@ export async function GET(_req: NextRequest, { params }: Params) {
   );
   const primaryNetwork = ownedNetworks[0] || null;
 
-  const formattedOwnedNetworks = ownedNetworks.map((n) => ({
-    id: n.id,
-    name: n.name,
-    slug: n.slug,
-    tagline: n.tagline,
-    description: n.description,
-    category: n.category,
-    monthlyPrice: n.monthlyPrice,
-    memberCount: Math.max(n._count.members, n.memberCount || 0),
-    followerCount: Math.max(n._count.followers, n.followerCount || 0),
-    logoImage: n.logoImage,
-    coverImage: n.coverImage,
-    memberBenefits: n.memberBenefits,
-    badgeShape: n.badgeShape,
-    badgeInitials: n.badgeInitials,
-    badgeText: n.badgeText,
-    badgeIcon: n.badgeIcon,
-    badgeBgColor: n.badgeBgColor,
-    badgeTextColor: n.badgeTextColor,
-    badgeBorderColor: n.badgeBorderColor,
-    badgeCustomImage: n.badgeCustomImage,
-    role: "OWNER",
-  }));
+  const formattedOwnedNetworks = ownedNetworks.map((n) => {
+    const logo = n.logoImage || n.badgeCustomImage || n.owner?.image || pro.image || null;
+    return {
+      id: n.id,
+      name: n.name,
+      slug: n.slug,
+      tagline: n.tagline,
+      description: n.description,
+      category: n.category,
+      monthlyPrice: n.monthlyPrice,
+      memberCount: Math.max(n._count.members, n.memberCount || 0),
+      followerCount: Math.max(n._count.followers, n.followerCount || 0),
+      logoImage: logo,
+      coverImage: n.coverImage,
+      memberBenefits: n.memberBenefits,
+      badgeShape: n.badgeShape,
+      badgeInitials: n.badgeInitials,
+      badgeText: n.badgeText,
+      badgeIcon: n.badgeIcon,
+      badgeBgColor: n.badgeBgColor,
+      badgeTextColor: n.badgeTextColor,
+      badgeBorderColor: n.badgeBorderColor,
+      badgeCustomImage: logo,
+      role: "OWNER",
+      ownerName: n.owner?.name || pro.name || "Owner",
+      ownerImage: n.owner?.image || pro.image || null,
+    };
+  });
 
-  const myBadges = ownedNetworks.map((n) => ({
-    id: `owned-${n.id}`,
-    networkId: n.id,
-    networkName: n.name,
-    networkSlug: n.slug,
-    role: "OWNER",
-    shape: n.badgeShape || "circle",
-    initials: n.badgeInitials || n.name.slice(0, 3).toUpperCase(),
-    text: n.badgeText || "OWNER",
-    icon: n.badgeIcon || "Crown",
-    bgColor: n.badgeBgColor || "#0a1628",
-    textColor: n.badgeTextColor || "#f0c040",
-    borderColor: n.badgeBorderColor || "#d4a017",
-    customImage: n.badgeCustomImage || null,
-  }));
+  const myBadges = ownedNetworks.map((n) => {
+    const logo = n.badgeCustomImage || n.logoImage || n.owner?.image || pro.image || null;
+    return {
+      id: `owned-${n.id}`,
+      networkId: n.id,
+      networkName: n.name,
+      networkSlug: n.slug,
+      role: "OWNER",
+      ownerName: n.owner?.name || pro.name || "Owner",
+      ownerImage: n.owner?.image || pro.image || null,
+      shape: n.badgeShape || "circle",
+      initials: n.badgeInitials || n.name.slice(0, 3).toUpperCase(),
+      text: n.badgeText || "OWNER",
+      icon: n.badgeIcon || "Crown",
+      bgColor: n.badgeBgColor || "#0a1628",
+      textColor: n.badgeTextColor || "#f0c040",
+      borderColor: n.badgeBorderColor || "#d4a017",
+      customImage: logo,
+      logoImage: logo,
+    };
+  });
 
   return NextResponse.json({
     ...pro,
@@ -143,7 +161,8 @@ export async function GET(_req: NextRequest, { params }: Params) {
           description: primaryNetwork.description,
           monthlyPrice: primaryNetwork.monthlyPrice,
           memberCount: Math.max(primaryNetwork._count.members, primaryNetwork.memberCount || 0),
-          logoImage: primaryNetwork.logoImage,
+          logoImage: primaryNetwork.logoImage || primaryNetwork.badgeCustomImage || primaryNetwork.owner?.image || pro.image || null,
+          ownerName: primaryNetwork.owner?.name || pro.name || "Owner",
           memberBenefits: primaryNetwork.memberBenefits,
         }
       : null,
