@@ -9,6 +9,29 @@ interface Props {
   className?: string;
 }
 
+/** Automatically derives a high-quality JPEG poster frame for videos (e.g. from Cloudinary) */
+export function getVideoPoster(src?: string | null, customPoster?: string): string | undefined {
+  if (customPoster) return customPoster;
+  if (!src) return undefined;
+
+  // Cloudinary video URLs: swap video extension to .jpg for instant poster frame
+  if (src.includes("res.cloudinary.com") && src.includes("/video/upload/")) {
+    try {
+      const url = new URL(src);
+      let pathname = url.pathname;
+      pathname = pathname.replace(/\.(mp4|mov|webm|mkv|avi|wmv|m4v|flv)$/i, ".jpg");
+      if (!pathname.endsWith(".jpg")) {
+        pathname = `${pathname}.jpg`;
+      }
+      return `${url.origin}${pathname}${url.search}`;
+    } catch {
+      return src.replace(/\.(mp4|mov|webm|mkv|avi|wmv|m4v|flv)$/i, ".jpg");
+    }
+  }
+
+  return undefined;
+}
+
 function formatTime(seconds: number): string {
   if (isNaN(seconds) || !isFinite(seconds) || seconds < 0) return "0:00";
   const m = Math.floor(seconds / 60);
@@ -21,6 +44,8 @@ export default function FeedVideoPlayer({ src, poster, className = "" }: Props) 
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const [isPlaying, setIsPlaying] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false);
+  const [posterFailed, setPosterFailed] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
@@ -28,6 +53,10 @@ export default function FeedVideoPlayer({ src, poster, className = "" }: Props) 
   const [showControls, setShowControls] = useState(true);
   const [isBuffering, setIsBuffering] = useState(false);
   const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const computedPoster = !posterFailed ? getVideoPoster(src, poster) : undefined;
+  // Append #t=0.001 to hint browser decoders to paint the first frame even before playback
+  const videoSrc = src && !src.includes("#") ? `${src}#t=0.001` : src;
 
   // Auto-hide controls during playback
   const resetHideTimer = useCallback(() => {
@@ -46,6 +75,7 @@ export default function FeedVideoPlayer({ src, poster, className = "" }: Props) 
     if (!v) return;
 
     if (v.paused) {
+      setHasStarted(true);
       v.play().then(() => setIsPlaying(true)).catch(() => {});
     } else {
       v.pause();
@@ -66,6 +96,7 @@ export default function FeedVideoPlayer({ src, poster, className = "" }: Props) 
     const v = videoRef.current;
     if (!v) return;
     const time = parseFloat(e.target.value);
+    setHasStarted(true);
     v.currentTime = time;
     setCurrentTime(time);
   };
@@ -118,6 +149,7 @@ export default function FeedVideoPlayer({ src, poster, className = "" }: Props) 
     const onPlaying = () => {
       setIsBuffering(false);
       setIsPlaying(true);
+      setHasStarted(true);
       resetHideTimer();
     };
     const onPause = () => {
@@ -162,18 +194,37 @@ export default function FeedVideoPlayer({ src, poster, className = "" }: Props) 
       className={`relative group bg-black rounded-2xl overflow-hidden select-none cursor-pointer flex items-center justify-center max-h-[480px] ${className}`}
       style={{ aspectRatio: "16/9" }}
     >
+      {/* Ambient background glow from video frame */}
+      {computedPoster && !hasStarted && (
+        <div
+          className="absolute inset-0 bg-cover bg-center blur-2xl opacity-35 scale-125 pointer-events-none"
+          style={{ backgroundImage: `url(${computedPoster})` }}
+        />
+      )}
+
       {/* Video Element */}
       <video
         ref={videoRef}
-        src={src}
-        poster={poster}
+        src={videoSrc}
+        poster={computedPoster}
         playsInline
         preload="metadata"
         disablePictureInPicture
         controlsList="nodownload nofullscreen noremoteplayback"
         onContextMenu={(e) => e.preventDefault()}
-        className="w-full h-full object-contain pointer-events-none"
+        className="w-full h-full object-contain pointer-events-none relative z-[2]"
       />
+
+      {/* Instant Video Preview Thumbnail Overlay (shown until user clicks play) */}
+      {computedPoster && !hasStarted && (
+        <img
+          src={computedPoster}
+          alt="Video preview"
+          onError={() => setPosterFailed(true)}
+          className="absolute inset-0 w-full h-full object-contain pointer-events-none z-[3] transition-opacity duration-300"
+          loading="lazy"
+        />
+      )}
 
       {/* Buffering Spinner */}
       {isBuffering && (

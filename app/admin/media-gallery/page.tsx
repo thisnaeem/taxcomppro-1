@@ -206,7 +206,13 @@ export default function AdminMediaGalleryPage() {
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
               ) : (
-                <video src={item.url} className="w-full h-full object-cover" muted playsInline />
+                <video
+                  src={item.url.includes("#") ? item.url : `${item.url}#t=0.001`}
+                  poster={item.url.includes("res.cloudinary.com") ? item.url.replace(/\.(mp4|mov|webm|mkv|avi|wmv|m4v|flv)$/i, ".jpg") : undefined}
+                  className="w-full h-full object-cover"
+                  muted
+                  playsInline
+                />
               )}
 
               {/* Hover overlay */}
