@@ -16,14 +16,29 @@ const PRICE_TO_TIER: Record<string, SubscriptionTier> = {
 
 export async function POST(req: NextRequest) {
   const body = await req.text();
-  const sig  = req.headers.get("stripe-signature")!;
+  const sig  = req.headers.get("stripe-signature");
+
+  if (!sig) {
+    console.error("[Stripe Webhook] Missing stripe-signature header");
+    return NextResponse.json({ error: "Missing stripe-signature header" }, { status: 400 });
+  }
+
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  if (!webhookSecret) {
+    console.error("[Stripe Webhook] STRIPE_WEBHOOK_SECRET environment variable is missing on server");
+    return NextResponse.json({ error: "STRIPE_WEBHOOK_SECRET not configured on server" }, { status: 500 });
+  }
 
   let event: Stripe.Event;
   try {
-    event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET!);
-  } catch {
-    return NextResponse.json({ error: "Webhook signature failed" }, { status: 400 });
+    event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("[Stripe Webhook] Signature verification failed:", msg);
+    return NextResponse.json({ error: `Webhook signature failed: ${msg}` }, { status: 400 });
   }
+
+  try {
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
@@ -397,6 +412,12 @@ export async function POST(req: NextRequest) {
       await prisma.user.update({ where: { id: existing.userId }, data: { tier: t } });
       await prisma.subscription.update({ where: { id: existing.id }, data: { plan: t, status: sub.status } });
     }
+  }
+
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    console.error("[Stripe Webhook] Error processing event:", errorMsg, err);
+    return NextResponse.json({ error: `Webhook handler error: ${errorMsg}` }, { status: 500 });
   }
 
   return NextResponse.json({ received: true });
