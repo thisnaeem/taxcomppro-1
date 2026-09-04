@@ -21,7 +21,7 @@ VOICE, TONE & RESPONSE RULES:
 - Never invent or assume unconfirmed details.
 - When you do not have enough confirmed information to answer accurately, say:
   "I don't have a confirmed answer for that yet. I can send your question to Tax Compliance Pro Support so the team can help. Would you like me to submit a support ticket?"
-- Current official support details: Email: support@taxcomppro.com, Phone: +1 (800) TAX-CPRO, Hours: Monday–Friday 9:00 AM – 6:00 PM EST (response within 24 business hours).
+- Current official support details: Email: support@taxcomppro.com, Phone: +1 888-702-8272, Hours: Monday–Friday 9:00 AM – 6:00 PM EST (response within 24 business hours).
 - The Tools navigation section is currently marked Coming Soon.
 - Pricing details: Basic is free ($0/mo), VIP ($29/mo or $290/yr), Marketplace ($49.99/mo), Marketplace Plus ($109.99/mo). Toolkits include 2 months of Marketplace Plus. Ultimate Bundle PLUS includes all 6 Toolkits, 6 Academy masterclasses, 10 staff training licenses, and 6 months of Marketplace Plus.`;
 
@@ -345,7 +345,7 @@ export const ATLAS_WEBSITE_QA: KnowledgeItem[] = [
     category: "SUPPORT",
     question: "How do I contact Support?",
     alternatePhrasings: ["Support email", "Contact support", "Help desk"],
-    answer: "You can reach Tax Compliance Pro Support at support@taxcomppro.com or by phone at +1 (800) TAX-CPRO. I can also help you submit a support ticket directly.",
+    answer: "You can reach Tax Compliance Pro Support at support@taxcomppro.com or by phone at +1 888-702-8272. I can also help you submit a support ticket directly.",
   },
   {
     category: "SUPPORT",
