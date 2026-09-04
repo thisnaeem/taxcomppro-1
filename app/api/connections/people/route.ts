@@ -18,6 +18,9 @@ export async function GET(req: NextRequest) {
   const excludeIds = new Set<string>([userId]);
   existing.forEach(c => { excludeIds.add(c.requesterId); excludeIds.add(c.receiverId); });
 
+  const limitParam = new URL(req.url).searchParams.get("limit");
+  const limit = limitParam ? Math.min(Math.max(parseInt(limitParam, 10) || 500, 1), 2000) : 500;
+
   const people = await prisma.user.findMany({
     where: {
       id:   { notIn: Array.from(excludeIds) },
@@ -26,8 +29,8 @@ export async function GET(req: NextRequest) {
         { headline: { contains: search, mode: "insensitive" } },
       ]} : {}),
     },
-    select: { id: true, name: true, image: true, headline: true, role: true },
-    take: 20,
+    select: { id: true, name: true, image: true, headline: true, role: true, tier: true },
+    take: limit,
     orderBy: { createdAt: "desc" },
   });
 

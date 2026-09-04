@@ -11,7 +11,7 @@ import {
 } from "hugeicons-react";
 import UpgradeGate from "@/components/ui/UpgradeGate";
 
-interface Person { id: string; name: string; image: string | null; headline: string | null; role: string; }
+interface Person { id: string; name: string; image: string | null; headline: string | null; role: string; tier?: string; }
 interface Connection { id: string; status: string; requester: Person; receiver: Person; }
 interface PendingIn { id: string; requester: Person; }
 interface PendingSent { id: string; receiver: Person; }
@@ -29,11 +29,29 @@ function Avatar({ user, size = "md" }: { user: { name: string; image: string | n
   );
 }
 
-function RoleBadge({ role }: { role: string }) {
-  const cls = role === "ADMIN" ? "bg-amber-100 text-amber-700"
+function RoleBadge({ role, tier }: { role: string; tier?: string }) {
+  const tierCls = tier === "MARKETPLACE_PLUS"
+    ? "bg-emerald-100 text-emerald-700"
+    : tier === "VIP"
+    ? "bg-amber-100 text-amber-700"
+    : tier === "MARKETPLACE"
+    ? "bg-indigo-100 text-indigo-700"
+    : null;
+
+  const roleCls = role === "ADMIN" ? "bg-purple-100 text-purple-700"
     : role === "PROFESSIONAL" ? "bg-blue-100 text-blue-700"
     : "bg-slate-100 text-slate-500";
-  return <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full mt-1 inline-block ${cls}`}>{role}</span>;
+
+  return (
+    <div className="flex flex-wrap gap-1 mt-1">
+      {tierCls && tier && tier !== "FREE" && (
+        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full inline-block ${tierCls}`}>
+          {tier === "MARKETPLACE_PLUS" ? "Marketplace Plus" : tier}
+        </span>
+      )}
+      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full inline-block ${roleCls}`}>{role}</span>
+    </div>
+  );
 }
 
 /* ─── Skeleton person card ──────────────────────────────────── */
@@ -249,7 +267,7 @@ export default function ConnectionsPage() {
                       <div className="flex-1 min-w-0">
                         <Link href={`/member/${p.id}`} className="font-bold text-[#0a1628] text-sm truncate hover:text-[#1a3a6b] transition-colors block">{p.name}</Link>
                         {p.headline && <div className="text-xs text-slate-400 truncate mt-0.5">{p.headline}</div>}
-                        <RoleBadge role={p.role} />
+                        <RoleBadge role={p.role} tier={p.tier} />
                       </div>
                       {sentIds.has(p.id) ? (
                         <span className="text-xs font-bold text-slate-400 shrink-0 flex items-center gap-1 mt-1">
@@ -286,7 +304,7 @@ export default function ConnectionsPage() {
                           <div className="flex-1 min-w-0">
                             <Link href={`/member/${r.requester.id}`} className="font-bold text-[#0a1628] text-sm hover:text-[#1a3a6b] transition-colors">{r.requester.name}</Link>
                             {r.requester.headline && <div className="text-xs text-slate-400 truncate">{r.requester.headline}</div>}
-                            <RoleBadge role={r.requester.role} />
+                            <RoleBadge role={r.requester.role} tier={r.requester.tier} />
                           </div>
                           <div className="flex gap-2 shrink-0">
                             <button onClick={() => respond(r.id, "accept")} disabled={!!acting[r.id]}
@@ -343,7 +361,7 @@ export default function ConnectionsPage() {
                         <div className="flex-1 min-w-0">
                           <Link href={`/member/${partner.id}`} className="font-bold text-[#0a1628] text-sm hover:text-[#1a3a6b] transition-colors block">{partner.name}</Link>
                           {partner.headline && <div className="text-xs text-slate-400 truncate mt-0.5">{partner.headline}</div>}
-                          <RoleBadge role={partner.role} />
+                          <RoleBadge role={partner.role} tier={partner.tier} />
                         </div>
                         <div className="flex flex-col gap-1.5 shrink-0 mt-1">
                           <Link href={`/messages?user=${partner.id}`}
