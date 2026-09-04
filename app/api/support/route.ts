@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { sendSupportTicketCreatedEmail, sendSupportTicketUpdatedEmail } from "@/lib/email";
 
 async function requireAdmin(req: NextRequest) {
   const session = await auth.api.getSession({ headers: req.headers });
@@ -71,6 +72,15 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    // Send transactional confirmation to user and alert to support team via Microsoft Graph
+    sendSupportTicketCreatedEmail({
+      to: email,
+      userName: name,
+      ticketId: ticket.id,
+      subject,
+      description,
+    }).catch(err => console.error("[Support Email] Failed to send ticket confirmation:", err));
+
     return NextResponse.json(ticket);
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Error creating ticket";
@@ -111,6 +121,17 @@ export async function PATCH(req: NextRequest) {
       where: { id },
       data: updateData,
     });
+
+    if (ticket && (status || feedback)) {
+      sendSupportTicketUpdatedEmail({
+        to: ticket.email,
+        userName: ticket.name,
+        ticketId: ticket.id,
+        subject: ticket.subject,
+        status: ticket.status,
+        feedback: ticket.feedback ?? undefined,
+      }).catch(err => console.error("[Support Update Email] Failed to send update:", err));
+    }
 
     return NextResponse.json(ticket);
   } catch (err) {

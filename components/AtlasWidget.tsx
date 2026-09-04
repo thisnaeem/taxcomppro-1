@@ -151,7 +151,7 @@ export default function AtlasWidget() {
     const width = isMob ? MOBILE_WIDTH : DESKTOP_WIDTH;
     const height = isMob ? MOBILE_HEIGHT : DESKTOP_HEIGHT;
     const maxX = Math.max(PADDING, docWidth - width - PADDING);
-    const maxY = Math.max(PADDING, docHeight - height - PADDING);
+    const maxY = Math.max(PADDING, docHeight - height - (isMob ? 84 : PADDING));
     return {
       x: Math.min(Math.max(PADDING, x), maxX),
       y: Math.min(Math.max(PADDING, y), maxY),
@@ -177,7 +177,7 @@ export default function AtlasWidget() {
       }
     } catch {}
 
-    setPos(clampPos(docWidth - width - 16, docHeight - height - 16));
+    setPos(clampPos(docWidth - width - 16, docHeight - height - (isMob ? 84 : 16)));
   }, [clampPos]);
 
   // Keep inside viewport on window resize

@@ -10,10 +10,12 @@ import ScheduledPostsPanel from "@/components/feed/ScheduledPostsPanel";
 import { PostSkeleton, LeftPanelSkeleton, RightPanelSkeleton } from "@/components/feed/FeedSkeletons";
 import { RefreshCw, MonitorPlay, ExternalLink, Sparkles, X } from "lucide-react";
 import { NoteEditIcon } from "hugeicons-react";
-import { useAppSelector } from "@/store/hooks";
+import { useAppSelector, useAppDispatch } from "@/store/hooks";
+import { setUser } from "@/store/slices/authSlice";
 
 function FeedContent() {
   const searchParams = useSearchParams();
+  const dispatch = useAppDispatch();
   const isWelcome = searchParams.get("welcome") === "1" || searchParams.get("registered") === "1" || searchParams.get("upgraded") === "1";
   const [showWelcomeBanner, setShowWelcomeBanner] = useState(isWelcome);
   const user = useAppSelector(s => s.auth.user);
@@ -23,6 +25,58 @@ function FeedContent() {
   const [nextCursor, setNextCursor]   = useState<string | null>(null);
   const [hasNew, setHasNew]           = useState(false);
   const [centerAds, setCenterAds]     = useState<{id:string;title:string;description:string|null;imageUrl:string;linkUrl:string;user:{name:string}}[]>([]);
+
+  // Always re-sync fresh user profile from DB on feed mount to avoid stale tier cache
+  useEffect(() => {
+    fetch("/api/user/me", { cache: "no-store", headers: { "Cache-Control": "no-cache, no-store" } })
+      .then(r => r.ok ? r.json() : null)
+      .then(u => {
+        if (u?.id) {
+          dispatch(setUser({
+            id: u.id, email: u.email, name: u.name,
+            role: u.role ?? "MEMBER", tier: u.tier ?? "FREE",
+            image: u.image ?? null, coverImage: u.coverImage ?? null,
+            bio: u.bio ?? null, headline: u.headline ?? null,
+            hasDueDiligenceBadge: u.hasDueDiligenceBadge ?? false,
+          }));
+        }
+      })
+      .catch(() => {});
+  }, [dispatch]);
+
+  // Handle Stripe checkout return with session_id
+  useEffect(() => {
+    const sessionId = searchParams.get("session_id");
+    if (!sessionId) return;
+
+    window.history.replaceState({}, "", "/feed");
+
+    fetch("/api/stripe/verify-session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sessionId }),
+    })
+      .then(r => r.json())
+      .then((data: { tier?: string }) => {
+        if (data.tier && data.tier !== "FREE") {
+          setShowWelcomeBanner(true);
+          fetch("/api/user/me", { cache: "no-store", headers: { "Cache-Control": "no-cache, no-store" } })
+            .then(r => r.ok ? r.json() : null)
+            .then(u => {
+              if (u?.id) {
+                dispatch(setUser({
+                  id: u.id, email: u.email, name: u.name,
+                  role: u.role ?? "MEMBER", tier: u.tier ?? "FREE",
+                  image: u.image ?? null, coverImage: u.coverImage ?? null,
+                  bio: u.bio ?? null, headline: u.headline ?? null,
+                  hasDueDiligenceBadge: u.hasDueDiligenceBadge ?? false,
+                }));
+              }
+            });
+        }
+      })
+      .catch(() => {});
+  }, [searchParams, dispatch]);
   const [scheduleRefreshKey, setScheduleRefreshKey] = useState(0);
   const loaderRef    = useRef<HTMLDivElement>(null);
   const pollingRef   = useRef<NodeJS.Timeout | null>(null);

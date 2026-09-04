@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import type { SubscriptionTier } from "@prisma/client";
 import { TRAINING_TOOLKIT_IDS, DEFAULT_SEATS, LICENSE_MONTHS } from "@/lib/training";
 import { ensureActiveTrainingVersion } from "@/lib/trainingServer";
+import { sendMembershipUpgradedEmail } from "@/lib/email";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
@@ -49,6 +50,15 @@ export async function POST(req: NextRequest) {
     resolvedTier = PRICE_TO_TIER[priceId] ?? (tier as SubscriptionTier) ?? null;
 
     if (resolvedTier) {
+      // Check if upgrade email was already sent in last 10 minutes to prevent duplicate emails
+      const alreadyNotified = await prisma.notification.findFirst({
+        where: {
+          userId,
+          title: "🎉 Membership Upgraded!",
+          createdAt: { gte: new Date(Date.now() - 10 * 60 * 1000) },
+        },
+      });
+
       await prisma.user.update({ where: { id: userId }, data: { tier: resolvedTier } });
       await prisma.subscription.upsert({
         where:  { userId },
@@ -58,6 +68,18 @@ export async function POST(req: NextRequest) {
       await prisma.notification.create({
         data: { userId, type: "SYSTEM", title: "🎉 Membership Upgraded!", message: `You are now on the ${resolvedTier} plan. Enjoy your new benefits!` },
       }).catch(() => {});
+
+      if (!alreadyNotified) {
+        const u = await prisma.user.findUnique({ where: { id: userId }, select: { email: true, name: true } });
+        if (u?.email) {
+          sendMembershipUpgradedEmail({
+            to: u.email,
+            userName: u.name || "Member",
+            tier: resolvedTier,
+            currentPeriodEnd: (sub as any)?.current_period_end ? new Date((sub as any).current_period_end * 1000) : undefined,
+          }).catch(err => console.error("[Verify Session] Failed to send upgrade email:", err));
+        }
+      }
     }
   }
 

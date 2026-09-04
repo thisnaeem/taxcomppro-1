@@ -6,6 +6,8 @@ import { Loader2, MoreHorizontal, Pencil, Trash2, Check, X, ChevronLeft, Chevron
 import { ThumbsUpIcon, Comment01Icon, Share01Icon, SentIcon } from "hugeicons-react";
 import DueDiligenceBadge from "@/components/badges/DueDiligenceBadge";
 import UpgradeModal from "@/components/ui/UpgradeModal";
+import FeedVideoPlayer from "./FeedVideoPlayer";
+import PostLikesModal from "./PostLikesModal";
 
 interface Author {
   id: string; name: string; image: string | null;
@@ -44,11 +46,12 @@ const tierBadge: Record<string, string> = {
 
 export default function PostCard({ post, onUpdate, onDelete }: { post: FeedPost; onUpdate: (updated: FeedPost) => void; onDelete?: (id: string) => void }) {
   const user = useAppSelector(s => s.auth.user);
-  const isFree = user?.tier === "FREE" && user?.role !== "ADMIN";
+  const isFree = (user?.tier === "FREE" || !user?.tier) && user?.role !== "ADMIN" && user?.role !== "PROFESSIONAL";
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [liked, setLiked]           = useState(post.likes.length > 0);
   const [likeCount, setLikeCount]   = useState(post._count.likes);
   const [liking, setLiking]         = useState(false);
+  const [showLikesModal, setShowLikesModal] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments]     = useState<Comment[]>(post.comments);
   const [commentCount, setCommentCount] = useState(post._count.comments);
@@ -311,20 +314,26 @@ export default function PostCard({ post, onUpdate, onDelete }: { post: FeedPost;
       {/* Video */}
       {post.videoUrl && (
         <div className="px-5 pb-4">
-          <video
-            src={post.videoUrl}
-            controls
-            playsInline
-            className="w-full rounded-xl overflow-hidden max-h-[420px] bg-black object-contain"
-            style={{ aspectRatio: "16/9" }}
-          />
+          <FeedVideoPlayer src={post.videoUrl} />
         </div>
       )}
 
       {/* Like / Comment counts */}
       {(likeCount > 0 || commentCount > 0) && (
         <div className="px-5 py-3 border-t border-slate-100 flex items-center justify-between text-sm font-medium text-slate-500">
-          {likeCount > 0 && <span className="flex items-center gap-1.5"><ThumbsUpIcon className="w-3.5 h-3.5" /> {likeCount}</span>}
+          {likeCount > 0 && (
+            <button
+              type="button"
+              onClick={() => setShowLikesModal(true)}
+              className="flex items-center gap-1.5 hover:underline hover:text-[#0a1628] transition-colors cursor-pointer group text-slate-500"
+              title="See who liked this post"
+            >
+              <span className="w-4 h-4 rounded-full bg-[#1877F2] text-white flex items-center justify-center shadow-xs group-hover:scale-110 transition-transform">
+                <ThumbsUpIcon className="w-2.5 h-2.5 fill-white stroke-none" />
+              </span>
+              <span className="font-semibold text-xs text-slate-600 group-hover:text-[#0a1628]">{likeCount}</span>
+            </button>
+          )}
           {commentCount > 0 && (
             <button onClick={handleToggleComments} className="hover:text-[#0a1628] transition-colors">
               {commentCount} comment{commentCount !== 1 ? "s" : ""}
@@ -490,6 +499,22 @@ export default function PostCard({ post, onUpdate, onDelete }: { post: FeedPost;
           </div>
         )}
       </div>
+    )}
+
+    {/* ── Likes modal (Facebook style) ── */}
+    <PostLikesModal
+      postId={post.id}
+      isOpen={showLikesModal}
+      onClose={() => setShowLikesModal(false)}
+      initialCount={likeCount}
+    />
+
+    {/* ── Upgrade modal ── */}
+    {showUpgrade && (
+      <UpgradeModal
+        onClose={() => setShowUpgrade(false)}
+        feature="Commenting"
+      />
     )}
   </>
   );

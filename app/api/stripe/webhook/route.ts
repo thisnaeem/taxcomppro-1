@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import type { SubscriptionTier } from "@prisma/client";
 import { TRAINING_TOOLKIT_IDS, DEFAULT_SEATS, LICENSE_MONTHS } from "@/lib/training";
 import { ensureActiveTrainingVersion } from "@/lib/trainingServer";
+import { sendMembershipUpgradedEmail } from "@/lib/email";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
@@ -335,6 +336,30 @@ export async function POST(req: NextRequest) {
         create: { userId, plan: t, stripeCustomerId: session.customer as string, stripeSubscriptionId: session.subscription as string, status: "active" },
         update: { plan: t, stripeSubscriptionId: session.subscription as string, status: "active" },
       });
+
+      // Check if upgrade email was already sent in last 10 minutes to prevent duplicates
+      const alreadyNotified = await prisma.notification.findFirst({
+        where: {
+          userId,
+          title: "🎉 Membership Upgraded!",
+          createdAt: { gte: new Date(Date.now() - 10 * 60 * 1000) },
+        },
+      });
+
+      if (!alreadyNotified) {
+        await prisma.notification.create({
+          data: { userId, type: "SYSTEM", title: "🎉 Membership Upgraded!", message: `You are now on the ${t} plan. Enjoy your new benefits!` },
+        }).catch(() => {});
+
+        const u = await prisma.user.findUnique({ where: { id: userId }, select: { email: true, name: true } });
+        if (u?.email) {
+          sendMembershipUpgradedEmail({
+            to: u.email,
+            userName: u.name || "Member",
+            tier: t,
+          }).catch(err => console.error("[Stripe Webhook] Failed to send upgrade email:", err));
+        }
+      }
     }
   }
 

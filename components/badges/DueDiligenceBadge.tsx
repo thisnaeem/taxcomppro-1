@@ -23,7 +23,7 @@ export default function DueDiligenceBadge({ size = 20, className = "", showToolt
         alt="Due Diligence Badge"
         width={size}
         height={size}
-        style={{ width: size, height: "auto" }}
+        style={{ width: size, height: size }}
         className="object-contain"
         unoptimized
       />

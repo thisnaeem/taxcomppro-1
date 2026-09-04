@@ -78,7 +78,7 @@ export default function Navbar() {
     if (isPending) return;
     if (!session) { dispatch(clearUser()); return; }
 
-    fetch("/api/user/me")
+    fetch("/api/user/me", { cache: "no-store", headers: { "Cache-Control": "no-cache, no-store" } })
       .then(r => r.ok ? r.json() : null)
       .then((u: AuthUser | null) => {
         if (u) dispatch(setUser({

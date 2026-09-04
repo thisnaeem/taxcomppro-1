@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { sendMembershipUpgradedEmail } from "@/lib/email";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
@@ -78,6 +79,16 @@ export async function POST(req: NextRequest) {
             where: { id: coupon.id },
             data: { usedCount: { increment: 1 } },
           });
+
+          if (user.email) {
+            sendMembershipUpgradedEmail({
+              to: user.email,
+              userName: user.name || "Member",
+              tier,
+              currentPeriodEnd: periodEnd,
+              isComplimentary: true,
+            }).catch(err => console.error("[Checkout Coupon] Failed to send upgrade email:", err));
+          }
 
           return NextResponse.json({ url: redirectUrl || "/feed?welcome=1" });
         }

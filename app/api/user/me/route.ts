@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET(req: NextRequest) {
   const session = await auth.api.getSession({ headers: req.headers });
 
@@ -306,6 +309,11 @@ export async function GET(req: NextRequest) {
       proTalksHosted,
       primaryNetworkSlug: primaryNetwork?.slug ?? null,
       primaryNetworkName: primaryNetwork?.name ?? null,
+    },
+  }, {
+    headers: {
+      "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0",
+      "Pragma": "no-cache",
     },
   });
 }

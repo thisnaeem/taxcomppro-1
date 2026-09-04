@@ -8,6 +8,7 @@ import {
   Radio, Sparkles, Mic, Calendar, Volume2, Play
 } from "lucide-react";
 import Navbar from "@/components/landing/Navbar";
+import MobileBottomNav from "@/components/layout/MobileBottomNav";
 
 const features = [
   {
@@ -668,7 +669,7 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
-
+      <MobileBottomNav />
     </div>
   );
 }

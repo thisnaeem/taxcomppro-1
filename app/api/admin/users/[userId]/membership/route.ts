@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import type { SubscriptionTier } from "@prisma/client";
+import { sendMembershipUpgradedEmail } from "@/lib/email";
 
 export async function POST(
   req: NextRequest,
@@ -142,6 +143,17 @@ export async function POST(
         message: `You've been granted ${months} free months of ${tier} membership (valid until ${formattedDate}).`,
       },
     });
+
+    if (targetUser.email) {
+      sendMembershipUpgradedEmail({
+        to: targetUser.email,
+        userName: targetUser.name || "Member",
+        tier,
+        currentPeriodEnd: newPeriodEnd,
+        months,
+        isComplimentary: true,
+      }).catch(err => console.error("[Admin Membership Email] Failed to send email:", err));
+    }
 
     return NextResponse.json({
       success: true,

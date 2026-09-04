@@ -22,7 +22,7 @@ function minDateTimeLocal() {
 
 export default function PostComposer({ onPostCreated, onScheduled }: Props) {
   const user         = useAppSelector(s => s.auth.user);
-  const isFree       = user?.tier === "FREE" && user?.role !== "ADMIN";
+  const isFree       = (user?.tier === "FREE" || !user?.tier) && user?.role !== "ADMIN" && user?.role !== "PROFESSIONAL";
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [content,    setContent]    = useState("");
   const [expanded,   setExpanded]   = useState(false);
@@ -221,7 +221,14 @@ export default function PostComposer({ onPostCreated, onScheduled }: Props) {
               {/* Video preview */}
               {video && (
                 <div className="relative rounded-xl overflow-hidden bg-black">
-                  <video src={video.url} controls playsInline className="w-full max-h-64 object-contain" />
+                  <video
+                    src={video.url}
+                    controls
+                    playsInline
+                    controlsList="nodownload nofullscreen noremoteplayback"
+                    onContextMenu={(e) => e.preventDefault()}
+                    className="w-full max-h-64 object-contain"
+                  />
                   <div className="absolute top-2 left-2 bg-black/60 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">{video.duration}s</div>
                   <button onClick={removeVideo} className="absolute top-2 right-2 w-6 h-6 bg-black/60 hover:bg-black/80 rounded-full flex items-center justify-center text-white">
                     <X className="w-3.5 h-3.5" />
