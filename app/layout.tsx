@@ -3,6 +3,7 @@ import { Urbanist } from "next/font/google";
 import dynamic from "next/dynamic";
 import { Suspense } from "react";
 import "./globals.css";
+import Script from "next/script";
 import { ReduxProvider } from "@/store/provider";
 import AtlasWidgetLoader from "@/components/AtlasWidgetLoader";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -54,6 +55,13 @@ export default function RootLayout({
             <AtlasWidgetLoader />
           </ReduxProvider>
         </ThemeProvider>
+        <Script
+          src="https://widgets.leadconnectorhq.com/loader.js"
+          data-resources-url="https://widgets.leadconnectorhq.com/chat-widget/loader.js"
+          data-widget-id="6a99fd823dadf9f23d855820"
+          data-source="WEB_USER"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );
