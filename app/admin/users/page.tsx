@@ -113,6 +113,7 @@ function UserEditDropdown({
   currentRole,
   currentTier,
   anchor,
+  anchorEl,
   onClose,
   onSelectRole,
   onSelectTier,
@@ -125,6 +126,7 @@ function UserEditDropdown({
   currentRole: Role;
   currentTier: Tier;
   anchor: DOMRect;
+  anchorEl?: HTMLElement | null;
   onClose: () => void;
   onSelectRole: (role: Role) => void;
   onSelectTier: (tier: Tier) => void;
@@ -135,27 +137,72 @@ function UserEditDropdown({
 }) {
   const ref = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    function handle(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
-    }
-    document.addEventListener("mousedown", handle);
-    return () => document.removeEventListener("mousedown", handle);
-  }, [onClose]);
+  // Dynamic positioning: compute whether to flip above or below
+  const spaceBelow = typeof window !== "undefined" ? window.innerHeight - anchor.bottom : 500;
+  const spaceAbove = typeof window !== "undefined" ? anchor.top : 500;
+  // If space below is less than 440px and there's more space above, open upwards
+  const isAbove = spaceBelow < 440 && spaceAbove > spaceBelow;
 
+  useEffect(() => {
+    function handleMousedown(e: MouseEvent) {
+      if (ref.current && ref.current.contains(e.target as Node)) return;
+      // If clicking on the trigger button itself, let the button's toggle logic handle it
+      if (anchorEl && anchorEl.contains(e.target as Node)) return;
+      onClose();
+    }
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+
+    function handleScroll(e: Event) {
+      // If scrolling happens outside the dropdown (e.g. scrolling table or page), close dropdown
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        onClose();
+      }
+    }
+
+    document.addEventListener("mousedown", handleMousedown);
+    document.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("scroll", handleScroll, true);
+    window.addEventListener("resize", onClose);
+
+    return () => {
+      document.removeEventListener("mousedown", handleMousedown);
+      document.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("scroll", handleScroll, true);
+      window.removeEventListener("resize", onClose);
+    };
+  }, [onClose, anchorEl]);
+
+  const right = Math.max(12, Math.min(window.innerWidth - 220, window.innerWidth - anchor.right));
   const style: React.CSSProperties = {
     position: "fixed",
-    top: anchor.bottom + 6,
-    right: window.innerWidth - anchor.right,
+    ...(isAbove
+      ? {
+          bottom: window.innerHeight - anchor.top + 6,
+          maxHeight: Math.max(180, anchor.top - 16),
+        }
+      : {
+          top: anchor.bottom + 6,
+          maxHeight: Math.max(180, spaceBelow - 16),
+        }),
+    right,
     zIndex: 9999,
-    minWidth: 210,
+    minWidth: 220,
+    maxWidth: "calc(100vw - 24px)",
+    overflowY: "auto",
+    scrollbarWidth: "thin",
+    scrollbarColor: "#334155 transparent",
   };
 
   return createPortal(
     <div
       ref={ref}
       style={style}
-      className="bg-slate-900 border border-slate-800 rounded-xl shadow-2xl p-3 flex flex-col gap-3 text-slate-200 animate-in fade-in zoom-in-95 duration-100"
+      className={`bg-slate-900 border border-slate-800 rounded-xl shadow-2xl p-3 flex flex-col gap-3 text-slate-200 animate-in fade-in ${
+        isAbove ? "slide-in-from-bottom-2" : "slide-in-from-top-2"
+      } duration-100 overscroll-contain`}
     >
       {/* View Full Profile */}
       <div>
@@ -311,6 +358,8 @@ function ColumnFilterPopover({
     left,
     zIndex: 9998,
     width: 260,
+    maxHeight: "calc(100vh - 24px)",
+    overflowY: "auto",
   };
 
   return createPortal(
@@ -383,7 +432,7 @@ export default function AdminUsersPage() {
     col: "user" | "card" | "role" | "tier" | "joined";
     rect: DOMRect;
   } | null>(null);
-  const [openDropdown, setOpenDropdown] = useState<{ id: string; rect: DOMRect } | null>(null);
+  const [openDropdown, setOpenDropdown] = useState<{ id: string; rect: DOMRect; btnEl: HTMLButtonElement } | null>(null);
   const [selectedProfileUserId, setSelectedProfileUserId] = useState<string | null>(null);
 
   // Membership Gifting modal state
@@ -750,7 +799,7 @@ export default function AdminUsersPage() {
         setOpenDropdown(null);
         return;
       }
-      setOpenDropdown({ id: userId, rect: btn.getBoundingClientRect() });
+      setOpenDropdown({ id: userId, rect: btn.getBoundingClientRect(), btnEl: btn });
     },
     [openDropdown]
   );
@@ -2011,6 +2060,7 @@ export default function AdminUsersPage() {
           currentRole={users.find((u) => u.id === openDropdown.id)?.role ?? "MEMBER"}
           currentTier={users.find((u) => u.id === openDropdown.id)?.tier ?? "FREE"}
           anchor={openDropdown.rect}
+          anchorEl={openDropdown.btnEl}
           onClose={() => setOpenDropdown(null)}
           onSelectRole={(role) => updateUser(openDropdown.id, { role })}
           onSelectTier={(tier) => updateUser(openDropdown.id, { tier })}

@@ -188,7 +188,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
                               : "gap-3 px-3 py-2.5 text-sm"
                           } ${
                             isActive
-                              ? "bg-[#f0c040] text-[#0a1628] shadow-lg shadow-amber-400/20 font-bold"
+                              ? "bg-[#f0c040] !text-black shadow-lg shadow-amber-400/20 font-bold"
                               : "text-white/60 hover:text-white hover:bg-white/10"
                           }`}
                         >
@@ -197,15 +197,15 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
                               isCollapsed ? "w-5 h-5" : "w-4 h-4"
                             } ${
                               isActive
-                                ? "text-[#0a1628]"
+                                ? "!text-black"
                                 : "text-white/40 group-hover:text-white/80 group-hover:scale-105"
                             }`}
                           />
                           {!isCollapsed && (
                             <>
-                              <span className="flex-1 truncate">{l.label}</span>
+                              <span className={`flex-1 truncate ${isActive ? "!text-black font-bold" : ""}`}>{l.label}</span>
                               {isActive && (
-                                <ChevronRight className="w-3.5 h-3.5 text-[#0a1628]/60" />
+                                <ChevronRight className="w-3.5 h-3.5 !text-black/70 shrink-0" />
                               )}
                             </>
                           )}
@@ -275,12 +275,12 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
                       isCollapsed ? "justify-center px-0 py-2.5" : "gap-3 px-3 py-2.5 text-sm"
                     } ${
                       isActive
-                        ? "bg-[#f0c040] text-[#0a1628]"
+                        ? "bg-[#f0c040] !text-black font-bold shadow-lg shadow-amber-400/20"
                         : "text-white/60 hover:text-white hover:bg-white/10"
                     }`}
                   >
-                    <l.icon className="w-5 h-5 shrink-0" />
-                    {!isCollapsed && <span>{l.label}</span>}
+                    <l.icon className={`w-5 h-5 shrink-0 ${isActive ? "!text-black" : ""}`} />
+                    {!isCollapsed && <span className={isActive ? "!text-black font-bold" : ""}>{l.label}</span>}
                   </Link>
                 );
               })}
