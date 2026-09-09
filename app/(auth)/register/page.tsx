@@ -1,33 +1,21 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState, useRef, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { signUp, signIn, useSession } from "@/lib/auth-client";
+import { signIn, useSession } from "@/lib/auth-client";
 import { z } from "zod";
 import {
-  Mail,
-  Lock,
-  User,
-  Phone,
-  ArrowRight,
-  Globe,
-  Eye,
-  EyeOff,
-  ChevronDown,
-  Check,
-  Search,
-  CheckCircle2,
-  Crown,
-  Sparkles,
-  ShieldCheck,
-  Tag,
-  Loader2,
-  Zap,
+  Mail, Lock, User, Phone, ArrowRight, Eye, EyeOff, ChevronDown, Check,
+  Search, CheckCircle2, Crown, Sparkles, ShieldCheck, Tag, Loader2, Zap,
+  MailCheck, ArrowLeft, RefreshCw, AlertCircle,
 } from "lucide-react";
-import Image from "next/image";
+import OtpInput from "@/components/auth/OtpInput";
+import GoogleMark from "@/components/auth/GoogleMark";
+import AuthShell, { StepRail } from "@/components/auth/AuthShell";
 
 interface Country {
   code: string;
@@ -84,15 +72,15 @@ const membershipPlans = [
     period: "/month",
     badge: "Core Membership",
     popular: false,
-    color: "from-amber-500/20 to-amber-600/10 border-amber-500/30",
     icon: Crown,
+    summary: "The library, the forums and the directory.",
     features: [
-      "Priority Access to Tax SOP & Due Diligence Library",
-      "Private Discussion Forums & Feed Interaction",
-      "Full Member Directory & Direct Networking",
-      "ATLAS AI Tax Concierge & Assistant Bot",
-      "Ongoing Tax Training & CE Masterclasses",
-      "2 Months FREE with Annual / Promo",
+      "Priority access to the Tax SOP and due diligence library",
+      "Private discussion forums and feed interaction",
+      "Full member directory and direct networking",
+      "ATLAS AI tax concierge and assistant bot",
+      "Ongoing tax training and CE masterclasses",
+      "2 months free with annual billing",
     ],
   },
   {
@@ -102,15 +90,15 @@ const membershipPlans = [
     period: "/month",
     badge: "Most Popular",
     popular: true,
-    color: "from-blue-600/25 to-indigo-600/15 border-blue-500",
     icon: Sparkles,
+    summary: "Everything in VIP, plus you can sell.",
     features: [
       "Everything in VIP Members Only",
-      "Verified Seller Profile in Marketplace",
-      "Sell Tax Services & Digital Products with 0% Platform Fee",
-      "Verified Pro Badge next to your name",
-      "Custom Marketplace Storefront & Showcase",
-      "Connect Digital Business Card Integration",
+      "Verified seller profile in the marketplace",
+      "Sell tax services and digital products at 0% platform fee",
+      "Verified Pro badge next to your name",
+      "Custom marketplace storefront and showcase",
+      "Connect digital business card integration",
     ],
   },
   {
@@ -120,30 +108,65 @@ const membershipPlans = [
     period: "/month",
     badge: "Best Value",
     popular: false,
-    color: "from-emerald-500/20 to-teal-600/15 border-emerald-500/40",
     icon: Zap,
+    summary: "Everything, plus you can host and advertise.",
     features: [
-      "Everything in Marketplace Bundle",
-      "Host Live Pro Talk Audio Rooms on TCP",
-      "Host Video Training Workshops & Masterclasses",
-      "Priority Search Ranking in Pro Directory",
-      "Post Featured Ads, Banners & Announcements",
-      "Unlimited Toolkit & Compliance Vault Downloads",
+      "Everything in the Marketplace Bundle",
+      "Host live Pro Talk audio rooms",
+      "Host video training workshops and masterclasses",
+      "Priority search ranking in the Pro directory",
+      "Post featured ads, banners and announcements",
+      "Unlimited toolkit and compliance vault downloads",
     ],
   },
 ];
+
+// Shared control tokens. Same radius and contrast system as the login screen:
+// inputs 12px, cards 16px, primary CTA full pill.
+const inputBase =
+  "w-full font-[inherit] text-sm rounded-xl border bg-white text-[#0a1628] placeholder:text-slate-500 outline-none transition-all " +
+  "dark:bg-[#0c1a2e] dark:text-white dark:placeholder:text-slate-400";
+const inputOk =
+  "border-slate-200 focus:border-[#0a1628] focus:ring-4 focus:ring-[#0a1628]/10 dark:border-white/15 dark:focus:border-amber-400 dark:focus:ring-amber-400/20";
+const inputErr = "border-red-400 focus:border-red-500 focus:ring-4 focus:ring-red-500/15";
+const fieldLabel = "block text-sm font-semibold text-[#0a1628] dark:text-white";
+const fieldError = "text-xs font-medium text-red-600 dark:text-red-400";
+const goldCta =
+  "flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#f0c040] to-[#d4a017] py-3.5 text-sm font-bold text-[#0a1628] transition-all " +
+  "hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(212,160,23,0.35)] active:translate-y-0 active:scale-[0.99] " +
+  "disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:shadow-none";
+
+function ErrorBanner({ message }: { message: string }) {
+  return (
+    <div
+      role="alert"
+      className="mb-6 flex items-start gap-2.5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300"
+    >
+      <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+      <span>{message}</span>
+    </div>
+  );
+}
 
 function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session } = useSession();
 
-  const [step, setStep] = useState<"account" | "membership">("account");
+  const [step, setStep] = useState<"account" | "verify" | "membership">("account");
+
+  // Email verification (OTP) state. The account is only created once the code checks out.
+  const [pendingSignup, setPendingSignup] = useState<{
+    name: string; email: string; password: string; phone: string;
+  } | null>(null);
+  const [otpCode, setOtpCode] = useState("");
+  const [otpError, setOtpError] = useState("");
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [resendIn, setResendIn] = useState(0);
+  const [resendLoading, setResendLoading] = useState(false);
+
   const [selectedTier, setSelectedTier] = useState<string>("MARKETPLACE");
   const [couponCode, setCouponCode] = useState("");
-  const [couponApplied, setCouponApplied] = useState(false);
-  const [couponLoading, setCouponLoading] = useState(false);
-  const [couponMsg, setCouponMsg] = useState("");
 
   const [serverError, setServerError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -166,12 +189,7 @@ function RegisterForm() {
   }, [searchParams, session]);
 
   const {
-    register,
-    handleSubmit,
-    setValue,
-    watch,
-    setError,
-    clearErrors,
+    register, handleSubmit, setValue, watch, setError, clearErrors,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -193,13 +211,19 @@ function RegisterForm() {
     }
   }, [showCountryPicker]);
 
+  // Resend cooldown ticker.
+  useEffect(() => {
+    if (resendIn <= 0) return;
+    const t = setTimeout(() => setResendIn((s) => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [resendIn]);
+
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const rawVal = e.target.value;
     clearErrors("phone");
 
     if (selectedCountry.code === "US" || selectedCountry.code === "CA") {
-      const formatted = formatUSPhone(rawVal);
-      setValue("phone", formatted, { shouldValidate: false });
+      setValue("phone", formatUSPhone(rawVal), { shouldValidate: false });
     } else {
       const cleaned = rawVal.replace(/[^\d\s\-()]/g, "").slice(0, 16);
       setValue("phone", cleaned, { shouldValidate: false });
@@ -228,19 +252,30 @@ function RegisterForm() {
     const fullPhoneNumber = `${selectedCountry.dialCode} ${data.phone.trim()}`;
 
     try {
-      const res = await signUp.email({
+      // Prove the address before creating anything. The account is created server-side
+      // in /api/auth/otp/verify only after the emailed code is accepted.
+      const res = await fetch("/api/auth/otp/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: data.email, name: data.name }),
+      });
+      const payload = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        setServerError(payload.error || "We could not send your verification code.");
+        return;
+      }
+
+      setPendingSignup({
+        name: data.name,
         email: data.email,
         password: data.password,
-        name: data.name,
         phone: fullPhoneNumber,
-      } as any);
-
-      if (res.error) {
-        setServerError(res.error.message || "Registration failed.");
-      } else {
-        // Successfully created account — proceed to choose membership plan
-        setStep("membership");
-      }
+      });
+      setOtpCode("");
+      setOtpError("");
+      setResendIn(60);
+      setStep("verify");
     } catch {
       setServerError("Something went wrong. Please try again.");
     } finally {
@@ -248,16 +283,69 @@ function RegisterForm() {
     }
   };
 
+  const handleVerifyOtp = async (code?: string) => {
+    const submitted = (code ?? otpCode).replace(/\D/g, "");
+    if (!pendingSignup || submitted.length !== 6) {
+      setOtpError("Enter the 6-digit code from your email.");
+      return;
+    }
+
+    setOtpLoading(true);
+    setOtpError("");
+    try {
+      const res = await fetch("/api/auth/otp/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...pendingSignup, code: submitted }),
+      });
+
+      if (!res.ok) {
+        const payload = await res.json().catch(() => ({}));
+        setOtpError(payload.error || "That code is not correct.");
+        setOtpCode("");
+        return;
+      }
+
+      // Verified and signed in. Continue to plan selection.
+      setStep("membership");
+    } catch {
+      setOtpError("Something went wrong. Please try again.");
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (!pendingSignup || resendIn > 0) return;
+    setResendLoading(true);
+    setOtpError("");
+    try {
+      const res = await fetch("/api/auth/otp/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: pendingSignup.email, name: pendingSignup.name }),
+      });
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setOtpError(payload.error || "We could not resend the code.");
+        setResendIn(payload.retryAfter ?? 60);
+        return;
+      }
+      setOtpCode("");
+      setResendIn(60);
+    } catch {
+      setOtpError("We could not resend the code. Please try again.");
+    } finally {
+      setResendLoading(false);
+    }
+  };
+
   const handleGoogle = async () => {
     setGoogleLoading(true);
     try {
-      await signIn.social({
-        provider: "google",
-        callbackURL: "/register?step=membership",
-      });
+      await signIn.social({ provider: "google", callbackURL: "/register?step=membership" });
     } catch {
       setServerError("Google sign-in failed.");
-    } finally {
       setGoogleLoading(false);
     }
   };
@@ -298,474 +386,507 @@ function RegisterForm() {
       c.code.toLowerCase().includes(countrySearch.toLowerCase())
   );
 
-  const inputCls = (err: boolean) =>
-    `w-full font-[inherit] text-sm pl-10 pr-10 py-3 border rounded-xl outline-none transition-all ${
-      err
-        ? "border-red-400 focus:ring-2 focus:ring-red-100"
-        : "border-slate-200 dark:border-white/10 focus:border-[#0a1628] dark:focus:border-amber-400 focus:ring-2 focus:ring-[#0a1628]/8 bg-white dark:bg-[#0c1a2e] text-slate-900 dark:text-white"
-    }`;
+  /* ─────────────────────────── STEP 3: MEMBERSHIP ───────────────────────────
+     Full width, no brand panel: three plans need the horizontal room, and by this
+     point the marketing column has already done its job. */
+  if (step === "membership") {
+    const selected = membershipPlans.find((p) => p.id === selectedTier);
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#060f1e] font-[var(--font-urbanist,Urbanist),sans-serif] px-4 py-12 transition-colors duration-200">
-      <div className={`w-full transition-all duration-300 ${step === "membership" ? "max-w-4xl" : "max-w-[440px]"}`}>
-        {/* Logo */}
-        <div className="flex justify-center mb-8">
-          <Link href="/">
-            <Image
-              src="/logo.webp"
-              alt="TaxCompPro"
-              width={160}
-              height={60}
-              className="object-contain dark:hidden"
-              style={{ width: "auto", height: "auto" }}
-              loading="eager"
-            />
-            <Image
-              src="/logo_dark.webp"
-              alt="TaxCompPro"
-              width={160}
-              height={60}
-              className="object-contain hidden dark:block"
-              style={{ width: "auto", height: "auto" }}
-              loading="eager"
-            />
-          </Link>
-        </div>
+    return (
+      <div className="min-h-[100dvh] bg-[#f8fafc] px-5 py-12 font-[var(--font-urbanist,Urbanist),sans-serif] dark:bg-[#0a1220]">
+        <div className="mx-auto w-full max-w-5xl">
+          <div className="mb-9 flex justify-center">
+            <Link href="/">
+              <Image src="/logo.webp" alt="TaxCompPro" width={150} height={52}
+                className="object-contain dark:hidden" style={{ width: "150px", height: "auto" }} priority />
+              <Image src="/logo_dark.webp" alt="TaxCompPro" width={150} height={52}
+                className="hidden object-contain dark:block" style={{ width: "150px", height: "auto" }} priority />
+            </Link>
+          </div>
 
-        {/* STEP 1: ACCOUNT CREATION */}
-        {step === "account" && (
-          <div className="bg-white dark:bg-[#0a1628] rounded-2xl border border-slate-200 dark:border-white/10 shadow-lg p-8 transition-colors">
-            <h1 className="text-2xl font-black text-[#0a1628] dark:text-white mb-1">Create your account</h1>
-            <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">
-              Already have an account?{" "}
-              <Link href="/login" className="text-[#d4a017] font-bold hover:underline">
-                Sign in
-              </Link>
-            </p>
-
-            {serverError && (
-              <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-xl px-4 py-3 text-sm mb-5">
-                {serverError}
-              </div>
-            )}
-
-            {/* Google */}
-            <button
-              onClick={handleGoogle}
-              disabled={googleLoading}
-              className="w-full flex items-center justify-center gap-3 border border-slate-200 dark:border-white/10 rounded-xl py-3 font-semibold text-sm text-slate-700 dark:text-white hover:bg-slate-50 dark:hover:bg-white/5 transition-all mb-5 disabled:opacity-60 cursor-pointer"
-            >
-              <Globe className="w-4 h-4" />
-              {googleLoading ? "Redirecting…" : "Continue with Google"}
-            </button>
-
-            <div className="flex items-center gap-3 mb-5">
-              <div className="flex-1 h-px bg-slate-100 dark:bg-white/10" />
-              <span className="text-xs text-slate-400">or register with email</span>
-              <div className="flex-1 h-px bg-slate-100 dark:bg-white/10" />
+          <div className="mx-auto mb-10 max-w-2xl text-center">
+            <div className="mx-auto mb-5 max-w-xs">
+              <StepRail current={3} />
             </div>
+            <h1 className="text-[28px] font-black leading-tight tracking-tight text-[#0a1628] sm:text-[34px] dark:text-white">
+              Choose your membership
+            </h1>
+            <p className="mx-auto mt-3 max-w-lg text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+              Every account needs an active plan to reach the tools, feed and directory.
+              You can change or cancel it later.
+            </p>
+          </div>
 
-            <form onSubmit={handleSubmit(onAccountSubmit)} noValidate className="space-y-4">
-              {/* Full Name */}
-              <div>
-                <label htmlFor="name" className="block text-sm font-semibold text-[#0a1628] dark:text-white mb-1.5">
-                  Full Name
-                </label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <input
-                    id="name"
-                    type="text"
-                    placeholder="John Smith"
-                    className={inputCls(!!errors.name)}
-                    {...register("name")}
-                  />
-                </div>
-                {errors.name && <p className="text-red-500 text-xs mt-1.5">{errors.name.message}</p>}
-              </div>
+          {serverError && (
+            <div className="mx-auto mb-6 max-w-lg">
+              <ErrorBanner message={serverError} />
+            </div>
+          )}
 
-              {/* Email Address */}
-              <div>
-                <label htmlFor="reg-email" className="block text-sm font-semibold text-[#0a1628] dark:text-white mb-1.5">
-                  Email Address
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <input
-                    id="reg-email"
-                    type="email"
-                    placeholder="you@example.com"
-                    className={inputCls(!!errors.email)}
-                    {...register("email")}
-                  />
-                </div>
-                {errors.email && <p className="text-red-500 text-xs mt-1.5">{errors.email.message}</p>}
-              </div>
-
-              {/* Phone Number with Country Code & Flag Selector */}
-              <div>
-                <label htmlFor="phone" className="block text-sm font-semibold text-[#0a1628] dark:text-white mb-1.5">
-                  Phone Number
-                </label>
-                <div
-                  className={`relative flex items-center border rounded-xl transition-all bg-white dark:bg-[#0c1a2e] ${
-                    errors.phone
-                      ? "border-red-400 ring-2 ring-red-100"
-                      : "border-slate-200 dark:border-white/10 focus-within:border-[#0a1628] dark:focus-within:border-amber-400 focus-within:ring-2 focus-within:ring-[#0a1628]/8"
+          {/* Plans. The popular tier is lifted rather than merely outlined, so the
+              recommendation reads before any colour is processed. */}
+          <div
+            role="radiogroup"
+            aria-label="Membership plan"
+            className="grid grid-cols-1 items-start gap-5 md:grid-cols-3"
+          >
+            {membershipPlans.map((p) => {
+              const isSelected = selectedTier === p.id;
+              const Icon = p.icon;
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={isSelected}
+                  onClick={() => setSelectedTier(p.id)}
+                  className={`relative flex h-full flex-col rounded-2xl border-2 p-6 text-left transition-all ${
+                    p.popular ? "md:-mt-3 md:pb-8" : ""
+                  } ${
+                    isSelected
+                      ? "border-[#d4a017] bg-white shadow-[0_12px_36px_rgba(212,160,23,0.18)] dark:bg-white/[0.06]"
+                      : "border-slate-200 bg-white hover:border-slate-300 dark:border-white/12 dark:bg-white/[0.03] dark:hover:border-white/25"
                   }`}
                 >
-                  {/* Country Code Selector Trigger */}
-                  <div className="relative" ref={countryPickerRef}>
-                    <button
-                      type="button"
-                      onClick={() => setShowCountryPicker((p) => !p)}
-                      className="flex items-center gap-1.5 px-3 py-3 text-slate-800 dark:text-white hover:bg-slate-50 dark:hover:bg-white/5 rounded-l-xl transition-colors text-sm font-semibold border-r border-slate-200 dark:border-white/10 cursor-pointer shrink-0"
-                      title="Select Country"
+                  {p.popular && (
+                    <span className="absolute -top-3 left-6 rounded-full bg-[#0a1628] px-3 py-1 text-[10px] font-black uppercase tracking-wider text-[#f0c040]">
+                      {p.badge}
+                    </span>
+                  )}
+
+                  <div className="mb-4 flex items-start justify-between gap-3">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0a1628]">
+                      <Icon className="h-5 w-5 text-[#f0c040]" strokeWidth={2} />
+                    </span>
+                    <span
+                      className={`mt-0.5 flex h-5 w-5 items-center justify-center rounded-full border-2 transition-all ${
+                        isSelected
+                          ? "border-[#d4a017] bg-[#d4a017]"
+                          : "border-slate-300 dark:border-white/30"
+                      }`}
                     >
-                      <span className="text-base leading-none select-none">{selectedCountry.flag}</span>
-                      <span className="text-xs text-slate-700 dark:text-slate-300 font-mono font-bold">
-                        {selectedCountry.dialCode}
-                      </span>
-                      <ChevronDown
-                        className={`w-3.5 h-3.5 text-slate-400 transition-transform ${
-                          showCountryPicker ? "rotate-180" : ""
-                        }`}
-                      />
-                    </button>
-
-                    {/* Dropdown Menu */}
-                    {showCountryPicker && (
-                      <div className="absolute left-0 top-full mt-1.5 w-64 max-h-64 overflow-hidden flex flex-col bg-white dark:bg-[#0f1d33] border border-slate-200 dark:border-white/10 rounded-xl shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-100">
-                        {/* Search in countries */}
-                        <div className="p-2 border-b border-slate-100 dark:border-white/10 bg-slate-50/70 dark:bg-white/5">
-                          <div className="relative">
-                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
-                            <input
-                              type="text"
-                              placeholder="Search country..."
-                              value={countrySearch}
-                              onChange={(e) => setCountrySearch(e.target.value)}
-                              className="w-full text-xs pl-7 pr-2.5 py-1.5 bg-white dark:bg-[#0c1a2e] text-slate-800 dark:text-white border border-slate-200 dark:border-white/10 rounded-lg outline-none focus:border-[#0a1628] dark:focus:border-amber-400"
-                              autoFocus
-                            />
-                          </div>
-                        </div>
-
-                        <div className="overflow-y-auto p-1 divide-y divide-slate-50 dark:divide-white/5 max-h-48">
-                          {filteredCountries.map((c) => (
-                            <button
-                              key={c.code}
-                              type="button"
-                              onClick={() => {
-                                setSelectedCountry(c);
-                                setShowCountryPicker(false);
-                                setCountrySearch("");
-                                if (phoneValue) {
-                                  if (c.code === "US" || c.code === "CA") {
-                                    setValue("phone", formatUSPhone(phoneValue));
-                                  }
-                                }
-                              }}
-                              className={`w-full flex items-center justify-between px-3 py-2 text-xs rounded-lg transition-colors cursor-pointer text-left ${
-                                selectedCountry.code === c.code
-                                  ? "bg-amber-50 dark:bg-amber-400/10 text-amber-950 dark:text-amber-300 font-bold"
-                                  : "hover:bg-slate-50 dark:hover:bg-white/5 text-slate-700 dark:text-slate-200"
-                              }`}
-                            >
-                              <div className="flex items-center gap-2">
-                                <span className="text-base leading-none">{c.flag}</span>
-                                <span>{c.name}</span>
-                              </div>
-                              <div className="flex items-center gap-1.5">
-                                <span className="font-mono text-slate-400 text-[11px] font-semibold">
-                                  {c.dialCode}
-                                </span>
-                                {selectedCountry.code === c.code && (
-                                  <Check className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                                )}
-                              </div>
-                            </button>
-                          ))}
-
-                          {filteredCountries.length === 0 && (
-                            <div className="py-4 text-center text-xs text-slate-400">
-                              No country found
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
+                      {isSelected && <Check className="h-3 w-3 text-white" strokeWidth={3} />}
+                    </span>
                   </div>
 
-                  {/* Phone Input */}
-                  <div className="relative flex-1 flex items-center">
-                    <Phone className="absolute left-3 w-4 h-4 text-slate-400 pointer-events-none" />
-                    <input
-                      id="phone"
-                      type="tel"
-                      placeholder={
-                        selectedCountry.code === "US" || selectedCountry.code === "CA"
-                          ? "(555) 000-0000"
-                          : "Phone number"
-                      }
-                      value={phoneValue}
-                      onChange={handlePhoneChange}
-                      className="w-full font-[inherit] text-sm pl-9 pr-3 py-3 outline-none bg-transparent text-slate-900 dark:text-white"
-                    />
+                  <h2 className="text-base font-black leading-tight text-[#0a1628] dark:text-white">
+                    {p.name}
+                  </h2>
+                  <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">{p.summary}</p>
+
+                  <div className="mt-4 flex items-baseline gap-1">
+                    <span className="text-[32px] font-black leading-none tabular-nums text-[#0a1628] dark:text-white">
+                      {p.price}
+                    </span>
+                    <span className="text-xs font-bold text-slate-600 dark:text-slate-400">{p.period}</span>
                   </div>
-                </div>
-                {errors.phone && <p className="text-red-500 text-xs mt-1.5">{errors.phone.message}</p>}
-              </div>
 
-              {/* Password */}
-              <div>
-                <label htmlFor="reg-password" className="block text-sm font-semibold text-[#0a1628] dark:text-white mb-1.5">
-                  Password
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <input
-                    id="reg-password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="At least 8 characters"
-                    className={inputCls(!!errors.password)}
-                    {...register("password")}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword((p) => !p)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-                {errors.password && (
-                  <p className="text-red-500 text-xs mt-1.5">{errors.password.message}</p>
-                )}
-              </div>
-
-              {/* Confirm Password */}
-              <div>
-                <label
-                  htmlFor="confirmPassword"
-                  className="block text-sm font-semibold text-[#0a1628] dark:text-white mb-1.5"
-                >
-                  Confirm Password
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <input
-                    id="confirmPassword"
-                    type={showConfirm ? "text" : "password"}
-                    placeholder="Repeat your password"
-                    className={inputCls(!!errors.confirmPassword)}
-                    {...register("confirmPassword")}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirm((p) => !p)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
-                  >
-                    {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-                {errors.confirmPassword && (
-                  <p className="text-red-500 text-xs mt-1.5">{errors.confirmPassword.message}</p>
-                )}
-              </div>
-
-              {/* Terms */}
-              <label className="flex items-start gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  {...register("agreeTerms")}
-                  className="mt-0.5 w-4 h-4 shrink-0 accent-[#0a1628]"
-                />
-                <span className="text-sm text-slate-500 dark:text-slate-400">
-                  I agree to the{" "}
-                  <Link href="/terms" className="text-[#0a1628] dark:text-amber-400 font-semibold underline">
-                    Terms of Service
-                  </Link>{" "}
-                  and{" "}
-                  <Link href="/privacy" className="text-[#0a1628] dark:text-amber-400 font-semibold underline">
-                    Privacy Policy
-                  </Link>
-                </span>
-              </label>
-              {errors.agreeTerms && (
-                <p className="text-red-500 text-xs -mt-2">{errors.agreeTerms.message}</p>
-              )}
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#f0c040] to-[#d4a017] text-[#0a1628] font-bold text-sm py-3.5 rounded-full hover:shadow-[0_0_20px_rgba(212,160,23,0.4)] hover:-translate-y-0.5 transition-all disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none cursor-pointer"
-              >
-                {loading ? (
-                  "Creating Account…"
-                ) : (
-                  <>
-                    <span>Continue to Membership Selection</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </>
-                )}
-              </button>
-            </form>
+                  <ul className="mt-5 space-y-2.5 border-t border-slate-100 pt-5 dark:border-white/10">
+                    {p.features.map((feat) => (
+                      <li key={feat} className="flex items-start gap-2 text-xs leading-snug text-slate-700 dark:text-slate-300">
+                        <CheckCircle2 className="mt-px h-3.5 w-3.5 shrink-0 text-[#d4a017]" />
+                        <span>{feat}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </button>
+              );
+            })}
           </div>
-        )}
 
-        {/* STEP 2: MEMBERSHIP SELECTION & CHECKOUT */}
-        {step === "membership" && (
-          <div className="bg-white dark:bg-[#0a1628] rounded-3xl border border-slate-200 dark:border-white/10 shadow-2xl p-6 sm:p-10 space-y-8 animate-in fade-in zoom-in-95 duration-200">
-            {/* Top Progress & Banner */}
-            <div className="text-center space-y-2">
-              <div className="inline-flex items-center gap-2 bg-amber-400/15 border border-amber-400/30 text-amber-500 text-xs font-black uppercase tracking-widest px-3.5 py-1.5 rounded-full">
-                <Crown className="w-3.5 h-3.5" />
-                <span>Step 2 of 2: Select Your Membership Plan</span>
-              </div>
-              <h2 className="text-2xl sm:text-3xl font-black text-[#0a1628] dark:text-white">
-                Choose Your Membership Tier
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-lg mx-auto">
-                All accounts require an active membership plan to access Tax Compliance Pro tools, feeds, and directory.
-                Choose your plan below to complete setup on Stripe.
-              </p>
-            </div>
-
-            {serverError && (
-              <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-xl px-4 py-3 text-xs font-semibold text-center">
-                {serverError}
-              </div>
-            )}
-
-            {/* Plan Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              {membershipPlans.map((p) => {
-                const isSelected = selectedTier === p.id;
-                const Icon = p.icon;
-                return (
-                  <div
-                    key={p.id}
-                    onClick={() => setSelectedTier(p.id)}
-                    className={`relative rounded-2xl p-6 transition-all cursor-pointer flex flex-col justify-between border-2 ${
-                      isSelected
-                        ? "border-amber-400 bg-amber-400/5 dark:bg-amber-400/10 shadow-xl ring-2 ring-amber-400/30"
-                        : "border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 bg-slate-50/50 dark:bg-white/5"
-                    }`}
-                  >
-                    {/* Badge */}
-                    {p.popular && (
-                      <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-[10px] font-black uppercase tracking-wider px-3 py-0.5 rounded-full shadow-md">
-                        {p.badge}
-                      </span>
-                    )}
-
-                    <div>
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="w-10 h-10 rounded-xl bg-[#0a1628] dark:bg-slate-800 text-amber-400 flex items-center justify-center shadow-md">
-                          <Icon className="w-5 h-5" />
-                        </div>
-                        <div
-                          className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
-                            isSelected
-                              ? "border-amber-400 bg-amber-400 text-[#0a1628]"
-                              : "border-slate-300 dark:border-slate-600"
-                          }`}
-                        >
-                          {isSelected && <CheckCircle2 className="w-3.5 h-3.5" />}
-                        </div>
-                      </div>
-
-                      <h3 className="font-black text-base text-[#0a1628] dark:text-white leading-tight">
-                        {p.name}
-                      </h3>
-
-                      <div className="mt-3 flex items-baseline gap-1">
-                        <span className="text-3xl font-black text-[#0a1628] dark:text-white">{p.price}</span>
-                        <span className="text-xs text-slate-500 font-bold">{p.period}</span>
-                      </div>
-
-                      <div className="h-px bg-slate-200 dark:bg-white/10 my-4" />
-
-                      <ul className="space-y-2.5">
-                        {p.features.map((feat, idx) => (
-                          <li key={idx} className="flex items-start gap-2 text-xs text-slate-600 dark:text-slate-300">
-                            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                            <span className="leading-snug">{feat}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    <div className="pt-6">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedTier(p.id);
-                          handleProceedToCheckout();
-                        }}
-                        className={`w-full py-2.5 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-1.5 shadow-md ${
-                          isSelected
-                            ? "bg-[#f0c040] text-[#0a1628] hover:bg-amber-400"
-                            : "bg-slate-200 dark:bg-white/10 text-slate-700 dark:text-white hover:bg-slate-300 dark:hover:bg-white/20"
-                        }`}
-                      >
-                        <span>Select {p.id === "MARKETPLACE_PLUS" ? "Plus" : p.id}</span>
-                        <ArrowRight className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Promo Code Box */}
-            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3">
-              <div className="flex items-center gap-2.5 text-xs text-slate-600 dark:text-slate-300 font-bold">
-                <Tag className="w-4 h-4 text-amber-500" />
-                <span>Have a Promo or Referral Code?</span>
-              </div>
-              <div className="flex items-center gap-2 w-full sm:w-auto">
+          {/* One checkout CTA for the whole step. The cards select; this commits. */}
+          <div className="mx-auto mt-9 max-w-lg">
+            <div className="mb-4">
+              <label htmlFor="coupon" className={`${fieldLabel} mb-2`}>
+                Promo or referral code{" "}
+                <span className="font-normal text-slate-600 dark:text-slate-400">(optional)</span>
+              </label>
+              <div className="relative">
+                <Tag className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 dark:text-slate-400" />
                 <input
+                  id="coupon"
                   type="text"
-                  placeholder="Enter code (optional)"
+                  placeholder="Enter your code"
                   value={couponCode}
                   onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                  className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0a1424] text-xs font-bold uppercase tracking-wider text-[#0a1628] dark:text-white placeholder:normal-case placeholder:font-normal"
+                  className={`${inputBase} ${inputOk} py-3 pl-11 pr-4 uppercase tracking-wider placeholder:normal-case placeholder:tracking-normal`}
                 />
               </div>
-            </div>
-
-            {/* Big Complete Registration CTA */}
-            <div className="text-center space-y-3 pt-2">
-              <button
-                type="button"
-                disabled={checkoutLoading}
-                onClick={handleProceedToCheckout}
-                className="w-full sm:w-auto sm:min-w-[320px] mx-auto py-4 px-8 rounded-full bg-gradient-to-r from-[#f0c040] to-[#d4a017] hover:from-amber-300 hover:to-amber-400 text-[#0a1628] font-black text-sm shadow-xl hover:shadow-[0_0_30px_rgba(212,160,23,0.5)] transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
-              >
-                {checkoutLoading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Connecting to Stripe Checkout…</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Proceed to Stripe Checkout</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </>
-                )}
-              </button>
-
-              <p className="text-[11px] text-slate-400 font-medium">
-                🔒 Safe &amp; Secure 256-bit Encrypted Checkout. After checkout, you will land directly in your private feed.
+              <p className="mt-2 text-xs text-slate-600 dark:text-slate-400">
+                Codes are validated and applied at checkout.
               </p>
             </div>
+
+            <button type="button" disabled={checkoutLoading} onClick={handleProceedToCheckout} className={goldCta}>
+              {checkoutLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Connecting to Stripe…</span>
+                </>
+              ) : (
+                <>
+                  <span>Continue to checkout{selected ? ` (${selected.price}${selected.period})` : ""}</span>
+                  <ArrowRight className="h-4 w-4" />
+                </>
+              )}
+            </button>
+
+            <p className="mt-4 flex items-center justify-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
+              <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
+              Secure 256-bit encrypted checkout on Stripe.
+            </p>
           </div>
-        )}
+        </div>
       </div>
-    </div>
+    );
+  }
+
+  /* ─────────────────────────── STEP 2: VERIFY EMAIL ─────────────────────────── */
+  if (step === "verify") {
+    return (
+      <AuthShell>
+        <StepRail current={2} />
+
+        <header className="mb-7">
+          <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-[#0a1628] dark:bg-amber-400/15">
+            <MailCheck className="h-6 w-6 text-[#f0c040]" strokeWidth={2} />
+          </span>
+          <h1 className="text-[28px] font-black leading-tight tracking-tight text-[#0a1628] sm:text-[32px] dark:text-white">
+            Check your email
+          </h1>
+          <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+            We sent a 6-digit code to{" "}
+            <span className="break-all font-bold text-[#0a1628] dark:text-white">{pendingSignup?.email}</span>.
+            Enter it below to confirm your address.
+          </p>
+        </header>
+
+        <OtpInput
+          value={otpCode}
+          onChange={(v) => { setOtpCode(v); if (otpError) setOtpError(""); }}
+          onComplete={(v) => handleVerifyOtp(v)}
+          disabled={otpLoading}
+          invalid={Boolean(otpError)}
+          autoFocus
+        />
+
+        {otpError ? (
+          <p role="alert" className="mt-3 text-sm font-medium text-red-600 dark:text-red-400">
+            {otpError}
+          </p>
+        ) : (
+          <p className="mt-3 text-xs text-slate-600 dark:text-slate-400">
+            The code expires in 10 minutes.
+          </p>
+        )}
+
+        <button
+          type="button"
+          onClick={() => handleVerifyOtp()}
+          disabled={otpLoading || otpCode.replace(/\D/g, "").length !== 6}
+          className={`${goldCta} mt-6`}
+        >
+          {otpLoading ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Verifying…</span>
+            </>
+          ) : (
+            <>
+              <span>Verify and continue</span>
+              <ArrowRight className="h-4 w-4" />
+            </>
+          )}
+        </button>
+
+        <div className="mt-6 flex items-center justify-between gap-4 border-t border-slate-200 pt-5 dark:border-white/10">
+          <button
+            type="button"
+            onClick={() => { setStep("account"); setOtpCode(""); setOtpError(""); }}
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-600 transition-colors hover:text-[#0a1628] dark:text-slate-300 dark:hover:text-white"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Change email
+          </button>
+
+          <button
+            type="button"
+            onClick={handleResendOtp}
+            disabled={resendIn > 0 || resendLoading}
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#b8860b] hover:underline disabled:cursor-not-allowed disabled:text-slate-600 disabled:no-underline dark:text-[#f0c040] dark:disabled:text-slate-400"
+          >
+            <RefreshCw className={`h-4 w-4 ${resendLoading ? "animate-spin" : ""}`} />
+            {resendIn > 0 ? `Resend in ${resendIn}s` : resendLoading ? "Sending…" : "Resend code"}
+          </button>
+        </div>
+      </AuthShell>
+    );
+  }
+
+  /* ─────────────────────────── STEP 1: ACCOUNT ─────────────────────────── */
+  return (
+    <AuthShell>
+      <StepRail current={1} />
+
+      <header className="mb-7">
+        <h1 className="text-[28px] font-black leading-tight tracking-tight text-[#0a1628] sm:text-[32px] dark:text-white">
+          Create your account
+        </h1>
+        <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+          Already have an account?{" "}
+          <Link href="/login" className="font-bold text-[#b8860b] underline-offset-2 hover:underline dark:text-[#f0c040]">
+            Sign in
+          </Link>
+        </p>
+      </header>
+
+      {serverError && <ErrorBanner message={serverError} />}
+
+      <button
+        type="button"
+        onClick={handleGoogle}
+        disabled={googleLoading || loading}
+        className="flex w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white py-3 text-sm font-semibold text-slate-700 transition-all hover:border-slate-300 hover:bg-slate-50 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 dark:border-white/15 dark:bg-transparent dark:text-white dark:hover:bg-white/5"
+      >
+        {googleLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <GoogleMark />}
+        {googleLoading ? "Redirecting…" : "Continue with Google"}
+      </button>
+
+      <div className="my-6 flex items-center gap-3">
+        <div className="h-px flex-1 bg-slate-200 dark:bg-white/10" />
+        <span className="text-xs font-medium text-slate-500 dark:text-slate-400">or register with email</span>
+        <div className="h-px flex-1 bg-slate-200 dark:bg-white/10" />
+      </div>
+
+      <form onSubmit={handleSubmit(onAccountSubmit)} noValidate className="space-y-5">
+        {/* Full name */}
+        <div className="space-y-2">
+          <label htmlFor="name" className={fieldLabel}>Full name</label>
+          <div className="relative">
+            <User className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 dark:text-slate-400" />
+            <input
+              id="name" type="text" autoComplete="name" placeholder="Marcus Reyes"
+              aria-invalid={Boolean(errors.name) || undefined}
+              className={`${inputBase} ${errors.name ? inputErr : inputOk} py-3 pl-11 pr-4`}
+              {...register("name")}
+            />
+          </div>
+          {errors.name && <p className={fieldError}>{errors.name.message}</p>}
+        </div>
+
+        {/* Email */}
+        <div className="space-y-2">
+          <label htmlFor="reg-email" className={fieldLabel}>Email address</label>
+          <div className="relative">
+            <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 dark:text-slate-400" />
+            <input
+              id="reg-email" type="email" autoComplete="email" placeholder="you@firm.com"
+              aria-invalid={Boolean(errors.email) || undefined}
+              className={`${inputBase} ${errors.email ? inputErr : inputOk} py-3 pl-11 pr-4`}
+              {...register("email")}
+            />
+          </div>
+          {errors.email && <p className={fieldError}>{errors.email.message}</p>}
+          <p className="text-xs text-slate-600 dark:text-slate-400">
+            We send a verification code here before creating your account.
+          </p>
+        </div>
+
+        {/* Phone with country selector */}
+        <div className="space-y-2">
+          <label htmlFor="phone" className={fieldLabel}>Phone number</label>
+          <div
+            className={`relative flex items-center rounded-xl border bg-white transition-all dark:bg-[#0c1a2e] ${
+              errors.phone
+                ? "border-red-400 ring-4 ring-red-500/15"
+                : "border-slate-200 focus-within:border-[#0a1628] focus-within:ring-4 focus-within:ring-[#0a1628]/10 dark:border-white/15 dark:focus-within:border-amber-400 dark:focus-within:ring-amber-400/20"
+            }`}
+          >
+            <div className="relative" ref={countryPickerRef}>
+              <button
+                type="button"
+                onClick={() => setShowCountryPicker((p) => !p)}
+                aria-expanded={showCountryPicker}
+                aria-label={`Country code, currently ${selectedCountry.name} ${selectedCountry.dialCode}`}
+                className="flex shrink-0 items-center gap-1.5 rounded-l-xl border-r border-slate-200 px-3 py-3 text-sm font-semibold text-slate-800 transition-colors hover:bg-slate-50 dark:border-white/10 dark:text-white dark:hover:bg-white/5"
+              >
+                <span className="select-none text-base leading-none">{selectedCountry.flag}</span>
+                <span className="font-mono text-xs font-bold text-slate-700 dark:text-slate-300">
+                  {selectedCountry.dialCode}
+                </span>
+                <ChevronDown className={`h-3.5 w-3.5 text-slate-500 transition-transform dark:text-slate-400 ${showCountryPicker ? "rotate-180" : ""}`} />
+              </button>
+
+              {showCountryPicker && (
+                <div className="absolute left-0 top-full z-50 mt-1.5 flex max-h-64 w-64 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl dark:border-white/10 dark:bg-[#0f1d33]">
+                  <div className="border-b border-slate-100 bg-slate-50 p-2 dark:border-white/10 dark:bg-white/5">
+                    <div className="relative">
+                      <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500 dark:text-slate-400" />
+                      <input
+                        type="text"
+                        placeholder="Search country"
+                        value={countrySearch}
+                        onChange={(e) => setCountrySearch(e.target.value)}
+                        className="w-full rounded-lg border border-slate-200 bg-white py-1.5 pl-7 pr-2.5 text-xs text-slate-800 outline-none placeholder:text-slate-500 focus:border-[#0a1628] dark:border-white/10 dark:bg-[#0c1a2e] dark:text-white dark:focus:border-amber-400"
+                        autoFocus
+                      />
+                    </div>
+                  </div>
+
+                  <div className="max-h-48 overflow-y-auto p-1">
+                    {filteredCountries.map((c) => (
+                      <button
+                        key={c.code}
+                        type="button"
+                        onClick={() => {
+                          setSelectedCountry(c);
+                          setShowCountryPicker(false);
+                          setCountrySearch("");
+                          if (phoneValue && (c.code === "US" || c.code === "CA")) {
+                            setValue("phone", formatUSPhone(phoneValue));
+                          }
+                        }}
+                        className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-xs transition-colors ${
+                          selectedCountry.code === c.code
+                            ? "bg-amber-50 font-bold text-amber-900 dark:bg-amber-400/10 dark:text-amber-300"
+                            : "text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-white/5"
+                        }`}
+                      >
+                        <span className="flex items-center gap-2">
+                          <span className="text-base leading-none">{c.flag}</span>
+                          <span>{c.name}</span>
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                          <span className="font-mono text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                            {c.dialCode}
+                          </span>
+                          {selectedCountry.code === c.code && (
+                            <Check className="h-3.5 w-3.5 text-amber-700 dark:text-amber-400" />
+                          )}
+                        </span>
+                      </button>
+                    ))}
+
+                    {filteredCountries.length === 0 && (
+                      <p className="py-6 text-center text-xs text-slate-600 dark:text-slate-400">
+                        No country matches that search.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="relative flex flex-1 items-center">
+              <Phone className="pointer-events-none absolute left-3 h-4 w-4 text-slate-500 dark:text-slate-400" />
+              <input
+                id="phone"
+                type="tel"
+                autoComplete="tel-national"
+                placeholder={
+                  selectedCountry.code === "US" || selectedCountry.code === "CA"
+                    ? "(555) 000-0000"
+                    : "Phone number"
+                }
+                value={phoneValue}
+                onChange={handlePhoneChange}
+                aria-invalid={Boolean(errors.phone) || undefined}
+                className="w-full bg-transparent py-3 pl-9 pr-3 font-[inherit] text-sm text-slate-900 outline-none placeholder:text-slate-500 dark:text-white dark:placeholder:text-slate-400"
+              />
+            </div>
+          </div>
+          {errors.phone && <p className={fieldError}>{errors.phone.message}</p>}
+        </div>
+
+        {/* Password */}
+        <div className="space-y-2">
+          <label htmlFor="reg-password" className={fieldLabel}>Password</label>
+          <div className="relative">
+            <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 dark:text-slate-400" />
+            <input
+              id="reg-password"
+              type={showPassword ? "text" : "password"}
+              autoComplete="new-password"
+              placeholder="At least 8 characters"
+              aria-invalid={Boolean(errors.password) || undefined}
+              className={`${inputBase} ${errors.password ? inputErr : inputOk} py-3 pl-11 pr-11`}
+              {...register("password")}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((p) => !p)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-500 transition-colors hover:text-[#0a1628] dark:text-slate-400 dark:hover:text-white"
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+          {errors.password && <p className={fieldError}>{errors.password.message}</p>}
+        </div>
+
+        {/* Confirm password */}
+        <div className="space-y-2">
+          <label htmlFor="confirmPassword" className={fieldLabel}>Confirm password</label>
+          <div className="relative">
+            <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 dark:text-slate-400" />
+            <input
+              id="confirmPassword"
+              type={showConfirm ? "text" : "password"}
+              autoComplete="new-password"
+              placeholder="Repeat your password"
+              aria-invalid={Boolean(errors.confirmPassword) || undefined}
+              className={`${inputBase} ${errors.confirmPassword ? inputErr : inputOk} py-3 pl-11 pr-11`}
+              {...register("confirmPassword")}
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirm((p) => !p)}
+              aria-label={showConfirm ? "Hide password" : "Show password"}
+              className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-500 transition-colors hover:text-[#0a1628] dark:text-slate-400 dark:hover:text-white"
+            >
+              {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+          {errors.confirmPassword && <p className={fieldError}>{errors.confirmPassword.message}</p>}
+        </div>
+
+        {/* Terms */}
+        <div className="space-y-2">
+          <label className="flex cursor-pointer items-start gap-3">
+            <input
+              type="checkbox"
+              {...register("agreeTerms")}
+              className="mt-0.5 h-4 w-4 shrink-0 accent-[#d4a017]"
+            />
+            <span className="text-sm text-slate-600 dark:text-slate-300">
+              I agree to the{" "}
+              <Link href="/terms" className="font-semibold text-[#0a1628] underline underline-offset-2 dark:text-[#f0c040]">
+                Terms of Service
+              </Link>{" "}
+              and{" "}
+              <Link href="/privacy" className="font-semibold text-[#0a1628] underline underline-offset-2 dark:text-[#f0c040]">
+                Privacy Policy
+              </Link>
+            </span>
+          </label>
+          {errors.agreeTerms && <p className={fieldError}>{errors.agreeTerms.message}</p>}
+        </div>
+
+        <button type="submit" disabled={loading || googleLoading} className={goldCta}>
+          {loading ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Sending code…</span>
+            </>
+          ) : (
+            <>
+              <span>Continue</span>
+              <ArrowRight className="h-4 w-4" />
+            </>
+          )}
+        </button>
+      </form>
+    </AuthShell>
   );
 }
 

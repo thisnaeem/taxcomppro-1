@@ -1,16 +1,26 @@
 "use client";
 
-import Link from "next/link"; 
+import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "@/lib/auth-client";
 import { loginSchema, type LoginInput } from "@/lib/schemas";
-import { Mail, Lock, ArrowRight, Globe, Eye, EyeOff, Check } from "lucide-react";
-import Image from "next/image";
+import { Mail, Lock, ArrowRight, Eye, EyeOff, Check, AlertCircle, Loader2 } from "lucide-react";
+import AuthShell from "@/components/auth/AuthShell";
+import GoogleMark from "@/components/auth/GoogleMark";
 
-// Inner component that uses useSearchParams — must be inside <Suspense>
+// Radius system for this page: inputs and secondary buttons 12px, cards 16px,
+// primary CTA full pill. Applied consistently across both auth screens.
+const inputBase =
+  "w-full font-[inherit] text-sm rounded-xl border bg-white text-[#0a1628] placeholder:text-slate-500 outline-none transition-all " +
+  "dark:bg-[#0c1a2e] dark:text-white dark:placeholder:text-slate-400";
+const inputOk =
+  "border-slate-200 focus:border-[#0a1628] focus:ring-4 focus:ring-[#0a1628]/10 dark:border-white/15 dark:focus:border-amber-400 dark:focus:ring-amber-400/20";
+const inputErr =
+  "border-red-400 focus:border-red-500 focus:ring-4 focus:ring-red-500/15";
+
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -25,13 +35,11 @@ function LoginForm() {
     resolver: zodResolver(loginSchema),
   });
 
-  // Pre-fill email from localStorage if previously remembered
+  // Pre-fill email from localStorage if previously remembered.
+  // rememberMe already defaults to true, so only the field value needs restoring.
   useEffect(() => {
     const saved = localStorage.getItem("tcp_remembered_email");
-    if (saved) {
-      setValue("email", saved);
-      setRememberMe(true);
-    }
+    if (saved) setValue("email", saved);
   }, [setValue]);
 
   const onSubmit = async (data: LoginInput) => {
@@ -53,124 +61,188 @@ function LoginForm() {
   const handleGoogle = async () => {
     setGoogleLoading(true);
     try { await signIn.social({ provider: "google", callbackURL: nextPath }); }
-    catch { setServerError("Google sign-in failed."); }
-    finally { setGoogleLoading(false); }
+    catch { setServerError("Google sign-in failed."); setGoogleLoading(false); }
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-lg p-8">
-      <h1 className="text-2xl font-black text-[#0a1628] mb-1">Welcome back</h1>
-      <p className="text-slate-500 text-sm mb-6">
-        Don&apos;t have an account?{" "}
-        <Link href="/register" className="text-[#d4a017] font-bold hover:underline">Create one free</Link>
-      </p>
+    <>
+      <header className="mb-8">
+        <h1 className="text-[28px] sm:text-[32px] font-black leading-tight tracking-tight text-[#0a1628] dark:text-white">
+          Welcome back
+        </h1>
+        <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+          New to Tax Compliance Pro?{" "}
+          <Link
+            href="/register"
+            className="font-bold text-[#b8860b] underline-offset-2 hover:underline dark:text-[#f0c040]"
+          >
+            Create an account
+          </Link>
+        </p>
+      </header>
 
       {serverError && (
-        <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm mb-5">{serverError}</div>
+        <div
+          role="alert"
+          className="mb-6 flex items-start gap-2.5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300"
+        >
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>{serverError}</span>
+        </div>
       )}
 
-      {/* Google */}
-      <button onClick={handleGoogle} disabled={googleLoading}
-        className="w-full flex items-center justify-center gap-3 border border-slate-200 rounded-xl py-3 font-semibold text-sm text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all mb-5 disabled:opacity-60">
-        <Globe className="w-4 h-4" />
+      <button
+        type="button"
+        onClick={handleGoogle}
+        disabled={googleLoading || loading}
+        className="flex w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white py-3 text-sm font-semibold text-slate-700 transition-all hover:border-slate-300 hover:bg-slate-50 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 dark:border-white/15 dark:bg-transparent dark:text-white dark:hover:bg-white/5"
+      >
+        {googleLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <GoogleMark />}
         {googleLoading ? "Redirecting…" : "Continue with Google"}
       </button>
 
-      <div className="flex items-center gap-3 mb-5">
-        <div className="flex-1 h-px bg-slate-100" />
-        <span className="text-xs text-slate-400">or sign in with email</span>
-        <div className="flex-1 h-px bg-slate-100" />
+      <div className="my-6 flex items-center gap-3">
+        <div className="h-px flex-1 bg-slate-200 dark:bg-white/10" />
+        <span className="text-xs font-medium text-slate-500 dark:text-slate-400">or sign in with email</span>
+        <div className="h-px flex-1 bg-slate-200 dark:bg-white/10" />
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
-        <div>
-          <label htmlFor="email" className="block text-sm font-semibold text-[#0a1628] mb-1.5">Email Address</label>
+      <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-5">
+        <div className="space-y-2">
+          <label htmlFor="email" className="block text-sm font-semibold text-[#0a1628] dark:text-white">
+            Email address
+          </label>
           <div className="relative">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input id="email" type="email" placeholder="you@example.com"
-              className={`w-full font-[inherit] text-sm pl-10 pr-4 py-3 border rounded-xl outline-none transition-all ${errors.email ? "border-red-400 focus:ring-2 focus:ring-red-100" : "border-slate-200 focus:border-[#0a1628] focus:ring-2 focus:ring-[#0a1628]/8"}`}
-              {...register("email")} />
+            <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 dark:text-slate-400" />
+            <input
+              id="email"
+              type="email"
+              autoComplete="email"
+              placeholder="you@firm.com"
+              aria-invalid={Boolean(errors.email) || undefined}
+              aria-describedby={errors.email ? "email-error" : undefined}
+              className={`${inputBase} ${errors.email ? inputErr : inputOk} py-3 pl-11 pr-4`}
+              {...register("email")}
+            />
           </div>
-          {errors.email && <p className="text-red-500 text-xs mt-1.5">{errors.email.message}</p>}
+          {errors.email && (
+            <p id="email-error" className="text-xs font-medium text-red-600 dark:text-red-400">
+              {errors.email.message}
+            </p>
+          )}
         </div>
 
-        <div>
-          <div className="flex justify-between items-center mb-1.5">
-            <label htmlFor="password" className="block text-sm font-semibold text-[#0a1628]">Password</label>
-            <Link href="/forgot-password" className="text-xs text-slate-400 hover:text-[#d4a017] transition-colors">Forgot password?</Link>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <label htmlFor="password" className="block text-sm font-semibold text-[#0a1628] dark:text-white">
+              Password
+            </label>
+            <Link
+              href="/forgot-password"
+              className="text-xs font-semibold text-slate-600 transition-colors hover:text-[#b8860b] dark:text-slate-300 dark:hover:text-[#f0c040]"
+            >
+              Forgot password?
+            </Link>
           </div>
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input id="password" type={showPassword ? "text" : "password"} placeholder="••••••••"
-              className={`w-full font-[inherit] text-sm pl-10 pr-10 py-3 border rounded-xl outline-none transition-all ${errors.password ? "border-red-400 focus:ring-2 focus:ring-red-100" : "border-slate-200 focus:border-[#0a1628] focus:ring-2 focus:ring-[#0a1628]/8"}`}
-              {...register("password")} />
-            <button type="button" onClick={() => setShowPassword(p => !p)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
-              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 dark:text-slate-400" />
+            <input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              autoComplete="current-password"
+              placeholder="Enter your password"
+              aria-invalid={Boolean(errors.password) || undefined}
+              aria-describedby={errors.password ? "password-error" : undefined}
+              className={`${inputBase} ${errors.password ? inputErr : inputOk} py-3 pl-11 pr-11`}
+              {...register("password")}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((p) => !p)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-500 transition-colors hover:text-[#0a1628] dark:text-slate-400 dark:hover:text-white"
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
-          {errors.password && <p className="text-red-500 text-xs mt-1.5">{errors.password.message}</p>}
+          {errors.password && (
+            <p id="password-error" className="text-xs font-medium text-red-600 dark:text-red-400">
+              {errors.password.message}
+            </p>
+          )}
         </div>
 
-        {/* Remember Me */}
-        <div className="flex items-center gap-3 pt-0.5">
+        <div className="flex items-center gap-3">
           <button
             type="button"
-            id="remember-me"
-            onClick={() => setRememberMe(p => !p)}
-            className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all duration-150 ${
+            role="checkbox"
+            aria-checked={rememberMe}
+            onClick={() => setRememberMe((p) => !p)}
+            className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition-all ${
               rememberMe
-                ? "bg-[#0a1628] border-[#0a1628]"
-                : "bg-white border-slate-300 hover:border-[#0a1628]"
+                ? "border-[#0a1628] bg-[#0a1628] dark:border-amber-400 dark:bg-amber-400"
+                : "border-slate-300 bg-white hover:border-[#0a1628] dark:border-white/25 dark:bg-transparent"
             }`}
           >
-            {rememberMe && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+            {rememberMe && <Check className="h-3 w-3 text-white dark:text-[#0a1628]" strokeWidth={3} />}
           </button>
-          <label
-            htmlFor="remember-me"
-            className="text-sm text-slate-600 cursor-pointer select-none"
-            onClick={() => setRememberMe(p => !p)}
+          <span
+            onClick={() => setRememberMe((p) => !p)}
+            className="cursor-pointer select-none text-sm text-slate-600 dark:text-slate-300"
           >
-            Remember me
-          </label>
+            Keep me signed in
+          </span>
         </div>
 
-        <button type="submit" disabled={loading}
-          className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#f0c040] to-[#d4a017] text-[#0a1628] font-bold text-sm py-3.5 rounded-full hover:shadow-[0_0_20px_rgba(212,160,23,0.4)] hover:-translate-y-0.5 transition-all disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none mt-1">
-          {loading ? "Signing in…" : <><span>Sign In</span><ArrowRight className="w-4 h-4" /></>}
+        <button
+          type="submit"
+          disabled={loading || googleLoading}
+          className="mt-1 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#f0c040] to-[#d4a017] py-3.5 text-sm font-bold text-[#0a1628] transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(212,160,23,0.35)] active:translate-y-0 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:shadow-none"
+        >
+          {loading ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Signing in…</span>
+            </>
+          ) : (
+            <>
+              <span>Sign in</span>
+              <ArrowRight className="h-4 w-4" />
+            </>
+          )}
         </button>
       </form>
 
-      <p className="text-center text-xs text-slate-400 mt-6">
+      <p className="mt-7 text-center text-xs leading-relaxed text-slate-500 dark:text-slate-400">
         By signing in you agree to our{" "}
-        <Link href="/terms" className="underline hover:text-[#0a1628]">Terms</Link> and{" "}
-        <Link href="/privacy" className="underline hover:text-[#0a1628]">Privacy Policy</Link>.
+        <Link href="/terms" className="underline underline-offset-2 hover:text-[#0a1628] dark:hover:text-white">Terms</Link>{" "}
+        and{" "}
+        <Link href="/privacy" className="underline underline-offset-2 hover:text-[#0a1628] dark:hover:text-white">Privacy Policy</Link>.
       </p>
+    </>
+  );
+}
+
+function FormSkeleton() {
+  return (
+    <div className="animate-pulse space-y-5" aria-hidden="true">
+      <div className="h-8 w-2/3 rounded-lg bg-slate-200 dark:bg-white/10" />
+      <div className="h-4 w-1/2 rounded bg-slate-200 dark:bg-white/10" />
+      <div className="h-12 rounded-xl bg-slate-200 dark:bg-white/10" />
+      <div className="h-4 w-1/3 rounded bg-slate-200 dark:bg-white/10" />
+      <div className="h-12 rounded-xl bg-slate-200 dark:bg-white/10" />
+      <div className="h-12 rounded-xl bg-slate-200 dark:bg-white/10" />
+      <div className="h-12 rounded-full bg-slate-200 dark:bg-white/10" />
     </div>
   );
 }
 
-// Outer page — wraps LoginForm in Suspense to satisfy Next.js build requirement
 export default function LoginPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 font-[var(--font-urbanist,Urbanist),sans-serif] px-4 py-12">
-      <div className="w-full max-w-[420px]">
-        {/* Logo */}
-        <div className="flex justify-center mb-8">
-          <Link href="/">
-            <Image src="/logo.webp"      alt="TaxCompPro" width={160} height={60} className="object-contain dark:hidden" style={{ width: "auto", height: "auto" }} loading="eager" />
-            <Image src="/logo_dark.webp" alt="TaxCompPro" width={160} height={60} className="object-contain hidden dark:block" style={{ width: "auto", height: "auto" }} loading="eager" />
-          </Link>
-        </div>
-
-        <Suspense fallback={
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-lg p-8 flex items-center justify-center min-h-[400px]">
-            <div className="w-8 h-8 border-2 border-[#d4a017] border-t-transparent rounded-full animate-spin" />
-          </div>
-        }>
-          <LoginForm />
-        </Suspense>
-      </div>
-    </div>
+    <AuthShell>
+      <Suspense fallback={<FormSkeleton />}>
+        <LoginForm />
+      </Suspense>
+    </AuthShell>
   );
 }

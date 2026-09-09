@@ -41,6 +41,18 @@ const AUTH_PAGES = ["/login", "/register", "/forgot-password", "/reset-password"
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Email sign-up must go through /api/auth/otp/verify, which only creates the account
+  // after the emailed code is accepted. Blocking better-auth's public sign-up endpoint
+  // stops that check being skipped. The OTP route calls auth.api.signUpEmail in-process,
+  // so it never crosses this HTTP path. Google OAuth uses /api/auth/callback/* and is
+  // unaffected: Google has already verified the address.
+  if (pathname === "/api/auth/sign-up/email" && request.method === "POST") {
+    return NextResponse.json(
+      { message: "Email verification is required. Start at /register." },
+      { status: 403 }
+    );
+  }
+
   // Always pass through: static assets & all API routes (auth is enforced at the route level)
   if (
     pathname.startsWith("/api/") ||

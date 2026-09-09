@@ -53,6 +53,33 @@ body {
   transition: background-color 0.2s ease, border-color 0.2s ease, color 0.1s ease;
 }
 
+/* ── Reduced motion ──
+   Honour prefers-reduced-motion across the whole app: collapse decorative
+   animation and hover travel to instant, but keep opacity/visibility changes
+   so nothing becomes unreachable. Spinners keep a slow turn so "loading" is
+   still legible rather than looking frozen. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  html { scroll-behavior: auto !important; }
+  .animate-float,
+  .animate-fade-in-up { animation: none !important; }
+  .animate-spin {
+    animation-duration: 1.5s !important;
+    animation-iteration-count: infinite !important;
+  }
+  /* Hover lifts read as jitter when motion is reduced. */
+  .hover\:-translate-y-0\.5:hover,
+  .hover\:-translate-y-1:hover,
+  .hover\:-translate-y-2:hover,
+  .hover\:scale-105:hover,
+  .hover\:scale-\[1\.02\]:hover { transform: none !important; }
+}
+
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: #f1f5f9; }
 ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
@@ -141,8 +168,10 @@ body {
   color: #e2e8f0 !important;
   border-color: #2d4460 !important;
 }
+/* Placeholders must still clear WCAG AA against the #1e2e45 input fill.
+   The previous #4e6280 sat at ~2:1 and was effectively unreadable. */
 .dark input::placeholder,
-.dark textarea::placeholder { color: #4e6280 !important; }
+.dark textarea::placeholder { color: #94a3b8 !important; }
 
 /* ── Shadows ── */
 .dark .shadow-sm  { box-shadow: 0 1px 4px rgba(0,0,0,0.5) !important; }

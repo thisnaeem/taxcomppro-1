@@ -101,13 +101,13 @@ const plans = [
   },
   {
     name: "VIP + Marketplace Bundle", price: "$79.99", period: "/month", img: "/plan-marketplace.webp",
-    popular: true, badge: "Most Popular", savings: "Save $131.96/yr",
+    popular: true, badge: "Most Popular", savings: null,
     features: ["Professional marketplace listing","Custom seller profile page","Ability to sell services","Private Discussion Forums","Fully Customizable Profile","Featured in Marketplace directory","Enhanced Visibility & Credibility","Stronger Brand Authority"],
     cta: "Start Marketplace Plan", href: "/register?plan=MARKETPLACE",
   },
   {
     name: "VIP + Marketplace Plus", price: "$129.99", period: "/month", img: "/plan-marketplace-plus.webp",
-    popular: true, badge: "Best Value", savings: "Save $131.96/yr",
+    popular: false, badge: "Best Value", savings: null,
     features: ["Professional marketplace listing","Custom seller profile","Ability to sell services","Private Discussion Forums","Fully Customizable Profile","Featured in directory","Enhanced Visibility","Live Audio Session Hosting","Live Video Session Hosting","Post Ads/Products/Services"],
     cta: "Get Best Value", href: "/register?plan=MARKETPLACE_PLUS",
   },
@@ -145,9 +145,7 @@ export default function LandingPage() {
               {/* Heading */}
               <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-[62px] font-black leading-[1.08] tracking-tight mb-6">
                 The Professional Hub for{" "}
-                <span className="bg-gradient-to-r from-[#f0c040] via-[#fbbf24] to-[#d4a017] bg-clip-text text-transparent">
-                  Tax & Business Experts
-                </span>
+                <span className="text-[#f0c040]">Tax &amp; Business Experts</span>
               </h1>
 
               {/* Subtitle */}
@@ -170,22 +168,6 @@ export default function LandingPage() {
                 >
                   View Pricing
                 </Link>
-              </div>
-
-              {/* Trust Indicators */}
-              <div className="mt-10 pt-6 border-t border-white/10 flex flex-wrap items-center justify-center lg:justify-start gap-6 text-xs sm:text-sm text-slate-300">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                  <span>Verified Tax Pros</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                  <span>Encrypted Platform</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                  <span>Members-Only Access</span>
-                </div>
               </div>
             </div>
 
@@ -216,15 +198,26 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ── TRUST BAND (sits under the hero, not inside it) ── */}
+      <section className="bg-[#0a1628] border-b border-white/10 py-5">
+        <div className="max-w-7xl mx-auto px-5 sm:px-6">
+          <ul className="flex flex-wrap items-center justify-center gap-x-10 gap-y-3 text-sm text-slate-300">
+            {["Verified tax pros", "Encrypted platform", "Members-only access"].map((t) => (
+              <li key={t} className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-[#f0c040] shrink-0" />
+                <span>{t}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
 
       {/* ── FEATURES ("Why TaxCompPro" - Clean, Large Icons with Nothing Around Them) ── */}
       <section id="about" className="py-24 bg-white dark:bg-[#0a1628] border-b border-slate-200 dark:border-white/10">
         <div className="max-w-7xl mx-auto px-5 sm:px-6">
           
           <div className="text-center max-w-3xl mx-auto mb-16">
-            <p className="text-xs sm:text-sm font-black uppercase tracking-widest text-[#d4a017] dark:text-[#f0c040] mb-3">
-              Why TaxCompPro
-            </p>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-[#0a1628] dark:text-white tracking-tight mb-4">
               Everything You Need in One Platform
             </h2>
@@ -233,31 +226,89 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {features.map((f) => (
-              <div
-                key={f.title}
-                className="bg-[#f8fafc] dark:bg-[#0c182b] border border-slate-200 dark:border-slate-800 rounded-3xl p-8 hover:border-[#d4a017] dark:hover:border-[#f0c040] hover:-translate-y-2 hover:shadow-2xl hover:shadow-[#d4a017]/10 transition-all duration-300 flex flex-col items-center text-center group"
-              >
-                {/* Big prominent icon with nothing around it */}
-                <div className="mb-6 w-24 h-24 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <Image
-                    src={f.img}
-                    alt={f.title}
-                    width={96}
-                    height={96}
-                    className="w-24 h-24 object-contain drop-shadow-md"
-                  />
-                </div>
+          {/* Bento, not a uniform card row. Six items, six cells, three tile sizes:
+              8+4 / 4+4+4 / 12. Every cell collapses to full width below md. */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-5">
 
-                <h3 className="text-xl font-black text-[#0a1628] dark:text-white mb-3 group-hover:text-[#d4a017] dark:group-hover:text-[#f0c040] transition-colors">
+            {/* Lead tile: navy, oversized art. Carries the section visually. */}
+            <article className="md:col-span-2 lg:col-span-8 group relative overflow-hidden rounded-3xl bg-[#0a1628] p-8 sm:p-10 transition-all duration-300 hover:-translate-y-1">
+              <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-[#d4a017]/15 blur-[90px]" />
+              <div className="relative flex flex-col items-start gap-7 sm:flex-row sm:items-center">
+                <Image
+                  src={features[0].img}
+                  alt={features[0].title}
+                  width={160}
+                  height={160}
+                  className="h-28 w-28 shrink-0 object-contain drop-shadow-lg transition-transform duration-300 group-hover:scale-105 sm:h-40 sm:w-40"
+                />
+                <div>
+                  <h3 className="text-2xl font-black tracking-tight text-white sm:text-[28px]">
+                    {features[0].title}
+                  </h3>
+                  <p className="mt-3 max-w-md text-sm leading-relaxed text-slate-300 sm:text-base">
+                    {features[0].desc}
+                  </p>
+                </div>
+              </div>
+            </article>
+
+            {/* Tall companion tile */}
+            <article className="md:col-span-2 lg:col-span-4 group flex flex-col justify-center rounded-3xl border border-slate-200 bg-[#f8fafc] p-8 transition-all duration-300 hover:-translate-y-1 hover:border-[#d4a017] dark:border-slate-800 dark:bg-[#0c182b] dark:hover:border-[#f0c040]">
+              <Image
+                src={features[1].img}
+                alt={features[1].title}
+                width={112}
+                height={112}
+                className="mb-6 h-24 w-24 object-contain drop-shadow-md transition-transform duration-300 group-hover:scale-105"
+              />
+              <h3 className="text-xl font-black tracking-tight text-[#0a1628] dark:text-white">
+                {features[1].title}
+              </h3>
+              <p className="mt-2.5 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                {features[1].desc}
+              </p>
+            </article>
+
+            {/* Middle row: three equal tiles */}
+            {features.slice(2, 5).map((f) => (
+              <article
+                key={f.title}
+                className="md:col-span-1 lg:col-span-4 group rounded-3xl border border-slate-200 bg-[#f8fafc] p-8 transition-all duration-300 hover:-translate-y-1 hover:border-[#d4a017] dark:border-slate-800 dark:bg-[#0c182b] dark:hover:border-[#f0c040]"
+              >
+                <Image
+                  src={f.img}
+                  alt={f.title}
+                  width={96}
+                  height={96}
+                  className="mb-5 h-20 w-20 object-contain drop-shadow-md transition-transform duration-300 group-hover:scale-105"
+                />
+                <h3 className="text-lg font-black tracking-tight text-[#0a1628] dark:text-white">
                   {f.title}
                 </h3>
-                <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
+                <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
                   {f.desc}
                 </p>
-              </div>
+              </article>
             ))}
+
+            {/* Closing full-width band, gold tinted so the grid does not end flat */}
+            <article className="md:col-span-2 lg:col-span-12 group flex flex-col items-start gap-7 rounded-3xl border border-[#d4a017]/30 bg-gradient-to-r from-[#d4a017]/10 via-[#f0c040]/5 to-transparent p-8 transition-all duration-300 hover:-translate-y-1 sm:flex-row sm:items-center sm:p-10">
+              <Image
+                src={features[5].img}
+                alt={features[5].title}
+                width={120}
+                height={120}
+                className="h-24 w-24 shrink-0 object-contain drop-shadow-md transition-transform duration-300 group-hover:scale-105"
+              />
+              <div>
+                <h3 className="text-xl font-black tracking-tight text-[#0a1628] sm:text-2xl dark:text-white">
+                  {features[5].title}
+                </h3>
+                <p className="mt-2.5 max-w-2xl text-sm leading-relaxed text-slate-600 sm:text-base dark:text-slate-300">
+                  {features[5].desc}
+                </p>
+              </div>
+            </article>
           </div>
 
         </div>
@@ -265,9 +316,9 @@ export default function LandingPage() {
 
 
       {/* ── PRO TALKS SECTION (Dedicated Live Audio & Video Showcase - Green & Blue Theme) ── */}
-      <section className="py-24 bg-gradient-to-br from-[#040a14] via-[#061224] to-[#0a1c38] text-white border-b border-emerald-950/60 relative overflow-hidden">
+      <section className="py-24 bg-gradient-to-br from-[#040a14] via-[#061224] to-[#0a1c38] text-white border-b border-white/10 relative overflow-hidden">
         {/* Glow ambient meshes */}
-        <div className="absolute top-0 right-1/4 w-[500px] h-[500px] bg-emerald-500/10 rounded-full blur-[140px] pointer-events-none" />
+        <div className="absolute top-0 right-1/4 w-[500px] h-[500px] bg-[#d4a017]/12 rounded-full blur-[140px] pointer-events-none" />
         <div className="absolute bottom-0 left-1/4 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[140px] pointer-events-none" />
 
         <div className="max-w-7xl mx-auto px-5 sm:px-6 relative z-10">
@@ -275,15 +326,15 @@ export default function LandingPage() {
             
             {/* Left Content */}
             <div className="flex-1 text-center lg:text-left">
-              <div className="inline-flex items-center gap-2 bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 text-xs font-black uppercase tracking-widest px-4 py-1.5 rounded-full mb-4 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
-                <Radio className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+              <div className="inline-flex items-center gap-2 bg-[#d4a017]/15 text-[#f0c040] border border-[#d4a017]/35 text-xs font-black uppercase tracking-widest px-4 py-1.5 rounded-full mb-4">
+                <Radio className="w-3.5 h-3.5 text-[#f0c040] animate-pulse" />
                 Live Audio &amp; Video Stages
               </div>
               <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight mb-3 leading-tight">
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-lime-400 via-emerald-400 to-teal-300">PRO</span> TALKS
+<span className="text-[#f0c040]">PRO</span> TALKS
               </h2>
               <p className="text-lg sm:text-xl font-bold text-slate-200 mb-3">
-                Go Live. Share Insight. <span className="text-emerald-400">Grow Your Voice.</span>
+                Go Live. Share Insight. <span className="text-[#f0c040]">Grow Your Voice.</span>
               </p>
               <p className="text-base text-slate-300 leading-relaxed mb-8 max-w-xl">
                 Host live conversations, join expert discussions, and connect with your audience in real time. Drop in to listen or raise your hand to speak on stage.
@@ -297,9 +348,9 @@ export default function LandingPage() {
                   { title: "ASK QUESTIONS", desc: "Interact in real time and request to speak on stage." },
                   { title: "SCHEDULE SESSIONS", desc: "Plan upcoming talks and topics with automated calendar invites." },
                 ].map(item => (
-                  <div key={item.title} className="bg-[#08172c]/80 border border-emerald-500/25 hover:border-emerald-400/50 rounded-2xl p-4 transition-all hover:shadow-[0_0_20px_rgba(16,185,129,0.15)]">
-                    <div className="flex items-center gap-2 font-black text-xs sm:text-sm text-emerald-300 mb-1 tracking-wide">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <div key={item.title} className="bg-[#08172c]/80 border border-[#d4a017]/25 hover:border-[#f0c040]/50 rounded-2xl p-4 transition-all hover:shadow-[0_0_20px_rgba(212,160,23,0.15)]">
+                    <div className="flex items-center gap-2 font-black text-xs sm:text-sm text-[#f0c040] mb-1 tracking-wide">
+                      <CheckCircle2 className="w-4 h-4 text-[#f0c040] shrink-0" />
                       <span>{item.title}</span>
                     </div>
                     <p className="text-xs text-slate-300 pl-6 leading-relaxed">{item.desc}</p>
@@ -311,13 +362,13 @@ export default function LandingPage() {
               <div className="flex gap-4 justify-center lg:justify-start flex-wrap">
                 <Link
                   href="/pro-talks"
-                  className="inline-flex items-center gap-2.5 bg-gradient-to-r from-lime-400 via-emerald-500 to-teal-500 text-[#060e1a] font-black px-8 py-4 rounded-full hover:shadow-[0_0_35px_rgba(34,197,94,0.5)] hover:scale-105 transition-all text-base"
+                  className="inline-flex items-center gap-2.5 bg-gradient-to-r from-[#f0c040] via-[#e5a919] to-[#d4a017] text-[#0a1628] font-black px-8 py-4 rounded-full hover:shadow-[0_0_35px_rgba(240,192,64,0.45)] hover:scale-105 transition-all text-base"
                 >
                   <Radio className="w-5 h-5" /> Explore Pro Talks
                 </Link>
                 <Link
                   href="/upgrade"
-                  className="inline-flex items-center gap-2 bg-emerald-950/40 hover:bg-emerald-900/40 text-emerald-300 font-bold px-7 py-4 rounded-full border border-emerald-500/40 hover:border-emerald-400 transition-all text-base"
+                  className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/15 text-white font-bold px-7 py-4 rounded-full border border-white/20 hover:border-[#f0c040]/50 transition-all text-base"
                 >
                   Host Your Own Stage
                 </Link>
@@ -326,7 +377,7 @@ export default function LandingPage() {
 
             {/* Right Visual Poster showcasing /protalk.png */}
             <div className="flex-1 w-full max-w-lg lg:max-w-none">
-              <div className="relative rounded-3xl overflow-hidden border-2 border-emerald-500/40 shadow-[0_0_60px_rgba(16,185,129,0.25)] group hover:border-lime-400/80 transition-all duration-500 bg-[#061224]">
+              <div className="relative rounded-3xl overflow-hidden border-2 border-[#d4a017]/40 shadow-[0_0_60px_rgba(212,160,23,0.2)] group hover:border-[#f0c040]/80 transition-all duration-500 bg-[#061224]">
                 <Image
                   src="/protalk.png"
                   alt="Pro Talks - Go Live. Share Insight. Grow Your Voice."
@@ -343,7 +394,7 @@ export default function LandingPage() {
           </div>
 
           {/* 5 Bottom Pillars Strip */}
-          <div className="mt-14 pt-8 border-t border-emerald-900/40 grid grid-cols-2 sm:grid-cols-5 gap-4 text-center">
+          <div className="mt-14 pt-8 border-t border-white/10 grid grid-cols-2 sm:grid-cols-5 gap-4 text-center">
             {[
               { label: "CONNECT", desc: "Build real connections." },
               { label: "SPEAK", desc: "Share your expertise." },
@@ -351,8 +402,8 @@ export default function LandingPage() {
               { label: "ENGAGE", desc: "Participate & stay active." },
               { label: "GROW", desc: "Expand your influence." },
             ].map(p => (
-              <div key={p.label} className="p-3 bg-emerald-950/20 border border-emerald-500/20 rounded-2xl">
-                <div className="text-xs font-black text-lime-400 tracking-wider mb-0.5">{p.label}</div>
+              <div key={p.label} className="p-3 bg-white/5 border border-[#d4a017]/20 rounded-2xl">
+                <div className="text-xs font-black text-[#f0c040] tracking-wider mb-0.5">{p.label}</div>
                 <div className="text-[11px] text-slate-300">{p.desc}</div>
               </div>
             ))}
@@ -462,9 +513,6 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-5 sm:px-6">
           
           <div className="text-center max-w-3xl mx-auto mb-14">
-            <p className="text-xs sm:text-sm font-black uppercase tracking-widest text-[#d4a017] dark:text-[#f0c040] mb-3">
-              Communities
-            </p>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-[#0a1628] dark:text-white tracking-tight mb-4">
               Your Community.<br />Your Rules.
             </h2>
@@ -508,9 +556,6 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-5 sm:px-6">
           
           <div className="text-center max-w-3xl mx-auto mb-16">
-            <p className="text-xs sm:text-sm font-black uppercase tracking-widest text-[#d4a017] dark:text-[#f0c040] mb-3">
-              Pricing
-            </p>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-[#0a1628] dark:text-white tracking-tight mb-4">
               Choose Your Plan
             </h2>
@@ -568,7 +613,7 @@ export default function LandingPage() {
                   {/* Price */}
                   <div className="flex items-baseline justify-center gap-1 mb-6">
                     <span className="text-4xl sm:text-5xl font-black text-[#0a1628] dark:text-white">{plan.price}</span>
-                    <span className="text-sm font-semibold text-slate-400">{plan.period}</span>
+                    <span className="text-sm font-semibold text-slate-600 dark:text-slate-400">{plan.period}</span>
                   </div>
 
                   {/* Features */}
@@ -623,7 +668,7 @@ export default function LandingPage() {
               href="/register"
               className="inline-flex items-center gap-2.5 bg-gradient-to-r from-[#f0c040] via-[#e5a919] to-[#d4a017] text-[#0a1628] font-black text-base px-9 py-4 rounded-full hover:shadow-[0_0_35px_rgba(240,192,64,0.45)] hover:scale-105 transition-all"
             >
-              Create Free Account <ArrowRight className="w-5 h-5" />
+              Join For Free <ArrowRight className="w-5 h-5" />
             </Link>
             <Link
               href="/login"
