@@ -10,15 +10,19 @@ import {
   renderText,
   FONT_STACK,
 } from "@/lib/email-template";
+import { prisma } from "@/lib/prisma";
+import { renderDynamicEmail } from "@/lib/email-defaults";
 
-interface SendEmailOptions {
+export interface SendEmailOptions {
   to: string | string[];
   subject: string;
   html: string;
   text?: string;
+  templateKey?: string;
+  metadata?: Record<string, unknown>;
 }
 
-interface PasswordResetEmailOptions {
+export interface PasswordResetEmailOptions {
   to: string;
   resetUrl: string;
   userName?: string;
@@ -83,13 +87,67 @@ export async function getMicrosoftGraphAccessToken(): Promise<string> {
 }
 
 /**
- * Sends an email using Microsoft Graph sendMail API endpoint.
+ * Helper to record an email in the email_logs table without interrupting flow on logging error.
+ */
+async function logEmailSent({
+  recipient,
+  subject,
+  html,
+  templateKey,
+  status,
+  errorMessage,
+  metadata,
+}: {
+  recipient: string;
+  subject: string;
+  html: string;
+  templateKey?: string;
+  status: "SENT" | "FAILED";
+  errorMessage?: string;
+  metadata?: Record<string, unknown>;
+}) {
+  try {
+    await prisma.emailLog.create({
+      data: {
+        recipient,
+        subject,
+        templateKey: templateKey || null,
+        status,
+        errorMessage: errorMessage || null,
+        html,
+        metadata: metadata ? (metadata as object) : undefined,
+      },
+    });
+  } catch (logErr) {
+    console.error("[EmailLog] Failed to persist email log to database:", logErr);
+  }
+}
+
+/**
+ * Sends an email using Microsoft Graph sendMail API endpoint and logs the result.
  */
 export async function sendEmail(options: SendEmailOptions): Promise<{ success: boolean }> {
   const senderEmail = process.env.MICROSOFT_SENDER_EMAIL || "support@taxcomppro.com";
-  const accessToken = await getMicrosoftGraphAccessToken();
-
   const recipients = Array.isArray(options.to) ? options.to : [options.to];
+  const recipientStr = recipients.join(", ");
+
+  let accessToken: string;
+  try {
+    accessToken = await getMicrosoftGraphAccessToken();
+  } catch (tokenErr) {
+    const errorMsg = tokenErr instanceof Error ? tokenErr.message : "Failed to obtain access token";
+    await logEmailSent({
+      recipient: recipientStr,
+      subject: options.subject,
+      html: options.html,
+      templateKey: options.templateKey,
+      status: "FAILED",
+      errorMessage: errorMsg,
+      metadata: options.metadata,
+    });
+    throw tokenErr;
+  }
+
   const toRecipients = recipients.map((email) => ({
     emailAddress: {
       address: email.trim(),
@@ -118,26 +176,65 @@ export async function sendEmail(options: SendEmailOptions): Promise<{ success: b
 
   const sendEndpoint = `https://graph.microsoft.com/v1.0/users/${encodeURIComponent(senderEmail)}/sendMail`;
 
-  const response = await fetch(sendEndpoint, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error("[Microsoft Graph] sendMail failed:", {
-      status: response.status,
-      statusText: response.statusText,
-      errorText,
+  try {
+    const response = await fetch(sendEndpoint, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
     });
-    throw new Error(`Failed to send email via Microsoft Graph: ${response.status} ${response.statusText} - ${errorText}`);
-  }
 
-  return { success: true };
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("[Microsoft Graph] sendMail failed:", {
+        status: response.status,
+        statusText: response.statusText,
+        errorText,
+      });
+
+      const failureMessage = `HTTP ${response.status} ${response.statusText} - ${errorText}`;
+      await logEmailSent({
+        recipient: recipientStr,
+        subject: options.subject,
+        html: options.html,
+        templateKey: options.templateKey,
+        status: "FAILED",
+        errorMessage: failureMessage,
+        metadata: options.metadata,
+      });
+
+      throw new Error(`Failed to send email via Microsoft Graph: ${failureMessage}`);
+    }
+
+    // Success log
+    await logEmailSent({
+      recipient: recipientStr,
+      subject: options.subject,
+      html: options.html,
+      templateKey: options.templateKey,
+      status: "SENT",
+      metadata: options.metadata,
+    });
+
+    return { success: true };
+  } catch (sendErr) {
+    if (sendErr instanceof Error && sendErr.message.includes("Failed to send email via Microsoft Graph")) {
+      throw sendErr;
+    }
+    const errMessage = sendErr instanceof Error ? sendErr.message : "Unknown send error";
+    await logEmailSent({
+      recipient: recipientStr,
+      subject: options.subject,
+      html: options.html,
+      templateKey: options.templateKey,
+      status: "FAILED",
+      errorMessage: errMessage,
+      metadata: options.metadata,
+    });
+    throw sendErr;
+  }
 }
 
 export interface OtpEmailOptions {
@@ -149,7 +246,7 @@ export interface OtpEmailOptions {
 
 /**
  * Sends the registration one-time passcode.
- * The code itself is the hero of this email, so the layout keeps everything else quiet.
+ * Uses dynamic template from database if active, otherwise uses standard default layout.
  */
 export async function sendOtpEmail({
   to,
@@ -157,6 +254,36 @@ export async function sendOtpEmail({
   userName,
   expiresInMinutes = 10,
 }: OtpEmailOptions): Promise<{ success: boolean }> {
+  // Check if admin has customized this template in the database
+  try {
+    const customTemplate = await prisma.emailTemplate.findUnique({
+      where: { key: "OTP_VERIFICATION" },
+    });
+
+    if (customTemplate && customTemplate.isActive) {
+      const { subject, html } = renderDynamicEmail({
+        template: customTemplate,
+        variables: {
+          code,
+          userName: userName?.trim() || "there",
+          email: to,
+          expiresInMinutes,
+        },
+      });
+
+      return sendEmail({
+        to,
+        subject,
+        html,
+        templateKey: "OTP_VERIFICATION",
+        metadata: { code, userName, expiresInMinutes },
+      });
+    }
+  } catch (err) {
+    console.warn("[Email] Falling back to default OTP template:", err);
+  }
+
+  // Default hardcoded fallback
   const subject = `${code} is your Tax Compliance Pro verification code`;
   const greeting = userName?.trim() ? `Hi ${escapeHtml(userName.trim())},` : "Hi there,";
 
@@ -185,6 +312,8 @@ export async function sendOtpEmail({
       body,
       footerNote: "This code was requested during sign up on taxcomppro.com.",
     }),
+    templateKey: "OTP_VERIFICATION",
+    metadata: { code, userName, expiresInMinutes },
   });
 }
 
@@ -196,6 +325,33 @@ export async function sendPasswordResetEmail({
   resetUrl,
   userName = "Member",
 }: PasswordResetEmailOptions): Promise<{ success: boolean }> {
+  try {
+    const customTemplate = await prisma.emailTemplate.findUnique({
+      where: { key: "PASSWORD_RESET" },
+    });
+
+    if (customTemplate && customTemplate.isActive) {
+      const { subject, html } = renderDynamicEmail({
+        template: customTemplate,
+        variables: {
+          userName,
+          email: to,
+          resetUrl,
+        },
+      });
+
+      return sendEmail({
+        to,
+        subject,
+        html,
+        templateKey: "PASSWORD_RESET",
+        metadata: { userName, resetUrl },
+      });
+    }
+  } catch (err) {
+    console.warn("[Email] Falling back to default Password Reset template:", err);
+  }
+
   const subject = "Reset your Tax Compliance Pro password";
 
   const body = [
@@ -227,6 +383,8 @@ export async function sendPasswordResetEmail({
       heading: "Reset your password",
       body,
     }),
+    templateKey: "PASSWORD_RESET",
+    metadata: { userName, resetUrl },
   });
 }
 
@@ -267,63 +425,131 @@ export async function sendSupportTicketCreatedEmail({
   description,
 }: SupportTicketEmailOptions): Promise<{ success: boolean }> {
   const shortId = ticketId.slice(-6).toUpperCase();
-  const subject = `[Ticket #${shortId}] We received your request: ${ticketSubject}`;
   const senderEmail = process.env.MICROSOFT_SENDER_EMAIL || "support@taxcomppro.com";
 
-  const quotedMessage = `
-    <div style="font-family:${FONT_STACK};font-size:11px;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;color:${BRAND.muted};margin:16px 0 8px 0;" class="dark-muted">Your message</div>
-    <div style="background-color:${BRAND.surface};border:1px solid ${BRAND.border};border-radius:8px;padding:14px;font-family:${FONT_STACK};font-size:13px;line-height:1.6;color:${BRAND.body};white-space:pre-wrap;" class="dark-body dark-surface">${escapeHtml(description)}</div>`;
+  // 1. Send confirmation to user
+  try {
+    const customTemplate = await prisma.emailTemplate.findUnique({
+      where: { key: "SUPPORT_TICKET_CREATED" },
+    });
 
-  const userBody = [
-    renderText(`Hello ${escapeHtml(userName)},`),
-    renderText("Thanks for reaching out. Your request is logged and our support team has been notified."),
-    renderPanel(
-      renderRow("Ticket", `#${escapeHtml(shortId)}`) +
-        renderRow("Status", renderBadge("Open", "info")) +
-        renderRow("Subject", escapeHtml(ticketSubject)) +
-        quotedMessage
-    ),
-    renderText(
-      "Our team usually responds within 24 business hours. You can also track this ticket from the Concierge widget once you are signed in."
-    ),
-    renderButton({ href: `${BRAND.site}/feed`, label: "Open your dashboard" }),
-  ].join("\n");
+    if (customTemplate && customTemplate.isActive) {
+      const { subject, html } = renderDynamicEmail({
+        template: customTemplate,
+        variables: {
+          userName,
+          email: to,
+          ticketId,
+          ticketShortId: shortId,
+          subject: ticketSubject,
+          description,
+          dashboardUrl: `${BRAND.site}/feed`,
+        },
+      });
 
-  // Internal alert. Plain and scannable, no marketing shell needed.
-  const adminBody = [
-    renderText(`New support ticket <strong style="color:${BRAND.heading};" class="dark-heading">#${escapeHtml(shortId)}</strong> was opened.`),
-    renderPanel(
-      renderRow("From", escapeHtml(userName)) +
-        renderRow("Email", escapeHtml(to)) +
-        renderRow("Ticket ID", escapeHtml(ticketId)) +
-        renderRow("Subject", escapeHtml(ticketSubject)) +
-        quotedMessage
-    ),
-    renderButton({ href: `${BRAND.site}/admin/support`, label: "Open in admin" }),
-  ].join("\n");
+      await sendEmail({
+        to,
+        subject,
+        html,
+        templateKey: "SUPPORT_TICKET_CREATED",
+        metadata: { ticketId, ticketShortId: shortId, ticketSubject },
+      });
+    } else {
+      const quotedMessage = `
+        <div style="font-family:${FONT_STACK};font-size:11px;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;color:${BRAND.muted};margin:16px 0 8px 0;" class="dark-muted">Your message</div>
+        <div style="background-color:${BRAND.surface};border:1px solid ${BRAND.border};border-radius:8px;padding:14px;font-family:${FONT_STACK};font-size:13px;line-height:1.6;color:${BRAND.body};white-space:pre-wrap;" class="dark-body dark-surface">${escapeHtml(description)}</div>`;
 
-  // Send to user
-  await sendEmail({
-    to,
-    subject,
-    html: renderEmailShell({
-      preheader: `Ticket #${shortId} is open. We usually reply within 24 business hours.`,
-      heading: "We received your request",
-      body: userBody,
-    }),
-  });
+      const userBody = [
+        renderText(`Hello ${escapeHtml(userName)},`),
+        renderText("Thanks for reaching out. Your request is logged and our support team has been notified."),
+        renderPanel(
+          renderRow("Ticket", `#${escapeHtml(shortId)}`) +
+            renderRow("Status", renderBadge("Open", "info")) +
+            renderRow("Subject", escapeHtml(ticketSubject)) +
+            quotedMessage
+        ),
+        renderText(
+          "Our team usually responds within 24 business hours. You can also track this ticket from the Concierge widget once you are signed in."
+        ),
+        renderButton({ href: `${BRAND.site}/feed`, label: "Open your dashboard" }),
+      ].join("\n");
 
-  // Alert admin team (non-blocking if admin alert fails)
+      await sendEmail({
+        to,
+        subject: `[Ticket #${shortId}] We received your request: ${ticketSubject}`,
+        html: renderEmailShell({
+          preheader: `Ticket #${shortId} is open. We usually reply within 24 business hours.`,
+          heading: "We received your request",
+          body: userBody,
+        }),
+        templateKey: "SUPPORT_TICKET_CREATED",
+        metadata: { ticketId, ticketShortId: shortId, ticketSubject },
+      });
+    }
+  } catch (err) {
+    console.error("[Support Email] Failed sending ticket creation email to user:", err);
+  }
+
+  // 2. Alert admin team
   if (senderEmail && senderEmail !== to) {
-    sendEmail({
-      to: senderEmail,
-      subject: `[New ticket #${shortId}] ${ticketSubject} (from ${userName})`,
-      html: renderEmailShell({
-        preheader: `${userName} opened ticket #${shortId}: ${ticketSubject}`,
-        heading: `New support ticket #${shortId}`,
-        body: adminBody,
-      }),
-    }).catch((err) => console.error("[Microsoft Graph] Failed to alert admin team:", err));
+    try {
+      const adminAlertTemplate = await prisma.emailTemplate.findUnique({
+        where: { key: "SUPPORT_TICKET_ADMIN_ALERT" },
+      });
+
+      if (adminAlertTemplate && adminAlertTemplate.isActive) {
+        const { subject, html } = renderDynamicEmail({
+          template: adminAlertTemplate,
+          variables: {
+            userName,
+            email: to,
+            ticketId,
+            ticketShortId: shortId,
+            subject: ticketSubject,
+            description,
+            adminUrl: `${BRAND.site}/admin/support`,
+          },
+        });
+
+        sendEmail({
+          to: senderEmail,
+          subject,
+          html,
+          templateKey: "SUPPORT_TICKET_ADMIN_ALERT",
+          metadata: { ticketId, ticketShortId: shortId, fromUser: to },
+        }).catch((err) => console.error("[Microsoft Graph] Failed to alert admin team:", err));
+      } else {
+        const quotedMessage = `
+          <div style="font-family:${FONT_STACK};font-size:11px;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;color:${BRAND.muted};margin:16px 0 8px 0;" class="dark-muted">Your message</div>
+          <div style="background-color:${BRAND.surface};border:1px solid ${BRAND.border};border-radius:8px;padding:14px;font-family:${FONT_STACK};font-size:13px;line-height:1.6;color:${BRAND.body};white-space:pre-wrap;" class="dark-body dark-surface">${escapeHtml(description)}</div>`;
+
+        const adminBody = [
+          renderText(`New support ticket <strong style="color:${BRAND.heading};" class="dark-heading">#${escapeHtml(shortId)}</strong> was opened.`),
+          renderPanel(
+            renderRow("From", escapeHtml(userName)) +
+              renderRow("Email", escapeHtml(to)) +
+              renderRow("Ticket ID", escapeHtml(ticketId)) +
+              renderRow("Subject", escapeHtml(ticketSubject)) +
+              quotedMessage
+          ),
+          renderButton({ href: `${BRAND.site}/admin/support`, label: "Open in admin" }),
+        ].join("\n");
+
+        sendEmail({
+          to: senderEmail,
+          subject: `[New ticket #${shortId}] ${ticketSubject} (from ${userName})`,
+          html: renderEmailShell({
+            preheader: `${userName} opened ticket #${shortId}: ${ticketSubject}`,
+            heading: `New support ticket #${shortId}`,
+            body: adminBody,
+          }),
+          templateKey: "SUPPORT_TICKET_ADMIN_ALERT",
+          metadata: { ticketId, ticketShortId: shortId, fromUser: to },
+        }).catch((err) => console.error("[Microsoft Graph] Failed to alert admin team:", err));
+      }
+    } catch (err) {
+      console.error("[Support Email] Failed sending admin alert:", err);
+    }
   }
 
   return { success: true };
@@ -341,10 +567,43 @@ export async function sendSupportTicketUpdatedEmail({
   feedback,
 }: SupportTicketUpdatedOptions): Promise<{ success: boolean }> {
   const shortId = ticketId.slice(-6).toUpperCase();
-  const subject = `[Ticket #${shortId}] Update on your request: ${ticketSubject}`;
-
   const statusLabel =
     status === "RESOLVED" ? "Resolved" : status === "IN_PROGRESS" ? "In progress" : "Open";
+
+  try {
+    const customTemplate = await prisma.emailTemplate.findUnique({
+      where: { key: "SUPPORT_TICKET_UPDATED" },
+    });
+
+    if (customTemplate && customTemplate.isActive) {
+      const { subject, html } = renderDynamicEmail({
+        template: customTemplate,
+        variables: {
+          userName,
+          email: to,
+          ticketId,
+          ticketShortId: shortId,
+          subject: ticketSubject,
+          status,
+          statusLabel,
+          feedback: feedback || "No additional feedback provided.",
+          dashboardUrl: `${BRAND.site}/feed`,
+        },
+      });
+
+      return sendEmail({
+        to,
+        subject,
+        html,
+        templateKey: "SUPPORT_TICKET_UPDATED",
+        metadata: { ticketId, status, feedback },
+      });
+    }
+  } catch (err) {
+    console.warn("[Email] Falling back to default ticket updated template:", err);
+  }
+
+  const subject = `[Ticket #${shortId}] Update on your request: ${ticketSubject}`;
   const statusTone: "success" | "warning" | "info" =
     status === "RESOLVED" ? "success" : status === "IN_PROGRESS" ? "warning" : "info";
 
@@ -374,6 +633,8 @@ export async function sendSupportTicketUpdatedEmail({
       heading: "Update on your support request",
       body,
     }),
+    templateKey: "SUPPORT_TICKET_UPDATED",
+    metadata: { ticketId, status, feedback },
   });
 }
 
@@ -395,6 +656,45 @@ export async function sendMembershipUpgradedEmail({
   };
 
   const displayName = tierNameMap[tier] || `${tier} Membership`;
+  const dateFormatted = currentPeriodEnd
+    ? new Date(currentPeriodEnd).toLocaleDateString("en-US", {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      })
+    : "Lifetime / Indefinite";
+
+  try {
+    const customTemplate = await prisma.emailTemplate.findUnique({
+      where: { key: "MEMBERSHIP_UPGRADED" },
+    });
+
+    if (customTemplate && customTemplate.isActive) {
+      const { subject, html } = renderDynamicEmail({
+        template: customTemplate,
+        variables: {
+          userName,
+          email: to,
+          tier,
+          tierName: displayName,
+          periodEndFormatted: dateFormatted,
+          isComplimentary: isComplimentary ? "true" : "false",
+          dashboardUrl: `${BRAND.site}/feed`,
+        },
+      });
+
+      return sendEmail({
+        to,
+        subject,
+        html,
+        templateKey: "MEMBERSHIP_UPGRADED",
+        metadata: { tier, currentPeriodEnd, isComplimentary },
+      });
+    }
+  } catch (err) {
+    console.warn("[Email] Falling back to default membership upgraded template:", err);
+  }
+
   const subject = `Your ${displayName} is active`;
 
   const perks = [
@@ -421,14 +721,6 @@ export async function sendMembershipUpgradedEmail({
         ]
       : []),
   ];
-
-  const dateFormatted = currentPeriodEnd
-    ? new Date(currentPeriodEnd).toLocaleDateString("en-US", {
-        month: "long",
-        day: "numeric",
-        year: "numeric",
-      })
-    : null;
 
   // Perks as a table so the checkmark column stays aligned without flexbox.
   const perkRows = perks
@@ -476,5 +768,7 @@ export async function sendMembershipUpgradedEmail({
       body,
       footerNote: `This email was sent to ${escapeHtml(to)} about your Tax Compliance Pro membership.`,
     }),
+    templateKey: "MEMBERSHIP_UPGRADED",
+    metadata: { tier, currentPeriodEnd, isComplimentary },
   });
 }

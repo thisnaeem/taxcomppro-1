@@ -1859,5 +1859,45 @@ model ProNetworkQuestion {
   @@map("pro_network_questions")
 }
 
+model EmailTemplate {
+  id          String     @id @default(cuid())
+  key         String     @unique
+  name        String
+  category    String     @default("AUTH") // AUTH, SUPPORT, BILLING, SYSTEM
+  description String     @db.Text
+  subject     String
+  preheader   String?
+  heading     String
+  bodyHtml    String     @db.Text
+  buttonLabel String?
+  buttonUrl   String?
+  footerNote  String?
+  isActive    Boolean    @default(true)
+  variables   String[]   @default([])
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 
+  logs        EmailLog[]
 
+  @@map("email_templates")
+}
+
+model EmailLog {
+  id           String         @id @default(cuid())
+  recipient    String
+  subject      String
+  templateKey  String?
+  status       String         @default("SENT") // SENT, FAILED
+  errorMessage String?        @db.Text
+  html         String         @db.Text
+  metadata     Json?
+  createdAt    DateTime       @default(now())
+
+  template     EmailTemplate? @relation(fields: [templateKey], references: [key], onDelete: SetNull)
+
+  @@index([recipient])
+  @@index([templateKey])
+  @@index([status])
+  @@index([createdAt])
+  @@map("email_logs")
+}

@@ -18,6 +18,7 @@ import {
   ChevronRight,
   LifeBuoy,
   Ticket,
+  Mail,
   Trash2,
   AlertTriangle,
   Loader2,
@@ -47,6 +48,7 @@ const adminLinks: NavLink[] = [
   { icon: Users,           label: "Users",             href: "/admin/users" },
   { icon: CreditCard,      label: "Payments",          href: "/admin/payments" },
   { icon: Ticket,          label: "Coupons",           href: "/admin/coupons" },
+  { icon: Mail,            label: "Emails",            href: "/admin/emails" },
   { icon: CheckSquare,     label: "Approvals",         href: "/admin/approvals" },
   { icon: BarChart2,       label: "Analytics",         href: "/admin/analytics" },
   { icon: Calendar,        label: "Content Calendar",  href: "/admin/content-calendar" },
@@ -57,9 +59,9 @@ const adminLinks: NavLink[] = [
 ];
 
 const navGroups = [
-  { label: "Overview",   items: adminLinks.slice(0, 4) },
-  { label: "Management", items: adminLinks.slice(4, 7) },
-  { label: "Tools",      items: adminLinks.slice(7) },
+  { label: "Overview",   items: adminLinks.slice(0, 5) },
+  { label: "Management", items: adminLinks.slice(5, 8) },
+  { label: "Tools",      items: adminLinks.slice(8) },
 ];
 
 interface SidebarProps {
