@@ -1,13 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import { Urbanist } from "next/font/google";
-import dynamic from "next/dynamic";
 import { Suspense } from "react";
 import "./globals.css";
-import Script from "next/script";
 import { ReduxProvider } from "@/store/provider";
 import AtlasWidgetLoader from "@/components/AtlasWidgetLoader";
+import GhlChatWidget from "@/components/GhlChatWidget";
 import { ThemeProvider } from "@/components/ThemeProvider";
-
 
 const urbanist = Urbanist({
   subsets: ["latin"],
@@ -23,20 +21,18 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "TaxCompPro — Professional Tax Community",
+  metadataBase: new URL("https://taxcomppro.com"),
+  title: "Tax Compliance Pro | Connect & Grow",
   description:
-    "Join TaxCompPro — the premier professional community for tax experts, CPAs, and taxpayers. Access the marketplace, Pro Hub communities, training, and expert networking.",
-  keywords: "tax professionals, CPA community, tax marketplace, tax training, IRS help",
+    "The premier community for tax professionals, CPA, and EA practitioners.",
   icons: {
-    icon: [
-      { url: "/fevicon.webp", type: "image/webp" },
-    ],
-    apple: "/fevicon.webp",
-    shortcut: "/fevicon.webp",
+    icon: "/fevicon.webp",
   },
   openGraph: {
-    title: "TaxCompPro — Professional Tax Community",
-    description: "The premier platform for tax professionals and taxpayers to connect, learn, and grow.",
+    title: "Tax Compliance Pro | Connect & Grow",
+    description:
+      "The premier community for tax professionals, CPA, and EA practitioners.",
+    images: [{ url: "/fevicon.webp", width: 512, height: 512 }],
     type: "website",
   },
 };
@@ -53,17 +49,10 @@ export default function RootLayout({
               {children}
             </Suspense>
             <AtlasWidgetLoader />
+            <GhlChatWidget />
           </ReduxProvider>
         </ThemeProvider>
-        <Script
-          src="https://widgets.leadconnectorhq.com/loader.js"
-          data-resources-url="https://widgets.leadconnectorhq.com/chat-widget/loader.js"
-          data-widget-id="6a99fd823dadf9f23d855820"
-          data-source="WEB_USER"
-          strategy="afterInteractive"
-        />
       </body>
     </html>
   );
 }
-
