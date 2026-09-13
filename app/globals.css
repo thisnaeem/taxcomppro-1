@@ -200,3 +200,18 @@ body {
 .animate-float-up {
   animation: floatUp 2.4s ease-out forwards;
 }
+
+/* ── Hide scrollbar utilities across all browsers ── */
+.no-scrollbar::-webkit-scrollbar,
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+.no-scrollbar,
+.scrollbar-none {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;     /* Firefox */
+}
+

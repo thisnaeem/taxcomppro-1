@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import {
   Radio01Icon, Add01Icon, CalendarAdd01Icon, Search01Icon, Cancel01Icon,
-  GridViewIcon, Calendar03Icon, StarIcon, FireIcon, PlayCircle02Icon,
+  GridViewIcon, Calendar03Icon, StarIcon, FireIcon,
   CourtLawIcon, CheckListIcon, Audit01Icon, CreditCardIcon as HugeCreditCardIcon, Briefcase01Icon,
   Rocket01Icon, Building02Icon, ComputerIcon, AiBrain01Icon, Analytics01Icon,
   UserGroupIcon, School01Icon, Shield01Icon, Clock01Icon, News01Icon,
@@ -33,6 +33,7 @@ interface Space {
   id: string;
   name: string;
   description: string | null;
+  hostId?: string;
   roomName: string;
   category: string;
   mediaType: string;
@@ -82,7 +83,7 @@ function getCategoryIconByName(name: string, className = "w-3.5 h-3.5 shrink-0")
   return <CategoryIcon slug={cat?.slug} className={className} />;
 }
 
-type TabType = "all" | "live" | "upcoming" | "following" | "popular" | "replays";
+type TabType = "all" | "live" | "upcoming" | "following" | "popular";
 
 function timeAgo(d: string) {
   const s = Math.floor((Date.now() - new Date(d).getTime()) / 1000);
@@ -679,63 +680,6 @@ function UpcomingCard({
   );
 }
 
-// ── Replay Session Card ───────────────────────────────────────────────────────
-function ReplayCard({ space }: { space: Space }) {
-  return (
-    <div className="group relative bg-gradient-to-br from-[#061426]/60 to-[#040a14]/60 hover:from-[#091b35]/80 hover:to-[#061224]/80 border border-emerald-500/20 hover:border-emerald-400/40 rounded-3xl p-5 transition-all duration-200 backdrop-blur-sm flex flex-col">
-      <div className="flex items-center justify-between gap-2 mb-3">
-        <div className="flex items-center gap-1.5 bg-violet-500/20 border border-violet-400/30 rounded-full px-3 py-1">
-          <PlayCircle02Icon className="w-3 h-3 text-violet-300" />
-          <span className="text-violet-200 text-[11px] font-black uppercase tracking-wide">
-            Replay
-          </span>
-        </div>
-        {space.replayDurationMinutes && (
-          <span className="text-slate-400 text-xs font-semibold">
-            {space.replayDurationMinutes} min
-          </span>
-        )}
-      </div>
-
-      <div className="mb-2">
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-emerald-950/40 border border-emerald-500/20 text-emerald-300 text-[11px] font-semibold">
-          {getCategoryIconByName(space.category || "Open Discussion", "w-3 h-3 text-teal-400")}
-          <span>{space.category || "Open Discussion"}</span>
-        </span>
-      </div>
-
-      <h3 className="text-white font-black text-lg mb-1.5 leading-snug">{space.name}</h3>
-      {space.description && (
-        <p className="text-slate-300 text-xs leading-relaxed line-clamp-2 mb-4">
-          {space.description}
-        </p>
-      )}
-
-      <div className="mt-auto flex items-center justify-between gap-3 pt-3 border-t border-emerald-900/30">
-        <div className="flex items-center gap-2 min-w-0">
-          <div className="w-7 h-7 rounded-full overflow-hidden shrink-0 border border-emerald-400/40 bg-gradient-to-br from-emerald-600 to-teal-800">
-            {space.host.image ? (
-              <img src={space.host.image} alt={space.host.name} className="w-full h-full object-cover" />
-            ) : (
-              <span className="w-full h-full flex items-center justify-center text-white text-xs font-bold">
-                {space.host.name[0]}
-              </span>
-            )}
-          </div>
-          <div className="text-white text-xs font-semibold truncate">{space.host.name}</div>
-        </div>
-
-        <button
-          onClick={() => alert("Replay video archive loading. Full replay player will open shortly.")}
-          className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-violet-600/30 hover:bg-violet-600/50 border border-violet-400/40 text-violet-200 text-xs font-bold transition-all"
-        >
-          <PlayCircle02Icon className="w-3.5 h-3.5" /> Watch
-        </button>
-      </div>
-    </div>
-  );
-}
-
 // ── Main Page Inner ───────────────────────────────────────────────────────────
 function ProTalksInner() {
   const user = useAppSelector(s => s.auth.user);
@@ -828,7 +772,6 @@ function ProTalksInner() {
 
   const liveSpaces = useMemo(() => spaces.filter(s => s.isLive), [spaces]);
   const upcomingSpaces = useMemo(() => spaces.filter(s => !s.isLive && !s.endedAt), [spaces]);
-  const replaySpaces = useMemo(() => spaces.filter(s => s.endedAt !== null || s.isReplay), [spaces]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#040a14] via-[#061224] to-[#0a1c38]">
@@ -1006,7 +949,6 @@ function ProTalksInner() {
                 { id: "upcoming", label: "Upcoming", icon: Calendar03Icon, color: "text-blue-400", count: upcomingSpaces.length },
                 { id: "following", label: "Following", icon: StarIcon, color: "text-amber-400" },
                 { id: "popular", label: "Popular / Trending", icon: FireIcon, color: "text-orange-400" },
-                { id: "replays", label: "Replays", icon: PlayCircle02Icon, color: "text-teal-400", count: replaySpaces.length },
               ].map(tab => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
@@ -1202,34 +1144,6 @@ function ProTalksInner() {
                 </div>
               </section>
             )}
-
-            {/* REPLAYS */}
-            {(activeTab === "all" && replaySpaces.length > 0) || activeTab === "replays" ? (
-              <section>
-                <div className="flex items-center justify-between mb-5">
-                  <div className="flex items-center gap-2">
-                    <PlayCircle02Icon className="w-4 h-4 text-teal-400" />
-                    <h2 className="text-white font-black text-lg uppercase tracking-wide">
-                      Replay Archive
-                    </h2>
-                  </div>
-                  <span className="text-slate-400 text-xs">Recorded expert sessions</span>
-                </div>
-
-                {replaySpaces.length === 0 ? (
-                  <div className="text-center py-10 bg-[#061426]/30 rounded-3xl border border-emerald-500/15 px-4">
-                    <p className="text-slate-300 font-bold mb-1 text-sm">No recorded replays available</p>
-                    <p className="text-slate-500 text-xs">Past recorded Pro Talks will appear here for on-demand playback.</p>
-                  </div>
-                ) : (
-                  <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                    {replaySpaces.map(space => (
-                      <ReplayCard key={space.id} space={space} />
-                    ))}
-                  </div>
-                )}
-              </section>
-            ) : null}
           </>
         )}
       </div>

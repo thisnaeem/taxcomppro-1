@@ -21,7 +21,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
   return NextResponse.json(space);
 }
 
-// PATCH /api/spaces/[id] — host starts a scheduled space now
+// PATCH /api/spaces/[id] — host starts a scheduled space or updates replay info
 export async function PATCH(req: NextRequest, { params }: Params) {
   const session = await auth.api.getSession({ headers: req.headers });
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -35,9 +35,29 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   if (!isAdmin && !isHost)
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
+  const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
+  const dataToUpdate: Record<string, unknown> = {};
+
+  if (typeof body.isLive === "boolean") {
+    dataToUpdate.isLive = body.isLive;
+  } else if (!body.replayUrl) {
+    dataToUpdate.isLive = true;
+  }
+
+  if (typeof body.replayUrl === "string") {
+    dataToUpdate.replayUrl = body.replayUrl.trim() || null;
+    dataToUpdate.isReplay = true;
+  }
+  if (typeof body.replayDurationMinutes === "number") {
+    dataToUpdate.replayDurationMinutes = body.replayDurationMinutes;
+  }
+  if (typeof body.isReplay === "boolean") {
+    dataToUpdate.isReplay = body.isReplay;
+  }
+
   const updated = await prisma.space.update({
     where: { id },
-    data: { isLive: true },
+    data: dataToUpdate,
     include: {
       host: { select: HOST_SELECT },
       _count: { select: { rsvps: true, attendances: true } },
