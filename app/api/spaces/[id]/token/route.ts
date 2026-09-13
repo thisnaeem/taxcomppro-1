@@ -15,23 +15,30 @@ export async function POST(req: NextRequest, { params }: Params) {
   if (!space || !space.isLive)
     return NextResponse.json({ error: "Space not found or ended" }, { status: 404 });
 
-  const apiKey    = process.env.LIVEKIT_API_KEY!;
+  const apiKey = process.env.LIVEKIT_API_KEY!;
   const apiSecret = process.env.LIVEKIT_API_SECRET!;
-  const isHost    = session.user.id === space.hostId || session.user.role === "ADMIN";
+  const isHost = session.user.id === space.hostId || session.user.role === "ADMIN";
+  const isCoHost = Array.isArray(space.coHostIds) && space.coHostIds.includes(session.user.id);
 
   const token = new AccessToken(apiKey, apiSecret, {
     identity: session.user.id,
-    name:     session.user.name ?? session.user.id,
-    metadata: JSON.stringify({ image: session.user.image ?? null }),
+    name: session.user.name ?? session.user.id,
+    metadata: JSON.stringify({
+      image: session.user.image ?? null,
+      isHost,
+      isCoHost,
+      role: isHost ? "HOST" : isCoHost ? "CO_HOST" : session.user.role,
+      tier: (session.user as { tier?: string }).tier ?? "FREE",
+    }),
   });
 
   token.addGrant({
-    roomJoin:       true,
-    room:           space.roomName,
-    canPublish:     true,
+    roomJoin: true,
+    room: space.roomName,
+    canPublish: true,
     canPublishData: true,
-    canSubscribe:   true,
-    roomAdmin:      isHost,
+    canSubscribe: true,
+    roomAdmin: isHost,
   });
 
   const jwt = await token.toJwt();

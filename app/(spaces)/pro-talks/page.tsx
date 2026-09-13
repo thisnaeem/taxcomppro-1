@@ -1,24 +1,88 @@
 "use client";
 
-import { useEffect, useState, useCallback, Suspense } from "react";
+import { useEffect, useState, useMemo, useRef, useCallback, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { useAppSelector } from "@/store/hooks";
 import {
   Loader2, X, Check, Zap, CreditCard, Radio, Copy, CheckCheck,
-  Calendar, Clock, Users, Mic, Volume2, Sparkles, MessageSquare, Video
+  Calendar, Clock, Users, Mic, Video, ArrowRight
 } from "lucide-react";
 import {
-  Mic01Icon, Radio01Icon, UserGroupIcon, Add01Icon, CalendarAdd01Icon,
+  Radio01Icon, Add01Icon, CalendarAdd01Icon, Search01Icon, Cancel01Icon,
+  GridViewIcon, Calendar03Icon, StarIcon, FireIcon, PlayCircle02Icon,
+  CourtLawIcon, CheckListIcon, Audit01Icon, CreditCardIcon as HugeCreditCardIcon, Briefcase01Icon,
+  Rocket01Icon, Building02Icon, ComputerIcon, AiBrain01Icon, Analytics01Icon,
+  UserGroupIcon, School01Icon, Shield01Icon, Clock01Icon, News01Icon,
+  Award01Icon, UserMultiple02Icon, QuestionIcon, Mic01Icon,
+  ArrowLeft01Icon, ArrowRight01Icon,
 } from "hugeicons-react";
+import { PRO_TALK_CATEGORIES } from "@/lib/proTalks";
 
-interface SpaceHost { id: string; name: string; image: string | null; headline: string | null; }
-interface Space {
-  id: string; name: string; description: string | null; roomName: string;
-  isLive: boolean; scheduledAt: string | null; shareToken: string | null;
-  createdAt: string; host: SpaceHost; _count: { rsvps: number };
+interface SpaceHost {
+  id: string;
+  name: string;
+  image: string | null;
+  headline: string | null;
+  role?: string;
+  tier?: string;
 }
+
+interface Space {
+  id: string;
+  name: string;
+  description: string | null;
+  roomName: string;
+  category: string;
+  mediaType: string;
+  isLive: boolean;
+  scheduledAt: string | null;
+  shareToken: string | null;
+  totalAttendees: number;
+  peakAttendees: number;
+  replayUrl: string | null;
+  replayDurationMinutes: number | null;
+  isReplay: boolean;
+  createdAt: string;
+  endedAt: string | null;
+  host: SpaceHost;
+  _count: { rsvps: number; attendances?: number };
+}
+
+function CategoryIcon({ slug, className = "w-3.5 h-3.5 shrink-0" }: { slug?: string; className?: string }) {
+  switch (slug) {
+    case "tax-law-updates": return <CourtLawIcon className={className} />;
+    case "due-diligence-compliance": return <CheckListIcon className={className} />;
+    case "irs-audits-notices": return <Audit01Icon className={className} />;
+    case "tax-credits-filing-status": return <HugeCreditCardIcon className={className} />;
+    case "schedule-c-business-returns": return <Briefcase01Icon className={className} />;
+    case "tax-office-start-up": return <Rocket01Icon className={className} />;
+    case "tax-office-operations": return <Building02Icon className={className} />;
+    case "tax-software-technology": return <ComputerIcon className={className} />;
+    case "ai-automation": return <AiBrain01Icon className={className} />;
+    case "marketing-business-growth": return <Analytics01Icon className={className} />;
+    case "client-management": return <UserGroupIcon className={className} />;
+    case "staffing-training": return <School01Icon className={className} />;
+    case "efin-ero-discussions": return <Shield01Icon className={className} />;
+    case "tax-season-talk": return <Clock01Icon className={className} />;
+    case "industry-news-updates": return <News01Icon className={className} />;
+    case "professional-development": return <Award01Icon className={className} />;
+    case "networking-collaboration": return <UserMultiple02Icon className={className} />;
+    case "expert-qa": return <QuestionIcon className={className} />;
+    case "open-discussion": return <Mic01Icon className={className} />;
+    case "all":
+    default:
+      return <GridViewIcon className={className} />;
+  }
+}
+
+function getCategoryIconByName(name: string, className = "w-3.5 h-3.5 shrink-0") {
+  const cat = PRO_TALK_CATEGORIES.find(c => c.name === name);
+  return <CategoryIcon slug={cat?.slug} className={className} />;
+}
+
+type TabType = "all" | "live" | "upcoming" | "following" | "popular" | "replays";
 
 function timeAgo(d: string) {
   const s = Math.floor((Date.now() - new Date(d).getTime()) / 1000);
@@ -29,8 +93,11 @@ function timeAgo(d: string) {
 
 function formatScheduled(d: string) {
   return new Date(d).toLocaleString(undefined, {
-    weekday: "short", month: "short", day: "numeric",
-    hour: "2-digit", minute: "2-digit",
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
   });
 }
 
@@ -46,19 +113,24 @@ function timeUntil(d: string) {
 
 function LiveWave() {
   return (
-    <div className="flex items-end gap-[2px] h-4">
-      {[1, 0.5, 0.75, 0.3, 0.9, 0.6, 0.4, 0.8, 0.5, 1].map((h, i) => (
-        <span key={i} className="w-[2px] bg-emerald-400 rounded-full animate-pulse"
-          style={{ height: `${h * 14}px`, animationDelay: `${i * 80}ms` }} />
+    <div className="flex items-end gap-[2px] h-3.5">
+      {[1, 0.4, 0.8, 0.3, 1, 0.6, 0.4, 0.9, 0.5, 0.9].map((h, i) => (
+        <span
+          key={i}
+          className="w-[2px] bg-emerald-400 rounded-full animate-pulse"
+          style={{ height: `${h * 13}px`, animationDelay: `${i * 90}ms` }}
+        />
       ))}
     </div>
   );
 }
 
-// ── Copy button ────────────────────────────────────────────────────────────────
-function CopyButton({ text, label = "Copy" }: { text: string; label?: string }) {
+// ── Copy Link Button ──────────────────────────────────────────────────────────
+function CopyButton({ text, label = "Share" }: { text: string; label?: string }) {
   const [copied, setCopied] = useState(false);
-  const copy = async () => {
+  const copy = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     await navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -66,7 +138,7 @@ function CopyButton({ text, label = "Copy" }: { text: string; label?: string }) 
   return (
     <button
       onClick={copy}
-      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 hover:text-white text-xs font-semibold transition-all shrink-0"
+      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 hover:text-white text-xs font-semibold transition-all shrink-0"
     >
       {copied ? <CheckCheck className="w-3.5 h-3.5 text-lime-400" /> : <Copy className="w-3.5 h-3.5" />}
       {copied ? "Copied!" : label}
@@ -74,95 +146,106 @@ function CopyButton({ text, label = "Copy" }: { text: string; label?: string }) 
   );
 }
 
-// ── Shareable link banner ─────────────────────────────────────────────────────
-function ShareLinkBanner({ token }: { token: string }) {
-  const url = typeof window !== "undefined"
-    ? `${window.location.origin}/pro-talks/invite/${token}`
-    : `/pro-talks/invite/${token}`;
-  return (
-    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 bg-emerald-950/40 border border-emerald-500/30 rounded-2xl px-5 py-4 shadow-[0_0_20px_rgba(16,185,129,0.15)]">
-      <div className="flex-1 min-w-0">
-        <p className="text-emerald-300 text-sm font-bold mb-0.5">🔗 Share this invite link</p>
-        <p className="text-emerald-100/60 text-xs truncate">{url}</p>
-      </div>
-      <CopyButton text={url} label="Copy Link" />
-    </div>
-  );
-}
-
-// ── Host Payment Modal ─────────────────────────────────────────────────────────
-function HostPaymentModal({ onClose }: { onClose: () => void }) {
+// ── Host Payment / Upgrade Modal ──────────────────────────────────────────────
+function HostUpgradeModal({ onClose }: { onClose: () => void }) {
   const [loading, setLoading] = useState(false);
   const handlePay = async () => {
     if (loading) return;
     setLoading(true);
     try {
       const res = await fetch("/api/stripe/pro-talk-host-checkout", {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({}),
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
       });
       const data = await res.json();
       if (data.url) window.location.href = data.url;
-    } catch { setLoading(false); }
+    } catch {
+      setLoading(false);
+    }
   };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-      <div className="relative w-full max-w-md bg-gradient-to-br from-[#061224] via-[#091b35] to-[#040a14] border border-emerald-500/30 rounded-3xl p-7 shadow-2xl">
-        <button onClick={onClose} className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/60 hover:text-white transition-all">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
+      <div className="relative w-full max-w-lg bg-gradient-to-br from-[#061224] via-[#091b35] to-[#040a14] border border-emerald-500/40 rounded-3xl p-6 sm:p-8 shadow-2xl overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+
+        <button
+          onClick={onClose}
+          className="absolute top-5 right-5 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/70 hover:text-white transition-all"
+        >
           <X className="w-4 h-4" />
         </button>
+
         <div className="flex items-center gap-3.5 mb-5">
           <div className="relative w-12 h-12 rounded-2xl overflow-hidden border border-emerald-500/40 shadow-lg shadow-emerald-500/30 shrink-0 bg-[#061224]">
             <Image src="/protalk.png" alt="Pro Talks" fill className="object-cover" />
           </div>
           <div>
             <h2 className="text-white font-black text-xl leading-tight">Host a Pro Talk</h2>
-            <p className="text-emerald-300/70 text-sm">One-time session payment</p>
+            <p className="text-emerald-300/80 text-xs">Exclusively for Marketplace Plus members</p>
           </div>
         </div>
-        <div className="bg-gradient-to-br from-emerald-950/40 to-blue-950/30 border border-emerald-500/30 rounded-2xl p-5 mb-6">
-          <div className="flex items-baseline gap-1 mb-1">
-            <span className="text-5xl font-black text-white">$99.99</span>
-            <span className="text-emerald-300/70 text-sm ml-1">one-time</span>
+
+        {/* Plan 1: Marketplace Plus Membership (Recommended) */}
+        <div className="relative bg-gradient-to-br from-emerald-950/60 to-[#071d34] border-2 border-lime-400/60 rounded-2xl p-5 mb-4 shadow-xl">
+          <div className="absolute -top-3 right-4 px-3 py-0.5 rounded-full bg-lime-400 text-[#060e1a] text-[10px] font-black uppercase tracking-wider">
+            Best Value · Unlimited
           </div>
-          <p className="text-slate-300 text-sm mb-4">Pay once, host one live Pro Talk stage with audio and video.</p>
-          <ul className="space-y-2">
-            {[
-              "Start instantly or schedule for later",
-              "Get a shareable invite link",
-              "No subscription or recurring charges",
-              "Full live stage controls & speaker invitations",
-            ].map(perk => (
-              <li key={perk} className="flex items-center gap-2 text-slate-200 text-sm">
-                <Zap className="w-3.5 h-3.5 text-lime-400 shrink-0 fill-lime-400/30" />{perk}
-              </li>
-            ))}
+          <div className="flex items-baseline gap-1.5 mb-1">
+            <span className="text-3xl font-black text-white">$129.99</span>
+            <span className="text-emerald-300/70 text-xs">/month</span>
+          </div>
+          <p className="text-slate-200 text-xs font-semibold mb-3">
+            VIP + Marketplace Plus Membership
+          </p>
+          <ul className="space-y-1.5 text-xs text-slate-300 mb-4">
+            <li className="flex items-center gap-2">
+              <Zap className="w-3.5 h-3.5 text-lime-400 shrink-0" />
+              <span><strong>Unlimited Pro Talk hosting</strong> with video, audio &amp; screenshare</span>
+            </li>
+            <li className="flex items-center gap-2">
+              <Zap className="w-3.5 h-3.5 text-lime-400 shrink-0" />
+              <span>Full Marketplace seller privileges &amp; premium verified badge</span>
+            </li>
+            <li className="flex items-center gap-2">
+              <Zap className="w-3.5 h-3.5 text-lime-400 shrink-0" />
+              <span>Host up to 5 replay archives permanently on your profile</span>
+            </li>
           </ul>
-        </div>
-        <button
-          id="pro-talk-pay-btn"
-          onClick={handlePay}
-          disabled={loading}
-          className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-gradient-to-r from-lime-400 via-emerald-500 to-teal-500 text-[#060e1a] font-black text-base hover:shadow-[0_0_30px_rgba(34,197,94,0.45)] hover:scale-[1.02] transition-all shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {loading
-            ? <><Loader2 className="w-5 h-5 animate-spin text-[#060e1a]" /> Redirecting to Stripe…</>
-            : <><CreditCard className="w-5 h-5" /> Pay $99.99 &amp; Host Now</>
-          }
-        </button>
-        <p className="text-center text-slate-400 text-xs mt-3">Secure payment via Stripe · No hidden fees</p>
-        <div className="mt-4 pt-4 border-t border-white/10 text-center">
-          <p className="text-slate-400 text-xs">Want unlimited hosting?</p>
-          <Link href="/upgrade" onClick={onClose} className="text-lime-400 hover:text-lime-300 text-xs font-bold transition-colors">
-            Upgrade to VIP + Marketplace Plus ($129.99/mo) →
+          <Link
+            href="/upgrade"
+            onClick={onClose}
+            className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-gradient-to-r from-lime-400 via-emerald-500 to-teal-500 text-[#060e1a] font-black text-xs sm:text-sm hover:scale-[1.02] transition-all shadow-lg shadow-emerald-500/25"
+          >
+            Upgrade to Marketplace Plus →
           </Link>
+        </div>
+
+        {/* Plan 2: Single-Session Host Pass */}
+        <div className="bg-[#050f1d]/80 border border-emerald-500/20 rounded-2xl p-4 text-left">
+          <div className="flex items-baseline justify-between mb-1">
+            <span className="text-white font-bold text-sm">Single Session Host Pass</span>
+            <span className="text-emerald-300 font-bold text-sm">$99.99 <span className="text-slate-400 text-xs font-normal">one-time</span></span>
+          </div>
+          <p className="text-slate-400 text-xs mb-3">Host a single live session with full stage controls, polls, and invite links.</p>
+          <button
+            id="pro-talk-pay-btn"
+            onClick={handlePay}
+            disabled={loading}
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 border border-emerald-500/30 text-white font-bold text-xs transition-all disabled:opacity-50"
+          >
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4 text-lime-400" />}
+            Pay $99.99 for 1 Pro Talk Pass
+          </button>
         </div>
       </div>
     </div>
   );
 }
 
-// ── Create Form (Start Now / Schedule tabs) ────────────────────────────────────
-function CreateForm({
+// ── Create Pro Talk Form Modal ────────────────────────────────────────────────
+function CreateFormModal({
   onClose,
   onCreated,
   hostPaid,
@@ -173,184 +256,325 @@ function CreateForm({
   hostPaid: boolean;
   hostSessionId?: string;
 }) {
-  const [tab, setTab]             = useState<"now" | "schedule">("now");
-  const [name, setName]           = useState("");
-  const [desc, setDesc]           = useState("");
+  const [tab, setTab] = useState<"now" | "schedule">("now");
+  const [name, setName] = useState("");
+  const [desc, setDesc] = useState("");
+  const [category, setCategory] = useState("Tax Law & Updates");
+  const [mediaType, setMediaType] = useState<"AUDIO_VIDEO" | "AUDIO">("AUDIO_VIDEO");
   const [schedDate, setSchedDate] = useState("");
-  const [creating, setCreating]   = useState(false);
-  const [newToken, setNewToken]   = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const minDateTime = new Date(Date.now() + 5 * 60_000).toISOString().slice(0, 16);
+  const [minDateTime] = useState(() => new Date(Date.now() + 5 * 60_000).toISOString().slice(0, 16));
 
   const handleCreate = async () => {
     if (!name.trim() || creating) return;
     if (tab === "schedule" && !schedDate) return;
     setCreating(true);
+    setError(null);
 
-    const body: Record<string, string> = { name, description: desc };
+    const body: Record<string, unknown> = {
+      name: name.trim(),
+      description: desc.trim() || null,
+      category,
+      mediaType,
+    };
     if (hostPaid && hostSessionId) body.hostSessionId = hostSessionId;
     if (tab === "schedule") body.scheduledAt = new Date(schedDate).toISOString();
 
-    const res = await fetch("/api/spaces", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
+    try {
+      const res = await fetch("/api/spaces", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
 
-    if (res.ok) {
-      const space = await res.json() as Space;
-      if (space.shareToken) setNewToken(space.shareToken);
-      onCreated(space);
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Failed to create session.");
+        setCreating(false);
+        return;
+      }
+
+      onCreated(data as Space);
+    } catch {
+      setError("Network error occurred.");
+      setCreating(false);
     }
-    setCreating(false);
   };
 
   return (
-    <div className="relative bg-gradient-to-br from-[#061426] via-[#091b35] to-[#040a14] border border-emerald-500/30 rounded-3xl p-6 sm:p-7 backdrop-blur-md shadow-[0_0_40px_rgba(16,185,129,0.15)]">
-      <button onClick={onClose} className="absolute top-4 right-4 w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/60 hover:text-white transition-all">
-        <X className="w-4 h-4" />
-      </button>
-
-      {/* Header */}
-      <div className="flex items-center gap-3.5 mb-5">
-        <div className="relative w-11 h-11 rounded-2xl overflow-hidden border border-emerald-500/40 shadow-lg shadow-emerald-500/30 shrink-0 bg-[#061224]">
-          <Image src="/protalk.png" alt="Pro Talks" fill className="object-cover" />
-        </div>
-        <div>
-          <h2 className="text-white font-black text-base">Host a Pro Talk</h2>
-          <p className="text-emerald-300/70 text-xs">Start a live conversation or schedule for later</p>
-        </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="flex p-1 bg-black/40 border border-emerald-500/20 rounded-xl mb-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
+      <div className="relative w-full max-w-lg bg-gradient-to-br from-[#061426] via-[#091b35] to-[#040a14] border border-emerald-500/40 rounded-3xl p-6 sm:p-7 shadow-2xl max-h-[90vh] overflow-y-auto">
         <button
-          onClick={() => setTab("now")}
-          className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all ${
-            tab === "now"
-              ? "bg-gradient-to-r from-lime-400 to-emerald-500 text-[#060e1a] shadow-md"
-              : "text-slate-400 hover:text-white"
-          }`}
+          onClick={onClose}
+          className="absolute top-5 right-5 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/70 hover:text-white transition-all"
         >
-          <Radio className="w-3.5 h-3.5" /> Start Now
+          <X className="w-4 h-4" />
         </button>
-        <button
-          onClick={() => setTab("schedule")}
-          className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all ${
-            tab === "schedule"
-              ? "bg-gradient-to-r from-lime-400 to-emerald-500 text-[#060e1a] shadow-md"
-              : "text-slate-400 hover:text-white"
-          }`}
-        >
-          <Calendar className="w-3.5 h-3.5" /> Schedule
-        </button>
-      </div>
 
-      {/* Fields */}
-      <div className="space-y-3.5">
-        <input
-          value={name}
-          onChange={e => setName(e.target.value)}
-          placeholder="What are we talking about?"
-          className="w-full bg-[#050f1d] border border-emerald-500/25 rounded-xl px-4 py-3 text-white placeholder-slate-400 outline-none focus:border-emerald-400 transition-all text-sm"
-        />
-        <textarea
-          value={desc}
-          onChange={e => setDesc(e.target.value)}
-          placeholder="Description (optional)…"
-          rows={2}
-          className="w-full bg-[#050f1d] border border-emerald-500/25 rounded-xl px-4 py-3 text-white placeholder-slate-400 outline-none focus:border-emerald-400 transition-all text-sm resize-none"
-        />
-
-        {tab === "schedule" && (
+        {/* Header */}
+        <div className="flex items-center gap-3.5 mb-5">
+          <div className="relative w-11 h-11 rounded-2xl overflow-hidden border border-emerald-500/40 shadow-lg shadow-emerald-500/30 shrink-0 bg-[#061224]">
+            <Image src="/protalk.png" alt="Pro Talks" fill className="object-cover" />
+          </div>
           <div>
-            <label className="block text-emerald-300/80 text-xs font-semibold mb-1.5 uppercase tracking-wide">
-              <Clock className="w-3 h-3 inline mr-1 text-emerald-400" />Date &amp; Time
+            <h2 className="text-white font-black text-lg">Create a Pro Talk</h2>
+            <p className="text-emerald-300/70 text-xs">Broadcast live or schedule for your audience</p>
+          </div>
+        </div>
+
+        {/* Mode Tabs */}
+        <div className="flex p-1 bg-black/40 border border-emerald-500/20 rounded-xl mb-4">
+          <button
+            onClick={() => setTab("now")}
+            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold transition-all ${
+              tab === "now"
+                ? "bg-gradient-to-r from-lime-400 to-emerald-500 text-[#060e1a] shadow-md"
+                : "text-slate-400 hover:text-white"
+            }`}
+          >
+            <Radio className="w-3.5 h-3.5" /> Go Live Now
+          </button>
+          <button
+            onClick={() => setTab("schedule")}
+            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold transition-all ${
+              tab === "schedule"
+                ? "bg-gradient-to-r from-lime-400 to-emerald-500 text-[#060e1a] shadow-md"
+                : "text-slate-400 hover:text-white"
+            }`}
+          >
+            <Calendar className="w-3.5 h-3.5" /> Schedule for Later
+          </button>
+        </div>
+
+        {/* Fields */}
+        <div className="space-y-4">
+          <div>
+            <label className="block text-emerald-300/80 text-xs font-semibold mb-1 uppercase tracking-wide">
+              Pro Talk Title *
             </label>
             <input
-              type="datetime-local"
-              value={schedDate}
-              min={minDateTime}
-              onChange={e => setSchedDate(e.target.value)}
-              className="w-full bg-[#050f1d] border border-emerald-500/25 rounded-xl px-4 py-3 text-white outline-none focus:border-emerald-400 transition-all text-sm [color-scheme:dark]"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              placeholder="e.g. Schedule C Audit Defense: Red Flags & Best Practices"
+              className="w-full bg-[#050f1d] border border-emerald-500/25 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 outline-none focus:border-emerald-400 transition-all text-sm"
             />
           </div>
-        )}
 
-        <button
-          id="protalk-create-btn"
-          onClick={handleCreate}
-          disabled={!name.trim() || creating || (tab === "schedule" && !schedDate)}
-          className="flex items-center justify-center gap-2 w-full sm:w-auto px-7 py-3 rounded-xl bg-gradient-to-r from-lime-400 via-emerald-500 to-teal-500 text-[#060e1a] text-sm font-black transition-all shadow-lg shadow-emerald-500/25 disabled:opacity-40 disabled:cursor-not-allowed hover:scale-[1.02]"
-        >
-          {creating
-            ? <><Loader2 className="w-4 h-4 animate-spin text-[#060e1a]" /> Creating…</>
-            : tab === "now"
-              ? <><Radio01Icon className="w-4 h-4" /> Go Live Now</>
-              : <><CalendarAdd01Icon className="w-4 h-4" /> Schedule Pro Talk</>
-          }
-        </button>
-      </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* Category selection */}
+            <div>
+              <label className="block text-emerald-300/80 text-xs font-semibold mb-1 uppercase tracking-wide">
+                Category *
+              </label>
+              <select
+                value={category}
+                onChange={e => setCategory(e.target.value)}
+                className="w-full bg-[#050f1d] border border-emerald-500/25 rounded-xl px-3.5 py-2.5 text-white text-xs outline-none focus:border-emerald-400 transition-all cursor-pointer [color-scheme:dark]"
+              >
+                {PRO_TALK_CATEGORIES.map(c => (
+                  <option key={c.id} value={c.name}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-      {/* Share link after creation */}
-      {newToken && (
-        <div className="mt-5">
-          <ShareLinkBanner token={newToken} />
+            {/* Media format */}
+            <div>
+              <label className="block text-emerald-300/80 text-xs font-semibold mb-1 uppercase tracking-wide">
+                Format
+              </label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setMediaType("AUDIO_VIDEO")}
+                  className={`flex-1 py-2 px-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border transition-all ${
+                    mediaType === "AUDIO_VIDEO"
+                      ? "bg-emerald-500/25 border-emerald-400 text-lime-300"
+                      : "bg-[#050f1d] border-emerald-500/20 text-slate-400 hover:text-white"
+                  }`}
+                >
+                  <Video className="w-3.5 h-3.5" /> Audio + Video
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMediaType("AUDIO")}
+                  className={`flex-1 py-2 px-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border transition-all ${
+                    mediaType === "AUDIO"
+                      ? "bg-emerald-500/25 border-emerald-400 text-lime-300"
+                      : "bg-[#050f1d] border-emerald-500/20 text-slate-400 hover:text-white"
+                  }`}
+                >
+                  <Mic className="w-3.5 h-3.5" /> Audio Only
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-emerald-300/80 text-xs font-semibold mb-1 uppercase tracking-wide">
+              Description (Optional)
+            </label>
+            <textarea
+              value={desc}
+              onChange={e => setDesc(e.target.value)}
+              placeholder="What topics will be covered? What should attendees prepare?"
+              rows={3}
+              className="w-full bg-[#050f1d] border border-emerald-500/25 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 outline-none focus:border-emerald-400 transition-all text-xs resize-none"
+            />
+          </div>
+
+          {tab === "schedule" && (
+            <div>
+              <label className="block text-emerald-300/80 text-xs font-semibold mb-1.5 uppercase tracking-wide">
+                <Clock className="w-3 h-3 inline mr-1 text-emerald-400" /> Date &amp; Start Time *
+              </label>
+              <input
+                type="datetime-local"
+                value={schedDate}
+                min={minDateTime}
+                onChange={e => setSchedDate(e.target.value)}
+                className="w-full bg-[#050f1d] border border-emerald-500/25 rounded-xl px-4 py-2.5 text-white outline-none focus:border-emerald-400 transition-all text-sm [color-scheme:dark]"
+              />
+            </div>
+          )}
+
+          {error && (
+            <p className="text-rose-400 text-xs bg-rose-950/40 border border-rose-500/30 p-2.5 rounded-xl">
+              {error}
+            </p>
+          )}
+
+          <button
+            id="protalk-create-btn"
+            onClick={handleCreate}
+            disabled={!name.trim() || creating || (tab === "schedule" && !schedDate)}
+            className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl bg-gradient-to-r from-lime-400 via-emerald-500 to-teal-500 text-[#060e1a] text-sm font-black transition-all shadow-lg shadow-emerald-500/25 disabled:opacity-40 disabled:cursor-not-allowed hover:scale-[1.01]"
+          >
+            {creating ? (
+              <><Loader2 className="w-4 h-4 animate-spin text-[#060e1a]" /> Preparing Stage…</>
+            ) : tab === "now" ? (
+              <><Radio01Icon className="w-4 h-4" /> Go Live Now</>
+            ) : (
+              <><CalendarAdd01Icon className="w-4 h-4" /> Schedule Pro Talk</>
+            )}
+          </button>
         </div>
-      )}
+      </div>
     </div>
   );
 }
 
-// ── Space Card (live) ─────────────────────────────────────────────────────────
+// ── Live Session Card ─────────────────────────────────────────────────────────
 function LiveCard({ space }: { space: Space }) {
+  const isVideo = space.mediaType === "AUDIO_VIDEO";
   return (
-    <Link href={`/pro-talks/${space.id}`}
-      className="group relative bg-gradient-to-br from-[#061426]/90 to-[#040a14]/90 hover:from-[#091b35] hover:to-[#061224] border border-emerald-500/30 hover:border-emerald-400/80 rounded-3xl p-5 transition-all duration-300 backdrop-blur-md overflow-hidden flex flex-col shadow-[0_4px_25px_rgba(0,0,0,0.5)] hover:shadow-[0_0_30px_rgba(16,185,129,0.2)] hover:-translate-y-1"
+    <Link
+      href={`/pro-talks/${space.id}`}
+      className="group relative bg-gradient-to-br from-[#061426]/95 via-[#07192f]/90 to-[#040a14]/95 hover:from-[#091e38] hover:to-[#071526] border border-emerald-500/35 hover:border-emerald-400 rounded-3xl p-5 transition-all duration-300 backdrop-blur-md overflow-hidden flex flex-col shadow-[0_4px_25px_rgba(0,0,0,0.5)] hover:shadow-[0_0_35px_rgba(16,185,129,0.25)] hover:-translate-y-1"
     >
-      <div className="flex items-start justify-between mb-4">
+      {/* Glow pulse behind card */}
+      <div className="absolute -top-16 -right-16 w-36 h-36 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all pointer-events-none" />
+
+      {/* Badges row */}
+      <div className="flex items-center justify-between gap-2 mb-3">
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5 bg-emerald-500/20 border border-emerald-400/40 rounded-full px-3 py-1 shadow-[0_0_10px_rgba(16,185,129,0.3)]">
+          <div className="flex items-center gap-1.5 bg-emerald-500/25 border border-emerald-400/50 rounded-full px-3 py-1 shadow-[0_0_12px_rgba(16,185,129,0.35)]">
             <span className="w-2 h-2 rounded-full bg-lime-400 animate-pulse" />
             <span className="text-lime-300 text-[11px] font-black uppercase tracking-wide">Live</span>
           </div>
           <LiveWave />
         </div>
-        <span className="text-slate-400 text-xs font-semibold">{timeAgo(space.createdAt)}</span>
+
+        <div className="flex items-center gap-1.5">
+          <span className="px-2.5 py-0.5 rounded-full bg-white/8 border border-white/10 text-slate-300 text-[10px] font-semibold flex items-center gap-1">
+            {isVideo ? <Video className="w-3 h-3 text-emerald-400" /> : <Mic className="w-3 h-3 text-teal-400" />}
+            {isVideo ? "Audio + Video" : "Audio Only"}
+          </span>
+          <span className="text-slate-400 text-xs">{timeAgo(space.createdAt)}</span>
+        </div>
       </div>
-      <h3 className="text-white font-black text-lg mb-1.5 group-hover:text-lime-300 transition-colors leading-snug">{space.name}</h3>
-      {space.description && <p className="text-slate-300 text-sm leading-relaxed line-clamp-2 mb-4">{space.description}</p>}
-      <div className="mt-auto flex items-center gap-3 pt-3 border-t border-emerald-900/40">
-        <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 border border-emerald-400/60 bg-gradient-to-br from-emerald-600 to-teal-800">
-          {space.host.image
-            ? <img src={space.host.image} alt={space.host.name} referrerPolicy="no-referrer" className="w-full h-full object-cover" />
-            : <span className="w-full h-full flex items-center justify-center text-white text-xs font-black">{space.host.name[0]}</span>
-          }
+
+      {/* Category Pill */}
+      <div className="mb-2">
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-emerald-950/70 border border-emerald-500/30 text-emerald-300 text-[11px] font-bold">
+          {getCategoryIconByName(space.category || "Open Discussion", "w-3 h-3 text-emerald-400")}
+          <span>{space.category || "Open Discussion"}</span>
+        </span>
+      </div>
+
+      {/* Title & Description */}
+      <h3 className="text-white font-black text-lg mb-1.5 group-hover:text-lime-300 transition-colors leading-snug">
+        {space.name}
+      </h3>
+      {space.description && (
+        <p className="text-slate-300 text-xs leading-relaxed line-clamp-2 mb-4">
+          {space.description}
+        </p>
+      )}
+
+      {/* Host Profile & Join */}
+      <div className="mt-auto flex items-center justify-between gap-3 pt-3.5 border-t border-emerald-900/40">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 border border-emerald-400/60 bg-gradient-to-br from-emerald-600 to-teal-800">
+            {space.host.image ? (
+              <img
+                src={space.host.image}
+                alt={space.host.name}
+                referrerPolicy="no-referrer"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <span className="w-full h-full flex items-center justify-center text-white text-xs font-black">
+                {space.host.name[0]}
+              </span>
+            )}
+          </div>
+          <div className="min-w-0">
+            <div className="text-white text-xs font-bold truncate">{space.host.name}</div>
+            {space.host.headline && (
+              <div className="text-slate-400 text-[10px] truncate">{space.host.headline}</div>
+            )}
+          </div>
         </div>
-        <div className="min-w-0 flex-1">
-          <div className="text-white text-xs font-bold truncate">{space.host.name}</div>
-          {space.host.headline && <div className="text-slate-400 text-[11px] truncate">{space.host.headline}</div>}
-        </div>
-        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-xs font-bold shrink-0">
-          <UserGroupIcon className="w-3.5 h-3.5" /><span>Join</span>
+
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="flex items-center gap-1 text-slate-300 text-xs font-semibold px-2 py-1 rounded-lg bg-white/5">
+            <Users className="w-3.5 h-3.5 text-emerald-400" />
+            <span>{Math.max(1, space.totalAttendees || 1)}</span>
+          </span>
+          <span className="flex items-center gap-1 px-4 py-1.5 rounded-full bg-gradient-to-r from-lime-400 to-emerald-500 text-[#060e1a] text-xs font-black shadow-md shadow-emerald-500/20 group-hover:scale-105 transition-all">
+            Join Live <ArrowRight className="w-3 h-3" />
+          </span>
         </div>
       </div>
     </Link>
   );
 }
 
-// ── Space Card (upcoming / scheduled) ─────────────────────────────────────────
-function UpcomingCard({ space, currentUserId }: { space: Space; currentUserId: string }) {
-  const [rsvped,    setRsvped]    = useState(false);
-  const [rsvping,   setRsvping]   = useState(false);
-  const [rsvpCount, setRsvpCount] = useState(space._count.rsvps);
+// ── Upcoming Session Card ─────────────────────────────────────────────────────
+function UpcomingCard({
+  space,
+  currentUserId,
+}: {
+  space: Space;
+  currentUserId: string;
+}) {
+  const [rsvped, setRsvped] = useState(false);
+  const [rsvping, setRsvping] = useState(false);
+  const [rsvpCount, setRsvpCount] = useState(space._count?.rsvps ?? 0);
 
   const shareUrl = space.shareToken
-    ? (typeof window !== "undefined" ? `${window.location.origin}/pro-talks/invite/${space.shareToken}` : `/pro-talks/invite/${space.shareToken}`)
+    ? typeof window !== "undefined"
+      ? `${window.location.origin}/pro-talks/invite/${space.shareToken}`
+      : `/pro-talks/invite/${space.shareToken}`
     : null;
 
   const toggleRsvp = async (e: React.MouseEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     if (rsvping || !currentUserId) return;
     setRsvping(true);
     if (rsvped) {
@@ -358,162 +582,274 @@ function UpcomingCard({ space, currentUserId }: { space: Space; currentUserId: s
       setRsvped(false);
       setRsvpCount(c => Math.max(0, c - 1));
     } else {
-      const res = await fetch(`/api/spaces/${space.id}/rsvp`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({}) });
-      if (res.ok) { setRsvped(true); setRsvpCount(c => c + 1); }
+      const res = await fetch(`/api/spaces/${space.id}/rsvp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      if (res.ok) {
+        setRsvped(true);
+        setRsvpCount(c => c + 1);
+      }
     }
     setRsvping(false);
   };
 
   return (
-    <div className="group relative bg-gradient-to-br from-[#061426]/70 to-[#040a14]/70 hover:from-[#091b35]/90 hover:to-[#061224]/90 border border-emerald-500/20 hover:border-emerald-400/50 rounded-3xl p-5 transition-all duration-200 backdrop-blur-sm overflow-hidden flex flex-col">
-      {/* Scheduled badge */}
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center gap-1.5 bg-blue-500/20 border border-blue-400/30 rounded-full px-3 py-1">
-          <Calendar className="w-3 h-3 text-blue-300" />
-          <span className="text-blue-200 text-[11px] font-black uppercase tracking-wide">Upcoming</span>
+    <div className="group relative bg-gradient-to-br from-[#061426]/75 to-[#040a14]/75 hover:from-[#091b35]/90 hover:to-[#061224]/90 border border-emerald-500/20 hover:border-emerald-400/50 rounded-3xl p-5 transition-all duration-200 backdrop-blur-sm overflow-hidden flex flex-col">
+      {/* Top row */}
+      <div className="flex items-start justify-between gap-2 mb-3">
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 bg-blue-500/20 border border-blue-400/30 rounded-full px-3 py-1">
+            <Calendar className="w-3 h-3 text-blue-300" />
+            <span className="text-blue-200 text-[11px] font-black uppercase tracking-wide">
+              Upcoming
+            </span>
+          </div>
+          {space.scheduledAt && (
+            <span className="text-emerald-300/80 text-xs font-semibold">
+              {timeUntil(space.scheduledAt)}
+            </span>
+          )}
         </div>
-        {space.scheduledAt && (
-          <span className="text-emerald-300/80 text-xs font-semibold">{timeUntil(space.scheduledAt)}</span>
-        )}
+
+        {shareUrl && <CopyButton text={shareUrl} label="Share" />}
       </div>
 
-      <h3 className="text-white font-black text-lg mb-1.5 leading-snug">{space.name}</h3>
-      {space.description && <p className="text-slate-300 text-sm leading-relaxed line-clamp-2 mb-4">{space.description}</p>}
+      {/* Category */}
+      <div className="mb-2">
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-emerald-950/40 border border-emerald-500/20 text-emerald-300 text-[11px] font-semibold">
+          {getCategoryIconByName(space.category || "Open Discussion", "w-3 h-3 text-emerald-400")}
+          <span>{space.category || "Open Discussion"}</span>
+        </span>
+      </div>
 
+      {/* Title */}
+      <h3 className="text-white font-black text-lg mb-1.5 leading-snug">
+        {space.name}
+      </h3>
+      {space.description && (
+        <p className="text-slate-300 text-xs leading-relaxed line-clamp-2 mb-3">
+          {space.description}
+        </p>
+      )}
+
+      {/* Date & Time pill */}
       {space.scheduledAt && (
-        <div className="flex items-center gap-2 text-xs text-emerald-300/90 mb-4 bg-emerald-950/30 border border-emerald-500/20 rounded-xl px-3 py-2">
-          <Clock className="w-3.5 h-3.5 text-lime-400" />
-          <span>{formatScheduled(space.scheduledAt)}</span>
+        <div className="flex items-center gap-2 text-xs text-emerald-300 mb-4 bg-emerald-950/30 border border-emerald-500/20 rounded-xl px-3 py-2">
+          <Clock className="w-3.5 h-3.5 text-lime-400 shrink-0" />
+          <span className="font-semibold">{formatScheduled(space.scheduledAt)}</span>
         </div>
       )}
 
+      {/* Host profile and RSVP */}
       <div className="mt-auto flex items-center justify-between gap-3 pt-3 border-t border-emerald-900/30">
         <div className="flex items-center gap-2.5 min-w-0">
           <div className="w-7 h-7 rounded-full overflow-hidden shrink-0 border border-emerald-400/40 bg-gradient-to-br from-emerald-600 to-teal-800">
-            {space.host.image
-              ? <img src={space.host.image} alt={space.host.name} referrerPolicy="no-referrer" className="w-full h-full object-cover" />
-              : <span className="w-full h-full flex items-center justify-center text-white text-xs font-bold">{space.host.name[0]}</span>
-            }
+            {space.host.image ? (
+              <img
+                src={space.host.image}
+                alt={space.host.name}
+                referrerPolicy="no-referrer"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <span className="w-full h-full flex items-center justify-center text-white text-xs font-bold">
+                {space.host.name[0]}
+              </span>
+            )}
           </div>
           <div className="text-white text-xs font-semibold truncate">{space.host.name}</div>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
-          {shareUrl && <CopyButton text={shareUrl} label="Share" />}
-          <button
-            onClick={toggleRsvp}
-            disabled={rsvping}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
-              rsvped
-                ? "bg-emerald-500/25 border border-emerald-400 text-lime-300"
-                : "bg-white/10 hover:bg-white/18 text-white border border-white/10"
-            }`}
-          >
-            <Users className="w-3 h-3" />
-            <span>{rsvped ? "RSVP'd ✓" : `RSVP (${rsvpCount})`}</span>
-          </button>
-        </div>
+        <button
+          onClick={toggleRsvp}
+          disabled={rsvping}
+          className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-black transition-all ${
+            rsvped
+              ? "bg-emerald-500/25 border border-emerald-400 text-lime-300"
+              : "bg-white/10 hover:bg-white/18 text-white border border-white/10 hover:border-emerald-400/40"
+          }`}
+        >
+          <Users className="w-3 h-3" />
+          <span>{rsvped ? "Reminding You ✓" : `Remind Me (${rsvpCount})`}</span>
+        </button>
       </div>
     </div>
   );
 }
 
+// ── Replay Session Card ───────────────────────────────────────────────────────
+function ReplayCard({ space }: { space: Space }) {
+  return (
+    <div className="group relative bg-gradient-to-br from-[#061426]/60 to-[#040a14]/60 hover:from-[#091b35]/80 hover:to-[#061224]/80 border border-emerald-500/20 hover:border-emerald-400/40 rounded-3xl p-5 transition-all duration-200 backdrop-blur-sm flex flex-col">
+      <div className="flex items-center justify-between gap-2 mb-3">
+        <div className="flex items-center gap-1.5 bg-violet-500/20 border border-violet-400/30 rounded-full px-3 py-1">
+          <PlayCircle02Icon className="w-3 h-3 text-violet-300" />
+          <span className="text-violet-200 text-[11px] font-black uppercase tracking-wide">
+            Replay
+          </span>
+        </div>
+        {space.replayDurationMinutes && (
+          <span className="text-slate-400 text-xs font-semibold">
+            {space.replayDurationMinutes} min
+          </span>
+        )}
+      </div>
+
+      <div className="mb-2">
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-emerald-950/40 border border-emerald-500/20 text-emerald-300 text-[11px] font-semibold">
+          {getCategoryIconByName(space.category || "Open Discussion", "w-3 h-3 text-teal-400")}
+          <span>{space.category || "Open Discussion"}</span>
+        </span>
+      </div>
+
+      <h3 className="text-white font-black text-lg mb-1.5 leading-snug">{space.name}</h3>
+      {space.description && (
+        <p className="text-slate-300 text-xs leading-relaxed line-clamp-2 mb-4">
+          {space.description}
+        </p>
+      )}
+
+      <div className="mt-auto flex items-center justify-between gap-3 pt-3 border-t border-emerald-900/30">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="w-7 h-7 rounded-full overflow-hidden shrink-0 border border-emerald-400/40 bg-gradient-to-br from-emerald-600 to-teal-800">
+            {space.host.image ? (
+              <img src={space.host.image} alt={space.host.name} className="w-full h-full object-cover" />
+            ) : (
+              <span className="w-full h-full flex items-center justify-center text-white text-xs font-bold">
+                {space.host.name[0]}
+              </span>
+            )}
+          </div>
+          <div className="text-white text-xs font-semibold truncate">{space.host.name}</div>
+        </div>
+
+        <button
+          onClick={() => alert("Replay video archive loading. Full replay player will open shortly.")}
+          className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-violet-600/30 hover:bg-violet-600/50 border border-violet-400/40 text-violet-200 text-xs font-bold transition-all"
+        >
+          <PlayCircle02Icon className="w-3.5 h-3.5" /> Watch
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── Main Page Inner ───────────────────────────────────────────────────────────
 function ProTalksInner() {
-  const user           = useAppSelector(s => s.auth.user);
-  const [spaces,        setSpaces]        = useState<Space[]>([]);
-  const [loading,       setLoading]       = useState(true);
-  const [showForm,      setShowForm]      = useState(false);
-  const [showPayModal,  setShowPayModal]  = useState(false);
-  const [newShareToken, setNewShareToken] = useState<string | null>(null);
-
-  const isAdmin       = user?.role === "ADMIN";
-  const canHost       = isAdmin || user?.tier === "MARKETPLACE_PLUS";
-
-  const searchParams  = useSearchParams();
-  const hostPaid      = searchParams?.get("host_paid") === "1";
+  const user = useAppSelector(s => s.auth.user);
+  const searchParams = useSearchParams();
+  const hostPaid = searchParams?.get("host_paid") === "1";
   const hostSessionId = searchParams?.get("session_id") ?? undefined;
 
-  const fetchSpaces = useCallback(() => {
-    fetch("/api/spaces").then(r => r.json()).then(setSpaces).finally(() => setLoading(false));
+  const isAdmin = user?.role === "ADMIN";
+  const isMarketplacePlus = user?.tier === "MARKETPLACE_PLUS";
+  const canHost = isAdmin || isMarketplacePlus;
+  const effectiveCanHost = canHost || (hostPaid && !!hostSessionId);
+
+  const [spaces, setSpaces] = useState<Space[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(() => Boolean(hostPaid && !canHost));
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+
+  // Filters state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState<TabType>("all");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+
+  // Category horizontal scroll controls
+  const categoryScrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
+  const checkScroll = useCallback(() => {
+    const el = categoryScrollRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 10);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 10);
   }, []);
 
-  useEffect(() => { fetchSpaces(); }, [fetchSpaces]);
+  useEffect(() => {
+    checkScroll();
+    const handleResize = () => checkScroll();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [checkScroll]);
+
+  const handleScroll = (direction: "left" | "right") => {
+    const el = categoryScrollRef.current;
+    if (!el) return;
+    const scrollAmount = direction === "left" ? -320 : 320;
+    el.scrollBy({ left: scrollAmount, behavior: "smooth" });
+    setTimeout(checkScroll, 320);
+  };
 
   useEffect(() => {
-    if (hostPaid && user && !canHost) setShowForm(true);
-  }, [hostPaid, user, canHost]);
+    let active = true;
+    const params = new URLSearchParams();
+    if (selectedCategory && selectedCategory !== "all") params.set("category", selectedCategory);
+    if (searchQuery.trim()) params.set("search", searchQuery.trim());
+    if (activeTab !== "all") params.set("tab", activeTab);
 
-  const handleCreated = (space: Space) => {
-    setSpaces(p => [space, ...p]);
-    if (space.shareToken) setNewShareToken(space.shareToken);
+    fetch(`/api/spaces?${params.toString()}`)
+      .then(r => r.json())
+      .then(data => {
+        if (active) {
+          if (Array.isArray(data)) setSpaces(data);
+          else setSpaces([]);
+          setLoading(false);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setSpaces([]);
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [selectedCategory, searchQuery, activeTab]);
+
+  const handleCreated = (newSpace: Space) => {
+    setSpaces(p => [newSpace, ...p]);
     setShowForm(false);
   };
 
-  if (!user) return (
-    <div className="min-h-screen bg-gradient-to-br from-[#040a14] via-[#061224] to-[#0a1c38] flex items-center justify-center px-4">
-      <div className="text-center">
-        <Mic01Icon className="w-16 h-16 text-emerald-400/40 mx-auto mb-4" />
-        <h1 className="text-2xl font-black text-white mb-2">Sign in to access Pro Talks</h1>
-        <p className="text-slate-400 text-sm mb-6">Live audio and video rooms for professionals</p>
-        <Link href="/login" className="inline-flex items-center gap-2 bg-gradient-to-r from-lime-400 via-emerald-500 to-teal-500 text-[#060e1a] font-black px-7 py-3 rounded-full hover:scale-105 transition-all">Sign In</Link>
-      </div>
-    </div>
-  );
+  const handleHostClick = () => {
+    if (effectiveCanHost) {
+      setShowForm(true);
+    } else {
+      setShowUpgradeModal(true);
+    }
+  };
 
-  const tierOrder    = ["FREE", "VIP", "MARKETPLACE", "MARKETPLACE_PLUS"];
-  const userTierRank = tierOrder.indexOf(user.tier ?? "FREE");
-  const canView      = isAdmin || userTierRank >= 1;
-  const effectiveCanHost = canHost || (hostPaid && !!hostSessionId);
-
-  if (!canView && !hostPaid) return (
-    <div className="min-h-screen bg-gradient-to-br from-[#040a14] via-[#061224] to-[#0a1c38] flex items-center justify-center px-4 py-16">
-      <div className="max-w-md w-full text-center">
-        <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-lime-400 via-emerald-500 to-teal-600 flex items-center justify-center mx-auto mb-6 shadow-xl shadow-emerald-500/20">
-          <Mic01Icon className="w-10 h-10 text-[#060e1a]" />
-        </div>
-        <div className="inline-flex items-center gap-2 bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-bold px-4 py-1.5 rounded-full mb-4">
-          <Zap className="w-3.5 h-3.5 fill-emerald-400 text-emerald-400" /> VIP Members Only
-        </div>
-        <h1 className="text-3xl font-black text-white mb-3 leading-tight">Unlock Pro Talks</h1>
-        <p className="text-slate-300 text-sm leading-relaxed mb-8">
-          Join live audio rooms hosted by verified professionals and industry experts.
-          VIP members get full access — or pay a one-time fee to host your own session.
-        </p>
-        <div className="bg-gradient-to-br from-[#061426] to-[#0a1c38] rounded-2xl p-5 mb-4 text-white text-left border border-emerald-500/30">
-          <div className="text-[11px] font-black uppercase tracking-widest text-lime-400 mb-2">VIP Membership</div>
-          <div className="flex items-baseline gap-1 mb-1"><span className="text-3xl font-black">$39.99</span><span className="text-slate-400 text-sm">/month</span></div>
-          <p className="text-slate-400 text-xs mb-4">Full platform access · Unlimited Pro Talks · Cancel anytime</p>
-          <Link href="/upgrade" className="inline-flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-gradient-to-r from-lime-400 via-emerald-500 to-teal-500 text-[#060e1a] font-black text-sm hover:opacity-90 transition-all">Upgrade to VIP</Link>
-        </div>
-        <div className="bg-gradient-to-br from-emerald-950/40 to-blue-950/30 rounded-2xl p-5 text-white text-left border border-emerald-500/30">
-          <div className="text-[11px] font-black uppercase tracking-widest text-emerald-300 mb-2">Non-Member Hosting</div>
-          <div className="flex items-baseline gap-1 mb-1"><span className="text-3xl font-black">$99.99</span><span className="text-slate-400 text-sm">per session</span></div>
-          <p className="text-slate-400 text-xs mb-4">Host one live Pro Talk · Start now or schedule for later · Shareable invite link</p>
-          <button id="pro-talk-gate-pay-btn" onClick={() => setShowPayModal(true)} className="inline-flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-gradient-to-r from-lime-400 via-emerald-500 to-teal-500 text-[#060e1a] font-black text-sm hover:scale-[1.02] transition-all shadow-lg shadow-emerald-500/20">
-            <Radio className="w-4 h-4" /> Pay $99.99 to Host
-          </button>
-        </div>
-      </div>
-      {showPayModal && <HostPaymentModal onClose={() => setShowPayModal(false)} />}
-    </div>
-  );
-
-  const liveSpaces     = spaces.filter(s => s.isLive);
-  const upcomingSpaces = spaces.filter(s => !s.isLive);
+  const liveSpaces = useMemo(() => spaces.filter(s => s.isLive), [spaces]);
+  const upcomingSpaces = useMemo(() => spaces.filter(s => !s.isLive && !s.endedAt), [spaces]);
+  const replaySpaces = useMemo(() => spaces.filter(s => s.endedAt !== null || s.isReplay), [spaces]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#040a14] via-[#061224] to-[#0a1c38]">
-      {showPayModal && <HostPaymentModal onClose={() => setShowPayModal(false)} />}
+      {showUpgradeModal && <HostUpgradeModal onClose={() => setShowUpgradeModal(false)} />}
+      {showForm && (
+        <CreateFormModal
+          onClose={() => setShowForm(false)}
+          onCreated={handleCreated}
+          hostPaid={hostPaid}
+          hostSessionId={hostSessionId}
+        />
+      )}
 
-      {/* Hero */}
-      <div className="relative overflow-hidden border-b border-emerald-950/60">
-        <div className="absolute -top-20 -left-20 w-96 h-96 rounded-full bg-emerald-500/15 blur-3xl pointer-events-none" />
+      {/* Hero Header */}
+      <div className="relative overflow-hidden border-b border-emerald-950/60 bg-gradient-to-b from-[#061426]/80 to-transparent">
+        <div className="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-emerald-500/15 blur-3xl pointer-events-none" />
         <div className="absolute top-0 right-1/4 w-96 h-96 rounded-full bg-blue-600/10 blur-3xl pointer-events-none" />
 
-        <div className="relative max-w-5xl mx-auto px-4 pt-12 pb-10">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-            
-            {/* Header branding with protalk.png */}
+        <div className="relative max-w-6xl mx-auto px-4 pt-10 pb-8">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-8">
+            {/* Branding */}
             <div className="flex items-center gap-4 sm:gap-5">
               <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border-2 border-emerald-500/40 shadow-[0_0_30px_rgba(16,185,129,0.35)] shrink-0 bg-[#061224] group hover:scale-105 transition-transform">
                 <Image
@@ -525,128 +861,375 @@ function ProTalksInner() {
                 />
               </div>
               <div>
-                <div className="flex items-center gap-2 mb-1.5">
+                <div className="flex items-center gap-2 mb-1">
                   <span className="w-2.5 h-2.5 rounded-full bg-lime-400 animate-pulse" />
-                  <span className="text-lime-300 text-xs font-black uppercase tracking-widest">{liveSpaces.length} live now</span>
+                  <span className="text-lime-300 text-xs font-black uppercase tracking-widest">
+                    {liveSpaces.length} live now
+                  </span>
+                  <span className="text-slate-500 text-xs">• Free Access for All Members</span>
                 </div>
                 <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white leading-tight tracking-tight">
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-lime-400 via-emerald-400 to-teal-300">PRO</span> TALKS
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-lime-400 via-emerald-400 to-teal-300">
+                    PRO
+                  </span>{" "}
+                  TALKS
                 </h1>
-                <p className="text-slate-300 text-xs sm:text-sm mt-1 max-w-md">
-                  Live audio &amp; video stages. Join a conversation or start your own.
+                <p className="text-slate-300 text-xs sm:text-sm mt-1 max-w-xl leading-relaxed">
+                  Real-time audio &amp; video stages with tax masters, EAs, CPAs, and industry leaders.
+                  Join live discussions, ask questions, or host your own stage.
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              {effectiveCanHost ? (
+            {/* Host Button */}
+            <div className="flex items-center gap-3 w-full md:w-auto">
+              <button
+                onClick={handleHostClick}
+                className="flex items-center justify-center gap-2 w-full md:w-auto px-6 py-3.5 rounded-2xl bg-gradient-to-r from-lime-400 via-emerald-500 to-teal-500 text-[#060e1a] text-sm font-black transition-all shadow-xl shadow-emerald-500/30 hover:scale-105 active:scale-95 shrink-0"
+              >
+                <Add01Icon className="w-4 h-4" /> Host a Pro Talk
+              </button>
+            </div>
+          </div>
+
+          {/* Search Bar */}
+          <div className="relative mb-6">
+            <div className="flex items-center bg-[#061426]/95 border border-emerald-500/35 rounded-2xl px-4 py-3 shadow-lg focus-within:border-emerald-400 focus-within:ring-2 focus-within:ring-emerald-500/20 transition-all">
+              <Search01Icon className="w-5 h-5 text-emerald-400 shrink-0 mr-3" />
+              <input
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="Search Pro Talks by topic, keyword (e.g. Schedule C, EFIN), or host name..."
+                className="w-full bg-transparent text-white placeholder-slate-400 text-sm outline-none"
+              />
+              {searchQuery && (
                 <button
-                  onClick={() => setShowForm(v => !v)}
-                  className="flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-lime-400 via-emerald-500 to-teal-500 text-[#060e1a] text-sm font-black transition-all shadow-xl shadow-emerald-500/30 hover:scale-105 shrink-0"
+                  onClick={() => setSearchQuery("")}
+                  className="text-slate-400 hover:text-white text-xs px-2 flex items-center gap-1 transition-colors"
                 >
-                  <Add01Icon className="w-4 h-4" /> Host a Pro Talk
-                </button>
-              ) : (
-                <button
-                  id="pro-talk-host-header-btn"
-                  onClick={() => setShowPayModal(true)}
-                  className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-emerald-950/60 border border-emerald-500/40 hover:bg-emerald-900/50 text-emerald-300 hover:text-white text-sm font-bold transition-all shrink-0"
-                >
-                  <Add01Icon className="w-4 h-4 text-lime-400" /> Host a Pro Talk · $99.99
+                  <Cancel01Icon className="w-3.5 h-3.5" />
+                  <span>Clear</span>
                 </button>
               )}
+            </div>
+          </div>
+
+          {/* 19 Category Carousel with Controls & Hidden Scrollbar */}
+          <div className="space-y-2 mb-2">
+            <div className="flex items-center justify-between gap-2 px-1">
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-bold uppercase tracking-widest text-emerald-400/90 flex items-center gap-1.5">
+                  <GridViewIcon className="w-3.5 h-3.5 text-emerald-400" />
+                  Categories &amp; Tracks
+                </span>
+                <span className="text-[11px] text-slate-500 font-medium hidden sm:inline">
+                  ({PRO_TALK_CATEGORIES.length} Specialized Tracks)
+                </span>
+              </div>
+
+              {/* Scroll controls for desktop */}
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => handleScroll("left")}
+                  disabled={!canScrollLeft}
+                  aria-label="Scroll categories left"
+                  className="w-7 h-7 rounded-lg bg-[#061426] border border-emerald-500/20 flex items-center justify-center text-slate-300 hover:text-white hover:border-emerald-400/50 disabled:opacity-30 disabled:pointer-events-none transition-all shadow-sm"
+                >
+                  <ArrowLeft01Icon className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={() => handleScroll("right")}
+                  disabled={!canScrollRight}
+                  aria-label="Scroll categories right"
+                  className="w-7 h-7 rounded-lg bg-[#061426] border border-emerald-500/20 flex items-center justify-center text-slate-300 hover:text-white hover:border-emerald-400/50 disabled:opacity-30 disabled:pointer-events-none transition-all shadow-sm"
+                >
+                  <ArrowRight01Icon className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Scroll Track with Gradient Masks */}
+            <div className="relative group/track">
+              {canScrollLeft && (
+                <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-[#040e1a] to-transparent pointer-events-none z-10 rounded-l-xl" />
+              )}
+              {canScrollRight && (
+                <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[#040e1a] to-transparent pointer-events-none z-10 rounded-r-xl" />
+              )}
+
+              <div
+                ref={categoryScrollRef}
+                onScroll={checkScroll}
+                className="overflow-x-auto no-scrollbar scrollbar-none py-1.5 px-0.5 flex items-center gap-2 scroll-smooth"
+              >
+                <button
+                  onClick={() => setSelectedCategory("all")}
+                  className={`px-3.5 py-2 rounded-xl text-xs transition-all shrink-0 flex items-center gap-2 ${
+                    selectedCategory === "all"
+                      ? "bg-gradient-to-r from-lime-400 via-emerald-400 to-teal-400 text-[#040e1a] shadow-lg shadow-emerald-500/25 ring-2 ring-lime-400/50 font-black scale-[1.02]"
+                      : "bg-[#061426]/90 border border-emerald-500/20 text-slate-300 hover:text-white hover:border-emerald-400/50 hover:bg-[#0c2444] shadow-sm font-medium"
+                  }`}
+                >
+                  <GridViewIcon className={`w-3.5 h-3.5 ${selectedCategory === "all" ? "text-[#040e1a]" : "text-emerald-400"}`} />
+                  <span>All Categories</span>
+                </button>
+                {PRO_TALK_CATEGORIES.map(cat => {
+                  const isSelected = selectedCategory === cat.name;
+                  return (
+                    <button
+                      key={cat.id}
+                      onClick={() => setSelectedCategory(cat.name)}
+                      className={`px-3.5 py-2 rounded-xl text-xs transition-all shrink-0 flex items-center gap-2 ${
+                        isSelected
+                          ? "bg-gradient-to-r from-lime-400 via-emerald-400 to-teal-400 text-[#040e1a] shadow-lg shadow-emerald-500/25 ring-2 ring-lime-400/50 font-black scale-[1.02]"
+                          : "bg-[#061426]/90 border border-emerald-500/20 text-slate-300 hover:text-white hover:border-emerald-400/50 hover:bg-[#0c2444] shadow-sm font-medium"
+                      }`}
+                    >
+                      <CategoryIcon
+                        slug={cat.slug}
+                        className={`w-3.5 h-3.5 ${isSelected ? "text-[#040e1a]" : "text-emerald-400/90"}`}
+                      />
+                      <span>{cat.name}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Navigation Filter Tabs */}
+          <div className="mt-4 pt-3.5 border-t border-emerald-950/40">
+            <div className="inline-flex items-center gap-1.5 p-1.5 rounded-2xl bg-[#061426]/95 border border-emerald-500/25 backdrop-blur-md overflow-x-auto no-scrollbar scrollbar-none max-w-full">
+              {[
+                { id: "all", label: "All Talks", icon: GridViewIcon, color: "text-emerald-400" },
+                { id: "live", label: "Live Now", icon: Radio01Icon, color: "text-rose-400", count: liveSpaces.length, isLive: true },
+                { id: "upcoming", label: "Upcoming", icon: Calendar03Icon, color: "text-blue-400", count: upcomingSpaces.length },
+                { id: "following", label: "Following", icon: StarIcon, color: "text-amber-400" },
+                { id: "popular", label: "Popular / Trending", icon: FireIcon, color: "text-orange-400" },
+                { id: "replays", label: "Replays", icon: PlayCircle02Icon, color: "text-teal-400", count: replaySpaces.length },
+              ].map(tab => {
+                const Icon = tab.icon;
+                const isActive = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id as TabType)}
+                    className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-2 ${
+                      isActive
+                        ? "bg-gradient-to-r from-emerald-500/30 to-teal-500/30 border border-emerald-400/60 text-white shadow-md shadow-emerald-500/15"
+                        : "text-slate-400 hover:text-slate-200 hover:bg-white/5 border border-transparent"
+                    }`}
+                  >
+                    <span className="relative flex items-center">
+                      <Icon className={`w-3.5 h-3.5 ${isActive ? "text-white" : tab.color}`} />
+                      {tab.isLive && (
+                        <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping" />
+                      )}
+                    </span>
+                    <span>{tab.label}</span>
+                    {typeof tab.count === "number" && tab.count > 0 && (
+                      <span
+                        className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
+                          isActive
+                            ? "bg-white/20 text-white"
+                            : tab.isLive
+                            ? "bg-rose-500/20 text-rose-300"
+                            : "bg-emerald-500/20 text-lime-300"
+                        }`}
+                      >
+                        {tab.count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 py-10 space-y-8">
-
-        {/* Payment success banner */}
+      {/* Main Content Area */}
+      <div className="max-w-6xl mx-auto px-4 py-8 space-y-10">
+        {/* Payment Confirmation Banner */}
         {hostPaid && !canHost && (
-          <div className="flex items-center gap-3 bg-emerald-500/20 border border-emerald-500/30 rounded-2xl px-5 py-3.5">
+          <div className="flex items-center gap-3 bg-emerald-500/20 border border-emerald-500/40 rounded-2xl px-5 py-3.5">
             <Check className="w-5 h-5 text-lime-400 shrink-0" />
-            <p className="text-emerald-200 text-sm font-semibold">Payment confirmed! You can now start your Pro Talk session below.</p>
+            <p className="text-emerald-200 text-sm font-semibold">
+              Host pass confirmed! You can now start or schedule your Pro Talk below.
+            </p>
           </div>
-        )}
-
-        {/* Share link after creation */}
-        {newShareToken && (
-          <div className="relative">
-            <ShareLinkBanner token={newShareToken} />
-            <button onClick={() => setNewShareToken(null)} className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center text-white/40 hover:text-white">
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        )}
-
-        {/* Create form */}
-        {showForm && effectiveCanHost && (
-          <CreateForm
-            onClose={() => setShowForm(false)}
-            onCreated={handleCreated}
-            hostPaid={hostPaid}
-            hostSessionId={hostSessionId}
-          />
         )}
 
         {loading ? (
-          <div className="flex justify-center py-24"><Loader2 className="w-8 h-8 animate-spin text-emerald-400" /></div>
+          <div className="flex flex-col items-center justify-center py-28 gap-3">
+            <Loader2 className="w-8 h-8 animate-spin text-emerald-400" />
+            <p className="text-slate-400 text-xs">Discovering Pro Talks…</p>
+          </div>
         ) : (
           <>
-            {/* ── Live Now ── */}
-            <section>
-              <div className="flex items-center gap-2 mb-4">
-                <span className="w-2.5 h-2.5 rounded-full bg-lime-400 animate-pulse" />
-                <h2 className="text-white font-black text-base uppercase tracking-wider text-sm">Live Now</h2>
-                <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-lime-300 text-xs font-black">{liveSpaces.length}</span>
-              </div>
-
-              {liveSpaces.length === 0 ? (
-                <div className="text-center py-14 bg-[#061426]/50 rounded-3xl border border-emerald-500/20 px-4">
-                  <div className="relative w-16 h-16 mx-auto mb-4 rounded-2xl overflow-hidden border border-emerald-500/40 shadow-[0_0_20px_rgba(16,185,129,0.25)] bg-[#061224]">
-                    <Image
-                      src="/protalk.png"
-                      alt="Pro Talks"
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                  <p className="text-slate-200 font-bold mb-1 text-base">No live sessions right now</p>
-                  <p className="text-slate-400 text-sm">Check back later or start your own live stage</p>
-                  {effectiveCanHost && (
-                    <button onClick={() => setShowForm(true)} className="mt-4 inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-lime-400 via-emerald-500 to-teal-500 text-[#060e1a] text-sm font-black hover:scale-105 transition-all shadow-md">
-                      <Add01Icon className="w-4 h-4" /> Start a Pro Talk
-                    </button>
-                  )}
-                  {!effectiveCanHost && (
-                    <button id="pro-talk-empty-host-btn" onClick={() => setShowPayModal(true)} className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-950/60 border border-emerald-500/30 text-emerald-300 text-sm font-bold hover:bg-emerald-900/50 transition-all">
-                      <Add01Icon className="w-4 h-4 text-lime-400" /> Host a Pro Talk · $99.99
-                    </button>
-                  )}
-                </div>
-              ) : (
-                <div className="grid gap-5 sm:grid-cols-2">
-                  {liveSpaces.map(space => <LiveCard key={space.id} space={space} />)}
-                </div>
-              )}
-            </section>
-
-            {/* ── Upcoming ── */}
-            {upcomingSpaces.length > 0 && (
+            {/* LIVE NOW SECTION */}
+            {(activeTab === "all" || activeTab === "live") && (
               <section>
-                <div className="flex items-center gap-2 mb-4">
-                  <Calendar className="w-4 h-4 text-blue-400" />
-                  <h2 className="text-white font-black text-base uppercase tracking-wider text-sm">Upcoming</h2>
-                  <span className="px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 text-xs font-black">{upcomingSpaces.length}</span>
+                <div className="flex items-center justify-between mb-5">
+                  <div className="flex items-center gap-2">
+                    <Radio01Icon className="w-4 h-4 text-rose-500 animate-pulse" />
+                    <h2 className="text-white font-black text-lg uppercase tracking-wide">
+                      Live Now
+                    </h2>
+                    <span className="px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 text-xs font-black">
+                      {liveSpaces.length}
+                    </span>
+                  </div>
+                  {liveSpaces.length > 0 && (
+                    <span className="text-slate-400 text-xs">Updated in real-time</span>
+                  )}
                 </div>
-                <div className="grid gap-5 sm:grid-cols-2">
-                  {upcomingSpaces.map(space => (
-                    <UpcomingCard key={space.id} space={space} currentUserId={user?.id ?? ""} />
-                  ))}
+
+                {liveSpaces.length === 0 ? (
+                  <div className="text-center py-12 bg-[#061426]/50 rounded-3xl border border-emerald-500/20 px-4">
+                    <div className="relative w-14 h-14 mx-auto mb-3 rounded-2xl overflow-hidden border border-emerald-500/40 shadow-[0_0_20px_rgba(16,185,129,0.25)] bg-[#061224]">
+                      <Image src="/protalk.png" alt="Pro Talks" fill className="object-cover" />
+                    </div>
+                    <p className="text-slate-200 font-bold mb-1 text-sm">No live sessions right now</p>
+                    <p className="text-slate-400 text-xs max-w-sm mx-auto">
+                      Check upcoming scheduled talks below or start your own live stage.
+                    </p>
+                    <button
+                      onClick={handleHostClick}
+                      className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-lime-400 via-emerald-500 to-teal-500 text-[#060e1a] text-xs font-black hover:scale-105 transition-all shadow-md"
+                    >
+                      <Add01Icon className="w-3.5 h-3.5" /> Start a Pro Talk
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                    {liveSpaces.map(space => (
+                      <LiveCard key={space.id} space={space} />
+                    ))}
+                  </div>
+                )}
+              </section>
+            )}
+
+            {/* UPCOMING PRO TALKS SECTION */}
+            {(activeTab === "all" || activeTab === "upcoming") && (
+              <section>
+                <div className="flex items-center justify-between mb-5">
+                  <div className="flex items-center gap-2">
+                    <Calendar03Icon className="w-4 h-4 text-blue-400" />
+                    <h2 className="text-white font-black text-lg uppercase tracking-wide">
+                      Upcoming Pro Talks
+                    </h2>
+                    <span className="px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 text-xs font-black">
+                      {upcomingSpaces.length}
+                    </span>
+                  </div>
+                  <span className="text-slate-400 text-xs">Sorted by soonest first</span>
+                </div>
+
+                {upcomingSpaces.length === 0 ? (
+                  <div className="text-center py-10 bg-[#061426]/30 rounded-3xl border border-emerald-500/15 px-4">
+                    <p className="text-slate-300 font-bold mb-1 text-sm">No upcoming talks scheduled</p>
+                    <p className="text-slate-500 text-xs">Be the first to schedule a session in this category.</p>
+                  </div>
+                ) : (
+                  <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                    {upcomingSpaces.map(space => (
+                      <UpcomingCard
+                        key={space.id}
+                        space={space}
+                        currentUserId={user?.id ?? ""}
+                      />
+                    ))}
+                  </div>
+                )}
+              </section>
+            )}
+
+            {/* FROM HOSTS YOU FOLLOW */}
+            {activeTab === "following" && (
+              <section>
+                <div className="flex items-center gap-2 mb-5">
+                  <StarIcon className="w-4 h-4 text-amber-400" />
+                  <h2 className="text-white font-black text-lg uppercase tracking-wide">
+                    From Hosts You Follow
+                  </h2>
+                </div>
+                {spaces.length === 0 ? (
+                  <div className="text-center py-12 bg-[#061426]/40 rounded-3xl border border-emerald-500/20 px-4">
+                    <p className="text-slate-300 font-bold mb-1 text-sm">No talks from followed hosts yet</p>
+                    <p className="text-slate-400 text-xs max-w-sm mx-auto mb-4">
+                      Connect with experienced tax professionals on Pro Connect to see their live talks here.
+                    </p>
+                    <Link
+                      href="/find-a-pro"
+                      className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs font-bold transition-all border border-white/15"
+                    >
+                      Browse Pros →
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                    {spaces.map(space =>
+                      space.isLive ? (
+                        <LiveCard key={space.id} space={space} />
+                      ) : (
+                        <UpcomingCard key={space.id} space={space} currentUserId={user?.id ?? ""} />
+                      )
+                    )}
+                  </div>
+                )}
+              </section>
+            )}
+
+            {/* POPULAR / TRENDING */}
+            {activeTab === "popular" && (
+              <section>
+                <div className="flex items-center gap-2 mb-5">
+                  <FireIcon className="w-4 h-4 text-orange-400" />
+                  <h2 className="text-white font-black text-lg uppercase tracking-wide">
+                    Popular &amp; Trending
+                  </h2>
+                </div>
+                <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                  {spaces.map(space =>
+                    space.isLive ? (
+                      <LiveCard key={space.id} space={space} />
+                    ) : (
+                      <UpcomingCard key={space.id} space={space} currentUserId={user?.id ?? ""} />
+                    )
+                  )}
                 </div>
               </section>
             )}
+
+            {/* REPLAYS */}
+            {(activeTab === "all" && replaySpaces.length > 0) || activeTab === "replays" ? (
+              <section>
+                <div className="flex items-center justify-between mb-5">
+                  <div className="flex items-center gap-2">
+                    <PlayCircle02Icon className="w-4 h-4 text-teal-400" />
+                    <h2 className="text-white font-black text-lg uppercase tracking-wide">
+                      Replay Archive
+                    </h2>
+                  </div>
+                  <span className="text-slate-400 text-xs">Recorded expert sessions</span>
+                </div>
+
+                {replaySpaces.length === 0 ? (
+                  <div className="text-center py-10 bg-[#061426]/30 rounded-3xl border border-emerald-500/15 px-4">
+                    <p className="text-slate-300 font-bold mb-1 text-sm">No recorded replays available</p>
+                    <p className="text-slate-500 text-xs">Past recorded Pro Talks will appear here for on-demand playback.</p>
+                  </div>
+                ) : (
+                  <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                    {replaySpaces.map(space => (
+                      <ReplayCard key={space.id} space={space} />
+                    ))}
+                  </div>
+                )}
+              </section>
+            ) : null}
           </>
         )}
       </div>
@@ -656,11 +1239,13 @@ function ProTalksInner() {
 
 export default function ProTalksPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-[#040a14] via-[#061224] to-[#0a1c38] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-emerald-400" />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gradient-to-br from-[#040a14] via-[#061224] to-[#0a1c38] flex items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-emerald-400" />
+        </div>
+      }
+    >
       <ProTalksInner />
     </Suspense>
   );

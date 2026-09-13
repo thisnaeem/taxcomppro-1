@@ -169,6 +169,8 @@ model User {
   referredBy          AffiliateReferral[]  @relation("ReferredUser")
   hostedSpaces        Space[]
   spaceRsvps          SpaceRsvp[]
+  spaceReports        SpaceReport[]
+  spaceAttendances    SpaceAttendance[]
   proApplication      ProfessionalApplication?
   proServices         ProService[]
   reviewsReceived     ProReview[]  @relation("ReviewedPro")
@@ -751,19 +753,29 @@ model AtlasSettings {
 }
 
 model Space {
-  id          String    @id @default(cuid())
-  name        String
-  description String?
-  hostId      String
-  roomName    String    @unique
-  isLive      Boolean   @default(true)
-  scheduledAt DateTime?           // null = started immediately; future = scheduled
-  shareToken  String?   @unique   // short token for shareable invite link
-  createdAt   DateTime  @default(now())
-  endedAt     DateTime?
+  id                    String    @id @default(cuid())
+  name                  String
+  description           String?
+  hostId                String
+  roomName              String    @unique
+  category              String    @default("Open Discussion")
+  mediaType             String    @default("AUDIO_VIDEO") // "AUDIO", "VIDEO", "AUDIO_VIDEO"
+  isLive                Boolean   @default(true)
+  scheduledAt           DateTime?           // null = started immediately; future = scheduled
+  shareToken            String?   @unique   // short token for shareable invite link
+  totalAttendees        Int       @default(0)
+  peakAttendees         Int       @default(0)
+  replayUrl             String?
+  replayDurationMinutes Int?
+  isReplay              Boolean   @default(false)
+  coHostIds             String[]  @default([])
+  createdAt             DateTime  @default(now())
+  endedAt               DateTime?
 
-  host  User        @relation(fields: [hostId], references: [id], onDelete: Cascade)
-  rsvps SpaceRsvp[]
+  host        User              @relation(fields: [hostId], references: [id], onDelete: Cascade)
+  rsvps       SpaceRsvp[]
+  reports     SpaceReport[]
+  attendances SpaceAttendance[]
 
   @@map("spaces")
 }
@@ -781,6 +793,48 @@ model SpaceRsvp {
 
   @@unique([spaceId, userId])
   @@map("space_rsvps")
+}
+
+model SpaceReport {
+  id             String   @id @default(cuid())
+  spaceId        String
+  reporterId     String
+  reportedUserId String?
+  reason         String
+  details        String?
+  status         String   @default("PENDING") // PENDING, REVIEWED, DISMISSED, ACTION_TAKEN
+  createdAt      DateTime @default(now())
+
+  space    Space @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  reporter User  @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+
+  @@map("space_reports")
+}
+
+model SpaceAttendance {
+  id        String    @id @default(cuid())
+  spaceId   String
+  userId    String?
+  joinedAt  DateTime  @default(now())
+  leftAt    DateTime?
+
+  space Space @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  user  User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([spaceId, userId])
+  @@map("space_attendances")
+}
+
+model SpaceCategory {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  icon      String?
+  isActive  Boolean  @default(true)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@map("space_categories")
 }
 
 model ProfessionalApplication {

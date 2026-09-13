@@ -1,30 +1,127 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { nanoid } from "nanoid";
 
-const HOST_SELECT = { id: true, name: true, image: true, headline: true };
+const HOST_SELECT = {
+  id: true,
+  name: true,
+  image: true,
+  headline: true,
+  role: true,
+  tier: true,
+};
 
-// GET /api/spaces — list live + upcoming spaces
-export async function GET() {
-  const spaces = await prisma.space.findMany({
-    where: {
-      OR: [
-        { isLive: true },
-        // Upcoming: not yet live and scheduled in the future
-        { isLive: false, endedAt: null, scheduledAt: { gt: new Date() } },
-      ],
-    },
-    orderBy: [{ isLive: "desc" }, { scheduledAt: "asc" }, { createdAt: "desc" }],
-    include: {
-      host: { select: HOST_SELECT },
-      _count: { select: { rsvps: true } },
-    },
-  });
-  return NextResponse.json(spaces);
+// GET /api/spaces — list live, upcoming, following, popular, and replay spaces
+export async function GET(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const category = searchParams.get("category");
+    const search = searchParams.get("search")?.trim().toLowerCase();
+    const tab = searchParams.get("tab"); // "live" | "upcoming" | "following" | "popular" | "replays" | "all"
+
+    const session = await auth.api.getSession({ headers: req.headers }).catch(() => null);
+    const userId = session?.user?.id;
+
+    // Base conditions
+    const whereConditions: Prisma.SpaceWhereInput = {};
+
+    // Category filter
+    if (category && category !== "all") {
+      whereConditions.category = { equals: category, mode: "insensitive" };
+    }
+
+    // Keyword search filter (matches title, description, or host name)
+    if (search) {
+      whereConditions.OR = [
+        { name: { contains: search, mode: "insensitive" } },
+        { description: { contains: search, mode: "insensitive" } },
+        { category: { contains: search, mode: "insensitive" } },
+        { host: { name: { contains: search, mode: "insensitive" } } },
+      ];
+    }
+
+    // Filter by tab type
+    if (tab === "live") {
+      whereConditions.isLive = true;
+    } else if (tab === "upcoming") {
+      whereConditions.isLive = false;
+      whereConditions.endedAt = null;
+      whereConditions.scheduledAt = { gt: new Date() };
+    } else if (tab === "replays") {
+      whereConditions.OR = [
+        { isReplay: true },
+        { replayUrl: { not: null } },
+        { endedAt: { not: null } },
+      ];
+    } else if (tab === "following") {
+      if (userId) {
+        // Find hosts the user is connected to
+        const connections = await prisma.connection.findMany({
+          where: {
+            status: "ACCEPTED",
+            OR: [{ requesterId: userId }, { receiverId: userId }],
+          },
+          select: { requesterId: true, receiverId: true },
+        });
+
+        const followedHostIds = connections.map(c =>
+          c.requesterId === userId ? c.receiverId : c.requesterId
+        );
+
+        whereConditions.hostId = { in: followedHostIds };
+        // Show live or upcoming from followed hosts
+        whereConditions.OR = [
+          { isLive: true },
+          { isLive: false, endedAt: null, scheduledAt: { gt: new Date() } },
+        ];
+      } else {
+        // Not logged in -> return empty for following tab
+        return NextResponse.json([]);
+      }
+    } else if (!tab || tab === "all" || tab === "popular") {
+      // Default: Live + Upcoming sessions (or Replays if explicitly requested)
+      if (!whereConditions.OR) {
+        whereConditions.OR = [
+          { isLive: true },
+          { isLive: false, endedAt: null, scheduledAt: { gt: new Date() } },
+        ];
+      }
+    }
+
+    // Determine order
+    let orderBy: Prisma.SpaceOrderByWithRelationInput[] = [
+      { isLive: "desc" },
+      { scheduledAt: "asc" },
+      { createdAt: "desc" },
+    ];
+
+    if (tab === "popular") {
+      orderBy = [
+        { totalAttendees: "desc" },
+        { rsvps: { _count: "desc" } },
+        { isLive: "desc" },
+      ];
+    }
+
+    const spaces = await prisma.space.findMany({
+      where: whereConditions,
+      orderBy,
+      include: {
+        host: { select: HOST_SELECT },
+        _count: { select: { rsvps: true, attendances: true } },
+      },
+    });
+
+    return NextResponse.json(spaces);
+  } catch (error) {
+    console.error("Error fetching spaces:", error);
+    return NextResponse.json({ error: "Failed to fetch Pro Talks" }, { status: 500 });
+  }
 }
 
-// POST /api/spaces — admin or marketplace plus or paid host creates a new space
+// POST /api/spaces — create a new space (Marketplace Plus or Admin or paid pass)
 export async function POST(req: NextRequest) {
   const session = await auth.api.getSession({ headers: req.headers });
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -36,7 +133,15 @@ export async function POST(req: NextRequest) {
   const canHost = dbUser?.role === "ADMIN" || dbUser?.tier === "MARKETPLACE_PLUS";
 
   const body = await req.json();
-  const { name, description, hostSessionId, scheduledAt } = body;
+  const {
+    name,
+    description,
+    category,
+    mediaType,
+    hostSessionId,
+    scheduledAt,
+    coHostIds,
+  } = body;
 
   let hostVerified = canHost;
   if (!hostVerified && hostSessionId) {
@@ -51,11 +156,21 @@ export async function POST(req: NextRequest) {
       ) {
         hostVerified = true;
       }
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }
 
-  if (!hostVerified) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  if (!name?.trim()) return NextResponse.json({ error: "Name required" }, { status: 400 });
+  if (!hostVerified) {
+    return NextResponse.json(
+      { error: "Only Marketplace Plus members or Admin can host a Pro Talk." },
+      { status: 403 }
+    );
+  }
+
+  if (!name?.trim()) {
+    return NextResponse.json({ error: "Title is required" }, { status: 400 });
+  }
 
   // Parse scheduledAt if provided
   let scheduledDate: Date | null = null;
@@ -66,23 +181,26 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  const roomName   = `space-${nanoid(10)}`;
+  const roomName = `space-${nanoid(10)}`;
   const shareToken = nanoid(8);
 
   const space = await prisma.space.create({
     data: {
-      name:        name.trim(),
+      name: name.trim(),
       description: description?.trim() ?? null,
-      hostId:      session.user.id,
+      category: category?.trim() || "Open Discussion",
+      mediaType: mediaType === "AUDIO" ? "AUDIO" : "AUDIO_VIDEO",
+      hostId: session.user.id,
+      coHostIds: Array.isArray(coHostIds) ? coHostIds : [],
       roomName,
       shareToken,
       // If scheduled for later, mark not live yet
-      isLive:      scheduledDate ? false : true,
+      isLive: scheduledDate ? false : true,
       scheduledAt: scheduledDate,
     },
     include: {
-      host:   { select: HOST_SELECT },
-      _count: { select: { rsvps: true } },
+      host: { select: HOST_SELECT },
+      _count: { select: { rsvps: true, attendances: true } },
     },
   });
 
