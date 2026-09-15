@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/lib/auth-client";
 import NetworkBadge from "@/components/networks/NetworkBadge";
+import MemberBubbleCloud from "@/components/networks/MemberBubbleCloud";
 import {
   Home,
   MessageSquare,
@@ -13,6 +14,7 @@ import {
   Radio,
   Calendar,
   Users,
+  LayoutGrid,
   MessagesSquare,
   Settings,
   Pencil,
@@ -243,6 +245,9 @@ export default function ProNetworkHubPage({
       setSavingPrice(false);
     }
   };
+
+  // Member View Mode ("bubble" or "grid")
+  const [memberViewMode, setMemberViewMode] = useState<"bubble" | "grid">("bubble");
 
   const fetchStripeStatus = async () => {
     try {
@@ -2128,60 +2133,111 @@ export default function ProNetworkHubPage({
               renderPaywall("Members Directory", "Connect and collaborate directly with fellow network members.")
             ) : (
             <div className="bg-white dark:bg-[#121e33] border border-slate-200 dark:border-white/10 rounded-3xl p-6 shadow-sm space-y-6">
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-4">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-4 flex-wrap gap-3">
                 <div>
-                  <h3 className="text-lg font-black text-slate-900 dark:text-white">
-                    Network Member Directory ({network.memberCount.toLocaleString()})
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
+                    <Users className="w-5 h-5 text-amber-500" />
+                    <span>Network Member Directory ({network.memberCount.toLocaleString()})</span>
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                    Connect and collaborate directly with fellow network members.
+                    Connect, hover, and collaborate directly with fellow network members.
                   </p>
+                </div>
+
+                {/* View Switcher: Bubble Galaxy vs Directory Grid */}
+                <div className="flex items-center p-1 rounded-xl bg-slate-100 dark:bg-white/10 text-xs font-bold">
+                  <button
+                    type="button"
+                    onClick={() => setMemberViewMode("bubble")}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all ${
+                      memberViewMode === "bubble"
+                        ? "bg-amber-400 text-[#0a1628] font-black shadow-xs"
+                        : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+                    }`}
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Bubble Galaxy</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMemberViewMode("grid")}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all ${
+                      memberViewMode === "grid"
+                        ? "bg-amber-400 text-[#0a1628] font-black shadow-xs"
+                        : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+                    }`}
+                  >
+                    <LayoutGrid className="w-3.5 h-3.5" />
+                    <span>Directory Grid</span>
+                  </button>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {membersList.map((m) => (
-                  <div
-                    key={m.id}
-                    className="p-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/5 flex items-center justify-between gap-3 shadow-sm"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-11 h-11 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden ring-2 ring-amber-400/30 shrink-0">
-                        {m.user.image ? (
-                          <img
-                            src={m.user.image}
-                            alt={m.user.name}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center font-black text-sm">
-                            {m.user.name[0]}
-                          </div>
-                        )}
+              {/* ── BUBBLE GALAXY VIEW ── */}
+              {memberViewMode === "bubble" ? (
+                <MemberBubbleCloud
+                  members={membersList}
+                  networkName={network.name}
+                  isOwner={network.isOwner}
+                  onInviteClick={() => setShowInviteModal(true)}
+                />
+              ) : (
+                /* ── TRADITIONAL DIRECTORY GRID VIEW ── */
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                  {membersList.map((m) => (
+                    <div
+                      key={m.id}
+                      className="p-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/5 flex items-center justify-between gap-3 shadow-sm hover:border-amber-400/30 transition-all"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-11 h-11 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden ring-2 ring-amber-400/30 shrink-0">
+                          {m.user.image ? (
+                            <img
+                              src={m.user.image}
+                              alt={m.user.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center font-black text-sm text-amber-400">
+                              {m.user.name ? m.user.name[0].toUpperCase() : "?"}
+                            </div>
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <h4 className="text-xs font-black text-slate-900 dark:text-white truncate flex items-center gap-1">
+                            <span>{m.user.name}</span>
+                            {m.role.toUpperCase() === "OWNER" && (
+                              <Crown className="w-3 h-3 text-amber-400 fill-amber-400 shrink-0" />
+                            )}
+                          </h4>
+                          <p className="text-[10px] text-slate-400 truncate">
+                            {m.user.headline || m.user.location || "Tax Professional"}
+                          </p>
+                          <span
+                            className={`text-[9px] font-bold px-1.5 py-0.2 rounded mt-1 inline-block ${
+                              m.role.toUpperCase() === "OWNER"
+                                ? "text-amber-500 bg-amber-500/10"
+                                : "text-blue-500 bg-blue-500/10"
+                            }`}
+                          >
+                            {m.role}
+                          </span>
+                        </div>
                       </div>
-                      <div className="min-w-0">
-                        <h4 className="text-xs font-black text-slate-900 dark:text-white truncate">
-                          {m.user.name}
-                        </h4>
-                        <p className="text-[10px] text-slate-400 truncate">
-                          {m.user.headline || m.user.location || "Tax Professional"}
-                        </p>
-                        <span className="text-[9px] font-bold text-amber-500 bg-amber-500/10 px-1.5 py-0.2 rounded mt-1 inline-block">
-                          {m.role}
-                        </span>
+
+                      <div className="flex items-center gap-1">
+                        <Link
+                          href={`/messages?userId=${m.user.id}`}
+                          className="p-2 rounded-xl bg-blue-600/10 hover:bg-blue-600 text-blue-600 hover:text-white transition-colors"
+                          title="Send Direct Message"
+                        >
+                          <MessageCircle className="w-4 h-4" />
+                        </Link>
                       </div>
                     </div>
-
-                    <Link
-                      href="/messages"
-                      className="p-2 rounded-xl bg-blue-600/10 hover:bg-blue-600 text-blue-600 hover:text-white transition-colors"
-                      title="Send Direct Message"
-                    >
-                      <MessageCircle className="w-4 h-4" />
-                    </Link>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
             )
           )}
