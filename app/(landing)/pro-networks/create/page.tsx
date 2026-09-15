@@ -65,6 +65,7 @@ export default function CreateProNetworkPage() {
   const [tagline, setTagline] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("Tax Strategy");
+  const [pricingType, setPricingType] = useState<"free" | "paid">("paid");
   const [monthlyPrice, setMonthlyPrice] = useState("19.99");
   const [coverImage, setCoverImage] = useState(coverPresets[0]);
   const [customCoverUrl, setCustomCoverUrl] = useState("");
@@ -302,35 +303,141 @@ export default function CreateProNetworkPage() {
                 </select>
               </div>
 
-              {/* Monthly Subscription Price */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                  Monthly Member Subscription Price ($ USD / month)
+              {/* Monthly Subscription Price & Network Model */}
+              <div className="space-y-3">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                  Network Access &amp; Pricing Model *
                 </label>
-                <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-slate-400">
-                    $
-                  </span>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    placeholder="19.99"
-                    value={monthlyPrice}
-                    onChange={(e) => setMonthlyPrice(e.target.value)}
-                    className="w-full pl-8 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 font-black text-sm text-slate-900 dark:text-white"
-                  />
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* Free Network Card */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPricingType("free");
+                      setMonthlyPrice("0");
+                    }}
+                    className={`p-4 rounded-2xl border text-left transition-all relative ${
+                      pricingType === "free"
+                        ? "border-emerald-500 bg-emerald-500/10 dark:bg-emerald-500/15 ring-2 ring-emerald-500/30"
+                        : "border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 bg-white dark:bg-[#1a263d]"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="inline-flex items-center gap-1.5 text-xs font-black text-emerald-600 dark:text-emerald-400">
+                        <Sparkles className="w-4 h-4 text-emerald-500" />
+                        <span>Free Pro Network</span>
+                      </span>
+                      <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300">
+                        $0 / month
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                      100% free for members to join. Perfect for building an audience, masterclass discussions, and rapid community growth.
+                    </p>
+                  </button>
+
+                  {/* Paid Network Card */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPricingType("paid");
+                      if (parseFloat(monthlyPrice || "0") <= 0) {
+                        setMonthlyPrice("19.99");
+                      }
+                    }}
+                    className={`p-4 rounded-2xl border text-left transition-all relative ${
+                      pricingType === "paid"
+                        ? "border-amber-400 bg-amber-400/10 dark:bg-amber-400/15 ring-2 ring-amber-400/30"
+                        : "border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 bg-white dark:bg-[#1a263d]"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="inline-flex items-center gap-1.5 text-xs font-black text-amber-500 dark:text-amber-400">
+                        <Crown className="w-4 h-4 text-amber-400" />
+                        <span>Paid Membership</span>
+                      </span>
+                      <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-800 dark:text-amber-300">
+                        Custom Price
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                      Charge recurring monthly dues. 0% TCP fee — you keep 100% of subscriber revenue via direct Stripe payouts.
+                    </p>
+                  </button>
                 </div>
 
-                <div className="mt-3 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-xs space-y-1.5">
-                  <div className="flex items-center gap-2 font-bold">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                    <span>0% TCP Platform Fee • Direct Stripe Host Payouts</span>
+                {/* Paid Network Price Configuration */}
+                {pricingType === "paid" ? (
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#121e33] border border-slate-200 dark:border-slate-700 space-y-3">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                        Monthly Member Subscription Price ($ USD / month)
+                      </label>
+                      {/* Presets */}
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {["9.99", "19.99", "29.99", "49.99", "99.00"].map((preset) => (
+                          <button
+                            key={preset}
+                            type="button"
+                            onClick={() => setMonthlyPrice(preset)}
+                            className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all ${
+                              monthlyPrice === preset
+                                ? "bg-amber-400 text-[#0a1628] font-black shadow-xs"
+                                : "bg-white dark:bg-white/5 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100"
+                            }`}
+                          >
+                            ${preset}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="relative">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-slate-400">
+                        $
+                      </span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0.01"
+                        placeholder="Enter custom monthly price (e.g. 29.99)"
+                        value={monthlyPrice}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setMonthlyPrice(val);
+                          if (parseFloat(val) <= 0) {
+                            setPricingType("free");
+                          }
+                        }}
+                        className="w-full pl-8 pr-16 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 font-black text-sm text-slate-900 dark:text-white bg-white dark:bg-[#1a263d]"
+                      />
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
+                        USD / mo
+                      </span>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-xs space-y-1">
+                      <div className="flex items-center gap-2 font-bold">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                        <span>0% TCP Platform Fee • Direct Stripe Host Payouts</span>
+                      </div>
+                      <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                        You keep <strong>100% of recurring member subscriptions</strong>. Connect your Stripe account in your network dashboard after creation, and all member payments will transfer directly to your bank account.
+                      </p>
+                    </div>
                   </div>
-                  <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
-                    You keep <strong>100% of recurring member subscriptions</strong>. Connect your Stripe account in your network dashboard after creation, and all member payments will transfer directly to your bank account.
-                  </p>
-                </div>
+                ) : (
+                  <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-xs space-y-1.5">
+                    <div className="flex items-center gap-2 font-bold">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                      <span>Free Community Network Selected ($0.00 / month)</span>
+                    </div>
+                    <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                      Members can join your Pro Network instantly with zero payment hurdles or credit card entry. You can update your network's pricing at any time in your Network Management dashboard.
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Description */}

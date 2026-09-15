@@ -177,7 +177,13 @@ export async function POST(req: NextRequest) {
       slug = `${baseSlug}-${counter++}`;
     }
 
-    const price = typeof monthlyPrice === "number" ? monthlyPrice : parseFloat(monthlyPrice || "19.99") || 19.99;
+    let price = 0;
+    if (typeof monthlyPrice === "number") {
+      price = isNaN(monthlyPrice) ? 0 : Math.max(0, monthlyPrice);
+    } else if (monthlyPrice !== undefined && monthlyPrice !== null && monthlyPrice !== "") {
+      const parsed = parseFloat(String(monthlyPrice));
+      price = isNaN(parsed) ? 0 : Math.max(0, parsed);
+    }
 
     // Create the Pro Network and automatically add owner as first member
     const network = await prisma.proNetwork.create({

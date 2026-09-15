@@ -421,7 +421,9 @@ export default function ProProfilePage() {
                     href={`/pro-networks/${pro.primaryNetwork.slug}`}
                     className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#f0c040] via-[#e6b325] to-[#d4a017] hover:from-[#f5c955] hover:to-[#e0ab20] text-[#0a1628] font-black text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition-all"
                   >
-                    JOIN NOW - ${(pro.primaryNetwork.monthlyPrice || 19.99).toFixed(2)}/MO
+                    JOIN NOW - {pro.primaryNetwork.monthlyPrice !== undefined && pro.primaryNetwork.monthlyPrice <= 0
+                      ? "FREE"
+                      : `$${(pro.primaryNetwork.monthlyPrice ?? 19.99).toFixed(2)}/MO`}
                   </Link>
                   <p className="text-[10px] font-bold text-center text-slate-400">
                     {pro.primaryNetwork.memberCount} Members • Cancel Anytime

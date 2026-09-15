@@ -15,6 +15,7 @@ import {
   Users,
   MessagesSquare,
   Settings,
+  Pencil,
   BarChart2,
   Shield,
   Mail,
@@ -194,6 +195,54 @@ export default function ProNetworkHubPage({
 
   const [joining, setJoining] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Pricing Update State
+  const [showEditPricingModal, setShowEditPricingModal] = useState(false);
+  const [editPriceType, setEditPriceType] = useState<"free" | "paid">("paid");
+  const [editMonthlyPrice, setEditMonthlyPrice] = useState("19.99");
+  const [savingPrice, setSavingPrice] = useState(false);
+  const [pricingSuccessMsg, setPricingSuccessMsg] = useState("");
+
+  const openEditPricingModal = () => {
+    if (network) {
+      if (network.monthlyPrice <= 0) {
+        setEditPriceType("free");
+        setEditMonthlyPrice("0");
+      } else {
+        setEditPriceType("paid");
+        setEditMonthlyPrice(network.monthlyPrice.toString());
+      }
+    }
+    setShowEditPricingModal(true);
+  };
+
+  const handleSavePricing = async () => {
+    const finalPrice = editPriceType === "free" ? 0 : Math.max(0, parseFloat(editMonthlyPrice || "0"));
+    setSavingPrice(true);
+    try {
+      const res = await fetch(`/api/pro-networks/${slug}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ monthlyPrice: finalPrice }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setNetwork((prev) => (prev ? { ...prev, monthlyPrice: finalPrice } : prev));
+        setShowEditPricingModal(false);
+        setPricingSuccessMsg(
+          `Network pricing successfully updated to ${finalPrice <= 0 ? "FREE" : `$${finalPrice.toFixed(2)}/mo`}!`
+        );
+        setTimeout(() => setPricingSuccessMsg(""), 5000);
+      } else {
+        alert(data.error || "Failed to update network pricing.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update pricing.");
+    } finally {
+      setSavingPrice(false);
+    }
+  };
 
   const fetchStripeStatus = async () => {
     try {
@@ -388,13 +437,21 @@ export default function ProNetworkHubPage({
       <div className="max-w-xl mx-auto bg-white/5 border border-white/10 rounded-2xl p-5 text-center space-y-2 relative z-10 backdrop-blur-md">
         <div className="flex items-baseline justify-center gap-1.5">
           <span className="text-3xl sm:text-4xl font-black text-amber-400">
-            ${network?.monthlyPrice.toFixed(2)}
+            {network && network.monthlyPrice > 0 ? `$${network.monthlyPrice.toFixed(2)}` : "FREE"}
           </span>
-          <span className="text-xs font-bold text-slate-300">/ month</span>
+          {network && network.monthlyPrice > 0 && (
+            <span className="text-xs font-bold text-slate-300">/ month</span>
+          )}
         </div>
         <div className="flex items-center justify-center gap-2 text-xs font-semibold text-emerald-400">
           <CheckCircle2 className="w-4 h-4 shrink-0" />
-          <span>0% Platform Commission — 100% of your membership goes directly to host <strong>{network?.owner.name}</strong></span>
+          <span>
+            {network && network.monthlyPrice > 0 ? (
+              <>0% Platform Commission — 100% of your membership goes directly to host <strong>{network.owner.name}</strong></>
+            ) : (
+              "Free Community Access — 100% free for all verified tax professionals"
+            )}
+          </span>
         </div>
       </div>
 
@@ -451,17 +508,23 @@ export default function ProNetworkHubPage({
           {joining ? (
             <>
               <Loader2 className="w-5 h-5 animate-spin" />
-              <span>Connecting to Checkout...</span>
+              <span>{network && network.monthlyPrice > 0 ? "Connecting to Checkout..." : "Activating Free Membership..."}</span>
             </>
           ) : (
             <>
               <Crown className="w-5 h-5" />
-              <span>Join Now &amp; Unlock Access — ${network?.monthlyPrice.toFixed(2)}/mo</span>
+              <span>
+                {network && network.monthlyPrice > 0
+                  ? `Join Now & Unlock Access — $${network.monthlyPrice.toFixed(2)}/mo`
+                  : "Join Now & Unlock Free Access"}
+              </span>
             </>
           )}
         </button>
         <p className="text-[11px] text-slate-400 mt-2">
-          Secure Stripe checkout • Cancel anytime • Instant access
+          {network && network.monthlyPrice > 0
+            ? "Secure Stripe checkout • Cancel anytime • Instant access"
+            : "Free membership • No credit card required • Instant access"}
         </p>
       </div>
     </div>
@@ -867,7 +930,19 @@ export default function ProNetworkHubPage({
                 className="bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-[#0a1628] font-black text-xs px-4 py-2 rounded-full transition-all shadow-lg hover:scale-105 active:scale-95 flex items-center gap-1.5"
               >
                 <Crown className="w-3.5 h-3.5" />
-                <span>Join ${network.monthlyPrice.toFixed(2)}/mo</span>
+                <span>{network.monthlyPrice > 0 ? `Join $${network.monthlyPrice.toFixed(2)}/mo` : "Join Free"}</span>
+              </button>
+            )}
+
+            {network.isOwner && (
+              <button
+                type="button"
+                onClick={openEditPricingModal}
+                className="bg-amber-400 hover:bg-amber-300 text-[#0a1628] font-black text-xs px-3.5 py-2 rounded-full transition-all shadow-md flex items-center gap-1.5"
+                title="Update Network Pricing"
+              >
+                <Pencil className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Edit Pricing</span>
               </button>
             )}
 
@@ -2152,9 +2227,105 @@ export default function ProNetworkHubPage({
                 </div>
 
                 <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/5 space-y-1">
-                  <span className="text-xs text-slate-400 font-bold">Monthly Price</span>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-slate-400 font-bold">Monthly Price</span>
+                    <button
+                      type="button"
+                      onClick={openEditPricingModal}
+                      className="text-[11px] font-bold text-amber-500 hover:text-amber-400 inline-flex items-center gap-1 hover:underline"
+                    >
+                      <Pencil className="w-3 h-3" />
+                      <span>Edit</span>
+                    </button>
+                  </div>
                   <div className="text-2xl font-black text-amber-500">
-                    ${network.monthlyPrice.toFixed(2)}/mo
+                    {network.monthlyPrice <= 0 ? "FREE" : `$${network.monthlyPrice.toFixed(2)}/mo`}
+                  </div>
+                </div>
+              </div>
+
+              {/* Pricing Update Success Alert */}
+              {pricingSuccessMsg && (
+                <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs font-bold flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                    <span>{pricingSuccessMsg}</span>
+                  </span>
+                  <button type="button" onClick={() => setPricingSuccessMsg("")} className="text-emerald-600 hover:text-emerald-800 p-1">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+
+              {/* ── Network Pricing & Subscription Model Settings ── */}
+              <div className="bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-6 space-y-4">
+                <div className="flex items-start sm:items-center justify-between gap-4 flex-col sm:flex-row border-b border-slate-200/60 dark:border-white/10 pb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-amber-400/15 flex items-center justify-center shrink-0">
+                      <DollarSign className="w-5 h-5 text-amber-500" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h4 className="font-black text-slate-900 dark:text-white text-base">
+                          Network Pricing &amp; Membership Model
+                        </h4>
+                        <span
+                          className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full ${
+                            network.monthlyPrice <= 0
+                              ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+                              : "bg-amber-400/15 text-amber-700 dark:text-amber-300"
+                          }`}
+                        >
+                          {network.monthlyPrice <= 0
+                            ? "Active: Free Community"
+                            : `Active: $${network.monthlyPrice.toFixed(2)} / month`}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                        Set your membership dues or make this Pro Network free to join anytime.
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={openEditPricingModal}
+                    className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-[#0a1628] font-black text-xs px-5 py-2.5 rounded-xl transition-all shadow-md hover:scale-105 active:scale-95 shrink-0"
+                  >
+                    <Pencil className="w-4 h-4" />
+                    <span>Change Network Pricing</span>
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                  <div className="p-4 rounded-xl bg-white dark:bg-black/20 border border-slate-200/60 dark:border-white/5 space-y-1">
+                    <div className="text-[10px] uppercase tracking-wider text-slate-400 font-black">
+                      Current Access Mode
+                    </div>
+                    <div className="text-sm font-black text-slate-900 dark:text-white">
+                      {network.monthlyPrice <= 0
+                        ? "Free Network ($0.00/mo)"
+                        : `$${network.monthlyPrice.toFixed(2)} USD / month`}
+                    </div>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      {network.monthlyPrice <= 0
+                        ? "Members can join immediately with zero payment or credit card entry."
+                        : "Subscribers pay via Stripe. 100% of dues route directly to your connected bank account."}
+                    </p>
+                  </div>
+
+                  <div className="p-4 rounded-xl bg-white dark:bg-black/20 border border-slate-200/60 dark:border-white/5 space-y-1">
+                    <div className="text-[10px] uppercase tracking-wider text-slate-400 font-black">
+                      Projected Monthly Earnings
+                    </div>
+                    <div className="text-sm font-black text-emerald-500">
+                      ${(network.memberCount * network.monthlyPrice).toLocaleString("en-US", {
+                        minimumFractionDigits: 2,
+                      })}/mo
+                    </div>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      Based on {network.memberCount} active member{network.memberCount === 1 ? "" : "s"} with 0% platform commission taken by TCP.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -2316,7 +2487,7 @@ export default function ProNetworkHubPage({
             <span>
               {network.isMember
                 ? `You have full access as an active member of ${network.name}. Thank you for being part of our community!`
-                : `Join ${network.name} ($${network.monthlyPrice.toFixed(2)}/mo) to unlock full access to all private feeds, resources, and live Pro Talks.`}
+                : `Join ${network.name} (${network.monthlyPrice > 0 ? `$${network.monthlyPrice.toFixed(2)}/mo` : "FREE"}) to unlock full access to all private feeds, resources, and live Pro Talks.`}
             </span>
           </div>
         </main>
@@ -2928,6 +3099,188 @@ export default function ProNetworkHubPage({
                 Join this network to participate in discussions.
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ── MODAL: Update Network Pricing ── */}
+      {showEditPricingModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <div className="bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl space-y-6">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-4">
+              <div>
+                <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
+                  <DollarSign className="w-5 h-5 text-amber-500" />
+                  <span>Update Network Pricing</span>
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  Change your monthly dues or make your Pro Network completely free.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowEditPricingModal(false)}
+                className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Model Selector */}
+            <div className="space-y-3">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                Choose Access &amp; Pricing Model
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* Free Option */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditPriceType("free");
+                    setEditMonthlyPrice("0");
+                  }}
+                  className={`p-4 rounded-2xl border text-left transition-all ${
+                    editPriceType === "free"
+                      ? "border-emerald-500 bg-emerald-500/10 dark:bg-emerald-500/15 ring-2 ring-emerald-500/30"
+                      : "border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 bg-white dark:bg-[#1a263d]"
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="inline-flex items-center gap-1.5 text-xs font-black text-emerald-600 dark:text-emerald-400">
+                      <Sparkles className="w-4 h-4 text-emerald-500" />
+                      <span>Free Network</span>
+                    </span>
+                    <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300">
+                      $0 / mo
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                    100% free. Members join instantly without entering payment information.
+                  </p>
+                </button>
+
+                {/* Paid Option */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditPriceType("paid");
+                    if (parseFloat(editMonthlyPrice || "0") <= 0) {
+                      setEditMonthlyPrice("19.99");
+                    }
+                  }}
+                  className={`p-4 rounded-2xl border text-left transition-all ${
+                    editPriceType === "paid"
+                      ? "border-amber-400 bg-amber-400/10 dark:bg-amber-400/15 ring-2 ring-amber-400/30"
+                      : "border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 bg-white dark:bg-[#1a263d]"
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="inline-flex items-center gap-1.5 text-xs font-black text-amber-500 dark:text-amber-400">
+                      <Crown className="w-4 h-4 text-amber-400" />
+                      <span>Paid Dues</span>
+                    </span>
+                    <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-800 dark:text-amber-300">
+                      Custom Price
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                    Set recurring dues. 0% platform fee — 100% direct payouts via Stripe.
+                  </p>
+                </button>
+              </div>
+
+              {/* Price Details if Paid */}
+              {editPriceType === "paid" ? (
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#121e33] border border-slate-200 dark:border-slate-700 space-y-3">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                      Monthly Member Dues ($ USD / month)
+                    </label>
+                    {/* Presets */}
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {["9.99", "19.99", "29.99", "49.99", "99.00"].map((preset) => (
+                        <button
+                          key={preset}
+                          type="button"
+                          onClick={() => setEditMonthlyPrice(preset)}
+                          className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-all ${
+                            editMonthlyPrice === preset
+                              ? "bg-amber-400 text-[#0a1628] font-black shadow-xs"
+                              : "bg-white dark:bg-white/5 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100"
+                          }`}
+                        >
+                          ${preset}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-slate-400">
+                      $
+                    </span>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0.01"
+                      placeholder="e.g. 29.99"
+                      value={editMonthlyPrice}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setEditMonthlyPrice(val);
+                        if (parseFloat(val) <= 0) {
+                          setEditPriceType("free");
+                        }
+                      }}
+                      className="w-full pl-8 pr-16 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 font-black text-sm text-slate-900 dark:text-white bg-white dark:bg-[#1a263d]"
+                    />
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
+                      USD / mo
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-xs space-y-1">
+                  <div className="flex items-center gap-2 font-bold">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                    <span>Free Community Membership ($0.00 / month)</span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                    Existing and new members will have instant access to your private board and resources without requiring payment.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center justify-end gap-3 pt-2 border-t border-slate-100 dark:border-white/10">
+              <button
+                type="button"
+                onClick={() => setShowEditPricingModal(false)}
+                disabled={savingPrice}
+                className="px-5 py-2.5 rounded-full border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSavePricing}
+                disabled={savingPrice}
+                className="px-6 py-2.5 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 text-[#0a1628] font-black text-xs hover:from-amber-300 hover:to-amber-400 shadow-md hover:scale-105 active:scale-95 disabled:opacity-50 inline-flex items-center gap-2"
+              >
+                {savingPrice ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Saving Pricing...</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Save Pricing Changes</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}

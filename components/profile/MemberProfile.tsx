@@ -672,7 +672,9 @@ export default function MemberProfile() {
                       >
                         <span>
                           {primaryNetwork
-                            ? `JOIN NOW - $${(primaryNetwork.monthlyPrice || 19.99).toFixed(2)}/MONTH`
+                            ? (primaryNetwork.monthlyPrice !== undefined && primaryNetwork.monthlyPrice <= 0
+                                ? "JOIN NOW - FREE"
+                                : `JOIN NOW - $${(primaryNetwork.monthlyPrice ?? 19.99).toFixed(2)}/MONTH`)
                             : "LAUNCH YOUR PRO NETWORK"}
                         </span>
                       </Link>

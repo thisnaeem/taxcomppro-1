@@ -170,7 +170,9 @@ export async function PATCH(
         ...(category !== undefined && { category }),
         ...(coverImage !== undefined && { coverImage }),
         ...(logoImage !== undefined && { logoImage }),
-        ...(monthlyPrice !== undefined && { monthlyPrice: Number(monthlyPrice) }),
+        ...(monthlyPrice !== undefined && {
+          monthlyPrice: Math.max(0, isNaN(Number(monthlyPrice)) ? 0 : Number(monthlyPrice)),
+        }),
         ...(rules !== undefined && { rules }),
         ...(welcomeMessage !== undefined && { welcomeMessage }),
         ...(previewContent !== undefined && { previewContent }),
