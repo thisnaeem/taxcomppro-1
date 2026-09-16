@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { canAccessSpace } from "@/lib/spaceAccess";
 import { prisma } from "@/lib/prisma";
 import { AccessToken } from "livekit-server-sdk";
 
@@ -11,6 +12,8 @@ export async function POST(req: NextRequest, { params }: Params) {
   const space = await prisma.space.findUnique({ where: { id } });
   if (!space || !space.isLive)
     return NextResponse.json({ error: "This Pro Talk has ended or does not exist." }, { status: 404 });
+
+  if (!canAccessSpace(req, space)) return NextResponse.json({ error: "Invitation required" }, { status: 403 });
 
   const { displayName } = await req.json();
   const name = (typeof displayName === "string" && displayName.trim())
@@ -32,7 +35,7 @@ export async function POST(req: NextRequest, { params }: Params) {
   token.addGrant({
     roomJoin:       true,
     room:           space.roomName,
-    canPublish:     true,
+    canPublish:     false,
     canPublishData: true,
     canSubscribe:   true,
     roomAdmin:      false,

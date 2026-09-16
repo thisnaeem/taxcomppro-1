@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { canAccessSpace } from "@/lib/spaceAccess";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { AccessToken } from "livekit-server-sdk";
@@ -14,6 +15,8 @@ export async function POST(req: NextRequest, { params }: Params) {
   const space = await prisma.space.findUnique({ where: { id } });
   if (!space || !space.isLive)
     return NextResponse.json({ error: "Space not found or ended" }, { status: 404 });
+
+  if (!canAccessSpace(req, space, session.user)) return NextResponse.json({ error: "Invitation required" }, { status: 403 });
 
   const apiKey = process.env.LIVEKIT_API_KEY!;
   const apiSecret = process.env.LIVEKIT_API_SECRET!;
@@ -35,7 +38,7 @@ export async function POST(req: NextRequest, { params }: Params) {
   token.addGrant({
     roomJoin: true,
     room: space.roomName,
-    canPublish: true,
+    canPublish: isHost || isCoHost,
     canPublishData: true,
     canSubscribe: true,
     roomAdmin: isHost,

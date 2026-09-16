@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
     const userId = session?.user?.id;
 
     // Base conditions
-    const whereConditions: Prisma.SpaceWhereInput = {};
+    const whereConditions: Prisma.SpaceWhereInput = { AND: [{ OR: [{ visibility: "PUBLIC" }, ...(userId ? [{ hostId: userId }, { coHostIds: { has: userId } }] : [])] }] };
 
     // Category filter
     if (category && category !== "all") {
@@ -114,7 +114,12 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    return NextResponse.json(spaces);
+    const registrations = userId ? await prisma.spaceRsvp.findMany({
+      where: { userId, spaceId: { in: spaces.map(space => space.id) } },
+      select: { spaceId: true },
+    }) : [];
+    const registeredIds = new Set(registrations.map(item => item.spaceId));
+    return NextResponse.json(spaces.map(space => ({ ...space, isRsvped: registeredIds.has(space.id) })));
   } catch (error) {
     console.error("Error fetching spaces:", error);
     return NextResponse.json({ error: "Failed to fetch Pro Talks" }, { status: 500 });
@@ -141,6 +146,7 @@ export async function POST(req: NextRequest) {
     hostSessionId,
     scheduledAt,
     coHostIds,
+    visibility = "PUBLIC",
   } = body;
 
   let hostVerified = canHost;
@@ -172,6 +178,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Title is required" }, { status: 400 });
   }
 
+  if (!["PUBLIC", "PRIVATE"].includes(visibility)) return NextResponse.json({ error: "Invalid visibility" }, { status: 400 });
+
   // Parse scheduledAt if provided
   let scheduledDate: Date | null = null;
   if (scheduledAt) {
@@ -182,7 +190,7 @@ export async function POST(req: NextRequest) {
   }
 
   const roomName = `space-${nanoid(10)}`;
-  const shareToken = nanoid(8);
+  const shareToken = nanoid(32);
 
   const space = await prisma.space.create({
     data: {
@@ -194,6 +202,7 @@ export async function POST(req: NextRequest) {
       coHostIds: Array.isArray(coHostIds) ? coHostIds : [],
       roomName,
       shareToken,
+      visibility,
       // If scheduled for later, mark not live yet
       isLive: scheduledDate ? false : true,
       scheduledAt: scheduledDate,

@@ -1,672 +1,723 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import Image from "next/image";
+import {
+  useState,
+  useEffect,
+  useRef,
+  useSyncExternalStore,
+  type ReactNode,
+} from "react";
+import { useRouter, usePathname } from "next/navigation";
 import { useSession, signOut } from "@/lib/auth-client";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { setUser, clearUser } from "@/store/slices/authSlice";
-import type { AuthUser } from "@/store/slices/authSlice";
-import {
-  JusticeScale01Icon, Menu01Icon, Cancel01Icon, Layout01Icon, Logout01Icon, UserCircleIcon,
-  ArrowDown01Icon, Home01Icon, Notification01Icon, Search01Icon, ShoppingBag01Icon,
-  UserGroupIcon, Message01Icon, UserAdd01Icon, BookOpen01Icon,
-  Store01Icon, Rocket01Icon, Radio01Icon,
-} from "hugeicons-react";
-import { Gift, Shield, GraduationCap, ChevronDown, Megaphone, Sun, Moon, Network } from "lucide-react";
+import { setUser, clearUser, type AuthUser } from "@/store/slices/authSlice";
 import { useTheme } from "next-themes";
+import {
+  Menu01Icon,
+  Cancel01Icon,
+  ArrowDown01Icon,
+  ArrowRight01Icon,
+  Home01Icon,
+  Notification01Icon,
+  Search01Icon,
+  UserGroupIcon,
+  Message01Icon,
+  BookOpen01Icon,
+  ShoppingBag01Icon,
+  Store01Icon,
+  Rocket01Icon,
+  Radio01Icon,
+  UserCircleIcon,
+  UserAdd01Icon,
+  Logout01Icon,
+  Shield01Icon,
+  ComputerIcon,
+  GiftIcon,
+  Sun01Icon,
+  Moon02Icon,
+} from "hugeicons-react";
+import "./navbar.css";
 
-type NavItem =
-  | { type: "link";     label: string; href: string;  icon?: React.ElementType | null; badge?: string }
-  | { type: "dropdown"; label: string; icon: React.ElementType; items: { label: string; href: string; icon: React.ElementType; desc: string }[] };
-
-const navItems: NavItem[] = [
-  { type: "link",     label: "Home",        href: "/feed",        icon: Home01Icon },
-  { type: "link",     label: "Courses",     href: "/courses",    icon: BookOpen01Icon },
-  { type: "link",     label: "Toolkits",    href: "/toolkits",   icon: GraduationCap },
-  { type: "link",     label: "Tools",       href: "/tools",      icon: null, badge: "COMING SOON" },
-  { type: "link",     label: "Marketplace", href: "/marketplace",icon: ShoppingBag01Icon },
+const groups = [
   {
-    type: "dropdown", label: "Pros", icon: UserGroupIcon,
-    items: [
-      { label: "Find a Pro",    href: "/find-a-pro",   icon: UserGroupIcon, desc: "" },
-      { label: "Pro Talks",    href: "/pro-talks",    icon: Radio01Icon,   desc: "" },
-      { label: "Communities",  href: "/communities",  icon: Rocket01Icon,  desc: "" },
-      { label: "Pro Hub",      href: "/pro-hub",      icon: UserGroupIcon, desc: "" },
-      { label: "Pro Network",  href: "/pro-networks", icon: Network,       desc: "" },
-      { label: "Pro Marketing",href: "/pro-marketing",icon: Megaphone,     desc: "" },
+    label: "Learn",
+    links: [
+      {
+        label: "Courses",
+        href: "/courses",
+        icon: BookOpen01Icon,
+        description: "Build your expertise",
+      },
+      {
+        label: "Toolkits",
+        href: "/toolkits",
+        icon: ComputerIcon,
+        description: "Resources for your practice",
+      },
+      {
+        label: "Tools",
+        href: "/tools",
+        icon: Rocket01Icon,
+        description: "Coming soon",
+      },
     ],
   },
-  { type: "link",     label: "Pricing",     href: "/upgrade",    icon: Rocket01Icon },
-  { type: "link",     label: "Become an Affiliate", href: "https://affiliate.taxcomppro.com", icon: Gift },
+  {
+    label: "Pros",
+    links: [
+      {
+        label: "Find a Pro",
+        href: "/find-a-pro",
+        icon: UserGroupIcon,
+        description: "Find your next connection",
+      },
+      {
+        label: "Pro Talks",
+        href: "/pro-talks",
+        icon: Radio01Icon,
+        description: "Ideas worth talking about",
+      },
+      {
+        label: "Communities",
+        href: "/communities",
+        icon: UserGroupIcon,
+        description: "Find your people",
+      },
+      {
+        label: "Pro Hub",
+        href: "/pro-hub",
+        icon: Store01Icon,
+        description: "Your professional home",
+      },
+      {
+        label: "Pro Network",
+        href: "/pro-networks",
+        icon: UserAdd01Icon,
+        description: "Grow your circle",
+      },
+      {
+        label: "Pro Marketing",
+        href: "/pro-marketing",
+        icon: Rocket01Icon,
+        description: "Grow your presence",
+      },
+    ],
+  },
+  {
+    label: "More",
+    links: [
+      {
+        label: "Pricing & plans",
+        href: "/upgrade",
+        icon: Rocket01Icon,
+        description: "Find the right membership",
+      },
+      {
+        label: "Become an Affiliate",
+        href: "https://affiliate.taxcomppro.com",
+        icon: GiftIcon,
+        description: "Share the community",
+      },
+      {
+        label: "About us",
+        href: "/about",
+        icon: Shield01Icon,
+        description: "Get to know TaxCompPro",
+      },
+    ],
+  },
 ];
-
-type MobileNavLink = { label: string; href: string; icon?: React.ElementType | null; badge?: string };
-
-// Flat list for mobile menu — links + all dropdown sub-items
-const navLinks: MobileNavLink[] = navItems.flatMap<MobileNavLink>(item =>
-  item.type === "link"
-    ? [{ label: item.label, href: item.href, icon: item.icon ?? null, badge: item.badge }]
-    : item.items.map(sub => ({ label: sub.label, href: sub.href, icon: sub.icon }))
-);
-
-
+const subscribe = () => () => {};
+function SiteLink({
+  href,
+  children,
+  ...props
+}: {
+  href: string;
+  children: ReactNode;
+  className?: string;
+  onClick?: () => void;
+  "aria-label"?: string;
+  "aria-current"?: "page";
+}) {
+  return (
+    <Link
+      href={href}
+      {...(href.startsWith("https://")
+        ? { target: "_blank", rel: "noopener noreferrer" }
+        : {})}
+      {...props}
+    >
+      {children}
+    </Link>
+  );
+}
+function NavModal({
+  title,
+  children,
+  onClose,
+  drawer = false,
+}: {
+  title: string;
+  children: ReactNode;
+  onClose: () => void;
+  drawer?: boolean;
+}) {
+  const ref = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    const dialog = ref.current;
+    dialog?.showModal();
+    const old = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      dialog?.close();
+      document.body.style.overflow = old;
+    };
+  }, []);
+  return (
+    <dialog
+      ref={ref}
+      className={`site-nav-modal ${drawer ? "site-nav-drawer" : ""}`}
+      aria-label={title}
+      onCancel={(event) => {
+        event.preventDefault();
+        onClose();
+      }}
+    >
+      <div className="site-modal-top">
+        <span>{title}</span>
+        <button
+          className="site-icon"
+          onClick={onClose}
+          aria-label={`Close ${title.toLowerCase()}`}
+        >
+          <Cancel01Icon size={22} />
+        </button>
+      </div>
+      {children}
+    </dialog>
+  );
+}
 export default function Navbar() {
   const router = useRouter();
-  const [mobileOpen, setMobileOpen]     = useState(false);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [openMenu, setOpenMenu]         = useState<string | null>(null);
-  const [searchOpen, setSearchOpen]     = useState(false);
-  const [searchQuery, setSearchQuery]   = useState("");
-  const [unreadCount, setUnreadCount]   = useState(0);
-  const [unreadMessages, setUnreadMessages] = useState(0);
-  const dropdownRef    = useRef<HTMLDivElement>(null);
-  const navMenuRef     = useRef<HTMLDivElement>(null);
-  const searchInputRef = useRef<HTMLInputElement>(null);
-
+  const pathname = usePathname();
   const { data: session, isPending } = useSession();
-  const dispatch = useAppDispatch();
-  const storeUser = useAppSelector(s => s.auth.user);
   const user = session?.user;
-  const { theme, setTheme, resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
+  const dispatch = useAppDispatch();
+  const storeUser = useAppSelector((state) => state.auth.user);
+  const { resolvedTheme, setTheme } = useTheme();
+  const mounted = useSyncExternalStore(
+    subscribe,
+    () => true,
+    () => false,
+  );
   const isDark = mounted && resolvedTheme === "dark";
-
-  // Seed Redux auth state so feed components work in (landing) pages
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [counts, setCounts] = useState({ notifications: 0, messages: 0 });
+  const headerRef = useRef<HTMLElement>(null);
   useEffect(() => {
     if (isPending) return;
-    if (!session) { dispatch(clearUser()); return; }
-
-    fetch("/api/user/me", { cache: "no-store", headers: { "Cache-Control": "no-cache, no-store" } })
-      .then(r => r.ok ? r.json() : null)
-      .then((u: AuthUser | null) => {
-        if (u) dispatch(setUser({
-          id: u.id, email: u.email, name: u.name,
-          role: u.role ?? "MEMBER", tier: u.tier ?? "FREE",
-          image: u.image ?? null, coverImage: u.coverImage ?? null,
-          bio: u.bio ?? null, headline: u.headline ?? null,
-          hasDueDiligenceBadge: u.hasDueDiligenceBadge ?? false,
-        }));
+    if (!session) {
+      dispatch(clearUser());
+      return;
+    }
+    const controller = new AbortController();
+    const fallback = session.user as unknown as AuthUser;
+    fetch("/api/user/me", { cache: "no-store", signal: controller.signal })
+      .then(async (response) => (response.ok ? response.json() : fallback))
+      .then((profile: AuthUser) => {
+        if (!controller.signal.aborted)
+          dispatch(
+            setUser({
+              ...profile,
+              role: profile.role ?? "MEMBER",
+              tier: profile.tier ?? "FREE",
+            }),
+          );
       })
       .catch(() => {
-        if (session?.user) {
-          const u = session.user as unknown as AuthUser & Record<string, unknown>;
-          dispatch(setUser({
-            id: u.id, email: u.email, name: u.name,
-            role: (u.role as AuthUser["role"]) ?? "MEMBER",
-            tier: (u.tier as AuthUser["tier"]) ?? "FREE",
-            image: u.image as string | null,
-            coverImage: u.coverImage as string | null,
-            bio: u.bio as string | null,
-            headline: u.headline as string | null,
-          }));
-        }
+        if (!controller.signal.aborted)
+          dispatch(
+            setUser({
+              ...fallback,
+              role: fallback.role ?? "MEMBER",
+              tier: fallback.tier ?? "FREE",
+            }),
+          );
       });
+    return () => controller.abort();
   }, [session, isPending, dispatch]);
-
-  // Fetch unread notification count when logged in
   useEffect(() => {
-    if (!session) { setUnreadCount(0); setUnreadMessages(0); return; }
-    fetch("/api/notifications")
-      .then(r => r.ok ? r.json() : [])
-      .then(data => {
-        const list = Array.isArray(data) ? data : [];
-        setUnreadCount(list.filter((n: { isRead: boolean }) => !n.isRead).length);
+    if (!user?.id) return;
+    const controller = new AbortController();
+    Promise.all([
+      fetch("/api/notifications", { signal: controller.signal }).then(
+        (response) => (response.ok ? response.json() : []),
+      ),
+      fetch("/api/messages/unread", { signal: controller.signal }).then(
+        (response) => (response.ok ? response.json() : { count: 0 }),
+      ),
+    ])
+      .then(([notifications, messages]) => {
+        if (!controller.signal.aborted)
+          setCounts({
+            notifications: Array.isArray(notifications)
+              ? notifications.filter(
+                  (item: { isRead: boolean }) => !item.isRead,
+                ).length
+              : 0,
+            messages: messages.count || 0,
+          });
       })
       .catch(() => {});
-    fetch("/api/messages/unread")
-      .then(r => r.ok ? r.json() : { count: 0 })
-      .then(d => setUnreadMessages(d.count ?? 0))
-      .catch(() => {});
-  }, [session]);
-
-  // Close user dropdown on outside click
+    return () => controller.abort();
+  }, [user?.id]);
   useEffect(() => {
-    function handle(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) setDropdownOpen(false);
-      if (navMenuRef.current && !navMenuRef.current.contains(e.target as Node)) setOpenMenu(null);
+    function outside(event: MouseEvent) {
+      headerRef.current
+        ?.querySelectorAll<HTMLDetailsElement>("details[open]")
+        .forEach((detail) => {
+          if (!detail.contains(event.target as Node)) detail.open = false;
+        });
     }
-    document.addEventListener("mousedown", handle);
-    return () => document.removeEventListener("mousedown", handle);
+    function escape(event: KeyboardEvent) {
+      if (event.key === "Escape")
+        headerRef.current
+          ?.querySelectorAll<HTMLDetailsElement>("details[open]")
+          .forEach((detail) => {
+            detail.open = false;
+            detail.querySelector("summary")?.focus();
+          });
+    }
+    document.addEventListener("click", outside);
+    document.addEventListener("keydown", escape);
+    return () => {
+      document.removeEventListener("click", outside);
+      document.removeEventListener("keydown", escape);
+    };
   }, []);
-
-  // Focus search input when opened
-  useEffect(() => {
-    if (searchOpen) setTimeout(() => searchInputRef.current?.focus(), 50);
-  }, [searchOpen]);
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!searchQuery.trim()) return;
-    router.push(`/marketplace?search=${encodeURIComponent(searchQuery.trim())}`);
-    setSearchQuery("");
+  function closeMenus() {
+    setMobileOpen(false);
+    headerRef.current
+      ?.querySelectorAll<HTMLDetailsElement>("details[open]")
+      .forEach((detail) => {
+        detail.open = false;
+      });
+  }
+  function search(event: React.FormEvent) {
+    event.preventDefault();
+    if (!query.trim()) return;
+    router.push(`/marketplace?search=${encodeURIComponent(query.trim())}`);
     setSearchOpen(false);
-  };
-
+    setMobileOpen(false);
+    setQuery("");
+  }
+  const home = user ? "/feed" : "/";
+  const accountLinks =
+    storeUser?.role === "ADMIN"
+      ? [{ label: "Admin panel", href: "/admin", icon: Shield01Icon }]
+      : [
+          { label: "My profile", href: "/profile", icon: UserCircleIcon },
+          {
+            label: "My listings",
+            href: "/marketplace?mine=true",
+            icon: Store01Icon,
+          },
+          ...(["MARKETPLACE", "MARKETPLACE_PLUS"].includes(
+            storeUser?.tier || "",
+          )
+            ? [
+                {
+                  label: "Seller dashboard",
+                  href: "/seller-dashboard",
+                  icon: BriefcaseIcon,
+                },
+              ]
+            : []),
+          {
+            label: "Marketplace purchases",
+            href: "/marketplace-purchases",
+            icon: ShoppingBag01Icon,
+          },
+          { label: "Connections", href: "/connections", icon: UserAdd01Icon },
+          { label: "Upgrade plan", href: "/upgrade", icon: Rocket01Icon },
+        ];
+  function accountContent() {
+    return (
+      <>
+        <div className="site-account-info">
+          <strong>{user?.name}</strong>
+          <span>{user?.email}</span>
+          {storeUser?.tier && storeUser.tier !== "FREE" && (
+            <small>{storeUser.tier.replaceAll("_", " ")}</small>
+          )}
+        </div>
+        {accountLinks.map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className="site-account-link"
+            onClick={closeMenus}
+          >
+            <item.icon size={17} />
+            {item.label}
+          </Link>
+        ))}
+        <button
+          className="site-signout"
+          onClick={async () => {
+            closeMenus();
+            await signOut();
+            dispatch(clearUser());
+            window.location.assign("/");
+          }}
+        >
+          <Logout01Icon size={17} />
+          Sign out
+        </button>
+      </>
+    );
+  }
+  const countBadge = (value: number) =>
+    value > 0 ? (
+      <span className="site-count">{value > 9 ? "9+" : value}</span>
+    ) : null;
   return (
     <>
-      <style>{`
-        @keyframes atlas-shine {
-          0%   { background-position: 0% 50%; }
-          50%  { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
-        }
-        @keyframes atlas-pulse {
-          0%, 100% { box-shadow: 0 0 0 0 rgba(139,92,246,0.4), 0 0 0 0 rgba(59,130,246,0.3); }
-          50%       { box-shadow: 0 0 0 6px rgba(139,92,246,0), 0 0 16px 4px rgba(59,130,246,0.2); }
-        }
-        .atlas-btn {
-          background: linear-gradient(270deg,#d4a017,#f0c040,#f59e0b,#d4a017);
-          background-size: 300% 300%;
-          animation: atlas-shine 4s ease infinite, atlas-pulse 2.5s ease-in-out infinite;
-        }
-        .atlas-btn:hover { animation: atlas-shine 1.5s ease infinite; }
-      `}</style>
-      <header className="sticky top-0 z-50 bg-white dark:bg-[#172135] border-b border-slate-200 dark:border-[#243550] shadow-sm dark:shadow-[0_1px_8px_rgba(0,0,0,0.5)]">
-      <div className="w-full max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-8 h-[80px] flex items-center justify-between gap-4">
-
-        {/* Logo */}
-        <Link href="/" className="flex items-center shrink-0 relative z-50 mr-1 lg:mr-2">
-          <img src="/logo.webp"      alt="TaxCompPro" className="h-11 sm:h-13 lg:h-15 w-auto max-w-none object-contain dark:hidden shrink-0" />
-          <img src="/logo_dark.webp" alt="TaxCompPro" className="h-11 sm:h-13 lg:h-15 w-auto max-w-none object-contain hidden dark:block shrink-0" />
-        </Link>
-
-        {/* Search bar (expanded) */}
-        {searchOpen ? (
-          <form onSubmit={handleSearch} className="flex-1 flex items-center gap-2 max-w-lg mx-auto">
-            <div className="flex-1 flex items-center bg-slate-100 border border-slate-200 rounded-full px-4 py-2 gap-2 focus-within:border-[#0a1628]/20 focus-within:ring-2 focus-within:ring-[#0a1628]/5 transition-all">
-              <Search01Icon className="w-4 h-4 text-slate-400 shrink-0" />
-              <input
-                ref={searchInputRef}
-                type="text"
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Search marketplace, communities…"
-                className="flex-1 bg-transparent text-sm text-[#0a1628] placeholder-slate-400 outline-none font-[inherit]"
-              />
-            </div>
-            <button type="submit"
-              className="text-xs font-bold bg-[#f0c040] text-[#0a1628] px-4 py-2 rounded-full hover:bg-[#d4a017] transition-all shrink-0">
-              Search
-            </button>
-            <button type="button" onClick={() => { setSearchOpen(false); setSearchQuery(""); }}
-              className="text-slate-500 hover:text-[#0a1628] p-1.5 rounded-full hover:bg-slate-100 transition-all shrink-0">
-              <Cancel01Icon className="w-4 h-4" />
-            </button>
-          </form>
-        ) : (
-          <>
-            {/* Desktop nav */}
-            <nav className="hidden lg:flex items-center gap-1 xl:gap-2 shrink-0" ref={navMenuRef}>
-              {navItems
-                .filter(item => !(session && item.label === "Pricing"))
-                .map(item => {
-                if (item.type === "link") {
-                  const Icon = item.icon;
-                  const isHome = item.label === "Home";
-                  const label = item.label;
-                  const href = isHome ? (session ? "/feed" : "/") : item.href;
-                  const isExternal = href.startsWith("http");
-
-                  if (isExternal) {
-                    return (
-                      <a
-                        key={item.label}
-                        href={href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1.5 text-xs xl:text-sm font-semibold text-slate-600 hover:text-[#0a1628] hover:bg-slate-50 dark:text-white dark:hover:text-[#f0c040] dark:hover:bg-white/10 px-2.5 py-2 rounded-lg transition-all shrink-0 whitespace-nowrap"
-                      >
-                        {Icon && <Icon className="w-3.5 h-3.5 shrink-0" />}
-                        <span>{label}</span>
-                        {item.badge && (
-                          <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-amber-400/20 text-amber-600 dark:text-amber-300 border border-amber-400/40 shadow-[0_0_10px_rgba(245,158,11,0.45)] animate-pulse shrink-0">
-                            {item.badge}
-                          </span>
-                        )}
-                      </a>
-                    );
-                  }
-
-                  return (
-                    <Link key={item.label} href={href}
-                      className="flex items-center gap-1.5 text-xs xl:text-sm font-semibold text-slate-600 hover:text-[#0a1628] hover:bg-slate-50 dark:text-white dark:hover:text-[#f0c040] dark:hover:bg-white/10 px-2.5 py-2 rounded-lg transition-all shrink-0 whitespace-nowrap">
-                      {Icon && <Icon className="w-3.5 h-3.5 shrink-0" />}
-                      <span>{label}</span>
-                      {item.badge && (
-                        <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-amber-400/20 text-amber-600 dark:text-amber-300 border border-amber-400/40 shadow-[0_0_10px_rgba(245,158,11,0.45)] animate-pulse shrink-0">
-                          {item.badge}
-                        </span>
-                      )}
-                    </Link>
-                  );
-                }
-                // dropdown
-                const Icon = item.icon;
-                const isOpen = openMenu === item.label;
-                return (
-                  <div key={item.label} className="relative shrink-0">
-                    <button onClick={() => setOpenMenu(isOpen ? null : item.label)}
-                      className={`flex items-center gap-1.5 text-xs xl:text-sm font-semibold px-2.5 py-2 rounded-lg transition-all shrink-0 whitespace-nowrap ${
-                        isOpen
-                          ? "bg-slate-100 dark:bg-white/10 text-[#0a1628] dark:text-[#f0c040]"
-                          : "text-slate-600 hover:text-[#0a1628] hover:bg-slate-50 dark:text-white dark:hover:text-[#f0c040] dark:hover:bg-white/10"
-                      }`}>
-                      <Icon className="w-3.5 h-3.5 shrink-0" />{item.label}
-                      <ChevronDown className={`w-3 h-3 transition-transform ${isOpen ? "rotate-180" : ""}`} />
-                    </button>
-                    {isOpen && (
-                      <div className="absolute top-full left-0 mt-1.5 w-52 bg-white rounded-xl border border-slate-200 shadow-lg py-1.5 z-50">
-                        {item.items.map(sub => {
-                          const SubIcon = sub.icon;
-                          return (
-                            <Link key={sub.label} href={sub.href}
-                              onClick={() => setOpenMenu(null)}
-                              className="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 transition-colors">
-                              <div className="w-7 h-7 rounded-lg bg-[#0a1628]/8 flex items-center justify-center shrink-0">
-                                <SubIcon className="w-3.5 h-3.5 text-[#0a1628]" />
-                              </div>
-                              <p className="text-sm font-bold text-[#0a1628]">{sub.label}</p>
-                            </Link>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </nav>
-
-            {/* Desktop right */}
-            <div className="hidden lg:flex items-center gap-1.5 xl:gap-2 shrink-0 flex-nowrap">
-              {/* Atlas AI graphic button */}
-              <a
-                href="https://alwaysaskatlas.com/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hidden xl:inline-flex items-center justify-center shrink-0 transition-transform duration-200 hover:scale-105 active:scale-95 drop-shadow-[0_4px_12px_rgba(212,160,23,0.35)]"
-              >
-                <img
-                  src="/atlas-button.webp"
-                  alt="Try Atlas AI"
-                  className="h-13 sm:h-[52px] w-auto object-contain shrink-0"
-                />
-              </a>
-
-              {/* Theme toggle switch */}
-              <button
-                type="button"
-                onClick={() => setTheme(isDark ? "light" : "dark")}
-                className="relative inline-flex h-8 w-[58px] shrink-0 cursor-pointer items-center rounded-full p-1 transition-colors duration-300 bg-slate-200 dark:bg-slate-800 border border-slate-300/60 dark:border-slate-700 shadow-inner mx-1"
-                title={mounted ? (isDark ? "Switch to light mode" : "Switch to dark mode") : "Toggle theme"}
-                aria-label="Toggle theme switch"
-              >
-                {/* Left slot indicator */}
-                <span className="flex items-center justify-center w-6 h-6 shrink-0 z-0">
-                  <Sun className={`w-3.5 h-3.5 transition-opacity ${isDark ? "text-amber-500/40" : "opacity-0"}`} />
-                </span>
-
-                {/* Right slot indicator */}
-                <span className="flex items-center justify-center w-6 h-6 shrink-0 z-0 ml-auto">
-                  <Moon className={`w-3.5 h-3.5 transition-opacity ${isDark ? "opacity-0" : "text-blue-400/50"}`} />
-                </span>
-
-                {/* Sliding Thumb containing active centered icon */}
-                <span
-                  className={`absolute left-1 top-1 h-6 w-6 rounded-full bg-white dark:bg-slate-900 shadow-md ring-1 ring-black/5 flex items-center justify-center transition-transform duration-300 ease-in-out z-10 ${
-                    isDark ? "translate-x-[26px]" : "translate-x-0"
-                  }`}
-                >
-                  {isDark ? (
-                    <Moon className="w-3.5 h-3.5 text-blue-400 fill-blue-400/20" />
-                  ) : (
-                    <Sun className="w-3.5 h-3.5 text-amber-500 fill-amber-500/20" />
-                  )}
-                </span>
-              </button>
-
-              {/* Search icon */}
-              <button onClick={() => setSearchOpen(true)}
-                className="p-2 text-slate-500 hover:text-[#0a1628] hover:bg-slate-50 rounded-full transition-all">
-                <Search01Icon className="w-5 h-5" />
-              </button>
-
-              {/* Notification bell */}
-              {user && (
-                <Link href="/notifications"
-                  className="relative p-2 text-slate-500 hover:text-[#0a1628] hover:bg-slate-50 rounded-full transition-all">
-                  <Notification01Icon className="w-5 h-5" />
-                  {unreadCount > 0 && (
-                    <span className="absolute top-1 right-1 min-w-[16px] h-4 bg-[#f0c040] text-[#0a1628] text-[10px] font-black rounded-full flex items-center justify-center px-0.5 leading-none">
-                      {unreadCount > 9 ? "9+" : unreadCount}
-                    </span>
-                  )}
-                </Link>
-              )}
-
-              {/* Messages icon */}
-              {user && (
-                <Link href="/messages"
-                  className="relative p-2 text-slate-500 hover:text-[#0a1628] hover:bg-slate-50 rounded-full transition-all">
-                  <Message01Icon className="w-5 h-5" />
-                  {unreadMessages > 0 && (
-                    <span className="absolute top-1 right-1 min-w-[16px] h-4 bg-blue-500 text-white text-[10px] font-black rounded-full flex items-center justify-center px-0.5 leading-none">
-                      {unreadMessages > 9 ? "9+" : unreadMessages}
-                    </span>
-                  )}
-                </Link>
-              )}
-
-              {isPending ? (
-                <div className="flex items-center gap-2 ml-1">
-                  {/* Skeleton: icon button placeholders */}
-                  <div className="w-9 h-9 rounded-full bg-slate-100 animate-pulse" />
-                  <div className="w-9 h-9 rounded-full bg-slate-100 animate-pulse" />
-                  {/* Skeleton: user pill */}
-                  <div className="flex items-center gap-2 bg-slate-100 border border-slate-200 rounded-full pl-2 pr-4 py-1.5 animate-pulse ml-1">
-                    <div className="w-7 h-7 rounded-full bg-slate-200" />
-                    <div className="w-16 h-3.5 rounded-full bg-slate-200" />
-                  </div>
-                </div>
-              ) : user ? (
-                <div className="relative ml-1" ref={dropdownRef}>
-                <button
-                    onClick={() => setDropdownOpen(o => !o)}
-                    className="flex items-center gap-2.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl pl-2 pr-3.5 py-1.5 transition-all">
-                    <div className="w-7 h-7 rounded-xl bg-[#1a3a6b] overflow-hidden flex items-center justify-center shrink-0">
-                      {user.image
-                        ? <img src={user.image as string} alt={user.name ?? ""} referrerPolicy="no-referrer" className="w-full h-full object-cover" />
-                        : <span className="text-white font-bold text-xs">{user.name?.[0]?.toUpperCase()}</span>}
-                    </div>
-                    <span className="font-semibold text-[#0a1628] text-sm max-w-[100px] truncate">{user.name?.split(" ")[0]}</span>
-                    <ArrowDown01Icon className={`w-4 h-4 text-slate-400 transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
-                  </button>
-
-                  {dropdownOpen && (
-                    <div className="absolute right-0 top-[calc(100%+8px)] bg-white border border-slate-200 rounded-2xl shadow-2xl min-w-[230px] p-2 z-50">
-                      {/* User info */}
-                      <div className="px-3 py-2.5 border-b border-slate-100 mb-1">
-                        <div className="font-bold text-[#0a1628] text-sm">{user.name}</div>
-                        <div className="text-xs text-slate-400 truncate">{user.email}</div>
-                        {storeUser?.tier && storeUser.tier !== "FREE" && (
-                          <span className="text-[10px] font-bold bg-[#d4a017]/15 text-[#a07810] px-2 py-0.5 rounded-full mt-1 inline-block">
-                            {storeUser.tier === "MARKETPLACE_PLUS" ? "Marketplace Plus" : storeUser.tier === "MARKETPLACE" ? "Marketplace" : "VIP"}
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Admin: Admin Panel only */}
-                      {storeUser?.role === "ADMIN" ? (
-                        <Link href="/admin" onClick={() => setDropdownOpen(false)}
-                          className="flex items-center gap-2.5 text-sm font-medium text-slate-600 px-3 py-2.5 rounded-xl hover:bg-slate-50 transition-all">
-                          <Shield className="w-4 h-4 text-[#d4a017]" /> Admin Panel
-                        </Link>
-                      ) : (
-                        <>
-                          <Link href="/profile" onClick={() => setDropdownOpen(false)}
-                            className="flex items-center gap-2.5 text-sm font-medium text-slate-600 px-3 py-2.5 rounded-xl hover:bg-slate-50 transition-all">
-                            <UserCircleIcon className="w-4 h-4 text-slate-400" /> My Profile
-                          </Link>
-                          <Link href="/marketplace?mine=true" onClick={() => setDropdownOpen(false)}
-                            className="flex items-center gap-2.5 text-sm font-medium text-slate-600 px-3 py-2.5 rounded-xl hover:bg-slate-50 transition-all">
-                            <Store01Icon className="w-4 h-4 text-slate-400" /> My Listings
-                          </Link>
-                          {(storeUser?.tier === "MARKETPLACE" || storeUser?.tier === "MARKETPLACE_PLUS") && (
-                            <Link href="/seller-dashboard" onClick={() => setDropdownOpen(false)}
-                              className="flex items-center gap-2.5 text-sm font-medium text-slate-600 px-3 py-2.5 rounded-xl hover:bg-slate-50 transition-all">
-                              <Rocket01Icon className="w-4 h-4 text-[#d4a017]" /> Seller Dashboard
-                            </Link>
-                          )}
-                          <Link href="/marketplace-purchases" onClick={() => setDropdownOpen(false)}
-                            className="flex items-center gap-2.5 text-sm font-medium text-slate-600 px-3 py-2.5 rounded-xl hover:bg-slate-50 transition-all">
-                            <BookOpen01Icon className="w-4 h-4 text-slate-400" /> Marketplace Purchases
-                          </Link>
-                          <Link href="/connections" onClick={() => setDropdownOpen(false)}
-                            className="flex items-center gap-2.5 text-sm font-medium text-slate-600 px-3 py-2.5 rounded-xl hover:bg-slate-50 transition-all">
-                            <UserAdd01Icon className="w-4 h-4 text-slate-400" /> Connections
-                          </Link>
-                          <a href="https://affiliate.taxcomppro.com" target="_blank" rel="noopener noreferrer" onClick={() => setDropdownOpen(false)}
-                            className="flex items-center gap-2.5 text-sm font-medium text-slate-600 px-3 py-2.5 rounded-xl hover:bg-slate-50 transition-all">
-                            <Gift className="w-4 h-4 text-slate-400" /> Become an Affiliate
-                          </a>
-                          <Link href="/upgrade" onClick={() => setDropdownOpen(false)}
-                            className="flex items-center gap-2.5 text-sm font-medium text-[#d4a017] px-3 py-2.5 rounded-xl hover:bg-amber-50 transition-all">
-                            <Rocket01Icon className="w-4 h-4" /> Upgrade Plan
-                          </Link>
-                        </>
-                      )}
-
-                      <div className="h-px bg-slate-100 my-1" />
-                      <button onClick={async () => { setDropdownOpen(false); await signOut(); dispatch(clearUser()); window.location.href = "/"; }}
-                        className="flex items-center gap-2.5 text-sm font-medium text-red-500 px-3 py-2.5 rounded-xl hover:bg-red-50 transition-all w-full text-left">
-                        <Logout01Icon className="w-4 h-4" /> Sign Out
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="flex items-center gap-2 ml-1 shrink-0 flex-nowrap">
-                  <Link href="/login"
-                    className="text-sm font-semibold text-[#0a1628] hover:text-[#d4a017] px-4 py-2 rounded-full transition-all whitespace-nowrap">
-                    Sign In
-                  </Link>
-                  <Link href="/register"
-                    className="text-sm font-black bg-gradient-to-r from-[#f0c040] to-[#d4a017] !text-black px-5 py-2.5 rounded-full hover:shadow-[0_0_20px_rgba(212,160,23,0.4)] transition-all whitespace-nowrap">
-                    Get Started Free
-                  </Link>
-                </div>
-              )}
-            </div>
-
-            {/* Mobile toggle */}
-            <button onClick={() => setMobileOpen(!mobileOpen)} className="lg:hidden text-[#0a1628] dark:text-white relative z-50 p-2 -mr-2 ml-auto">
-              {mobileOpen ? <Cancel01Icon className="w-6 h-6" /> : <Menu01Icon className="w-6 h-6" />}
-            </button>
-          </>
-        )}
-      </div>
-
-      {/* Mobile menu — full-width panel below header */}
-      {mobileOpen && !searchOpen && (
-        <div className="lg:hidden bg-white dark:bg-[#172135] border-t border-slate-200 dark:border-[#243550] shadow-lg max-h-[calc(100vh-80px)] overflow-y-auto">
-          <div className="px-4 pt-4 pb-2">
-            {/* Mobile search */}
-            <form onSubmit={handleSearch} className="flex items-center gap-2 bg-slate-100 dark:bg-white/10 border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2.5 mb-3">
-              <Search01Icon className="w-4 h-4 text-slate-400 dark:text-white/50 shrink-0" />
-              <input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Search marketplace, communities…"
-                className="flex-1 bg-transparent text-sm text-[#0a1628] dark:text-white placeholder-slate-400 dark:placeholder-white/40 outline-none font-[inherit]" />
-              {searchQuery && (
-                <button type="submit" className="text-xs font-bold text-[#d4a017] shrink-0">Go</button>
-              )}
-            </form>
-          </div>
-
-          {/* Nav links */}
-          <div className="px-3 pb-2">
-            {navLinks
-              .filter(l => !(session && l.label === "Pricing"))
-              .map(l => {
-              const Icon = l.icon;
-              const isHome = l.label === "Home";
-              const label = l.label;
-              const href = isHome ? (session ? "/feed" : "/") : l.href;
-              const isExternal = href.startsWith("http");
-
-              if (isExternal) {
-                return (
-                  <a
-                    key={l.label}
-                    href={href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-between text-slate-700 dark:text-white/85 px-3 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-white/8 font-semibold transition-colors"
-                    onClick={() => setMobileOpen(false)}
+      <header className="site-navbar" ref={headerRef}>
+        <div className="site-navbar-inner">
+          <Link
+            href={home}
+            className="site-logo"
+            aria-label="Tax Compliance Pro home"
+          >
+            <Image
+              src="/logo.webp"
+              alt="Tax Compliance Pro"
+              width={144}
+              height={57}
+              className="site-logo-light"
+              priority
+            />
+            <Image
+              src="/logo_dark.webp"
+              alt="Tax Compliance Pro"
+              width={144}
+              height={57}
+              className="site-logo-dark"
+              priority
+            />
+          </Link>
+          <nav className="site-desktop-nav" aria-label="Main navigation">
+            <Link
+              href={home}
+              className="site-nav-link"
+              aria-current={pathname === home ? "page" : undefined}
+            >
+              <Home01Icon size={16} />
+              Home
+            </Link>
+            {groups.map((group, index) => (
+              <div key={group.label} className="site-nav-group">
+                {index === 1 && (
+                  <Link
+                    href="/marketplace"
+                    className="site-nav-link"
+                    aria-current={
+                      pathname === "/marketplace" ? "page" : undefined
+                    }
                   >
-                    <span className="flex items-center gap-3">
-                      {Icon ? (
-                        <span className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-white/10 flex items-center justify-center shrink-0">
-                          <Icon className="w-4 h-4 text-[#0a1628] dark:text-white/80" />
-                        </span>
-                      ) : (
-                        <span className="w-8 h-8 rounded-lg bg-amber-400/10 flex items-center justify-center shrink-0">
-                          <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse" />
-                        </span>
-                      )}
-                      {label}
+                    <ShoppingBag01Icon size={16} />
+                    Marketplace
+                  </Link>
+                )}
+                <details className="site-disclosure">
+                  <summary
+                    className={
+                      group.links.some((link) => pathname.startsWith(link.href))
+                        ? "site-nav-link is-current"
+                        : "site-nav-link"
+                    }
+                  >
+                    {group.label}
+                    <ArrowDown01Icon size={13} />
+                  </summary>
+                  <div className="site-dropdown">
+                    <span className="site-dropdown-label">
+                      {group.label === "Pros"
+                        ? "YOUR PROFESSIONAL COMMUNITY"
+                        : group.label === "Learn"
+                          ? "KEEP MOVING FORWARD"
+                          : "MORE FROM TAXCOMPPRO"}
                     </span>
-                    {l.badge && (
-                      <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-600 dark:text-amber-300 border border-amber-400/40 shadow-[0_0_10px_rgba(245,158,11,0.45)] animate-pulse">
-                        {l.badge}
-                      </span>
-                    )}
-                  </a>
-                );
-              }
-
-              return (
-                <Link key={l.label} href={href}
-                  className="flex items-center justify-between text-slate-700 dark:text-white/85 px-3 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-white/8 font-semibold transition-colors"
-                  onClick={() => setMobileOpen(false)}>
-                  <span className="flex items-center gap-3">
-                    {Icon ? (
-                      <span className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-white/10 flex items-center justify-center shrink-0">
-                        <Icon className="w-4 h-4 text-[#0a1628] dark:text-white/80" />
-                      </span>
-                    ) : (
-                      <span className="w-8 h-8 rounded-lg bg-amber-400/10 flex items-center justify-center shrink-0">
-                        <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse" />
-                      </span>
-                    )}
-                    {label}
-                  </span>
-                  {l.badge && (
-                    <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-600 dark:text-amber-300 border border-amber-400/40 shadow-[0_0_10px_rgba(245,158,11,0.45)] animate-pulse">
-                      {l.badge}
-                    </span>
-                  )}
-                </Link>
-              );
-            })}
-          </div>
-
-          {/* Atlas AI button on mobile */}
-          <div className="px-4 pb-3 flex justify-center">
+                    {group.links.map((item) => (
+                      <SiteLink
+                        key={item.href}
+                        href={item.href}
+                        onClick={closeMenus}
+                        className="site-dropdown-link"
+                        aria-current={
+                          pathname === item.href ? "page" : undefined
+                        }
+                      >
+                        <span className="site-menu-icon">
+                          <item.icon size={19} />
+                        </span>
+                        <span>
+                          <strong>{item.label}</strong>
+                          <small>{item.description}</small>
+                        </span>
+                        <ArrowRight01Icon size={14} />
+                      </SiteLink>
+                    ))}
+                  </div>
+                </details>
+              </div>
+            ))}
+          </nav>
+          <div className="site-nav-actions">
             <a
               href="https://alwaysaskatlas.com/"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center w-full max-w-[280px] transition-transform duration-200 hover:scale-105 active:scale-95 drop-shadow-[0_4px_12px_rgba(212,160,23,0.35)]"
+              className="site-atlas"
             >
-              <img
+              <Image
                 src="/atlas-button.webp"
                 alt="Try Atlas AI"
-                className="h-13 sm:h-14 w-auto object-contain"
+                width={150}
+                height={54}
               />
             </a>
-          </div>
-
-          {/* Divider + auth section */}
-          <div className="border-t border-slate-200 dark:border-white/10 mx-4 pt-3 pb-4">
-            {user ? (
-              <div className="flex flex-col gap-0.5">
-                {/* User info header */}
-                <div className="flex items-center gap-3 px-3 py-2.5 mb-2 bg-slate-50 dark:bg-white/5 rounded-xl">
-                  <div className="w-10 h-10 rounded-xl bg-[#1a3a6b] overflow-hidden flex items-center justify-center shrink-0">
-                    {user.image
-                      ? <img src={user.image as string} alt={user.name ?? ""} className="w-full h-full object-cover" />
-                      : <span className="text-white font-bold text-sm">{user.name?.[0]?.toUpperCase()}</span>}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-[#0a1628] dark:text-white font-bold text-sm truncate">{user.name}</div>
-                    <div className="text-slate-400 dark:text-white/40 text-xs truncate">{user.email}</div>
-                  </div>
-                  {/* Quick action icons */}
-                  <div className="flex items-center gap-1">
-                    <Link href="/notifications" onClick={() => setMobileOpen(false)}
-                      className="relative p-2 text-slate-500 dark:text-white/60 hover:text-[#0a1628] dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 rounded-lg transition-colors">
-                      <Notification01Icon className="w-4.5 h-4.5" />
-                      {unreadCount > 0 && (
-                        <span className="absolute top-1 right-1 min-w-[14px] h-3.5 bg-[#f0c040] text-[#0a1628] text-[9px] font-black rounded-full flex items-center justify-center px-0.5">
-                          {unreadCount > 9 ? "9+" : unreadCount}
-                        </span>
-                      )}
-                    </Link>
-                    <Link href="/messages" onClick={() => setMobileOpen(false)}
-                      className="relative p-2 text-slate-500 dark:text-white/60 hover:text-[#0a1628] dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 rounded-lg transition-colors">
-                      <Message01Icon className="w-4.5 h-4.5" />
-                      {unreadMessages > 0 && (
-                        <span className="absolute top-1 right-1 min-w-[14px] h-3.5 bg-blue-500 text-white text-[9px] font-black rounded-full flex items-center justify-center px-0.5">
-                          {unreadMessages > 9 ? "9+" : unreadMessages}
-                        </span>
-                      )}
-                    </Link>
-                  </div>
-                </div>
-
-                {storeUser?.role === "ADMIN" ? (
-                  <Link href="/admin" onClick={() => setMobileOpen(false)}
-                    className="flex items-center gap-3 text-sm font-semibold text-amber-600 dark:text-amber-300 px-3 py-3 rounded-xl hover:bg-amber-50 dark:hover:bg-white/8 transition-colors">
-                    <Shield className="w-4 h-4" /> Admin Panel
-                  </Link>
-                ) : (
-                  <>
-                    <Link href="/profile" onClick={() => setMobileOpen(false)}
-                      className="flex items-center gap-3 text-sm font-semibold text-slate-700 dark:text-white/80 px-3 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-white/8 transition-colors">
-                      <UserCircleIcon className="w-4 h-4 text-slate-400" /> My Profile
-                    </Link>
-                    <Link href="/marketplace?mine=true" onClick={() => setMobileOpen(false)}
-                      className="flex items-center gap-3 text-sm font-semibold text-slate-700 dark:text-white/80 px-3 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-white/8 transition-colors">
-                      <Store01Icon className="w-4 h-4 text-slate-400" /> My Listings
-                    </Link>
-                    <Link href="/marketplace-purchases" onClick={() => setMobileOpen(false)}
-                      className="flex items-center gap-3 text-sm font-semibold text-slate-700 dark:text-white/80 px-3 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-white/8 transition-colors">
-                      <BookOpen01Icon className="w-4 h-4 text-slate-400" /> Marketplace Purchases
-                    </Link>
-                    <Link href="/connections" onClick={() => setMobileOpen(false)}
-                      className="flex items-center gap-3 text-sm font-semibold text-slate-700 dark:text-white/80 px-3 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-white/8 transition-colors">
-                      <UserAdd01Icon className="w-4 h-4 text-slate-400" /> Connections
-                    </Link>
-                    <a href="https://affiliate.taxcomppro.com" target="_blank" rel="noopener noreferrer" onClick={() => setMobileOpen(false)}
-                      className="flex items-center gap-3 text-sm font-semibold text-slate-700 dark:text-white/80 px-3 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-white/8 transition-colors">
-                      <Gift className="w-4 h-4 text-slate-400" /> Become an Affiliate
-                    </a>
-                    {(storeUser?.tier === "MARKETPLACE" || storeUser?.tier === "MARKETPLACE_PLUS") && (
-                      <Link href="/seller-dashboard" onClick={() => setMobileOpen(false)}
-                        className="flex items-center gap-3 text-sm font-semibold text-[#d4a017] px-3 py-3 rounded-xl hover:bg-amber-50 dark:hover:bg-white/8 transition-colors">
-                        <Rocket01Icon className="w-4 h-4" /> Seller Dashboard
-                      </Link>
-                    )}
-                    <Link href="/upgrade" onClick={() => setMobileOpen(false)}
-                      className="flex items-center gap-3 text-sm font-semibold text-[#d4a017] px-3 py-3 rounded-xl hover:bg-amber-50 dark:hover:bg-white/8 transition-colors">
-                      <Rocket01Icon className="w-4 h-4" /> Upgrade Plan
-                    </Link>
-                  </>
-                )}
-
-                <div className="h-px bg-slate-100 dark:bg-white/10 my-1" />
-                <button onClick={async () => { setMobileOpen(false); await signOut(); dispatch(clearUser()); window.location.href = "/"; }}
-                  className="flex items-center gap-3 text-sm font-semibold text-red-500 px-3 py-3 rounded-xl hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors text-left w-full">
-                  <Logout01Icon className="w-4 h-4" /> Sign Out
-                </button>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-2 pt-1">
-                <Link href="/login" onClick={() => setMobileOpen(false)}
-                  className="w-full text-center py-2.5 text-sm font-bold text-[#0a1628] dark:text-white bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/15 rounded-xl transition-colors">
-                  Sign In
+            <span className="site-action-divider" />
+            <button
+              className="site-icon site-theme"
+              onClick={() => setTheme(isDark ? "light" : "dark")}
+              aria-label={
+                isDark ? "Switch to light theme" : "Switch to dark theme"
+              }
+              title={isDark ? "Light theme" : "Dark theme"}
+            >
+              {isDark ? <Sun01Icon size={19} /> : <Moon02Icon size={19} />}
+            </button>
+            <button
+              className="site-icon site-search-toggle"
+              onClick={() => setSearchOpen(true)}
+              aria-label="Search the site"
+            >
+              <Search01Icon size={20} />
+            </button>
+            {user && (
+              <div className="site-quick-actions">
+                <Link
+                  href="/notifications"
+                  className="site-icon"
+                  aria-label={`Notifications${counts.notifications ? `, ${counts.notifications} unread` : ""}`}
+                >
+                  <Notification01Icon size={20} />
+                  {countBadge(counts.notifications)}
                 </Link>
-                <Link href="/register" onClick={() => setMobileOpen(false)}
-                  className="w-full text-center py-2.5 text-sm font-black text-[#0a1628] bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 rounded-xl transition-all shadow-md">
-                  Join TaxCompPro
+                <Link
+                  href="/messages"
+                  className="site-icon"
+                  aria-label={`Messages${counts.messages ? `, ${counts.messages} unread` : ""}`}
+                >
+                  <Message01Icon size={20} />
+                  {countBadge(counts.messages)}
+                </Link>
+              </div>
+            )}
+            <div className="site-desktop-account">
+              {isPending ? (
+                <span
+                  className="site-account-loading"
+                  aria-label="Loading account"
+                />
+              ) : user ? (
+                <details className="site-disclosure site-account">
+                  <summary className="site-account-trigger">
+                    <span className="site-user-avatar">
+                      {user.image ? (
+                        <Image
+                          src={user.image}
+                          alt=""
+                          width={30}
+                          height={30}
+                          unoptimized
+                        />
+                      ) : (
+                        user.name?.[0]
+                      )}
+                    </span>
+                    <span>{user.name?.split(" ")[0]}</span>
+                    <ArrowDown01Icon size={13} />
+                  </summary>
+                  <div className="site-dropdown site-account-dropdown">
+                    {accountContent()}
+                  </div>
+                </details>
+              ) : (
+                <div className="site-auth-links">
+                  <Link href="/login">Sign in</Link>
+                  <Link href="/register" className="site-join">
+                    Get started <ArrowRight01Icon size={15} />
+                  </Link>
+                </div>
+              )}
+            </div>
+            <button
+              className="site-icon site-mobile-toggle"
+              onClick={() => setMobileOpen(true)}
+              aria-label="Open navigation"
+              aria-haspopup="dialog"
+            >
+              <Menu01Icon size={23} />
+            </button>
+          </div>
+        </div>
+      </header>
+      {searchOpen && (
+        <NavModal
+          title="Search TaxCompPro"
+          onClose={() => setSearchOpen(false)}
+        >
+          <form onSubmit={search} className="site-search-form">
+            <label htmlFor="site-search">What are you looking for?</label>
+            <div>
+              <Search01Icon size={20} />
+              <input
+                id="site-search"
+                autoFocus
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Search the marketplace…"
+              />
+              <button
+                type="submit"
+                disabled={!query.trim()}
+                aria-label="Submit search"
+              >
+                <ArrowRight01Icon size={20} />
+              </button>
+            </div>
+            <p>
+              Looking for a professional?{" "}
+              <Link href="/find-a-pro" onClick={() => setSearchOpen(false)}>
+                Explore the directory.
+              </Link>
+            </p>
+          </form>
+        </NavModal>
+      )}
+      {mobileOpen && (
+        <NavModal
+          title="Explore TaxCompPro"
+          onClose={() => setMobileOpen(false)}
+          drawer
+        >
+          <form className="site-mobile-search" onSubmit={search}>
+            <Search01Icon size={19} />
+            <input
+              aria-label="Search marketplace"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search the marketplace…"
+            />
+            <button type="submit" aria-label="Submit marketplace search">
+              <ArrowRight01Icon size={19} />
+            </button>
+          </form>
+          <nav aria-label="Mobile navigation">
+            <div className="site-mobile-primary">
+              <Link href={home} onClick={closeMenus}>
+                <Home01Icon size={20} />
+                Home
+                <ArrowRight01Icon size={16} />
+              </Link>
+              <Link href="/marketplace" onClick={closeMenus}>
+                <ShoppingBag01Icon size={20} />
+                Marketplace
+                <ArrowRight01Icon size={16} />
+              </Link>
+            </div>
+            {groups.map((group) => (
+              <details
+                className="site-mobile-section"
+                key={group.label}
+                open={group.label === "Pros"}
+              >
+                <summary>
+                  {group.label}
+                  <ArrowDown01Icon size={15} />
+                </summary>
+                <div>
+                  {group.links.map((item) => (
+                    <SiteLink
+                      href={item.href}
+                      key={item.href}
+                      onClick={closeMenus}
+                    >
+                      <item.icon size={18} />
+                      <span>{item.label}</span>
+                      <ArrowRight01Icon size={14} />
+                    </SiteLink>
+                  ))}
+                </div>
+              </details>
+            ))}
+          </nav>
+          <a
+            href="https://alwaysaskatlas.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="site-mobile-atlas"
+          >
+            <Image
+              src="/atlas-button.webp"
+              alt="Try Atlas AI"
+              width={160}
+              height={57}
+            />
+            <ArrowRight01Icon size={18} />
+          </a>
+          <div className="site-mobile-account">
+            {user ? (
+              <>
+                <div className="site-mobile-alerts">
+                  <Link href="/notifications" onClick={closeMenus}>
+                    <Notification01Icon size={18} />
+                    Notifications{countBadge(counts.notifications)}
+                  </Link>
+                  <Link href="/messages" onClick={closeMenus}>
+                    <Message01Icon size={18} />
+                    Messages{countBadge(counts.messages)}
+                  </Link>
+                </div>
+                {accountContent()}
+              </>
+            ) : (
+              <div className="site-auth-links">
+                <Link href="/login" onClick={closeMenus}>
+                  Sign in
+                </Link>
+                <Link
+                  href="/register"
+                  className="site-join"
+                  onClick={closeMenus}
+                >
+                  Get started
+                  <ArrowRight01Icon size={16} />
                 </Link>
               </div>
             )}
           </div>
-        </div>
+        </NavModal>
       )}
-    </header>
     </>
   );
 }
+const BriefcaseIcon = Store01Icon;

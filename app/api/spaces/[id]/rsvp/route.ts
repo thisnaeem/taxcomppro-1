@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { canAccessSpace } from "@/lib/spaceAccess";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -36,6 +37,8 @@ export async function POST(req: NextRequest, { params }: Params) {
   const { id } = await params;
   const space = await prisma.space.findUnique({ where: { id } });
   if (!space) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  if (!canAccessSpace(req, space, session?.user)) return NextResponse.json({ error: "Invitation required" }, { status: 403 });
 
   // Guests can RSVP with name + email
   const body = await req.json().catch(() => ({}));

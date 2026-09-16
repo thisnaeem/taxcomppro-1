@@ -15,5 +15,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
   if (!space) return NextResponse.json({ error: "Invite link not found" }, { status: 404 });
   if (space.endedAt) return NextResponse.json({ error: "This Pro Talk has ended" }, { status: 410 });
 
-  return NextResponse.json(space);
+  const response = NextResponse.json(space);
+  response.cookies.set(`pro-talk-invite-${space.id}`, token, { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: 60 * 60 * 24 * 7 });
+  return response;
 }

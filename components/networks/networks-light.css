@@ -1,0 +1,350 @@
+html:not(.dark) .pn-page {
+  --pn-text: #293c24;
+  --pn-muted: #637756;
+  --pn-line: #38552222;
+  --pn-panel: #fff;
+  background: #f5f7f0 !important;
+  color: #293c24;
+  color-scheme: light;
+}
+html:not(.dark)
+  .pn-page
+  :is(
+    .pn-eyebrow,
+    .pn-kicker,
+    .pn-page-top > a,
+    .pn-hero > div > p,
+    .pn-text-link,
+    .pn-value-strip > span,
+    .pn-section-title > p,
+    .pn-result-info,
+    .pn-result-info > span:last-child,
+    .pn-result-info > button,
+    .pn-network-owner strong,
+    .pn-network-owner small,
+    .pn-network-body > p,
+    .pn-network-body footer > span,
+    .pn-create-banner p
+  ) {
+  color: #607b4c;
+}
+html:not(.dark) .pn-hero h1 {
+  color: #25391f;
+}
+html:not(.dark) .pn-hero h1 em {
+  color: #5b7f3d;
+}
+html:not(.dark) .pn-hero-art {
+  background: #e8efdf;
+  border-color: #335a2226;
+}
+html:not(.dark) .pn-view-tabs {
+  background: #eaf0e1;
+  border-color: #38552224;
+}
+html:not(.dark) .pn-view-tabs button {
+  color: #5c7549;
+}
+html:not(.dark) .pn-view-tabs button[aria-pressed="true"] {
+  background: #d2f58a;
+  color: #2c4620;
+}
+html:not(.dark) .pn-search {
+  background: #fff;
+  border-color: #335a2226;
+  color: #688650;
+}
+html:not(.dark)
+  .pn-page
+  .pn-search
+  input:not([type="checkbox"]):not([type="radio"]) {
+  color: #2d4720 !important;
+  background: transparent !important;
+}
+html:not(.dark) .pn-page .pn-search input::placeholder {
+  color: #718764 !important;
+}
+html:not(.dark) .pn-categories button {
+  background: #edf2e7;
+  border-color: #3b5a2122;
+  color: #667e53;
+}
+html:not(.dark) .pn-categories button[aria-pressed="true"] {
+  background: #dfedcc;
+  border-color: #89a965;
+  color: #36561e;
+}
+html:not(.dark) .pn-network-card {
+  background: #e9efe2;
+  border-color: #385a2126;
+}
+html:not(.dark) .pn-network-body {
+  background: #fff;
+  border-radius: 0 0 18px 18px;
+}
+html:not(.dark) .pn-network-body h3 {
+  color: #2e4623;
+}
+html:not(.dark) .pn-network-body footer > a {
+  color: #4b7130;
+}
+html:not(.dark) .pn-network-body footer > a > span {
+  background: #e9f2df;
+  border-color: #bad49d;
+}
+html:not(.dark) .pn-network-owner > span:first-child {
+  background: #e3ecd7;
+  color: #55713e;
+}
+html:not(.dark) .pn-member-tag {
+  background: #e4f0d5;
+  color: #4b712f;
+}
+html:not(.dark) .pn-benefits > span {
+  background: #f0f4e9;
+  border-color: #3e5b2620;
+  color: #627c50;
+}
+html:not(.dark) .pn-empty,
+html:not(.dark) .pn-loading {
+  background: #fff;
+  border-color: #385a2126;
+  color: #2e4623;
+}
+html:not(.dark) .pn-empty p {
+  color: #698359;
+}
+html:not(.dark) .pn-create-banner {
+  background: #e9f0df;
+  border-color: #385a2126;
+}
+html:not(.dark) .pn-create-icon {
+  background: #dce9cd;
+  border-color: #a8c28b;
+  color: #5b793f;
+}
+html:not(.dark) .pn-secondary {
+  background: #fff;
+  border-color: #385a2126;
+  color: #4b6836;
+}
+html:not(.dark) .pn-secondary:hover {
+  background: #e9f1dd;
+}
+html:not(.dark) .pn-network-header {
+  background: #edf2e7;
+}
+html:not(.dark) .pn-back {
+  color: #607b4c;
+}
+html:not(.dark) .pn-header-identity > span {
+  color: #5d7b42;
+  background: #e0ebd3;
+  border-color: #b7cda0;
+}
+html:not(.dark) .pn-icon-button {
+  background: #fff;
+  color: #587741;
+  border-color: #b7cda0;
+}
+html:not(.dark) .pn-icon-button[aria-pressed="true"] {
+  background: #d2f58a;
+  color: #2d461c;
+}
+html:not(.dark) .pn-hub .bg-white,
+html:not(.dark) .pn-hub [class*="dark:bg-[#121e33]"],
+html:not(.dark) .pn-hub [class*="dark:bg-[#172135]"] {
+  background: #fff !important;
+}
+html:not(.dark) .pn-hub :is(.bg-slate-50, .bg-slate-100),
+html:not(.dark) .pn-hub [class*="dark:bg-white/5"] {
+  background: #eff4e9 !important;
+}
+html:not(.dark) .pn-hub :is(.bg-slate-200, .bg-slate-300) {
+  background: #dfe8d5;
+}
+html:not(.dark) .pn-hub [class*="dark:bg-slate-900"] {
+  background: #e9f0df !important;
+}
+html:not(.dark)
+  .pn-hub
+  :is(.text-slate-900, .text-slate-800, .text-slate-700, .text-white) {
+  color: #2e4523 !important;
+}
+html:not(.dark) .pn-hub :is(.text-slate-600, .text-slate-500, .text-slate-400) {
+  color: #697d5d !important;
+}
+html:not(.dark) .pn-hub :is(.text-slate-300, .text-slate-200) {
+  color: #4f6742 !important;
+}
+html:not(.dark)
+  .pn-hub
+  :is(
+    .text-amber-300,
+    .text-amber-400,
+    .text-amber-500,
+    .text-blue-400,
+    .text-blue-500,
+    .text-blue-600,
+    .text-emerald-400,
+    .text-emerald-500
+  ) {
+  color: #5e823b !important;
+}
+html:not(.dark) .pn-hub .pn-hub-sidebar > div {
+  background: transparent !important;
+}
+html:not(.dark) .pn-hub-sidebar button {
+  color: #526c43;
+}
+html:not(.dark) .pn-hub-sidebar button[aria-pressed="true"] {
+  color: #2d4620 !important;
+}
+html:not(.dark) .pn-mobile-navigation {
+  background: #eaf1e1;
+}
+html:not(.dark) .pn-mobile-navigation label {
+  color: #667d54;
+}
+html:not(.dark)
+  .pn-hub
+  input:not([type="checkbox"]):not([type="radio"]):not([type="color"]),
+html:not(.dark) .pn-hub textarea,
+html:not(.dark) .pn-hub select {
+  background: #fbfdf7 !important;
+  color: #2d4522 !important;
+  border-color: #36592035 !important;
+}
+html:not(.dark) .pn-hub input::placeholder,
+html:not(.dark) .pn-hub textarea::placeholder {
+  color: #798e6e !important;
+}
+html:not(.dark) .pn-hub .pn-search input {
+  background: transparent !important;
+}
+html:not(.dark) .pn-search-summary {
+  background: #edf3e6;
+  color: #5c774a;
+}
+html:not(.dark) .pn-search-summary button {
+  color: #416525;
+}
+html:not(.dark) .pn-network-welcome {
+  background: #e8efdf;
+  border-color: #335a2226;
+}
+html:not(.dark) .pn-hub-stats button {
+  background: #fff;
+  color: #6d8d50;
+}
+html:not(.dark) .pn-hub-stats button > span {
+  color: #728764;
+}
+html:not(.dark) .pn-hub-stats strong {
+  color: #314d23;
+}
+html:not(.dark) .pn-hub-main .py-8.text-center > svg,
+html:not(.dark) .pn-hub-main .py-16.text-center > svg {
+  background: #e9f1de;
+  border-color: #b6cca140;
+}
+html:not(.dark) .pn-paywall {
+  background: #edf4e3;
+  border-color: #b0c68f;
+}
+html:not(.dark) .pn-paywall .bg-white\/5 {
+  background: #fff9;
+}
+html:not(.dark) .pn-paywall .border-white\/10,
+html:not(.dark) .pn-paywall .border-white\/5 {
+  border-color: #38552220;
+}
+html:not(.dark) .pn-paywall-intro h2 {
+  color: #2d4522;
+}
+html:not(.dark) .pn-paywall-intro > div {
+  background: #dfedcf;
+  border-color: #bfd2a4;
+  color: #5b7b3d;
+}
+html:not(.dark) .pn-page.pn-create {
+  background: #f5f7f0 !important;
+}
+html:not(.dark) .pn-create > header {
+  background: #edf2e7 !important;
+}
+html:not(.dark) .pn-create-guide h1 em {
+  color: #5a7d3b;
+}
+html:not(.dark) .pn-create-guide > p {
+  color: #718666;
+}
+html:not(.dark) .pn-create-guide nav button {
+  color: #49643a;
+}
+html:not(.dark) .pn-create-guide nav small {
+  color: #6c835e;
+}
+html:not(.dark) .pn-create-guide nav button > span {
+  border-color: #b0c49c;
+  color: #66814e;
+}
+html:not(.dark) .pn-create-guide nav button[aria-current="step"] {
+  background: #e7f0db;
+  border-color: #adc68e;
+}
+html:not(.dark) .pn-create-preview {
+  background: #eaf1e0;
+  border-color: #3659202c;
+}
+html:not(.dark) .pn-create-preview h3 {
+  color: #355028;
+}
+html:not(.dark) .pn-create-preview :is(p, footer) {
+  color: #688353;
+}
+html:not(.dark) .pn-create-preview footer {
+  border-color: #36592026;
+}
+html:not(.dark) .pn-create-preview footer strong {
+  color: #517232;
+}
+html:not(.dark) .pn-create-step-heading > span:last-child {
+  color: #718765;
+}
+html:not(.dark) .pn-create-progress i {
+  background: #dfe7d4;
+}
+html:not(.dark) .pn-create-progress i[data-complete="true"] {
+  background: #85a75c;
+}
+html:not(.dark) .pn-create-form {
+  background: #fff;
+  border-color: #3659202a;
+  box-shadow: 0 10px 45px #334d1610;
+}
+html:not(.dark) .pn-create-form .border-amber-400 {
+  border-color: #8dad62 !important;
+  background: #edf5e2 !important;
+}
+html:not(.dark) .pn-create-form .bg-emerald-500\/10 {
+  background: #eaf2e3;
+}
+html:not(.dark) .pn-create-navigation {
+  border-color: #36592026;
+}
+html:not(.dark) .pn-create-review {
+  background: #edf4e4;
+  border-color: #b1c995;
+}
+html:not(.dark) .pn-create-review p {
+  color: #56753c;
+}
+html:not(.dark) .pn-hub .pn-badge-preview {
+  background: #edf2e7 !important;
+  border-color: #d0dcc4 !important;
+  box-shadow: none;
+}
+html:not(.dark) .pn-create-review > span:last-child {
+  color: #6c855a;
+}

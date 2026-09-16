@@ -1,284 +1,439 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import Link from "next/link";
 import {
-  Search, MapPin, Briefcase, Globe, Loader2, BadgeCheck,
-  Shield, Check, ArrowRight, Star, Sparkles, UserCheck, ChevronRight
-} from "lucide-react";
+  Search01Icon,
+  ArrowRight01Icon,
+  Cancel01Icon,
+  UserGroupIcon,
+  Shield01Icon,
+  Location01Icon,
+  Tick01Icon,
+  Briefcase01Icon,
+} from "hugeicons-react";
+import { ProCard, type ProData } from "@/components/pros/ProCard";
+import {
+  GridSwitcher,
+  type GridViewType,
+} from "@/components/pros/GridSwitcher";
+import "@/components/pros/pros.css";
+import "@/components/pros/pros-light.css";
 
-interface Pro {
-  id: string;
-  name: string;
-  image: string | null;
-  coverImage: string | null;
-  headline: string | null;
-  bio: string | null;
-  location: string | null;
-  yearsExperience: number | null;
-  specialties: string[];
-  certifications: string[];
-}
-
-const FILTER_PILLS = [
-  { label: "All", value: "" },
-  { label: "CPA", value: "CPA" },
-  { label: "EA", value: "EA" },
-  { label: "Attorney", value: "Attorney" },
-  { label: "Bookkeeper", value: "Bookkeeper" },
-  { label: "CFP", value: "CFP" },
-  { label: "Consultant", value: "Consultant" },
-  { label: "JD", value: "JD" },
-  { label: "MBA", value: "MBA" },
+const FILTERS = [
+  { label: "All professionals", value: "", pattern: null },
+  {
+    label: "CPA",
+    value: "CPA",
+    pattern: /\bcpa\b|certified public accountant/i,
+  },
+  { label: "Enrolled Agent", value: "EA", pattern: /\bea\b|enrolled\s*agent/i },
+  { label: "Attorney", value: "Attorney", pattern: /attorney|lawyer/i },
+  { label: "Bookkeeper", value: "Bookkeeper", pattern: /bookkeep/i },
+  {
+    label: "CFP",
+    value: "CFP",
+    pattern: /\bcfp\b|certified financial planner/i,
+  },
+  { label: "Consultant", value: "Consultant", pattern: /consult/i },
+  { label: "JD", value: "JD", pattern: /\bj\.?d\.?\b|juris doctor/i },
+  {
+    label: "MBA",
+    value: "MBA",
+    pattern: /\bmba\b|master.*business administration/i,
+  },
 ];
 
 export default function FindAProPage() {
-  const [pros, setPros] = useState<Pro[]>([]);
+  const [pros, setPros] = useState<ProData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [q, setQ] = useState("");
-  const [selectedFilter, setSelectedFilter] = useState("");
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams();
-      if (q.trim()) params.set("q", q.trim());
-      const res = await fetch(`/api/pros?${params}`);
-      const data = (await res.json()) as Pro[];
-
-      if (selectedFilter) {
-        setPros(
-          data.filter(
-            p =>
-              (p.certifications && p.certifications.some(c => c.toLowerCase().includes(selectedFilter.toLowerCase()))) ||
-              (p.headline && p.headline.toLowerCase().includes(selectedFilter.toLowerCase())) ||
-              (p.specialties && p.specialties.some(s => s.toLowerCase().includes(selectedFilter.toLowerCase())))
-          )
-        );
-      } else {
-        setPros(data);
-      }
-    } catch {
-      setPros([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [q, selectedFilter]);
-
+  const [error, setError] = useState("");
+  const [retry, setRetry] = useState(0);
+  const [query, setQuery] = useState("");
+  const [credential, setCredential] = useState("");
+  const [location, setLocation] = useState("");
+  const [sort, setSort] = useState("recent");
+  const [viewMode, setViewMode] = useState<GridViewType>("grid-3");
+  const results = useRef<HTMLDivElement>(null);
+  const search = useRef<HTMLInputElement>(null);
   useEffect(() => {
-    load();
-  }, [load]);
-
+    const controller = new AbortController();
+    async function load() {
+      try {
+        const response = await fetch("/api/pros", {
+          signal: controller.signal,
+        });
+        if (!response.ok)
+          throw new Error("We couldn’t load the directory. Please try again.");
+        const data = await response.json();
+        if (!Array.isArray(data))
+          throw new Error("The directory is temporarily unavailable.");
+        if (!controller.signal.aborted) {
+          setPros(
+            data.map((pro: ProData) => ({
+              ...pro,
+              specialties: Array.isArray(pro.specialties)
+                ? pro.specialties
+                : [],
+              certifications: Array.isArray(pro.certifications)
+                ? pro.certifications
+                : [],
+            })),
+          );
+          setError("");
+        }
+      } catch (error) {
+        if (!controller.signal.aborted)
+          setError(
+            error instanceof Error
+              ? error.message
+              : "Please check your connection and try again.",
+          );
+      } finally {
+        if (!controller.signal.aborted) setLoading(false);
+      }
+    }
+    void load();
+    return () => controller.abort();
+  }, [retry]);
+  const locations = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          pros
+            .map((pro) => pro.location?.trim())
+            .filter((value): value is string => !!value),
+        ),
+      ).sort((a, b) => a.localeCompare(b)),
+    [pros],
+  );
+  const filtered = useMemo(() => {
+    const term = query.trim().toLowerCase();
+    const pattern = FILTERS.find(
+      (filter) => filter.value === credential,
+    )?.pattern;
+    return pros
+      .filter((pro) => {
+        const professionalText = [
+          pro.headline,
+          ...pro.specialties,
+          ...pro.certifications,
+        ]
+          .filter(Boolean)
+          .join(" ");
+        return (
+          (!term ||
+            `${pro.name} ${pro.location || ""} ${professionalText}`
+              .toLowerCase()
+              .includes(term)) &&
+          (!pattern || pattern.test(professionalText)) &&
+          (!location || pro.location?.trim() === location)
+        );
+      })
+      .sort((a, b) =>
+        sort === "name"
+          ? a.name.localeCompare(b.name)
+          : sort === "experience"
+            ? (b.yearsExperience ?? -1) - (a.yearsExperience ?? -1)
+            : 0,
+      );
+  }, [pros, query, credential, location, sort]);
+  const hasFilters = !!(query || credential || location);
+  function reset() {
+    setQuery("");
+    setCredential("");
+    setLocation("");
+  }
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#070f1e]">
-
-      {/* Hero Section */}
-      <div className="relative bg-gradient-to-br from-[#060e1a] via-[#0a1628] to-[#142848] text-white py-16 sm:py-20 px-4 border-b border-slate-800 overflow-hidden">
-        {/* Glow meshes */}
-        <div className="absolute top-0 right-1/4 w-96 h-96 bg-amber-400/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-blue-600/15 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="max-w-5xl mx-auto text-center relative z-10">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 bg-amber-400/15 border border-amber-400/30 rounded-full px-4 py-1.5 text-xs sm:text-sm font-bold text-amber-300 mb-5 shadow-sm">
-            <BadgeCheck className="w-4 h-4 text-amber-400" />
-            Verified Professionals
-          </div>
-
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight mb-4 text-white">
-            Find a <span className="text-amber-400">Pro</span>
-          </h1>
-
-          <p className="text-slate-300 text-base sm:text-lg max-w-xl mx-auto leading-relaxed">
-            Connect with verified Enrolled Agents, CPAs, and tax specialists.
-          </p>
-
-          {/* Search Bar */}
-          <div className="flex items-center gap-3 bg-white dark:bg-[#111c30] rounded-2xl px-5 py-3.5 mt-8 max-w-2xl mx-auto shadow-2xl border border-slate-200/40 dark:border-slate-700">
-            <Search className="w-5 h-5 text-amber-500 shrink-0" />
-            <input
-              value={q}
-              onChange={e => setQ(e.target.value)}
-              placeholder="Search by name or specialty…"
-              className="flex-1 text-slate-800 dark:text-white text-sm outline-none placeholder-slate-400 bg-transparent font-[inherit]"
-            />
-            {q && (
-              <button
-                onClick={() => setQ("")}
-                className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-white px-2"
-              >
-                Clear
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content Area */}
-      <div className="max-w-6xl mx-auto px-4 py-10 sm:py-12">
-
-        {/* Filter Pills */}
-        <div className="flex flex-wrap items-center gap-2 mb-8 justify-center sm:justify-start">
-          {FILTER_PILLS.map(pill => {
-            const active = selectedFilter === pill.value;
-            return (
-              <button
-                key={pill.label}
-                onClick={() => setSelectedFilter(pill.value)}
-                className={`px-4 py-2 rounded-full text-xs sm:text-sm font-bold border transition-all ${
-                  active
-                    ? "bg-[#0a1628] text-white border-[#0a1628] shadow-md dark:bg-amber-400 dark:text-[#0a1628] dark:border-amber-400"
-                    : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-amber-400/50 hover:bg-slate-50 dark:hover:bg-slate-800"
-                }`}
-              >
-                {pill.label}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Professional Cards Grid */}
-        {loading ? (
-          <div className="flex flex-col items-center justify-center py-28">
-            <Loader2 className="w-10 h-10 animate-spin text-amber-500 mb-3" />
-            <p className="text-sm font-bold text-slate-500">Loading verified professionals…</p>
-          </div>
-        ) : pros.length === 0 ? (
-          <div className="bg-white dark:bg-[#111c30] rounded-3xl border border-slate-200/80 dark:border-slate-800 p-12 text-center max-w-lg mx-auto shadow-sm my-8">
-            <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center mx-auto mb-4 text-slate-400">
-              <Search className="w-8 h-8" />
-            </div>
-            <p className="text-[#0a1628] dark:text-white text-lg font-black">No professionals found</p>
-            <p className="text-slate-500 dark:text-slate-400 text-sm mt-1 mb-6">
-              Try adjusting your search query or choosing a different filter.
-            </p>
-            <button
-              onClick={() => {
-                setQ("");
-                setSelectedFilter("");
-              }}
-              className="px-6 py-2.5 bg-[#0a1628] text-white text-xs font-bold rounded-xl hover:bg-[#1a3a6b] transition-all"
-            >
-              Reset Filters
-            </button>
-          </div>
-        ) : (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {pros.map(pro => (
-              <Link
-                key={pro.id}
-                href={`/find-a-pro/${pro.id}`}
-                className="group bg-white dark:bg-[#111c30] rounded-2xl border border-slate-200/80 dark:border-slate-800 hover:border-amber-400/60 dark:hover:border-amber-400/60 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col"
-              >
-                {/* Cover Header */}
-                <div className="h-24 bg-gradient-to-br from-[#0a1628] via-[#102544] to-[#1a3a6b] relative overflow-hidden">
-                  {pro.coverImage && (
-                    <img
-                      src={pro.coverImage}
-                      alt=""
-                      className="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-500"
-                    />
-                  )}
-                  {/* Floating Avatar */}
-                  <div className="absolute -bottom-6 left-5">
-                    <div className="w-14 h-14 rounded-2xl border-2 border-white dark:border-slate-800 bg-[#0a1628] overflow-hidden flex items-center justify-center shadow-lg relative">
-                      {pro.image ? (
-                        <img
-                          src={pro.image}
-                          alt={pro.name}
-                          referrerPolicy="no-referrer"
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <span className="text-white font-black text-xl">{pro.name[0]}</span>
-                      )}
-                    </div>
-                  </div>
-                  {/* Cert badge top right */}
-                  {pro.certifications.length > 0 && (
-                    <div className="absolute top-3 right-3">
-                      <span className="text-[10px] font-black bg-amber-400/90 text-[#0a1628] px-2.5 py-1 rounded-full shadow-sm">
-                        {pro.certifications[0]}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Card Body */}
-                <div className="pt-8 px-5 pb-5 flex-1 flex flex-col">
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <h2 className="font-bold text-[#0a1628] dark:text-white text-base group-hover:text-amber-500 dark:group-hover:text-amber-400 transition-colors leading-snug truncate">
-                      {pro.name}
-                    </h2>
-                    <BadgeCheck className="w-4 h-4 text-amber-500 shrink-0" />
-                  </div>
-
-                  {pro.headline && (
-                    <p className="text-slate-500 dark:text-slate-400 text-xs mb-3 line-clamp-1 font-medium">
-                      {pro.headline}
-                    </p>
-                  )}
-
-                  {/* Specialties chips */}
-                  {pro.specialties.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mb-4">
-                      {pro.specialties.slice(0, 3).map(s => (
-                        <span
-                          key={s}
-                          className="text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2.5 py-0.5 rounded-md"
-                        >
-                          {s}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Meta details footer */}
-                  <div className="mt-auto pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-400">
-                    <div className="flex items-center gap-3">
-                      {pro.location && (
-                        <span className="flex items-center gap-1">
-                          <MapPin className="w-3 h-3 text-amber-500" />
-                          <span className="truncate max-w-[100px]">{pro.location}</span>
-                        </span>
-                      )}
-                      {pro.yearsExperience && (
-                        <span className="flex items-center gap-1">
-                          <Briefcase className="w-3 h-3 text-slate-400" />
-                          {pro.yearsExperience}+ yrs
-                        </span>
-                      )}
-                    </div>
-                    <span className="font-bold text-amber-500 dark:text-amber-400 group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5 text-[11px]">
-                      View <ChevronRight className="w-3 h-3" />
-                    </span>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* CTA for members */}
-      <div className="max-w-5xl mx-auto px-4 pb-20">
-        <div className="bg-gradient-to-br from-[#0a1628] via-[#102444] to-[#1a3a6b] rounded-3xl p-8 sm:p-10 text-white text-center shadow-2xl border border-slate-800 relative overflow-hidden">
-          <div className="w-14 h-14 bg-amber-400/20 border border-amber-400/40 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-            <BadgeCheck className="w-8 h-8 text-amber-400" />
-          </div>
-          <h2 className="text-2xl sm:text-3xl font-black mb-2 tracking-tight">Are you a Professional?</h2>
-          <p className="text-slate-300 text-sm sm:text-base mb-6 max-w-lg mx-auto leading-relaxed">
-            Join the directory and get discovered.
-          </p>
-          <Link
-            href="/apply-professional"
-            className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-400 to-amber-500 text-[#0a1628] font-black text-sm px-8 py-3.5 rounded-full hover:shadow-[0_0_25px_rgba(245,158,11,0.4)] hover:scale-105 transition-all"
-          >
-            Get Listed <ArrowRight className="w-4 h-4" />
+    <div className="fp-page">
+      <div className="fp-container">
+        <div className="fp-page-top">
+          <span className="fp-eyebrow">THE PROFESSIONAL DIRECTORY</span>
+          <Link href="/apply-professional">
+            Are you a professional?{" "}
+            <span>
+              Get listed <ArrowRight01Icon size={15} />
+            </span>
           </Link>
         </div>
+        <section className="fp-hero" aria-labelledby="directory-title">
+          <div className="fp-hero-copy">
+            <span className="fp-kicker">
+              <span />
+              EXPERTISE MEETS CONNECTION
+            </span>
+            <h1 id="directory-title">
+              Find a pro.
+              <br />
+              <span>Move forward.</span>
+            </h1>
+            <p>
+              The right expertise makes all the difference. Meet tax and
+              accounting professionals who bring a fresh perspective to your
+              next step.
+            </p>
+            <div className="fp-hero-actions">
+              <button
+                className="fp-button fp-primary"
+                onClick={() => {
+                  results.current?.scrollIntoView({ behavior: "smooth" });
+                  search.current?.focus({ preventScroll: true });
+                }}
+              >
+                Find your professional{" "}
+                <span className="fp-arrow">
+                  <ArrowRight01Icon size={17} />
+                </span>
+              </button>
+              <span>
+                <UserGroupIcon size={17} /> Real people. Personal expertise.
+              </span>
+            </div>
+          </div>
+          <aside className="fp-intro-shell">
+            <div className="fp-intro">
+              <div className="fp-intro-top">
+                <span>A GOOD CONNECTION STARTS HERE</span>
+                <span>↗</span>
+              </div>
+              <div className="fp-intro-art" aria-hidden="true">
+                <span className="fp-orbit" />
+                <span className="fp-orbit fp-orbit-two" />
+                <span className="fp-art-profile">
+                  <UserGroupIcon size={55} strokeWidth={1.1} />
+                </span>
+                <span className="fp-art-check">
+                  <Tick01Icon size={20} />
+                </span>
+                <i className="fp-art-dot one" />
+                <i className="fp-art-dot two" />
+              </div>
+              <h2>
+                Different expertise.
+                <br />
+                One shared purpose.
+              </h2>
+              <p>Helping you take the next step with confidence.</p>
+              <div className="fp-intro-tags">
+                <span>Tax & accounting</span>
+                <span>Business & beyond</span>
+              </div>
+            </div>
+          </aside>
+        </section>
+        <div className="fp-value-strip">
+          <span>
+            <UserGroupIcon size={17} />
+            {loading ? (
+              "Professional profiles"
+            ) : (
+              <>
+                <strong>{pros.length}</strong> professionals to discover
+              </>
+            )}
+          </span>
+          <span>
+            <Briefcase01Icon size={17} />
+            Expertise for your next chapter
+          </span>
+          <span>
+            <Location01Icon size={17} />
+            Find someone who understands your world
+          </span>
+          <span className="fp-strip-note">A connection worth making.</span>
+        </div>
+        <section
+          className="fp-directory"
+          ref={results}
+          id="professionals"
+          aria-label="Professional directory"
+        >
+          <div className="fp-directory-heading">
+            <div>
+              <span className="fp-eyebrow">YOUR NEXT GOOD CONNECTION</span>
+              <h2>Meet the professionals.</h2>
+            </div>
+            <p>Explore their expertise. Get to know their approach.</p>
+          </div>
+          <div className="fp-search-row">
+            <div className="fp-search">
+              <Search01Icon size={22} />
+              <input
+                ref={search}
+                aria-label="Search professionals"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Search by name, specialty, or city…"
+              />
+              {query && (
+                <button onClick={() => setQuery("")} aria-label="Clear search">
+                  <Cancel01Icon size={17} />
+                </button>
+              )}
+            </div>
+            <label className="fp-location">
+              <Location01Icon size={18} />
+              <select
+                aria-label="Filter by location"
+                value={location}
+                onChange={(event) => setLocation(event.target.value)}
+              >
+                <option value="">All locations</option>
+                {locations.map((value) => (
+                  <option key={value} value={value}>
+                    {value}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <div
+            className="fp-filters"
+            aria-label="Filter by professional expertise"
+          >
+            {FILTERS.map((filter) => (
+              <button
+                key={filter.value}
+                aria-pressed={credential === filter.value}
+                onClick={() => setCredential(filter.value)}
+              >
+                {filter.label}
+              </button>
+            ))}
+          </div>
+          <div className="fp-results-bar">
+            <div aria-live="polite">
+              <strong>
+                {loading
+                  ? "Finding your people…"
+                  : `${filtered.length} ${filtered.length === 1 ? "professional" : "professionals"}`}
+              </strong>
+              {!loading && (
+                <span>
+                  {hasFilters ? " matching your search" : " ready to explore"}
+                </span>
+              )}
+              {hasFilters && (
+                <button className="fp-reset" onClick={reset}>
+                  Reset filters <Cancel01Icon size={12} />
+                </button>
+              )}
+            </div>
+            <div className="fp-view-controls">
+              <label>
+                Sort by
+                <select
+                  aria-label="Sort professionals"
+                  value={sort}
+                  onChange={(event) => setSort(event.target.value)}
+                >
+                  <option value="recent">Newest first</option>
+                  <option value="name">Name A–Z</option>
+                  <option value="experience">Most experienced</option>
+                </select>
+              </label>
+              <GridSwitcher currentView={viewMode} onViewChange={setViewMode} />
+            </div>
+          </div>
+          {loading ? (
+            <div className="fp-loading" role="status">
+              <span className="fp-spinner" />
+              Getting the right people in the room…
+            </div>
+          ) : error ? (
+            <div className="fp-empty" role="alert">
+              <Shield01Icon size={34} />
+              <h3>Let’s try that connection again.</h3>
+              <p>{error}</p>
+              <button
+                className="fp-button fp-primary"
+                onClick={() => {
+                  setLoading(true);
+                  setRetry((value) => value + 1);
+                }}
+              >
+                Reload directory
+              </button>
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="fp-empty">
+              <Search01Icon size={34} />
+              <span className="fp-eyebrow">A LITTLE MORE EXPLORING</span>
+              <h3>
+                {hasFilters
+                  ? "Your professional is still out there."
+                  : "Good connections are on the way."}
+              </h3>
+              <p>
+                {hasFilters
+                  ? "Try a broader search, a different specialty, or another location."
+                  : "Check back as new professionals join the directory."}
+              </p>
+              {hasFilters && (
+                <button className="fp-button fp-primary" onClick={reset}>
+                  Explore all professionals{" "}
+                  <span className="fp-arrow">
+                    <ArrowRight01Icon size={17} />
+                  </span>
+                </button>
+              )}
+            </div>
+          ) : (
+            <div
+              className={`fp-card-grid ${viewMode}`}
+              aria-label="Professional profiles"
+            >
+              {filtered.map((pro) => (
+                <ProCard key={pro.id} pro={pro} viewMode={viewMode} />
+              ))}
+            </div>
+          )}
+        </section>
+        <section className="fp-guidance">
+          <div>
+            <span className="fp-eyebrow">A BETTER WAY TO CONNECT</span>
+            <h2>
+              A little research.
+              <br />
+              The right relationship.
+            </h2>
+          </div>
+          <div>
+            <span>01</span>
+            <h3>Start with what you need</h3>
+            <p>Use specialties and location to narrow your search.</p>
+          </div>
+          <div>
+            <span>02</span>
+            <h3>Get to know the person</h3>
+            <p>Explore their profile, experience, and approach.</p>
+          </div>
+          <div>
+            <span>03</span>
+            <h3>Take the next step</h3>
+            <p>Open a profile to find their contact and connection options.</p>
+          </div>
+        </section>
+        <section className="fp-cta">
+          <span className="fp-cta-icon">
+            <Briefcase01Icon size={32} />
+          </span>
+          <div>
+            <span className="fp-eyebrow">YOUR EXPERTISE BELONGS HERE</span>
+            <h2>Be someone’s next great connection.</h2>
+            <p>
+              Build your professional presence and help people discover what you
+              do best.
+            </p>
+          </div>
+          <Link className="fp-button fp-primary" href="/apply-professional">
+            Join the directory{" "}
+            <span className="fp-arrow">
+              <ArrowRight01Icon size={17} />
+            </span>
+          </Link>
+        </section>
       </div>
-
     </div>
   );
 }

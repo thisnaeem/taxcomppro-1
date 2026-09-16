@@ -1,0 +1,1 @@
+ALTER TABLE "spaces" ADD COLUMN "visibility" TEXT NOT NULL DEFAULT 'PUBLIC';

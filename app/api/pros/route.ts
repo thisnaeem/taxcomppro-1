@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 
 const publicSelect = {
   id: true, name: true, image: true, coverImage: true, headline: true, bio: true,
-  location: true, yearsExperience: true, website: true, linkedIn: true, twitter: true,
+  mission: true, location: true, yearsExperience: true, website: true, linkedIn: true, twitter: true,
   specialties: true, certifications: true, languages: true, createdAt: true,
 };
 

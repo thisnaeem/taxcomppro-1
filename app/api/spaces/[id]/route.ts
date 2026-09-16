@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { canAccessSpace } from "@/lib/spaceAccess";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { RoomServiceClient } from "livekit-server-sdk";
@@ -8,7 +9,7 @@ type Params = { params: Promise<{ id: string }> };
 const HOST_SELECT = { id: true, name: true, image: true, headline: true, role: true, tier: true };
 
 // GET /api/spaces/[id]
-export async function GET(_req: NextRequest, { params }: Params) {
+export async function GET(req: NextRequest, { params }: Params) {
   const { id } = await params;
   const space = await prisma.space.findUnique({
     where: { id },
@@ -18,6 +19,8 @@ export async function GET(_req: NextRequest, { params }: Params) {
     },
   });
   if (!space) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  const session = await auth.api.getSession({ headers: req.headers });
+  if (!canAccessSpace(req, space, session?.user)) return NextResponse.json({ error: "This Pro Talk is invite only. Open your invitation link to join." }, { status: 403 });
   return NextResponse.json(space);
 }
 
@@ -37,10 +40,14 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
   const dataToUpdate: Record<string, unknown> = {};
+  if (body.visibility !== undefined) {
+    if (body.visibility !== "PUBLIC" && body.visibility !== "PRIVATE") return NextResponse.json({ error: "Invalid visibility" }, { status: 400 });
+    dataToUpdate.visibility = body.visibility;
+  }
 
   if (typeof body.isLive === "boolean") {
     dataToUpdate.isLive = body.isLive;
-  } else if (!body.replayUrl) {
+  } else if (Object.keys(body).length === 0) {
     dataToUpdate.isLive = true;
   }
 

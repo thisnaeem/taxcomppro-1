@@ -85,7 +85,7 @@ export default function BadgeCreator({ value, onChange }: BadgeCreatorProps) {
   return (
     <div className="space-y-6">
       {/* Live Preview Box */}
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 text-center space-y-4 shadow-xl">
+      <div className="pn-badge-preview bg-slate-900 border border-slate-800 rounded-3xl p-6 text-center space-y-4 shadow-xl">
         <div className="text-xs font-black uppercase tracking-widest text-slate-400">
           Live Badge Preview
         </div>

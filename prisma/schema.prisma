@@ -769,6 +769,7 @@ model Space {
   replayDurationMinutes Int?
   isReplay              Boolean   @default(false)
   coHostIds             String[]  @default([])
+  visibility            String    @default("PUBLIC")
   createdAt             DateTime  @default(now())
   endedAt               DateTime?
 
