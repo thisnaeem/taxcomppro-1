@@ -23,6 +23,7 @@ import {
   StarIcon,
   FireIcon,
   Mic01Icon,
+  UserGroupIcon,
   Shield01Icon,
   AiBrain01Icon,
   CourtLawIcon,
