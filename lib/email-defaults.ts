@@ -23,6 +23,56 @@ export interface DefaultEmailTemplateDef {
 }
 
 export const DEFAULT_EMAIL_TEMPLATES: DefaultEmailTemplateDef[] = [
+{
+  "key": "CONNECTION_REQUEST",
+  "name": "New connection request",
+  "category": "SYSTEM",
+  "description": "Sent after a new connection request is created.",
+  "subject": "{{senderName}} wants to connect with you",
+  "preheader": "{{senderName}} would like to connect with you.",
+  "heading": "A new connection starts here",
+  "bodyHtml": "<p class=\"dark-body\" style=\"font-family:Arial,Helvetica,sans-serif;margin:0 0 20px;font-size:15px;line-height:1.7;color:#475569;\">Hi {{recipientName}},</p>\n<table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" class=\"panel\" style=\"font-family:Arial,Helvetica,sans-serif;background:#f4f6fa;border:1px solid #e2e8f0;border-radius:16px;\"><tr><td style=\"font-family:Arial,Helvetica,sans-serif;padding:24px;\">\n<p style=\"font-family:Arial,Helvetica,sans-serif;margin:0 0 12px;color:#a17a18;font-size:10px;font-weight:800;letter-spacing:2px;\">YOUR PROFESSIONAL COMMUNITY</p>\n<p class=\"dark-heading\" style=\"font-family:Arial,Helvetica,sans-serif;margin:0 0 6px;font-size:21px;font-weight:750;color:#101b2e;\">{{senderName}}</p>\n<p class=\"dark-body\" style=\"font-family:Arial,Helvetica,sans-serif;margin:0;font-size:14px;line-height:1.7;color:#64748b;\">would like to connect with you.</p>\n</td></tr></table>\n<p class=\"dark-body\" style=\"font-family:Arial,Helvetica,sans-serif;margin:22px 0 4px;font-size:15px;line-height:1.7;color:#475569;\">Grow your circle with a new professional connection. Review their profile and respond when you’re ready.</p>",
+  "buttonLabel": "Review connection request",
+  "buttonUrl": "{{actionUrl}}",
+  "footerNote": "You received this notification because you are a member of Tax Compliance Pro. Open the site to respond.",
+  "variables": [
+    "recipientName",
+    "senderName",
+    "actionUrl",
+    "siteUrl"
+  ],
+  "sampleVariables": {
+    "recipientName": "Alex",
+    "senderName": "Jordan Williams",
+    "actionUrl": "https://taxcomppro.com/connections",
+    "siteUrl": "https://taxcomppro.com"
+  }
+},
+{
+  "key": "DIRECT_MESSAGE",
+  "name": "New private message",
+  "category": "SYSTEM",
+  "description": "Sent to the recipient after a private message is saved. Message content stays in the app.",
+  "subject": "New message from {{senderName}}",
+  "preheader": "{{senderName}} sent you a private message.",
+  "heading": "You have a new message",
+  "bodyHtml": "<p class=\"dark-body\" style=\"font-family:Arial,Helvetica,sans-serif;margin:0 0 20px;font-size:15px;line-height:1.7;color:#475569;\">Hi {{recipientName}},</p>\n<table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" class=\"panel\" style=\"font-family:Arial,Helvetica,sans-serif;background:#f4f6fa;border:1px solid #e2e8f0;border-radius:16px;\"><tr><td style=\"font-family:Arial,Helvetica,sans-serif;padding:24px;\">\n<p style=\"font-family:Arial,Helvetica,sans-serif;margin:0 0 12px;color:#a17a18;font-size:10px;font-weight:800;letter-spacing:2px;\">YOUR PROFESSIONAL COMMUNITY</p>\n<p class=\"dark-heading\" style=\"font-family:Arial,Helvetica,sans-serif;margin:0 0 6px;font-size:21px;font-weight:750;color:#101b2e;\">{{senderName}}</p>\n<p class=\"dark-body\" style=\"font-family:Arial,Helvetica,sans-serif;margin:0;font-size:14px;line-height:1.7;color:#64748b;\">sent you a private message.</p>\n</td></tr></table>\n<p class=\"dark-body\" style=\"font-family:Arial,Helvetica,sans-serif;margin:22px 0 4px;font-size:15px;line-height:1.7;color:#475569;\">Your conversation is waiting. Open your inbox to read the message and reply.</p>",
+  "buttonLabel": "Read and reply",
+  "buttonUrl": "{{actionUrl}}",
+  "footerNote": "You received this notification because you are a member of Tax Compliance Pro. Open the site to respond.",
+  "variables": [
+    "recipientName",
+    "senderName",
+    "actionUrl",
+    "siteUrl"
+  ],
+  "sampleVariables": {
+    "recipientName": "Alex",
+    "senderName": "Jordan Williams",
+    "actionUrl": "https://taxcomppro.com/messages?user=sample-sender",
+    "siteUrl": "https://taxcomppro.com"
+  }
+},
   {
     key: "OTP_VERIFICATION",
     name: "Registration PIN & Verification Code",

@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import { sendCommunityNotificationEmail } from "@/lib/community-email";
+import { after, NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -74,6 +75,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ use
       fileType: fileType ?? null,
     },
   });
+
+  after(() => sendCommunityNotificationEmail({ kind: "DIRECT_MESSAGE", recipientId: receiverId, senderId: session.user.id, eventId: message.id }));
 
   return NextResponse.json(message, { status: 201 });
 }

@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAppSelector } from "@/store/hooks";
 import { Loader2, Send, Users, DollarSign, CheckCircle2, Clock, XCircle, ChevronRight, Megaphone, BarChart3, Lock, MonitorPlay, Image as ImageIcon, Calendar, ExternalLink, Tv, Star, ShoppingBag, Trash2 } from "lucide-react";
+import { canAccessProMarketing } from "@/lib/marketingAccess";
 import { BLAST_TIERS } from "@/lib/blast-pricing";
 
 const US_STATES = ["AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY"];
@@ -110,31 +111,31 @@ function ProMarketingContent() {
 
   const featuredPrice = 79 * featuredDuration;
 
-  const isPlus = mounted && user?.tier === "MARKETPLACE_PLUS";
+  const hasMarketingAccess = mounted && canAccessProMarketing(user);
 
 
   useEffect(() => { setMounted(true); }, []);
 
   // Load history
   const loadHistory = useCallback(() => {
-    if (!isPlus) return;
+    if (!hasMarketingAccess) return;
     setHistoryLoading(true);
     fetch("/api/message-blast/my")
       .then(r => r.json())
       .then(d => { setBlasts(d.blasts ?? []); setQuota(d.quota ?? null); })
       .finally(() => setHistoryLoading(false));
-  }, [isPlus]);
+  }, [hasMarketingAccess]);
 
   const loadMyAds = useCallback(() => {
-    if (!isPlus) return;
+    if (!hasMarketingAccess) return;
     setAdsLoading(true);
     fetch("/api/pro-ads/my").then(r => r.json())
       .then(d => setMyAds(Array.isArray(d) ? d : []))
       .finally(() => setAdsLoading(false));
-  }, [isPlus]);
+  }, [hasMarketingAccess]);
 
   const loadFeatured = useCallback(() => {
-    if (!isPlus) return;
+    if (!hasMarketingAccess) return;
     setListingsLoading(true);
     setFeaturedLoading(true);
     fetch("/api/listings/my").then(r => r.json())
@@ -143,7 +144,7 @@ function ProMarketingContent() {
     fetch("/api/featured-listing/my").then(r => r.json())
       .then(d => setMyFeatured(Array.isArray(d) ? d : []))
       .finally(() => setFeaturedLoading(false));
-  }, [isPlus]);
+  }, [hasMarketingAccess]);
 
   useEffect(() => { loadHistory(); loadMyAds(); loadFeatured(); }, [loadHistory, loadMyAds, loadFeatured]);
 
@@ -245,7 +246,7 @@ function ProMarketingContent() {
   };
 
   // Upgrade gate
-  if (!isPlus) {
+  if (!hasMarketingAccess) {
     return (
       <div className="min-h-screen bg-[#f4f6fb] flex items-center justify-center p-6">
         <div className="max-w-md w-full bg-white rounded-3xl border border-slate-200 shadow-xl p-10 text-center">

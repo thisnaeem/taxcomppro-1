@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { canAccessProMarketing } from "@/lib/marketingAccess";
 import { prisma } from "@/lib/prisma";
 import { calcBlastPrice } from "@/lib/blast-pricing";
 
@@ -7,7 +8,7 @@ import { calcBlastPrice } from "@/lib/blast-pricing";
 export async function GET(req: NextRequest) {
   const session = await auth.api.getSession({ headers: req.headers });
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (session.user.tier !== "MARKETPLACE_PLUS")
+  if (!canAccessProMarketing(session.user))
     return NextResponse.json({ error: "Marketplace Plus required" }, { status: 403 });
 
   const { searchParams } = new URL(req.url);
