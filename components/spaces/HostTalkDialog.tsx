@@ -16,7 +16,28 @@ import {
   UserGroupIcon,
 } from "hugeicons-react";
 import { PRO_TALK_CATEGORIES } from "@/lib/proTalks";
-import type { Talk } from "@/app/(spaces)/pro-talks/page";
+export interface Talk {
+  id: string;
+  name: string;
+  description: string | null;
+  category: string;
+  mediaType: string;
+  visibility: "PUBLIC" | "PRIVATE";
+  isLive: boolean;
+  scheduledAt: string | null;
+  shareToken: string | null;
+  totalAttendees: number;
+  endedAt: string | null;
+  createdAt: string;
+  host: {
+    id: string;
+    name: string;
+    image: string | null;
+    headline?: string | null;
+  };
+  _count: { rsvps: number };
+  isRsvped?: boolean;
+}
 
 function Dialog({
   title,

@@ -128,6 +128,7 @@ model User {
   image            String?
   coverImage       String?
   bio              String?
+  firstFeedPostAt  DateTime?
   headline         String?
   location         String?
   yearsExperience  Int?

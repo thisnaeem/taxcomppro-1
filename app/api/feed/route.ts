@@ -22,14 +22,14 @@ export async function GET(req: NextRequest) {
   const take = 10;
   const postId = searchParams.get("post");
 
-  const posts = await prisma.post.findMany({
+  const results = await prisma.post.findMany({
     where: { scheduledAt: null, ...(postId ? { id: postId } : {}), OR: [
       { communityId: null },
       ...(session ? [{ community: { members: { some: { userId: session.user.id } } } }] : []),
       ...(postId ? [{ community: { isPublic: true } }] : []),
     ] },
     orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-    take: postId ? 1 : take,
+    take: postId ? 1 : take + 1,
     ...(!postId && cursor ? { skip: 1, cursor: { id: cursor } } : {}),
     include: {
       author: { select: { id: true, name: true, image: true, headline: true, role: true, tier: true } },
@@ -45,6 +45,9 @@ export async function GET(req: NextRequest) {
         : { where: { userId: "__none__" }, select: { id: true, reaction: true } },
     },
   });
+
+  const hasMore = !postId && results.length > take;
+  const posts = results.slice(0, postId ? 1 : take);
 
   // Batch-compute Due Diligence badge for all unique post authors
   const authorIds = [...new Set(posts.map(p => p.author.id))];
@@ -72,7 +75,7 @@ export async function GET(req: NextRequest) {
     author: { ...p.author, hasDueDiligenceBadge: badgeUserIds.has(p.author.id) },
   }));
 
-  const nextCursor = !postId && posts.length === take ? posts[posts.length - 1].id : null;
+  const nextCursor = hasMore ? posts[posts.length - 1].id : null;
   return NextResponse.json({ posts: postsWithBadge, nextCursor }, { headers: { "Cache-Control": "private, no-store" } });
 }
 
@@ -95,27 +98,43 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  const post = await prisma.post.create({
-    data: {
-      content:     content?.trim() ?? "",
-      images:      images ?? [],
-      videoUrl:    videoUrl ?? null,
-      scheduledAt: schedDate,
-      authorId:    session.user.id,
-    },
-    include: {
-      author: { select: { id: true, name: true, image: true, headline: true, role: true, tier: true } },
-      comments: {
-        include: { author: { select: { id: true, name: true, image: true } } },
-        orderBy: { createdAt: "asc" as const },
-        take: 3,
+  const result = await prisma.$transaction(async tx => {
+    // Serialize publications per account so simultaneous submissions celebrate once.
+    const [author] = await tx.$queryRaw<{ firstFeedPostAt: Date | null }[]>
+      `SELECT "firstFeedPostAt" FROM "users" WHERE id = ${session.user.id} FOR UPDATE`;
+    let isFirstPost = false;
+    if (!schedDate && author && !author.firstFeedPostAt) {
+      const previousPost = await tx.post.findFirst({
+        where: { authorId: session.user.id, communityId: null, scheduledAt: null },
+        select: { id: true },
+      });
+      isFirstPost = !previousPost;
+      await tx.$executeRaw`UPDATE "users" SET "firstFeedPostAt" = NOW() WHERE id = ${session.user.id}`;
+    }
+    const post = await tx.post.create({
+      data: {
+        content:     content?.trim() ?? "",
+        images:      images ?? [],
+        videoUrl:    videoUrl ?? null,
+        scheduledAt: schedDate,
+        authorId:    session.user.id,
       },
-      community: { select: { name: true, slug: true, isPublic: true } },
-      _count: { select: { likes: true, comments: true } },
-      likes: { select: { id: true, reaction: true } },
-    },
+      include: {
+        author: { select: { id: true, name: true, image: true, headline: true, role: true, tier: true } },
+        comments: {
+          include: { author: { select: { id: true, name: true, image: true } } },
+          orderBy: { createdAt: "asc" as const },
+          take: 3,
+        },
+        community: { select: { name: true, slug: true, isPublic: true } },
+        _count: { select: { likes: true, comments: true } },
+        likes: { select: { id: true, reaction: true } },
+      },
+    });
+
+    return { ...post, isFirstPost };
   });
 
-  return NextResponse.json(post, { status: 201 });
+  return NextResponse.json(result, { status: 201 });
 }
 

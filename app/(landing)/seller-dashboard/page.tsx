@@ -1,16 +1,27 @@
 "use client";
 
-import { useEffect, useState, useCallback, Suspense } from "react";
+import { useEffect, useState, useCallback, useSyncExternalStore, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useAppSelector } from "@/store/hooks";
 import {
-  LayoutDashboard, ShoppingBag, Plus, ExternalLink, Trash2,
-  CheckCircle2, Clock, XCircle, Star, Eye, TrendingUp,
-  AlertCircle, Loader2, Settings, ChevronRight, Package,
-  Ticket, Link2, Copy, Check, DollarSign, Percent, Calendar,
-  Share2, ArrowUpRight, Sparkles, X,
-} from "lucide-react";
+  DashboardSquare01Icon as LayoutDashboard, ShoppingBag01Icon as ShoppingBag, Add01Icon as Plus,
+  ArrowUpRight01Icon as ExternalLink, Delete02Icon as Trash2, CheckmarkCircle02Icon as CheckCircle2,
+  Clock01Icon as Clock, CancelCircleIcon as XCircle, StarIcon as Star, EyeIcon as Eye,
+  ChartIncreaseIcon as TrendingUp, AlertCircleIcon as AlertCircle, Loading03Icon as Loader2,
+  Settings01Icon as Settings, ArrowRight01Icon as ChevronRight, PackageIcon as Package,
+  Ticket01Icon as Ticket, Link01Icon as Link2, Copy01Icon as Copy, Tick01Icon as Check,
+  DollarCircleIcon as DollarSign, PercentIcon as Percent, Calendar03Icon as Calendar,
+  Share01Icon as Share2, ArrowUpRight01Icon as ArrowUpRight, SparklesIcon as Sparkles, Cancel01Icon as X,
+} from "hugeicons-react";
+import "../marketplace/marketplace.css";
+import "./seller-dashboard.css";
+
+const subscribeToHydration = () => () => {};
+
+function SellerSkeleton() {
+  return <div className="mk-page sd-page"><div className="sd-loading" role="status" aria-label="Loading seller dashboard"><span className="sr-only">Loading seller dashboard…</span><i aria-hidden="true"/><i aria-hidden="true"/><i aria-hidden="true"/></div></div>;
+}
 
 /* ─── Types ─── */
 interface Listing {
@@ -123,7 +134,7 @@ function StripeCard({ status, onDisconnect }: { status: StripeStatus | null; onD
   if (!status) return <div className="bg-white rounded-2xl p-5 animate-pulse h-32 border border-slate-100" />;
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
+    <div className="sd-panel bg-white rounded-2xl border border-slate-100 overflow-hidden">
       <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-50">
         <div className="w-9 h-9 rounded-xl bg-[#6772e5]/10 flex items-center justify-center">
           <svg viewBox="0 0 24 24" className="w-5 h-5 fill-[#6772e5]">
@@ -148,7 +159,7 @@ function StripeCard({ status, onDisconnect }: { status: StripeStatus | null; onD
 
       <div className="p-5 space-y-4">
         {status.connected && status.accountDetails && (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="sd-stats grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
               { label: "Email",   value: status.accountDetails.email ?? "—" },
               { label: "Charges", value: status.accountDetails.chargesEnabled ? "Enabled" : "Disabled" },
@@ -207,7 +218,7 @@ function ListingRow({ l, onDelete }: { l: Listing; onDelete: (id: string) => voi
   const slugOrId = l.slug ?? l.id;
 
   return (
-    <div className="flex items-center gap-4 px-5 py-4 border-b border-slate-50 last:border-0 hover:bg-slate-50/60 transition-colors group">
+    <div className="sd-listing-row flex items-center gap-4 px-5 py-4 border-b border-slate-50 last:border-0 hover:bg-slate-50/60 transition-colors group">
       <div className="w-12 h-12 rounded-xl overflow-hidden bg-slate-100 shrink-0">
         {l.images?.[0]
           ? <img src={l.images[0]} alt={l.title} className="w-full h-full object-cover" />
@@ -256,7 +267,7 @@ function SellerDashboardInner() {
   const searchParams = useSearchParams();
   const stripeMsg = searchParams.get("stripe");
 
-  const [mounted,       setMounted]       = useState(false);
+  const mounted = useSyncExternalStore(subscribeToHydration, () => true, () => false);
   const [activeTab,     setActiveTab]     = useState<"dashboard" | "coupons" | "referrals">("dashboard");
   const [listings,      setListings]      = useState<Listing[]>([]);
   const [coupons,       setCoupons]       = useState<Coupon[]>([]);
@@ -284,7 +295,7 @@ function SellerDashboardInner() {
   const [creatingRef,     setCreatingRef]     = useState(false);
   const [refError,        setRefError]        = useState("");
 
-  useEffect(() => { setMounted(true); }, []);
+
 
   const ALLOWED = ["MARKETPLACE", "MARKETPLACE_PLUS", "ADMIN"];
   const canSell = user && (ALLOWED.includes(user.tier ?? "") || user.role === "ADMIN");
@@ -414,7 +425,7 @@ function SellerDashboardInner() {
   const rejected = listings.filter(l => l.status === "REJECTED").length;
   const totalViews = listings.reduce((a, l) => a + (l.viewCount ?? 0), 0);
 
-  if (!mounted) return <div className="min-h-screen bg-[#f4f6fb]" />;
+  if (!mounted) return <SellerSkeleton />;
 
   if (!user) {
     return (
@@ -450,39 +461,20 @@ function SellerDashboardInner() {
   const appUrl = typeof window !== "undefined" ? window.location.origin : "http://localhost:3000";
 
   return (
-    <div className="min-h-screen bg-[#f4f6fb] pt-5 pb-14">
-      <div className="max-w-[1320px] mx-auto px-4">
-        <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-6 items-start">
+    <div className="mk-page sd-page">
+      <div className="sd-container">
+        <div className="sd-layout">
 
           {/* ── Left Sidebar ── */}
-          <div className="hidden lg:block self-start sticky top-[90px] space-y-3">
-            {/* Profile */}
-            <div className="bg-white rounded-2xl overflow-hidden border border-slate-100">
-              <div className="h-24 relative">
-                {user.coverImage
-                  ? <div className="absolute inset-0 overflow-hidden"><img src={user.coverImage} alt="" className="w-full h-full object-cover" /></div>
-                  : <div className="absolute inset-0 bg-gradient-to-br from-[#0a1628] via-[#1a3a6b] to-[#0d2a50]">
-                      <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
-                    </div>
-                }
-                <div className="absolute -bottom-9 left-4">
-                  <div className="w-[72px] h-[72px] rounded-2xl border-[3px] border-white bg-[#0a1628] overflow-hidden flex items-center justify-center shadow-md">
-                    {user.image
-                      ? <img src={user.image} alt={user.name ?? ""} referrerPolicy="no-referrer" className="w-full h-full object-cover" />
-                      : <span className="text-white font-black text-2xl">{user.name?.[0]?.toUpperCase()}</span>}
-                  </div>
-                </div>
-              </div>
-              <div className="px-4 pt-12 pb-4 relative z-10">
-                <div className="font-black text-[#0a1628] text-base truncate">{user.name}</div>
-                <div className="text-xs text-slate-400 mt-0.5">{user.headline ?? user.tier + " plan"}</div>
-              </div>
-            </div>
-
+          <div className="sd-sidebar">
+            <Link href="/marketplace" className="sd-back"><ShoppingBag size={18} />Marketplace<ArrowUpRight size={16}/></Link>
+            <div className="sd-sidebar-title">Seller studio<span>Your business, in one place.</span></div>
+            <Link href="/profile" className="sd-account"><span>{user.image ? <img src={user.image} alt="" /> : user.name?.[0]}</span><div><strong>{user.name}</strong><small>View your profile</small></div></Link>
             {/* Nav */}
-            <div className="bg-white rounded-2xl border border-slate-100 p-2 space-y-1">
+            <div className="sd-navigation">
               <button
                 type="button"
+                aria-current={activeTab === "dashboard" ? "page" : undefined}
                 onClick={() => setActiveTab("dashboard")}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all text-left ${activeTab === "dashboard" ? "bg-[#0a1628] text-white shadow-sm" : "text-slate-600 hover:bg-slate-50"}`}
               >
@@ -491,6 +483,7 @@ function SellerDashboardInner() {
 
               <button
                 type="button"
+                aria-current={activeTab === "coupons" ? "page" : undefined}
                 onClick={() => setActiveTab("coupons")}
                 className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold transition-all text-left ${activeTab === "coupons" ? "bg-[#0a1628] text-white shadow-sm" : "text-slate-600 hover:bg-slate-50"}`}
               >
@@ -504,6 +497,7 @@ function SellerDashboardInner() {
 
               <button
                 type="button"
+                aria-current={activeTab === "referrals" ? "page" : undefined}
                 onClick={() => setActiveTab("referrals")}
                 className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold transition-all text-left ${activeTab === "referrals" ? "bg-[#0a1628] text-white shadow-sm" : "text-slate-600 hover:bg-slate-50"}`}
               >
@@ -530,16 +524,16 @@ function SellerDashboardInner() {
 
             {/* Create listing CTA */}
             <Link href="/marketplace/create"
-              className="flex items-center justify-center gap-2 bg-gradient-to-r from-[#d4a017] to-amber-500 text-white font-bold text-sm px-4 py-3 rounded-xl hover:opacity-90 transition-all w-full shadow-md shadow-amber-200/50">
+              className="mk-primary sd-create">
               <Plus className="w-4 h-4" /> Create Listing
             </Link>
           </div>
 
           {/* ── Main Content ── */}
-          <div className="space-y-5 min-w-0">
+          <div className="sd-main space-y-5">
 
             {/* Top Navigation Tabs (Mobile) */}
-            <div className="lg:hidden flex bg-white p-1.5 rounded-2xl border border-slate-100 overflow-x-auto gap-1">
+            <div className="sd-mobile-tabs lg:hidden flex bg-white p-1.5 rounded-2xl border border-slate-100 overflow-x-auto gap-1">
               {[
                 { id: "dashboard", label: "Dashboard", Icon: LayoutDashboard },
                 { id: "coupons",   label: "Coupons",   Icon: Ticket },
@@ -549,7 +543,7 @@ function SellerDashboardInner() {
                 return (
                   <button
                     key={tab.id}
-                    onClick={() => setActiveTab(tab.id as any)}
+                    onClick={() => setActiveTab(tab.id as typeof activeTab)}
                     className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
                       active ? "bg-[#0a1628] text-white shadow-sm" : "text-slate-600 hover:bg-slate-50"
                     }`}
@@ -563,8 +557,9 @@ function SellerDashboardInner() {
             {/* TAB 1: DASHBOARD OVERVIEW */}
             {activeTab === "dashboard" && (
               <div className="space-y-5">
-                <div className="flex items-center justify-between gap-3">
+                <div className="sd-heading flex items-center justify-between gap-3">
                   <div>
+                    <span className="sd-eyebrow">YOUR SELLER WORKSPACE</span>
                     <h1 className="text-2xl font-black text-[#0a1628]">Seller Dashboard</h1>
                     <p className="text-slate-400 text-sm mt-0.5">Manage your listings, payouts, and sales</p>
                   </div>
@@ -587,7 +582,7 @@ function SellerDashboardInner() {
                 )}
 
                 {/* Stats */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="sd-stats grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {[
                     { label: "Total Listings", value: listings.length, Icon: ShoppingBag,  color: "text-[#0a1628]", bg: "bg-slate-100" },
                     { label: "Approved",       value: approved,         Icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-100" },
@@ -598,7 +593,7 @@ function SellerDashboardInner() {
                       <div className={`w-8 h-8 rounded-xl ${s.bg} flex items-center justify-center mb-2`}>
                         <s.Icon className={`w-4 h-4 ${s.color}`} />
                       </div>
-                      <div className="text-2xl font-black text-[#0a1628]">{s.value}</div>
+                      <div className="text-2xl font-black text-[#0a1628]">{loading ? <span className="sd-loading-bar" aria-label="Loading"/> : s.value}</div>
                       <div className="text-[11px] text-slate-400 mt-0.5">{s.label}</div>
                     </div>
                   ))}
@@ -611,7 +606,7 @@ function SellerDashboardInner() {
                 }
 
                 {/* Listings */}
-                <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
+                <div className="sd-panel bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
                   <div className="flex items-center justify-between px-5 py-4 border-b border-slate-50">
                     <div>
                       <h2 className="font-black text-[#0a1628] text-sm">My Listings & Courses</h2>
@@ -646,9 +641,9 @@ function SellerDashboardInner() {
                       ))}
                     </div>
                   ) : listings.length === 0 ? (
-                    <div className="py-20 text-center">
+                    <div className="sd-empty">
                       <ShoppingBag className="w-12 h-12 text-slate-200 mx-auto mb-3" />
-                      <p className="font-bold text-slate-400">No listings yet</p>
+                      <p className="font-bold text-slate-400">Your next opportunity starts here</p>
                       <p className="text-slate-400 text-sm mt-1 mb-5">Create your first course, service, or product to start selling.</p>
                       <Link href="/marketplace/create"
                         className="inline-flex items-center gap-2 bg-[#0a1628] text-white font-bold text-sm px-6 py-3 rounded-xl hover:bg-[#1a3a6b] transition-all">
@@ -669,7 +664,7 @@ function SellerDashboardInner() {
             {/* TAB 2: COUPONS & PROMO CODES */}
             {activeTab === "coupons" && (
               <div className="space-y-5">
-                <div className="flex items-center justify-between gap-3">
+                <div className="sd-heading flex items-center justify-between gap-3">
                   <div>
                     <h1 className="text-2xl font-black text-[#0a1628]">Coupons & Discounts</h1>
                     <p className="text-slate-400 text-sm mt-0.5">Create custom discount promo codes for your listings and courses</p>
@@ -682,13 +677,13 @@ function SellerDashboardInner() {
                   </button>
                 </div>
 
-                <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
+                <div className="sd-panel bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
                   <div className="px-5 py-4 border-b border-slate-50 flex items-center justify-between">
                     <h2 className="font-black text-[#0a1628] text-sm">Active Coupons ({coupons.length})</h2>
                   </div>
 
                   {coupons.length === 0 ? (
-                    <div className="py-16 text-center px-4">
+                    <div className="sd-empty">
                       <Ticket className="w-12 h-12 text-slate-200 mx-auto mb-3" />
                       <p className="font-bold text-slate-700 text-sm">No coupons created yet</p>
                       <p className="text-slate-400 text-xs mt-1 mb-5">Create discount codes like 20% OFF or $50 OFF to share with your audience.</p>
@@ -760,7 +755,7 @@ function SellerDashboardInner() {
             {/* TAB 3: AFFILIATE & REFERRAL LINKS */}
             {activeTab === "referrals" && (
               <div className="space-y-5">
-                <div className="flex items-center justify-between gap-3">
+                <div className="sd-heading flex items-center justify-between gap-3">
                   <div>
                     <h1 className="text-2xl font-black text-[#0a1628]">Affiliate & Referral Links</h1>
                     <p className="text-slate-400 text-sm mt-0.5">Generate custom tracking links for partners and track sales & clicks</p>
@@ -773,13 +768,13 @@ function SellerDashboardInner() {
                   </button>
                 </div>
 
-                <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
+                <div className="sd-panel bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
                   <div className="px-5 py-4 border-b border-slate-50 flex items-center justify-between">
                     <h2 className="font-black text-[#0a1628] text-sm">Affiliate Links ({referrals.length})</h2>
                   </div>
 
                   {referrals.length === 0 ? (
-                    <div className="py-16 text-center px-4">
+                    <div className="sd-empty">
                       <Link2 className="w-12 h-12 text-slate-200 mx-auto mb-3" />
                       <p className="font-bold text-slate-700 text-sm">No affiliate tracking links generated</p>
                       <p className="text-slate-400 text-xs mt-1 mb-5">Create unique links like ?ref=PARTNER to share with influencers and affiliates.</p>
@@ -851,7 +846,7 @@ function SellerDashboardInner() {
       {/* ── CREATE COUPON MODAL ── */}
       {showCouponModal && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-150">
+          <div className="sd-modal bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center text-amber-700">
@@ -859,7 +854,7 @@ function SellerDashboardInner() {
                 </div>
                 <h3 className="text-lg font-black text-[#0a1628]">Create Coupon Code</h3>
               </div>
-              <button onClick={() => setShowCouponModal(false)} className="text-slate-400 hover:text-slate-600 p-1">
+              <button aria-label="Close coupon dialog" onClick={() => setShowCouponModal(false)} className="text-slate-400 hover:text-slate-600 p-1">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -888,7 +883,7 @@ function SellerDashboardInner() {
                   <label className="block text-[11px] font-black uppercase text-slate-500 mb-1">Discount Type</label>
                   <select
                     value={discountType}
-                    onChange={e => setDiscountType(e.target.value as any)}
+                    onChange={e => setDiscountType(e.target.value as "PERCENT" | "FIXED")}
                     className="w-full text-sm font-bold border border-slate-200 rounded-xl px-4 py-2.5 outline-none focus:border-[#0a1628]"
                   >
                     <option value="PERCENT">Percentage (% OFF)</option>
@@ -982,7 +977,7 @@ function SellerDashboardInner() {
                 </div>
                 <h3 className="text-lg font-black text-[#0a1628]">Generate Affiliate Link</h3>
               </div>
-              <button onClick={() => setShowRefModal(false)} className="text-slate-400 hover:text-slate-600 p-1">
+              <button aria-label="Close affiliate dialog" onClick={() => setShowRefModal(false)} className="text-slate-400 hover:text-slate-600 p-1">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -1048,7 +1043,7 @@ function SellerDashboardInner() {
 
 export default function SellerDashboardPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#f4f6fb]" />}>
+    <Suspense fallback={<SellerSkeleton />}>
       <SellerDashboardInner />
     </Suspense>
   );

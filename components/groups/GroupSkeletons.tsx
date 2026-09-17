@@ -14,10 +14,10 @@ function Person() {
 export function GroupsDirectorySkeleton({ view }: { view: "grid" | "list" }) {
   return <div role="status" aria-label="Loading groups" aria-busy="true">
     <span className="sr-only">Loading groups…</span>
-    <div className={view === "grid" ? "gp-grid" : "gs-list"} aria-hidden="true">
-      {[0, 1, 2, 3].map(i => <div key={i} className={`gp-card gs-card${view === "list" ? " gs-card-list" : ""}`}>
-        <div className="gs-card-cover gs-bone" />
-        <div className="gs-card-body"><Person /><Lines /><div className="gs-meta"><Bone width={90} height={12} /><Bone width={100} height={12} /></div><div className="gs-card-footer"><Bone width={110} height={14} /><Bone width={98} height={36} /></div></div>
+    <div className={view === "grid" ? "gf-discovery-grid" : "gs-list"} aria-hidden="true">
+      {[0, 1, 2, 3].map(i => <div key={i} className={`gf-discovery-card gs-directory-card${view === "list" ? " gs-card-list" : ""}`}>
+        <div className="gs-directory-cover gs-bone" />
+        <div className="gs-directory-body"><Bone width="78%" height={18} /><Bone width="60%" height={12} /><Bone width="40%" height={12} /><div className="gs-directory-description"><Bone /><Bone width="72%" /></div><Bone height={36} /></div>
       </div>)}
     </div>
   </div>;

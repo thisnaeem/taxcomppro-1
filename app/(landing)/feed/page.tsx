@@ -2,12 +2,13 @@
 
 import { Fragment, useEffect, useState, useCallback, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import FirstPostCelebration from "@/components/feed/FirstPostCelebration";
 import PostComposer from "@/components/feed/PostComposer";
 import PostCard, { type FeedPost } from "@/components/feed/PostCard";
 import FeedLeftPanel from "@/components/feed/FeedLeftPanel";
 import FeedRightPanel from "@/components/feed/FeedRightPanel";
 import ScheduledPostsPanel from "@/components/feed/ScheduledPostsPanel";
-import { PostSkeleton, LeftPanelSkeleton, RightPanelSkeleton, FeedPageSkeleton, ComposerSkeleton } from "@/components/feed/FeedSkeletons";
+import { PostSkeleton, LeftPanelSkeleton, ComposerSkeleton } from "@/components/feed/FeedSkeletons";
 import { RefreshIcon as RefreshCw, ComputerVideoIcon as MonitorPlay, ArrowUpRight01Icon as ExternalLink, SparklesIcon as Sparkles, Cancel01Icon as X } from "hugeicons-react";
 import Link from "next/link";
 import "@/components/feed/feed.css";
@@ -20,12 +21,16 @@ function FeedContent() {
   const dispatch = useAppDispatch();
   const sharedPost = searchParams.get("post");
   const isWelcome = searchParams.get("welcome") === "1" || searchParams.get("registered") === "1" || searchParams.get("upgraded") === "1";
+  const [celebrateFirstPost, setCelebrateFirstPost] = useState(false);
+  const closeCelebration = useCallback(() => setCelebrateFirstPost(false), []);
   const [showWelcomeBanner, setShowWelcomeBanner] = useState(isWelcome);
   const user = useAppSelector(s => s.auth.user);
   const [posts, setPosts]             = useState<FeedPost[]>([]);
   const [loading, setLoading]         = useState(true);
   const [feedError, setFeedError] = useState("");
   const [loadingMore, setLoadingMore] = useState(false);
+  const [moreError, setMoreError] = useState("");
+  const moreRequest = useRef<AbortController | null>(null);
   const [nextCursor, setNextCursor]   = useState<string | null>(null);
   const [hasNew, setHasNew]           = useState(false);
   const [centerAds, setCenterAds]     = useState<{id:string;title:string;description:string|null;imageUrl:string;linkUrl:string;user:{name:string}}[]>([]);
@@ -86,9 +91,9 @@ function FeedContent() {
   const pollingRef   = useRef<NodeJS.Timeout | null>(null);
   const latestIdRef  = useRef<string | null>(null);
 
-  const fetchFeed = useCallback(async (cursor?: string) => {
+  const fetchFeed = useCallback(async (cursor?: string, signal?: AbortSignal) => {
     const url = sharedPost ? `/api/feed?post=${encodeURIComponent(sharedPost)}` : cursor ? `/api/feed?cursor=${encodeURIComponent(cursor)}` : "/api/feed";
-    const res = await fetch(url);
+    const res = await fetch(url, { signal });
     if (!res.ok) throw new Error("Feed unavailable");
     const data = await res.json() as { posts?: FeedPost[]; nextCursor?: string | null };
     return {
@@ -130,6 +135,10 @@ function FeedContent() {
   }, [fetchFeed]);
 
   const refreshFeed = async () => {
+    moreRequest.current?.abort();
+    moreRequest.current = null;
+    setLoadingMore(false);
+    setMoreError("");
     setHasNew(false);
     setLoading(true);
     setFeedError("");
@@ -142,27 +151,45 @@ function FeedContent() {
     finally { setLoading(false); }
   };
 
-  // Infinite scroll (Facebook / LinkedIn style with threshold & rootMargin)
-  useEffect(() => {
-    if (!loaderRef.current || !nextCursor) return;
-    const obs = new IntersectionObserver(async ([entry]) => {
-      if (entry.isIntersecting && nextCursor && !loadingMore) {
-        setLoadingMore(true);
-        try {
-          const { posts: more, nextCursor: nc } = await fetchFeed(nextCursor);
-          setPosts(prev => [...prev, ...more]);
-          setNextCursor(nc);
-        } catch { /* ignore */ }
-        finally { setLoadingMore(false); }
+  const loadMore = useCallback(async () => {
+    if (!nextCursor || loading || sharedPost || moreRequest.current) return;
+    const controller = new AbortController();
+    moreRequest.current = controller;
+    setLoadingMore(true);
+    setMoreError("");
+    try {
+      const { posts: more, nextCursor: nc } = await fetchFeed(nextCursor, controller.signal);
+      if (controller.signal.aborted) return;
+      setPosts(previous => {
+        const existing = new Set(previous.map(post => post.id));
+        return [...previous, ...more.filter(post => !existing.has(post.id))];
+      });
+      setNextCursor(nc);
+    } catch {
+      if (!controller.signal.aborted) setMoreError("We couldn’t load more posts. Please try again.");
+    } finally {
+      if (moreRequest.current === controller) {
+        moreRequest.current = null;
+        setLoadingMore(false);
       }
-    }, { rootMargin: "300px" });
-    obs.observe(loaderRef.current);
-    return () => obs.disconnect();
-  }, [fetchFeed, nextCursor, loadingMore]);
+    }
+  }, [fetchFeed, nextCursor, loading, sharedPost]);
+
+  useEffect(() => () => { moreRequest.current?.abort(); }, []);
+
+  useEffect(() => {
+    if (!loaderRef.current || !nextCursor || loading || loadingMore || moreError || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) void loadMore();
+    }, { rootMargin: "400px" });
+    observer.observe(loaderRef.current);
+    return () => observer.disconnect();
+  }, [loadMore, nextCursor, loading, loadingMore, moreError]);
 
   const handlePostCreated = (post: FeedPost) => {
     setPosts(prev => [post, ...prev]);
     latestIdRef.current = post.id;
+    if (post.isFirstPost) setCelebrateFirstPost(true);
   };
 
   const handlePostUpdate = (updated: FeedPost) =>
@@ -172,8 +199,8 @@ function FeedContent() {
     setPosts(prev => prev.filter(p => p.id !== id));
 
   return (
-    <div className="feed-page">
-      <div className="feed-container">
+    <>
+        {celebrateFirstPost && <FirstPostCelebration onClose={closeCelebration} />}
         {/* Welcome Celebration Banner */}
         {showWelcomeBanner && (
           <div className="mb-6 bg-gradient-to-r from-amber-500 via-[#f0c040] to-amber-600 rounded-3xl p-5 sm:p-6 text-[#0a1628] shadow-xl flex items-center justify-between gap-4 animate-in fade-in slide-in-from-top-4 duration-300">
@@ -200,15 +227,6 @@ function FeedContent() {
           </div>
         )}
 
-        <div className="feed-layout">
-
-          {/* LEFT — profile panel */}
-          <div className="feed-sidebar">
-            {loading || !user ? <LeftPanelSkeleton /> : <FeedLeftPanel />}
-          </div>
-
-          {/* CENTER — feed */}
-          <div className="feed-center space-y-4">
             <header className="feed-heading"><div><p>Your professional community</p><h1>{sharedPost ? "Shared post" : "Your feed"}<span>.</span></h1></div><button type="button" onClick={refreshFeed} disabled={loading} aria-label="Refresh feed"><RefreshCw size={19} /></button></header>
             <nav className="feed-quick-links" aria-label="Explore your community">{sharedPost && <Link href="/feed">Back to your feed</Link>}<Link href="/groups">Groups</Link><Link href="/pro-networks">Pro Network</Link><Link href="/find-a-pro">Find a Pro</Link></nav>
             {!user && loading && <ComposerSkeleton />}
@@ -216,7 +234,7 @@ function FeedContent() {
             {user && <PostComposer onPostCreated={handlePostCreated} onScheduled={() => setScheduleRefreshKey(k => k + 1)} />}
 
             {/* Scheduled posts snippet — only for logged-in users */}
-            {user && <ScheduledPostsPanel refreshKey={scheduleRefreshKey} />}
+            {user && !loading && <ScheduledPostsPanel refreshKey={scheduleRefreshKey} />}
 
             {/* New posts banner */}
             {hasNew && (
@@ -264,7 +282,7 @@ function FeedContent() {
                             className="block relative rounded-2xl overflow-hidden group shadow-sm hover:shadow-lg transition-all">
                             {/* Image */}
                             <div className="w-full aspect-[16/9] overflow-hidden">
-                              <img src={ad.imageUrl} alt={ad.title}
+                              <img src={ad.imageUrl} alt={ad.title} loading="lazy" decoding="async"
                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                 onError={e => { (e.target as HTMLImageElement).style.display="none"; }} />
                             </div>
@@ -285,24 +303,19 @@ function FeedContent() {
                   );
                 })}
 
-                {/* Infinite Scroll Trigger & Skeleton loader on scroll */}
-                {nextCursor && (
-                  <div ref={loaderRef} className="pt-2">
-                    {loadingMore && <PostSkeleton />}
+                {nextCursor ? (
+                  <div ref={loaderRef} className="feed-load-more" aria-busy={loadingMore}>
+                    {loadingMore ? <div role="status" aria-label="Loading more posts"><PostSkeleton /></div> : <>
+                      {moreError && <p role="alert">{moreError}</p>}
+                      <button type="button" onClick={loadMore}>{moreError ? "Try again" : "Load more posts"}</button>
+                    </>}
                   </div>
+                ) : !sharedPost && (
+                  <div className="feed-end" role="status"><Sparkles size={28} /><h2>You’re all caught up</h2><p>You’ve reached the end of your feed. Check back for new conversations.</p><button type="button" onClick={() => window.scrollTo({ top: 0, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" })}>Back to top</button></div>
                 )}
               </>
             )}
-          </div>
-
-          {/* RIGHT — sidebar */}
-          <div className="feed-sidebar">
-            {loading ? <RightPanelSkeleton /> : <FeedRightPanel />}
-          </div>
-
-        </div>
-      </div>
-    </div>
+    </>
   );
 }
 
@@ -312,9 +325,16 @@ function FeedRoute() {
 }
 
 export default function FeedPage() {
+  const user = useAppSelector(state => state.auth.user);
   return (
-    <Suspense fallback={<FeedPageSkeleton />}>
-      <FeedRoute />
-    </Suspense>
+    <div className="feed-page"><div className="feed-container"><div className="feed-layout">
+      <aside className="feed-sidebar" aria-label="Your profile and navigation">{user ? <FeedLeftPanel /> : <LeftPanelSkeleton />}</aside>
+      <div className="feed-center space-y-4">
+        <Suspense fallback={<><ComposerSkeleton /><PostSkeleton /><PostSkeleton /></>}>
+          <FeedRoute />
+        </Suspense>
+      </div>
+      <aside className="feed-sidebar" aria-label="Community updates"><FeedRightPanel /></aside>
+    </div></div></div>
   );
 }

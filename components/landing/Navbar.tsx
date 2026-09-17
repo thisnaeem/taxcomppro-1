@@ -43,29 +43,6 @@ import { SiteSearch } from "./SiteSearch";
 
 const groups = [
   {
-    label: "Learn",
-    links: [
-      {
-        label: "Courses",
-        href: "/courses",
-        icon: BookOpen01Icon,
-        description: "Build your expertise",
-      },
-      {
-        label: "Toolkits",
-        href: "/toolkits",
-        icon: ComputerIcon,
-        description: "Resources for your practice",
-      },
-      {
-        label: "Tools",
-        href: "/tools",
-        icon: Rocket01Icon,
-        description: "Coming soon",
-      },
-    ],
-  },
-  {
     label: "Pros",
     links: [
       {
@@ -109,6 +86,7 @@ const groups = [
   {
     label: "More",
     links: [
+      { label: "Tools", href: "/tools", icon: Rocket01Icon, description: "Coming soon" },
       {
         label: "Pricing & plans",
         href: "/upgrade",
@@ -412,21 +390,12 @@ export default function Navbar() {
               <Home01Icon size={16} />
               Home
             </Link>
-            {groups.map((group, index) => (
+            <Link href="/courses" className="site-nav-link" aria-current={pathname.startsWith("/courses") ? "page" : undefined}>Courses</Link>
+            <Link href="/toolkits" className="site-nav-link" aria-current={pathname.startsWith("/toolkits") ? "page" : undefined}>Toolkits</Link>
+            <Link href="/marketplace" className="site-nav-link" aria-current={pathname.startsWith("/marketplace") ? "page" : undefined}><ShoppingBag01Icon size={16} />Marketplace</Link>
+            {groups.map((group) => (
               <div key={group.label} className="site-nav-group">
-                {index === 1 && (
-                  <Link
-                    href="/marketplace"
-                    className="site-nav-link"
-                    aria-current={
-                      pathname === "/marketplace" ? "page" : undefined
-                    }
-                  >
-                    <ShoppingBag01Icon size={16} />
-                    Marketplace
-                  </Link>
-                )}
-                <details className="site-disclosure">
+                <details className="site-disclosure site-mega-disclosure" name="main-navigation">
                   <summary
                     className={
                       group.links.some((link) => pathname.startsWith(link.href))
@@ -437,14 +406,14 @@ export default function Navbar() {
                     {group.label}
                     <ArrowDown01Icon size={13} />
                   </summary>
-                  <div className="site-dropdown">
+                  <div className="site-dropdown site-mega-menu">
+                    <div className="site-mega-directory">
                     <span className="site-dropdown-label">
                       {group.label === "Pros"
                         ? "YOUR PROFESSIONAL COMMUNITY"
-                        : group.label === "Learn"
-                          ? "KEEP MOVING FORWARD"
-                          : "MORE FROM TAXCOMPPRO"}
+                        : "MORE FROM TAXCOMPPRO"}
                     </span>
+                    <div className="site-mega-links">
                     {group.links.map((item) => (
                       <SiteLink
                         key={item.href}
@@ -465,6 +434,20 @@ export default function Navbar() {
                         <ArrowRight01Icon size={14} />
                       </SiteLink>
                     ))}
+                    </div>
+                    </div>
+                    <aside className="site-mega-feature">
+                      <span className="site-mega-eyebrow">{group.label === "Pros" ? "Make your next connection" : "Make more of your membership"}</span>
+                      {group.label === "Pros" ? <UserGroupIcon size={32} /> : <Rocket01Icon size={32} />}
+                      <h2>{group.label === "Pros" ? "Good company. Great possibilities." : "Your next step starts here."}</h2>
+                      <p>{group.label === "Pros" ? "Meet tax professionals, join a conversation, and build your circle." : "Explore membership options, find helpful resources, or talk to our team."}</p>
+                      <Link href={group.label === "Pros" ? "/find-a-pro" : "/upgrade"} onClick={closeMenus} className="site-mega-cta">
+                        {group.label === "Pros" ? "Find your people" : "Compare plans"}<ArrowRight01Icon size={18} />
+                      </Link>
+                      <Link href={group.label === "Pros" ? "/pro-talks" : "/contact"} onClick={closeMenus} className="site-mega-secondary">
+                        {group.label === "Pros" ? "Explore Pro Talks" : "Contact & support"}<ArrowRight01Icon size={16} />
+                      </Link>
+                    </aside>
                   </div>
                 </details>
               </div>
@@ -596,6 +579,8 @@ export default function Navbar() {
                 Home
                 <ArrowRight01Icon size={16} />
               </Link>
+              <Link href="/courses" onClick={closeMenus}><BookOpen01Icon size={20} />Courses<ArrowRight01Icon size={16} /></Link>
+              <Link href="/toolkits" onClick={closeMenus}><ComputerIcon size={20} />Toolkits<ArrowRight01Icon size={16} /></Link>
               <Link href="/marketplace" onClick={closeMenus}>
                 <ShoppingBag01Icon size={20} />
                 Marketplace

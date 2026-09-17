@@ -83,9 +83,9 @@ function Section({ title, icon: Icon, href, linkLabel, children }: {
 }) {
   return (
     <div className="feed-surface feed-discovery overflow-hidden">
-      <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-slate-50">
+      <div className="feed-discovery-header flex items-center justify-between px-4 pt-4 pb-3 border-b border-slate-50">
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-lg bg-[#0a1628]/8 flex items-center justify-center">
+          <div className="feed-discovery-icon w-6 h-6 rounded-lg bg-[#0a1628]/8 flex items-center justify-center">
             <Icon className="w-3.5 h-3.5 text-[#d4a017]" />
           </div>
           <h3 className="font-black text-[#0a1628] text-sm">{title}</h3>
@@ -132,9 +132,9 @@ function LiveProTalksSection() {
   const upcomingSpaces = spaces.filter(s => !s.isLive && s.scheduledAt);
 
   return (
-    <div className="bg-gradient-to-b from-[#0a1628] to-[#0f213d] text-white rounded-2xl overflow-hidden shadow-md border border-slate-800/80">
+    <div className="feed-surface feed-discovery feed-talks overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-white/10">
+      <div className="feed-discovery-header flex items-center justify-between px-4 pt-4 pb-3 border-b border-white/10">
         <div className="flex items-center gap-2">
           <div className="relative w-6 h-6 rounded-lg bg-emerald-500/20 flex items-center justify-center">
             {liveSpaces.length > 0 && (
@@ -200,7 +200,7 @@ function LiveProTalksSection() {
 
                   <Link
                     href={`/spaces/${space.id}`}
-                    className="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-[#060e1a] text-xs font-extrabold shadow-[0_0_12px_rgba(16,185,129,0.3)] transition-all group-hover:scale-105"
+                    className="feed-sidebar-button inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-[#060e1a] text-xs font-extrabold shadow-[0_0_12px_rgba(16,185,129,0.3)] transition-all group-hover:scale-105"
                   >
                     <Radio className="w-3 h-3" /> Join Talk
                   </Link>
@@ -233,15 +233,15 @@ function LiveProTalksSection() {
             ))}
           </div>
         ) : (
-          <div className="text-center py-3.5 px-2 bg-white/5 rounded-xl border border-white/5">
+          <div className="feed-talks-empty">
             <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center mx-auto mb-2 text-white/60">
               <Radio className="w-4 h-4" />
             </div>
-            <p className="text-xs font-bold text-white mb-0.5">No Live Talks Right Now</p>
+            <p className="text-xs font-bold text-white mb-0.5">Find your next conversation</p>
             <p className="text-[11px] text-white/50 mb-3">Join or host live audio & video sessions with fellow tax pros.</p>
             <Link
               href="/pro-talks"
-              className="inline-flex items-center justify-center gap-1.5 w-full py-2 rounded-lg bg-gradient-to-r from-[#f0c040] to-[#d4a017] text-[#0a1628] text-xs font-extrabold shadow-sm hover:opacity-95 transition-all"
+              className="feed-sidebar-button inline-flex items-center justify-center gap-1.5 w-full py-2 rounded-lg bg-gradient-to-r from-[#f0c040] to-[#d4a017] text-[#0a1628] text-xs font-extrabold shadow-sm hover:opacity-95 transition-all"
             >
               <Mic className="w-3.5 h-3.5" /> Explore Pro Talks
             </Link>
@@ -419,7 +419,7 @@ function TopProsSection() {
           ))
         ) : (
           pros.map((p, i) => (
-            <Link key={p.id} href={`/find-a-pro`}
+            <Link key={p.id} href={`/member/${p.id}`}
               className="flex items-center gap-2.5 group">
               <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${BG[i % 5]} flex items-center justify-center text-white font-black text-sm shrink-0 overflow-hidden ring-2 ring-white shadow-sm`}>
                 {p.image

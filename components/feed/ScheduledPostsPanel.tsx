@@ -46,7 +46,7 @@ export default function ScheduledPostsPanel({ refreshKey = 0 }: Props) {
     } finally { setDeleting(null); }
   };
 
-  if (!loading && posts.length === 0) return null;
+  if (posts.length === 0) return null;
 
   return (
     <div className="feed-surface feed-scheduled overflow-hidden">
@@ -130,4 +130,3 @@ export default function ScheduledPostsPanel({ refreshKey = 0 }: Props) {
     </div>
   );
 }
-

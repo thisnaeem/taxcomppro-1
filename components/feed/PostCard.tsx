@@ -24,6 +24,7 @@ interface Comment {
 }
 
 export interface FeedPost {
+  isFirstPost?: boolean;
   id: string; content: string; images: string[];
   videoUrl: string | null;
   likeCount: number; commentCount: number; createdAt: string;
@@ -163,14 +164,14 @@ export default function PostCard({ post, onUpdate, onDelete }: { post: FeedPost;
       {post.community && <Link href={`/groups/${post.community.slug}`} className="feed-post-group"><UserGroupIcon size={17} /><span>{post.community.name}</span>{post.community.isPublic ? <GlobeIcon size={14} /> : <LockIcon size={14} />}</Link>}
       {/* Header */}
       <div className="flex items-start gap-3 p-5 pb-3">
-        <div className="w-12 h-12 rounded-xl bg-[#0a1628] flex items-center justify-center overflow-hidden shrink-0">
+        <Link href={`/member/${post.author.id}`} aria-label={`View ${post.author.name}’s profile`} className="w-12 h-12 rounded-xl bg-[#0a1628] flex items-center justify-center overflow-hidden shrink-0">
           {post.author.image
-            ? <img src={post.author.image} alt={post.author.name} referrerPolicy="no-referrer" className="w-full h-full object-cover" />
+            ? <img loading="lazy" decoding="async" src={post.author.image} alt={post.author.name} referrerPolicy="no-referrer" className="w-full h-full object-cover" />
             : <span className="text-white font-bold text-base">{post.author.name?.[0]?.toUpperCase()}</span>}
-        </div>
+        </Link>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-bold text-[#0a1628] text-base">{post.author.name}</span>
+            <Link href={`/member/${post.author.id}`} className="feed-author-link font-bold text-[#0a1628] text-base">{post.author.name}</Link>
             {post.author.hasDueDiligenceBadge && (
               <DueDiligenceBadge size={22} />
             )}
@@ -247,7 +248,7 @@ export default function PostCard({ post, onUpdate, onDelete }: { post: FeedPost;
           {post.images.length === 1 && (
             <button onClick={() => setLightboxIdx(0)}
               className="block w-full rounded-xl overflow-hidden bg-slate-100 cursor-zoom-in">
-              <img src={post.images[0]} alt="Post image 1"
+              <img loading="lazy" decoding="async" src={post.images[0]} alt="Post image 1"
                 className="w-full object-cover max-h-[480px] hover:opacity-95 transition-opacity" />
             </button>
           )}
@@ -257,7 +258,7 @@ export default function PostCard({ post, onUpdate, onDelete }: { post: FeedPost;
               {post.images.map((url, i) => (
                 <button key={i} onClick={() => setLightboxIdx(i)}
                   className="block rounded-xl overflow-hidden bg-slate-100 cursor-zoom-in">
-                  <img src={url} alt={`Post image ${i + 1}`}
+                  <img loading="lazy" decoding="async" src={url} alt={`Post image ${i + 1}`}
                     className="w-full aspect-[3/4] object-cover hover:opacity-95 transition-opacity" />
                 </button>
               ))}
@@ -268,13 +269,13 @@ export default function PostCard({ post, onUpdate, onDelete }: { post: FeedPost;
             <div className="grid grid-cols-2 gap-1.5">
               <button onClick={() => setLightboxIdx(0)}
                 className="col-span-2 block rounded-xl overflow-hidden bg-slate-100 cursor-zoom-in">
-                <img src={post.images[0]} alt="Post image 1"
+                <img loading="lazy" decoding="async" src={post.images[0]} alt="Post image 1"
                   className="w-full h-60 object-cover hover:opacity-95 transition-opacity" />
               </button>
               {post.images.slice(1).map((url, i) => (
                 <button key={i + 1} onClick={() => setLightboxIdx(i + 1)}
                   className="block rounded-xl overflow-hidden bg-slate-100 cursor-zoom-in">
-                  <img src={url} alt={`Post image ${i + 2}`}
+                  <img loading="lazy" decoding="async" src={url} alt={`Post image ${i + 2}`}
                     className="w-full h-44 object-cover hover:opacity-95 transition-opacity" />
                 </button>
               ))}
@@ -286,7 +287,7 @@ export default function PostCard({ post, onUpdate, onDelete }: { post: FeedPost;
               {post.images.slice(0, 4).map((url, i) => (
                 <button key={i} onClick={() => setLightboxIdx(i)}
                   className="relative block rounded-xl overflow-hidden bg-slate-100 cursor-zoom-in">
-                  <img src={url} alt={`Post image ${i + 1}`}
+                  <img loading="lazy" decoding="async" src={url} alt={`Post image ${i + 1}`}
                     className="w-full h-44 object-cover hover:opacity-95 transition-opacity" />
                   {i === 3 && post.images.length > 4 && (
                     <div className="absolute inset-0 bg-black/55 flex items-center justify-center rounded-xl">
@@ -320,11 +321,11 @@ export default function PostCard({ post, onUpdate, onDelete }: { post: FeedPost;
                 <div key={c.id} className="flex items-start gap-2.5">
                   <div className="w-8 h-8 rounded-xl bg-[#0a1628] flex items-center justify-center overflow-hidden shrink-0">
                     {c.author.image
-                      ? <img src={c.author.image} alt={c.author.name} referrerPolicy="no-referrer" className="w-full h-full object-cover" />
+                      ? <img loading="lazy" decoding="async" src={c.author.image} alt={c.author.name} referrerPolicy="no-referrer" className="w-full h-full object-cover" />
                       : <span className="text-white text-xs font-bold">{c.author.name?.[0]?.toUpperCase()}</span>}
                   </div>
                   <div className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5">
-                    <div className="text-sm font-bold text-[#0a1628]">{c.author.name}</div>
+                    <Link href={`/member/${c.author.id}`} className="feed-author-link text-sm font-bold text-[#0a1628]">{c.author.name}</Link>
                     <div className="text-sm text-slate-600 mt-0.5 leading-relaxed">{c.content}</div>
                   </div>
                 </div>
@@ -344,7 +345,7 @@ export default function PostCard({ post, onUpdate, onDelete }: { post: FeedPost;
             <div className="flex items-center gap-2.5">
               <div className="w-7 h-7 rounded-xl bg-[#0a1628] flex items-center justify-center overflow-hidden shrink-0">
                 {user?.image
-                  ? <img src={user.image} alt={user.name ?? ""} referrerPolicy="no-referrer" className="w-full h-full object-cover" />
+                  ? <img loading="lazy" decoding="async" src={user.image} alt={user.name ?? ""} referrerPolicy="no-referrer" className="w-full h-full object-cover" />
                   : <span className="text-white text-[10px] font-bold">{user?.name?.[0]?.toUpperCase()}</span>}
               </div>
               <div className="flex-1 flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-full px-3 py-2">
@@ -444,7 +445,7 @@ export default function PostCard({ post, onUpdate, onDelete }: { post: FeedPost;
                   i === lightboxIdx ? "border-white scale-110" : "border-white/30 opacity-60 hover:opacity-90"
                 }`}
               >
-                <img src={url} alt="" className="w-full h-full object-cover" />
+                <img loading="lazy" decoding="async" src={url} alt="" className="w-full h-full object-cover" />
               </button>
             ))}
           </div>

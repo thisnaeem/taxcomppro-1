@@ -3,44 +3,29 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
-  FileText,
-  Tag,
-  DollarSign,
-  CheckCircle2,
-  Loader2,
-  ArrowLeft,
-  Upload,
-  X,
-  Clock,
-  Users,
-  Globe,
-  BookOpen,
-  Download,
-  Package,
-  Briefcase,
-  ShoppingBag,
-  Network,
-  GraduationCap,
-  Image as ImageIcon,
-  Plus,
-  Trash2,
-  ChevronDown,
-  ChevronRight,
-  Video,
-  HelpCircle,
-  ArrowRight,
-  Sparkles,
-} from "lucide-react";
+  File01Icon as FileText, Tag01Icon as Tag, DollarCircleIcon as DollarSign,
+  CheckmarkCircle02Icon as CheckCircle2, Loading03Icon as Loader2,
+  ArrowLeft01Icon as ArrowLeft, Upload01Icon as Upload, Cancel01Icon as X,
+  Clock01Icon as Clock, UserGroupIcon as Users, GlobeIcon as Globe,
+  BookOpen01Icon as BookOpen, Download01Icon as Download, PackageIcon as Package,
+  Briefcase01Icon as Briefcase, ShoppingBag01Icon as ShoppingBag, StructureCheckIcon as Network,
+  School01Icon as GraduationCap, Image01Icon as ImageIcon, Add01Icon as Plus,
+  Delete02Icon as Trash2, ArrowDown01Icon as ChevronDown, ArrowRight01Icon as ChevronRight,
+  Video02Icon as Video, HelpCircleIcon as HelpCircle, ArrowRight01Icon as ArrowRight,
+  SparklesIcon as Sparkles,
+} from "hugeicons-react";
+import "../marketplace.css";
+import "./create-listing.css";
 import Link from "next/link";
 import { useAppSelector } from "@/store/hooks";
 import RichTextEditor from "@/components/courses/RichTextEditor";
 
 /* ── Shared styles ── */
 const inp =
-  "w-full font-[inherit] text-sm px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:border-[#0a1628] dark:focus:border-amber-400 focus:ring-2 focus:ring-[#0a1628]/10 transition-all bg-white dark:bg-[#172135] text-[#0a1628] dark:text-white";
+  "lc-input w-full font-[inherit] text-sm px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:border-[#0a1628] dark:focus:border-amber-400 focus:ring-2 focus:ring-[#0a1628]/10 transition-all bg-white dark:bg-[#172135] text-[#0a1628] dark:text-white";
 const sel = `${inp}`;
 const lbl =
-  "block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1.5";
+  "lc-label block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1.5";
 
 /* ── Categories ── */
 const CATEGORIES = [
@@ -440,6 +425,7 @@ export default function CreateListingPage() {
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files?.length) return;
+    if (Array.from(files).some(file => !["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 10 * 1024 * 1024)) { setError("Choose a JPG, PNG, or WEBP image under 10 MB."); e.target.value = ""; return; }
     setUploadingImg(true);
     setError("");
     try {
@@ -634,6 +620,7 @@ export default function CreateListingPage() {
   // Submit General Listing (Service, Product, Network, or External Course)
   const handleSubmitListing = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading || uploadingImg) return;
     if (!title.trim() || !description.trim()) {
       setError("Title and description are required.");
       return;
@@ -892,17 +879,19 @@ export default function CreateListingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] dark:bg-[#0c1527] py-10 px-4 sm:px-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="mk-page lc-page">
+      <div className="lc-container">
         {/* Top bar */}
-        <div className="flex items-center gap-4 mb-8">
+        <div className="lc-heading">
           <Link
             href="/marketplace"
+            aria-label="Back to marketplace"
             className="p-2.5 rounded-full bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:text-[#0a1628] dark:hover:text-white transition-all shadow-sm"
           >
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
+            <span className="lc-eyebrow">YOUR MARKETPLACE · CREATE A LISTING</span>
             <h1 className="text-2xl sm:text-3xl font-black text-[#0a1628] dark:text-white">
               Create Marketplace Listing
             </h1>
@@ -913,21 +902,21 @@ export default function CreateListingPage() {
         </div>
 
         {error && (
-          <div className="mb-6 p-4 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 text-red-700 dark:text-red-300 text-sm font-semibold rounded-2xl flex items-center justify-between">
+          <div role="alert" className="mb-6 p-4 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 text-red-700 dark:text-red-300 text-sm font-semibold rounded-2xl flex items-center justify-between">
             <span>{error}</span>
-            <button onClick={() => setError("")}>
+            <button aria-label="Dismiss error" onClick={() => setError("")}>
               <X className="w-4 h-4" />
             </button>
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <div className="lc-layout">
           {/* ── LEFT COLUMN: CATEGORY SELECTOR + LIVE PREVIEW ── */}
-          <div className="lg:col-span-4 space-y-6">
+          <div className="lc-sidebar space-y-6">
             {/* Category Select Cards */}
             <div className="bg-white dark:bg-[#172135] rounded-3xl border border-slate-200/80 dark:border-slate-800 p-5 shadow-sm">
               <p className="text-xs font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-3.5">
-                SELECT CATEGORY
+                What are you offering?
               </p>
               <div className="space-y-2.5">
                 {CATEGORIES.map((cat) => {
@@ -937,11 +926,12 @@ export default function CreateListingPage() {
                     <button
                       key={cat.value}
                       type="button"
+                      aria-pressed={active}
                       onClick={() => {
-                        setCategory(cat.value as any);
+                        setCategory(cat.value as typeof category);
                         setError("");
                       }}
-                      className={`w-full text-left p-3.5 rounded-2xl border transition-all flex items-start gap-3.5 ${
+                      className={`lc-category w-full text-left p-3.5 rounded-2xl border transition-all flex items-start gap-3.5 ${
                         active
                           ? "bg-[#0a1628] dark:bg-amber-500/15 border-[#0a1628] dark:border-amber-400/50 shadow-md text-white dark:text-amber-300"
                           : "bg-slate-50/70 dark:bg-white/5 border-slate-200/70 dark:border-white/5 hover:border-slate-300 text-slate-700 dark:text-slate-300"
@@ -980,8 +970,8 @@ export default function CreateListingPage() {
             {/* LIVE PREVIEW CARD */}
             <div className="bg-white dark:bg-[#172135] rounded-3xl border border-slate-200/80 dark:border-slate-800 p-5 shadow-sm">
               <p className="text-xs font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-3.5 flex items-center justify-between">
-                <span>LIVE PREVIEW</span>
-                <span className="text-[10px] font-bold text-amber-500">Auto Updates</span>
+                <span>Listing preview</span>
+                <span className="text-[10px] font-bold text-amber-500">Live preview</span>
               </p>
 
               {/* If COURSE Preview */}
@@ -1143,7 +1133,7 @@ export default function CreateListingPage() {
           </div>
 
           {/* ── RIGHT COLUMN: FORM BASED ON CATEGORY ── */}
-          <div className="lg:col-span-8 space-y-6">
+          <div className="lc-editor space-y-6">
             {/* Course Delivery Mode Switcher (When 'COURSE' is selected) */}
             {category === "COURSE" && (
               <div className="bg-white dark:bg-[#172135] rounded-3xl border border-slate-200/80 dark:border-slate-800 p-5 shadow-sm space-y-3">
@@ -1793,12 +1783,13 @@ export default function CreateListingPage() {
               ════════════════════════════════════════════════════════════ */
               <form
                 onSubmit={handleSubmitListing}
-                className="bg-white dark:bg-[#172135] rounded-3xl border border-slate-200/80 dark:border-slate-800 p-6 sm:p-8 space-y-6 shadow-sm"
+                className="lc-form bg-white dark:bg-[#172135] rounded-3xl border border-slate-200/80 dark:border-slate-800 p-6 sm:p-8 space-y-6 shadow-sm"
               >
+                <div className="lc-section-heading"><span>01</span><div><h2>Make a great first impression</h2><p>Add a clear cover, a specific title, and what buyers can expect.</p></div></div>
                 {/* Banner image */}
                 <div>
                   <label className={lbl}>
-                    {category === "COURSE" ? "COURSE BANNER / COVER IMAGE" : "BANNER / COVER IMAGE"}
+                    {category === "COURSE" ? "Course cover image" : "Cover image"}
                   </label>
                   <input
                     ref={fileInputRef}
@@ -1812,14 +1803,17 @@ export default function CreateListingPage() {
                       <img src={images[0]} alt="Banner" className="w-full h-full object-cover" />
                       <button
                         type="button"
-                        onClick={() => setImages([])}
-                        className="absolute top-3 right-3 p-2 bg-red-500 text-white rounded-full shadow-md hover:bg-red-600 transition-all opacity-0 group-hover:opacity-100"
+                        aria-label="Remove cover image"
+                        onClick={() => { setImages([]); if (fileInputRef.current) fileInputRef.current.value = ""; }}
+                        className="absolute top-3 right-3 p-2 bg-red-500 text-white rounded-full shadow-md hover:bg-red-600 transition-all"
                       >
                         <X className="w-4 h-4" />
                       </button>
                     </div>
                   ) : (
-                    <div
+                    <button
+                      type="button"
+                      disabled={uploadingImg}
                       onClick={() => fileInputRef.current?.click()}
                       className="w-full h-40 border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-amber-400 rounded-2xl flex flex-col items-center justify-center p-6 cursor-pointer bg-slate-50/50 dark:bg-white/5 transition-all"
                     >
@@ -1836,14 +1830,14 @@ export default function CreateListingPage() {
                           </span>
                         </>
                       )}
-                    </div>
+                    </button>
                   )}
                 </div>
 
                 {/* Title */}
                 <div>
-                  <label className={lbl}>
-                    {category === "COURSE" ? "COURSE TITLE *" : "TITLE *"}
+                  <label htmlFor="listing-title" className={lbl}>
+                    {category === "COURSE" ? "Course title *" : "Title *"}
                   </label>
                   <input
                     className={inp}
@@ -1856,6 +1850,8 @@ export default function CreateListingPage() {
                         ? "e.g. IRS Practice & Procedure Masterclass 2026"
                         : "e.g. National Tax Practitioners Referral Circle"
                     }
+                    id="listing-title"
+                    required
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                   />
@@ -1863,11 +1859,13 @@ export default function CreateListingPage() {
 
                 {/* Description */}
                 <div>
-                  <label className={lbl}>
-                    {category === "COURSE" ? "COURSE OVERVIEW & DESCRIPTION *" : "DESCRIPTION *"}
+                  <label htmlFor="listing-description" className={lbl}>
+                    {category === "COURSE" ? "Course description *" : "Description *"}
                   </label>
                   <textarea
-                    rows={4}
+                    id="listing-description"
+                    required
+                    rows={5}
                     className={inp}
                     placeholder={
                       category === "COURSE"
@@ -1879,13 +1877,15 @@ export default function CreateListingPage() {
                   />
                 </div>
 
+                <div className="lc-section-heading lc-divider"><span>02</span><div><h2>The details that matter</h2><p>Set your price and help people understand how your offer works.</p></div></div>
                 {/* Price & External Link */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className={lbl}>PRICE (USD)</label>
+                    <label htmlFor="listing-price" className={lbl}>Price (USD)</label>
                     <div className="relative">
                       <DollarSign className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                       <input
+                        id="listing-price"
                         type="number"
                         min={0}
                         step="0.01"
@@ -1897,8 +1897,8 @@ export default function CreateListingPage() {
                     </div>
                   </div>
                   <div>
-                    <label className={lbl}>
-                      {category === "COURSE" ? "EXTERNAL COURSE / ENROLLMENT LINK *" : "ACTION / EXTERNAL LINK"}
+                    <label htmlFor="listing-url" className={lbl}>
+                      {category === "COURSE" ? "Course enrollment link *" : "Booking or external link"}
                     </label>
                     <input
                       className={inp}
@@ -1907,6 +1907,8 @@ export default function CreateListingPage() {
                           ? "https://yourdomain.com/courses/tax-masterclass or Udemy URL"
                           : "https://example.com/booking or contact"
                       }
+                      id="listing-url"
+                      type="url"
                       value={externalUrl}
                       onChange={(e) => setExternalUrl(e.target.value)}
                     />
@@ -1919,13 +1921,15 @@ export default function CreateListingPage() {
                 {category === "NETWORK" && <NetworkFields meta={meta} set={setMetaField} />}
                 {category === "COURSE" && <CourseExternalFields meta={meta} set={setMetaField} />}
 
+                <div className="lc-section-heading lc-divider"><span>03</span><div><h2>Help the right people find you</h2><p>Add up to eight relevant topics or specialties.</p></div></div>
                 {/* Tags */}
                 <div>
-                  <label className={lbl}>TAGS (UP TO 8)</label>
+                  <label htmlFor="listing-tags" className={lbl}>Tags ({tags.length}/8)</label>
                   <div className="flex gap-2 mb-2">
                     <input
                       className={inp}
                       placeholder="Add tag and press Enter…"
+                      id="listing-tags"
                       value={tagInput}
                       onChange={(e) => setTagInput(e.target.value)}
                       onKeyDown={(e) => {
@@ -1951,7 +1955,7 @@ export default function CreateListingPage() {
                           className="inline-flex items-center gap-1 text-xs font-bold bg-amber-50 dark:bg-amber-400/10 text-amber-800 dark:text-amber-300 px-3 py-1 rounded-full border border-amber-200 dark:border-amber-400/20"
                         >
                           #{t}
-                          <button type="button" onClick={() => removeTag(t)}>
+                          <button type="button" aria-label={`Remove tag ${t}`} onClick={() => removeTag(t)}>
                             <X className="w-3 h-3" />
                           </button>
                         </span>
@@ -1960,10 +1964,10 @@ export default function CreateListingPage() {
                   )}
                 </div>
 
-                <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+                <div className="lc-publish-bar"><p>Ready to share your expertise?<span>Review your preview before publishing.</span></p>
                   <button
                     type="submit"
-                    disabled={loading}
+                    disabled={loading || uploadingImg}
                     className="px-8 py-3.5 rounded-xl bg-gradient-to-r from-[#f0c040] to-[#d4a017] text-[#0a1628] font-black text-sm hover:shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
                   >
                     {loading ? (

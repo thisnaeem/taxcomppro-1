@@ -187,21 +187,22 @@ export default function FeedLeftPanel() {
             <div className="mt-2.5 space-y-1">
               {user.headline
                 ? <p className="text-sm font-semibold text-slate-600 leading-snug">{user.headline}</p>
-                : <p className="text-sm text-slate-400 italic">No headline — click ✎ to add one</p>}
+                : <p className="text-sm text-slate-400 italic">Add a headline to introduce yourself.</p>}
               {user.bio && <p className="text-sm text-slate-500 leading-relaxed line-clamp-3">{user.bio}</p>}
             </div>
           )}
 
           {/* View profile link */}
           <Link href="/profile"
-            className="mt-3 block text-center text-xs font-bold text-[#0a1628] border border-[#0a1628]/20 rounded-lg py-2 hover:bg-[#0a1628] hover:text-white transition-all">
-            View & Edit Full Profile
+            className="feed-sidebar-button feed-profile-button mt-3 block text-center text-xs font-bold text-[#0a1628] border border-[#0a1628]/20 rounded-lg py-2 hover:bg-[#0a1628] hover:text-white transition-all">
+            View & edit profile
           </Link>
         </div>
       </div>
 
       {/* ── Navigation links ── */}
-      <div className="feed-surface feed-navigation p-3">
+      <nav aria-label="Your account" className="feed-surface feed-navigation p-3">
+        <p className="feed-sidebar-label">Your workspace</p>
         <div className="space-y-0.5">
           {[
             { icon: Home01Icon,           label: "Feed",                    href: "/feed" },
@@ -239,15 +240,15 @@ export default function FeedLeftPanel() {
             <ExternalLink className="w-3.5 h-3.5 ml-auto opacity-40" />
           </a>
         </div>
-      </div>
+      </nav>
 
       {/* ── Upgrade promo (free users only) ── */}
       {!canSell && (
-        <div className="bg-gradient-to-br from-[#0a1628] to-[#1a3a6b] rounded-2xl p-4 text-white">
+        <div className="feed-upgrade bg-gradient-to-br from-[#0a1628] to-[#1a3a6b] rounded-2xl p-4 text-white">
           <div className="text-xs font-black uppercase tracking-widest text-[#f0c040] mb-1">Go Pro</div>
           <div className="text-sm font-bold leading-snug mb-2">Unlock marketplace selling & premium courses</div>
           <Link href="/upgrade"
-            className="block text-center text-xs font-bold bg-[#f0c040] text-[#0a1628] rounded-lg py-2 hover:bg-[#d4a017] transition-all">
+            className="feed-sidebar-button block text-center text-xs font-bold bg-[#f0c040] text-[#0a1628] rounded-lg py-2 hover:bg-[#d4a017] transition-all">
             Upgrade Now
           </Link>
         </div>

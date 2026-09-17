@@ -208,7 +208,7 @@ export default function FeedVideoPlayer({ src, poster, className = "" }: Props) 
         src={videoSrc}
         poster={computedPoster}
         playsInline
-        preload="metadata"
+        preload="none"
         disablePictureInPicture
         controlsList="nodownload nofullscreen noremoteplayback"
         onContextMenu={(e) => e.preventDefault()}
@@ -327,4 +327,3 @@ export default function FeedVideoPlayer({ src, poster, className = "" }: Props) 
     </div>
   );
 }
-
