@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { networkAccessWhere } from "@/lib/networkAccess";
 import { auth } from "@/lib/auth";
 
 // GET /api/pro-networks - List and filter discoverable networks
@@ -29,16 +30,15 @@ export async function GET(req: NextRequest) {
       where.category = category;
     }
 
+    if (filter !== "all" && !session?.user?.id) return NextResponse.json({ networks: [] });
     if (session?.user?.id) {
       const userId = session.user.id;
       if (filter === "mine") {
-        where.ownerId = userId;
+        delete where.isPublished;
+        where.AND = [{ OR: [{ ownerId: userId }, { members: { some: networkAccessWhere(userId) } }] }];
       } else if (filter === "joined") {
         where.members = {
-          some: {
-            userId,
-            status: "ACTIVE",
-          },
+          some: networkAccessWhere(userId),
         };
       } else if (filter === "following") {
         where.followers = {
@@ -79,7 +79,6 @@ export async function GET(req: NextRequest) {
           },
         },
       },
-      take: 50,
     });
 
     // Check current user's membership and follow status for each network
@@ -89,10 +88,7 @@ export async function GET(req: NextRequest) {
     if (session?.user?.id) {
       const [members, follows] = await Promise.all([
         prisma.proNetworkMember.findMany({
-          where: {
-            userId: session.user.id,
-            status: "ACTIVE",
-          },
+          where: networkAccessWhere(session.user.id),
           select: { networkId: true },
         }),
         prisma.proNetworkFollower.findMany({
@@ -136,6 +132,7 @@ export async function POST(req: NextRequest) {
       coverImage,
       logoImage,
       monthlyPrice,
+      accentColor,
       rules,
       welcomeMessage,
       previewContent,
@@ -159,6 +156,9 @@ export async function POST(req: NextRequest) {
     if (!name || !name.trim()) {
       return NextResponse.json({ error: "Network name is required" }, { status: 400 });
     }
+
+    if (accentColor !== undefined && (typeof accentColor !== "string" || !/^#[0-9a-fA-F]{6}$/.test(accentColor))) return NextResponse.json({ error: "Choose a valid accent color" }, { status: 400 });
+    if (monthlyPrice !== undefined && (!Number.isFinite(Number(monthlyPrice)) || Number(monthlyPrice) < 0 || Number(monthlyPrice) > 999999)) return NextResponse.json({ error: "Enter a valid non-negative monthly price" }, { status: 400 });
 
     // Generate unique slug
     let baseSlug = name
@@ -195,7 +195,8 @@ export async function POST(req: NextRequest) {
         category: category || "General",
         coverImage: coverImage || null,
         logoImage: logoImage || null,
-        monthlyPrice: price,
+        monthlyPrice: Math.round(price * 100) / 100,
+        accentColor: accentColor || "#e8c449",
         rules: rules?.trim() || null,
         welcomeMessage: welcomeMessage?.trim() || null,
         previewContent: previewContent?.trim() || null,

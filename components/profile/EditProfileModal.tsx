@@ -2,28 +2,33 @@
 
 import React, { useState } from "react";
 import {
-  X,
-  Loader2,
-  Check,
-  User,
-  ShieldCheck,
-  Briefcase,
-  Mic,
-  Share2,
-  Image as ImageIcon,
-  Sparkles,
-  MapPin,
-  Globe,
-  Award,
-} from "lucide-react";
+  Cancel01Icon as X,
+  Loading03Icon as Loader2,
+  Tick02Icon as Check,
+  UserIcon as User,
+  Shield01Icon as ShieldCheck,
+  Briefcase01Icon as Briefcase,
+  Mic01Icon as Mic,
+  Share08Icon as Share2,
+  Image01Icon as ImageIcon,
+  SparklesIcon as Sparkles,
+  Location01Icon as MapPin,
+  Globe02Icon as Globe,
+  Award01Icon as Award
+} from "hugeicons-react";
 import { Linkedin02Icon, NewTwitterIcon } from "hugeicons-react";
+import { PROFESSIONAL_TITLES } from "@/lib/professionalTitles";
+import "./profile-ui.css";
 import ImageUpload from "@/components/profile/ImageUpload";
 import ServiceEditor from "@/components/profile/ServiceEditor";
 import { VoiceMemoEditor } from "@/components/profile/VoiceMemo";
 import MediaGallery from "@/components/profile/MediaGallery";
 import ConnectCardManager from "@/components/profile/ConnectCardManager";
 
+export type ProfileEditTab = "basic" | "credentials" | "expertise" | "services" | "voice" | "social" | "media" | "card";
+
 export interface ProfileFormData {
+  professionalTitle?: string;
   name: string;
   headline: string;
   bio: string;
@@ -58,6 +63,7 @@ interface EditProfileModalProps {
   userId: string;
   role: string;
   initialServices?: Service[];
+  initialTab?: ProfileEditTab;
   onSaveSuccess: (updated: ProfileFormData) => void;
 }
 
@@ -91,11 +97,12 @@ export default function EditProfileModal({
   userId,
   role,
   initialServices = [],
+  initialTab = "basic",
   onSaveSuccess,
 }: EditProfileModalProps) {
   const [activeTab, setActiveTab] = useState<
     "basic" | "credentials" | "expertise" | "services" | "voice" | "social" | "media" | "card"
-  >("basic");
+  >(initialTab);
 
   const [form, setForm] = useState<ProfileFormData>(initialData);
   const [specialtyInput, setSpecialtyInput] = useState("");
@@ -103,6 +110,7 @@ export default function EditProfileModal({
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [coverUploading, setCoverUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
   const [saveSuccess, setSaveSuccess] = useState(false);
 
   if (!isOpen) return null;
@@ -157,6 +165,7 @@ export default function EditProfileModal({
 
   const handleSave = async () => {
     setSaving(true);
+    setSaveError("");
     try {
       const res = await fetch("/api/user/profile", {
         method: "PATCH",
@@ -170,13 +179,18 @@ export default function EditProfileModal({
       if (res.ok) {
         setSaveSuccess(true);
         onSaveSuccess(form);
+        window.dispatchEvent(new Event("profile-updated"));
         setTimeout(() => {
           setSaveSuccess(false);
           onClose();
         }, 800);
+      } else {
+        const data = await res.json();
+        setSaveError(data.error || "Could not save your profile. Please try again.");
       }
     } catch (err) {
       console.error(err);
+      setSaveError("Could not save your profile. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -259,6 +273,7 @@ export default function EditProfileModal({
         {/* Content Body */}
         <div className="p-6 overflow-y-auto flex-1 space-y-6">
           {/* TAB 1: BASIC INFO */}
+          {saveError && <p role="alert" className="mb-4 text-red-500">{saveError}</p>}
           {activeTab === "basic" && (
             <div className="space-y-5">
               {/* Photo & Banner row */}
@@ -323,6 +338,14 @@ export default function EditProfileModal({
                     />
                   </div>
                 </div>
+              </div>
+
+              <div>
+                <label htmlFor="profile-professional-title" className="block text-sm font-semibold mb-2">Professional title / role</label>
+                <select id="profile-professional-title" value={form.professionalTitle || ""} onChange={e => handleField("professionalTitle", e.target.value)} className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-3 text-sm">
+                  <option value="">Select your professional title</option>
+                  {PROFESSIONAL_TITLES.map(title => <option key={title} value={title}>{title}</option>)}
+                </select>
               </div>
 
               <div className="grid sm:grid-cols-2 gap-4">

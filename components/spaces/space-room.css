@@ -1042,3 +1042,16 @@
     scroll-behavior: auto !important;
   }
 }
+/* Keep the room styling; only the shared-media viewport expands. */
+.sr-screen > .sr-screen-media { position:relative; padding:0; background:#000; height:55vh; min-height:180px; }
+.sr-screen-media > video { position:absolute; inset:0; display:block; width:100% !important; height:100% !important; max-height:none !important; object-fit:contain; }
+.sr-screen-toolbar { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:12px 18px; background:#202b22; color:#dcfce7; border-bottom:1px solid #344838; flex-shrink:0; }
+.sr-screen-toolbar > div { display:flex; align-items:center; gap:8px; min-width:0; font-size:12px; font-weight:600; }
+.sr-screen-toolbar span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.sr-screen-toolbar svg { flex-shrink:0; }
+.sr-screen-toolbar button { display:grid; place-items:center; width:36px; height:36px; flex-shrink:0; border:1px solid #ffffff25; border-radius:9px; background:#ffffff12; color:white; cursor:pointer; }
+.sr-screen.sr-screen-fullscreen,.sr-screen:fullscreen { position:fixed; inset:0; z-index:1000; width:100vw; height:100dvh; max-width:none; max-height:none; margin:0; border:0; border-radius:0; display:flex; flex-direction:column; }
+.sr-screen.sr-screen-fullscreen > .sr-screen-media,.sr-screen:fullscreen > .sr-screen-media { flex:1; height:auto; min-height:0; width:100%; padding:0; }
+.sr-audience-grid > div > .sr-audience-hand { position:absolute; top:-6px; right:calc(50% - 32px); display:flex; align-items:center; justify-content:center; width:27px; height:27px; max-width:none; padding:0; background:#fcd34d; border:3px solid #172219; border-radius:50%; color:#172219; font-size:17px; line-height:1; overflow:visible; z-index:5; }
+.sr-raise-hand[aria-pressed="true"] { background:#fcd34d30; outline:2px solid #fcd34d; }
+@media(max-width:640px) { .sr-screen > .sr-screen-media { height:40vh; } }

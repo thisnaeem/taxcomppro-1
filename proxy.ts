@@ -28,6 +28,7 @@ const PUBLIC_PAGES = new Set([
 
 // Prefix-based public paths (any sub-path is also public)
 const PUBLIC_PREFIXES = [
+  "/member/",
   "/courses/",
   "/toolkits/",
   "/tools/",

@@ -27,6 +27,8 @@ export async function GET(req: NextRequest) {
       where: { id: session.user.id },
       select: {
         id: true,
+        profileSlug: true,
+        professionalTitle: true,
         name: true,
         email: true,
         phone: true,

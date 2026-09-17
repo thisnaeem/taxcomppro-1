@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { proTalkPublishPermissions } from "@/lib/proTalkPermissions";
 import { canAccessSpace } from "@/lib/spaceAccess";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -30,7 +31,7 @@ export async function POST(req: NextRequest, { params }: Params) {
       image: session.user.image ?? null,
       isHost,
       isCoHost,
-      role: isHost ? "HOST" : isCoHost ? "CO_HOST" : session.user.role,
+      role: isHost ? "HOST" : isCoHost ? "CO_HOST" : "ATTENDEE",
       tier: (session.user as { tier?: string }).tier ?? "FREE",
     }),
   });
@@ -38,7 +39,8 @@ export async function POST(req: NextRequest, { params }: Params) {
   token.addGrant({
     roomJoin: true,
     room: space.roomName,
-    canPublish: isHost || isCoHost,
+    ...proTalkPublishPermissions(isHost || isCoHost),
+    canUpdateOwnMetadata: false,
     canPublishData: true,
     canSubscribe: true,
     roomAdmin: isHost,

@@ -22,7 +22,16 @@ export async function GET(req: NextRequest) {
     orderBy: [{ isFeatured: "desc" }, { createdAt: "desc" }],
   });
 
-  return NextResponse.json(listings);
+  const networks = !category || category === "ALL" || category === "NETWORK" ? await prisma.proNetwork.findMany({
+    where: { isPublished: true, ...(search ? { OR: [{name: {contains: search, mode: "insensitive"}}, {description: {contains: search, mode: "insensitive"}}] } : {}) },
+    include: {owner: {select: {id: true, name: true, image: true}}}, orderBy: {createdAt: "desc"},
+  }) : [];
+  return NextResponse.json([...listings, ...networks.map(n => ({
+    id: "network-" + n.id, slug: n.slug, href: "/pro-networks/" + n.slug, title: n.name,
+    description: n.tagline || n.description, category: "NETWORK", price: n.monthlyPrice,
+    billingPeriod: "month", tags: [n.category], images: n.coverImage ? [n.coverImage] : n.logoImage ? [n.logoImage] : [],
+    isFeatured: false, viewCount: 0, createdAt: n.createdAt, user: n.owner,
+  }))]);
 }
 
 export async function POST(req: NextRequest) {

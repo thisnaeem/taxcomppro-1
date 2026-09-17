@@ -32,9 +32,9 @@ export async function GET(req: NextRequest) {
     take: postId ? 1 : take + 1,
     ...(!postId && cursor ? { skip: 1, cursor: { id: cursor } } : {}),
     include: {
-      author: { select: { id: true, name: true, image: true, headline: true, role: true, tier: true } },
+      author: { select: { id: true, profileSlug: true, name: true, image: true, headline: true, role: true, tier: true } },
       comments: {
-        include: { author: { select: { id: true, name: true, image: true } } },
+        include: { author: { select: { id: true, profileSlug: true, name: true, image: true } } },
         orderBy: { createdAt: "asc" as const },
         take: 3,
       },
@@ -120,9 +120,9 @@ export async function POST(req: NextRequest) {
         authorId:    session.user.id,
       },
       include: {
-        author: { select: { id: true, name: true, image: true, headline: true, role: true, tier: true } },
+        author: { select: { id: true, profileSlug: true, name: true, image: true, headline: true, role: true, tier: true } },
         comments: {
-          include: { author: { select: { id: true, name: true, image: true } } },
+          include: { author: { select: { id: true, profileSlug: true, name: true, image: true } } },
           orderBy: { createdAt: "asc" as const },
           take: 3,
         },

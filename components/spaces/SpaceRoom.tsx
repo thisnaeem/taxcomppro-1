@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
+import ScreenShareView from "./ScreenShareView";
+import { toggleProTalkScreenShare } from "@/lib/proTalkScreenShare";
 import { useRouter } from "next/navigation";
 import {
   LiveKitRoom,
@@ -36,8 +38,6 @@ import {
   Users,
   Monitor,
   MonitorOff,
-  Maximize2,
-  Minimize2,
   Copy,
   Check,
   Sparkles,
@@ -688,6 +688,7 @@ function RoomInner({ space, isAdmin, userId, onEnd, ending }: Props) {
   // Raised hands map: identity -> name
   const [raised, setRaised] = useState<Map<string, string>>(new Map());
   const [myHandUp, setMyHandUp] = useState(false);
+  const myHandRef = useRef(false);
 
   // Reporting modal
   const [reportTarget, setReportTarget] = useState<{
@@ -704,12 +705,11 @@ function RoomInner({ space, isAdmin, userId, onEnd, ending }: Props) {
 
   // Toasts
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [inviteToken, setInviteToken] = useState(space.shareToken);
   const [copied, setCopied] = useState(false);
   const [visibility, setVisibility] = useState(space.visibility || "PUBLIC");
   const [visibilityPending, setVisibilityPending] = useState(false);
 
-  const screenContainerRef = useRef<HTMLDivElement>(null);
   const discussionEndRef = useRef<HTMLDivElement>(null);
 
   const isHost =
@@ -733,10 +733,10 @@ function RoomInner({ space, isAdmin, userId, onEnd, ending }: Props) {
     (payload: object) => {
       try {
         if (room.state === ConnectionState.Connected && room.localParticipant) {
-          room.localParticipant.publishData(
+          void room.localParticipant.publishData(
             enc.encode(JSON.stringify(payload)),
             { reliable: true },
-          );
+          ).catch(error => console.debug("[ProTalk] DataChannel skipped:", error));
         }
       } catch (err) {
         console.debug("[ProTalk] DataChannel skipped:", err);
@@ -747,18 +747,18 @@ function RoomInner({ space, isAdmin, userId, onEnd, ending }: Props) {
 
   // Copy shareable link
   const copyShareLink = useCallback(() => {
-    const url = space.shareToken
-      ? `${window.location.origin}/pro-talks/invite/${space.shareToken}`
+    const url = inviteToken
+      ? `${window.location.origin}/pro-talks/invite/${inviteToken}`
       : window.location.href;
     navigator.clipboard.writeText(url).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2500);
     });
-  }, [space.shareToken]);
+  }, [inviteToken]);
 
   // Screen and Camera tracks
   const screenTracks = useTracks([Track.Source.ScreenShare], {
-    onlySubscribed: false,
+    onlySubscribed: true,
   });
   const cameraTracks = useTracks([Track.Source.Camera], {
     onlySubscribed: false,
@@ -769,10 +769,7 @@ function RoomInner({ space, isAdmin, userId, onEnd, ending }: Props) {
     sharingBusy.current = true;
     setSharingPending(true);
     try {
-      // Read the participant's current publication state, including browser Stop Sharing.
-      await localParticipant.setScreenShareEnabled(
-        !localParticipant.isScreenShareEnabled,
-      );
+      await toggleProTalkScreenShare(localParticipant);
     } catch (error) {
       if (!(error instanceof DOMException && error.name === "NotAllowedError"))
         showToast("Screen sharing could not start. Please try again.");
@@ -795,25 +792,6 @@ function RoomInner({ space, isAdmin, userId, onEnd, ending }: Props) {
     }
   }, [isApprovedSpeaker, isCameraEnabled, localParticipant, showToast]);
 
-  const toggleFullscreen = useCallback(async () => {
-    if (!screenContainerRef.current) return;
-    if (!document.fullscreenElement) {
-      try {
-        await screenContainerRef.current.requestFullscreen();
-      } catch {
-        showToast("Your browser could not enter fullscreen.");
-      }
-    } else {
-      await document.exitFullscreen();
-    }
-  }, [showToast]);
-
-  useEffect(() => {
-    const handler = () => setIsFullscreen(!!document.fullscreenElement);
-    document.addEventListener("fullscreenchange", handler);
-    return () => document.removeEventListener("fullscreenchange", handler);
-  }, []);
-
   // ── Sync Speaker, Co-Host & Room State Broadcast ───────────────────────────
   const broadcastSync = useCallback(() => {
     safePublishData({
@@ -821,8 +799,9 @@ function RoomInner({ space, isAdmin, userId, onEnd, ending }: Props) {
       raisedHands: Array.from(raised.entries()),
       reactionsEnabled,
       discussionEnabled,
+      visibility,
     });
-  }, [safePublishData, reactionsEnabled, discussionEnabled, raised]);
+  }, [safePublishData, reactionsEnabled, discussionEnabled, raised, visibility]);
 
   const updateStage = useCallback(
     async (identity: string, action: "speaker" | "audience" | "cohost") => {
@@ -1152,7 +1131,8 @@ function RoomInner({ space, isAdmin, userId, onEnd, ending }: Props) {
         } else if (msgType === "hand") {
           const ident = sender?.identity;
           if (!ident) return;
-          const upVal = raw.up as boolean;
+          if (typeof raw.up !== "boolean") return;
+          const upVal = raw.up;
           const nameVal = sender?.name || "Attendee";
           setRaised((prev) => {
             const next = new Map(prev);
@@ -1161,6 +1141,8 @@ function RoomInner({ space, isAdmin, userId, onEnd, ending }: Props) {
             return next;
           });
         } else if (msgType === "room_sync") {
+          if ((sender?.identity === space.hostId || senderRole === "HOST") &&
+              (raw.visibility === "PUBLIC" || raw.visibility === "PRIVATE")) setVisibility(raw.visibility);
           if (Array.isArray(raw.raisedHands)) {
             const hands = raw.raisedHands.filter(
               (entry): entry is [string, string] =>
@@ -1183,15 +1165,18 @@ function RoomInner({ space, isAdmin, userId, onEnd, ending }: Props) {
               return next;
             });
           if (raw.promoted && localParticipant?.identity === raw.promoted) {
+            myHandRef.current = false;
             setMyHandUp(false);
             showToast(
               "🎉 You've been brought onto the Stage as a Guest Speaker! You can now unmute mic and camera.",
             );
           }
           if (raw.demoted && localParticipant?.identity === raw.demoted) {
-            localParticipant.setMicrophoneEnabled(false);
-            localParticipant.setCameraEnabled(false);
-            localParticipant.setScreenShareEnabled(false);
+            void Promise.allSettled([
+              localParticipant.setMicrophoneEnabled(false),
+              localParticipant.setCameraEnabled(false),
+              localParticipant.setScreenShareEnabled(false),
+            ]);
             showToast("You have been moved back to Attendees.");
           }
         } else if (msgType === "request_room_sync" && isHost) {
@@ -1219,7 +1204,7 @@ function RoomInner({ space, isAdmin, userId, onEnd, ending }: Props) {
   useEffect(() => {
     safePublishData({ type: "request_room_sync" });
     const onArrival = () => {
-      if (myHandUp) safePublishData({ type: "hand", up: true });
+      if (myHandRef.current) safePublishData({ type: "hand", up: true });
     };
     const onDeparture = (participant: RemoteParticipant) =>
       setRaised((previous) => {
@@ -1233,12 +1218,13 @@ function RoomInner({ space, isAdmin, userId, onEnd, ending }: Props) {
       room.off(RoomEvent.ParticipantConnected, onArrival);
       room.off(RoomEvent.ParticipantDisconnected, onDeparture);
     };
-  }, [room, myHandUp, safePublishData]);
+  }, [room, safePublishData]);
 
   // Hand raise toggle
   const toggleHand = useCallback(() => {
     if (!localParticipant) return;
-    const up = !myHandUp;
+    const up = !myHandRef.current;
+    myHandRef.current = up;
     setMyHandUp(up);
     safePublishData({
       type: "hand",
@@ -1260,7 +1246,7 @@ function RoomInner({ space, isAdmin, userId, onEnd, ending }: Props) {
         "✋ Hand raised! The host has been notified to bring you onto the stage.",
       );
     }
-  }, [myHandUp, localParticipant, safePublishData, showToast]);
+  }, [localParticipant, safePublishData, showToast]);
 
   // Microphone toggle
   const handleMicToggle = useCallback(async () => {
@@ -1396,10 +1382,14 @@ function RoomInner({ space, isAdmin, userId, onEnd, ending }: Props) {
                     });
                     if (!response.ok)
                       throw new Error("Access could not be updated.");
+                    const updated = await response.json();
+                    setInviteToken(updated.shareToken);
+                    setCopied(false);
                     setVisibility(value);
+                    safePublishData({ type: "room_sync", visibility: value });
                     showToast(
                       value === "PRIVATE"
-                        ? "Invite only. People already in the room can stay."
+                        ? "Invite only. Copy the new invitation link. People already here can stay."
                         : "Your talk is now public.",
                     );
                   } catch {
@@ -1503,42 +1493,7 @@ function RoomInner({ space, isAdmin, userId, onEnd, ending }: Props) {
 
         <div className="sr-scroll-area">
           {/* Screen share area */}
-          {screenTracks.length > 0 && (
-            <div
-              ref={screenContainerRef}
-              className={`sr-screen ${isFullscreen ? "sr-screen-fullscreen" : ""}`}
-            >
-              <div className="flex items-center justify-between px-4 py-2 bg-emerald-950/70 border-b border-emerald-500/20 text-xs">
-                <div className="flex items-center gap-2">
-                  <Monitor className="w-3.5 h-3.5 text-lime-400" />
-                  <span className="text-emerald-200 font-semibold truncate">
-                    {screenTracks[0].participant.name ||
-                      screenTracks[0].participant.identity}{" "}
-                    is sharing screen
-                  </span>
-                </div>
-                <button
-                  onClick={toggleFullscreen}
-                  aria-label={
-                    isFullscreen
-                      ? "Exit full screen"
-                      : "View screen share full screen"
-                  }
-                  className="w-6 h-6 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-white"
-                >
-                  {isFullscreen ? (
-                    <Minimize2 className="w-3.5 h-3.5" />
-                  ) : (
-                    <Maximize2 className="w-3.5 h-3.5" />
-                  )}
-                </button>
-              </div>
-              <VideoTrack
-                trackRef={screenTracks[0]}
-                className={`w-full object-contain bg-black ${isFullscreen ? "flex-1 min-h-0 !max-h-none" : "max-h-[40vh]"}`}
-              />
-            </div>
-          )}
+          {screenTracks[0] && <ScreenShareView key={screenTracks[0].publication.trackSid} trackRef={screenTracks[0]} />}
 
           {/* Stage Content: Video Grid & Speaker Avatars */}
           <div className="sr-workspace">
@@ -1677,7 +1632,7 @@ function RoomInner({ space, isAdmin, userId, onEnd, ending }: Props) {
                         <span
                           role="img"
                           aria-label={`${p.name || "Attendee"} raised their hand`}
-                          className="absolute -top-2 right-0 flex h-6 w-6 items-center justify-center rounded-full bg-amber-300 text-sm ring-4 ring-[#0e1112]"
+                          className="sr-audience-hand"
                         >
                           ✋
                         </span>
@@ -1751,6 +1706,10 @@ function RoomInner({ space, isAdmin, userId, onEnd, ending }: Props) {
           <span className="text-slate-500 text-[11px] font-bold uppercase mr-1 hidden sm:inline">
             Send a little appreciation
           </span>
+          <button type="button" onClick={toggleHand} aria-pressed={myHandUp}
+            aria-label={myHandUp ? "Lower hand" : "Raise hand"}
+            title={myHandUp ? "Lower hand" : "Raise hand to request the stage"}
+            className={`sr-raise-hand w-9 h-9 rounded-full flex items-center justify-center text-lg ${myHandUp ? "bg-amber-400/25 ring-2 ring-amber-300" : "bg-white/6 hover:bg-white/15"}`}>✋</button>
           {AUDIENCE_REACTIONS.map((emoji) => (
             <button
               key={emoji}

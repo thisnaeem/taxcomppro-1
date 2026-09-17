@@ -5,35 +5,36 @@ import Link from "next/link";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setUser } from "@/store/slices/authSlice";
 import {
-  Loader2,
-  MapPin,
-  UserCheck,
-  Share2,
-  Award,
-  BookOpen,
-  FolderDown,
-  ShieldCheck,
-  Check,
-  Crown,
-  ChevronRight,
-  Camera,
-  Sparkles,
-  Edit3,
-  Download,
-  X,
-  Link2,
-  Mail,
-  Users,
-  Users2,
-  Star,
-  MessageSquare,
-  Video,
-  Megaphone,
-  Copy,
-  ExternalLink,
-  Plus,
-  Info,
-} from "lucide-react";
+  Loading03Icon as Loader2,
+  Location01Icon as MapPin,
+  UserCheck01Icon as UserCheck,
+  Share08Icon as Share2,
+  Award01Icon as Award,
+  BookOpen01Icon as BookOpen,
+  FolderDownloadIcon as FolderDown,
+  Shield01Icon as ShieldCheck,
+  Tick02Icon as Check,
+  CrownIcon as Crown,
+  ArrowRight01Icon as ChevronRight,
+  Camera01Icon as Camera,
+  SparklesIcon as Sparkles,
+  Edit01Icon as Edit3,
+  Download01Icon as Download,
+  Cancel01Icon as X,
+  Link01Icon as Link2,
+  Mail01Icon as Mail,
+  UserGroupIcon as Users,
+  UserMultipleIcon as Users2,
+  StarIcon as Star,
+  BubbleChatIcon as MessageSquare,
+  Video01Icon as Video,
+  Megaphone01Icon as Megaphone,
+  Copy01Icon as Copy,
+  LinkSquare02Icon as ExternalLink,
+  Add01Icon as Plus,
+  InformationCircleIcon as Info
+} from "hugeicons-react";
+import { PROFESSIONAL_TITLES } from "@/lib/professionalTitles";
 import EditProfileModal, { type ProfileFormData } from "@/components/profile/EditProfileModal";
 
 interface Purchase {
@@ -181,6 +182,7 @@ export default function MemberProfile() {
         const u = await res.json();
         setProfile({
           name: u.name || "",
+          professionalTitle: u.professionalTitle || "",
           headline: u.headline || "",
           bio: u.bio || "",
           mission: u.mission || "",
@@ -307,6 +309,7 @@ export default function MemberProfile() {
       });
       if (res.ok) {
         setSaveToast(true);
+        window.dispatchEvent(new Event("profile-updated"));
         if (user) dispatch(setUser({ ...user, name: profile.name, headline: profile.headline, bio: profile.bio, image: profile.image, coverImage: profile.coverImage }));
         setTimeout(() => setSaveToast(false), 2500);
       }
@@ -314,7 +317,13 @@ export default function MemberProfile() {
     finally { setSavingInPage(false); }
   };
 
-  const profileShareUrl = typeof window !== "undefined" ? window.location.href : "";
+  useEffect(() => {
+    const refresh = () => { void loadUserData(); };
+    window.addEventListener("profile-updated", refresh);
+    return () => window.removeEventListener("profile-updated", refresh);
+  }, [loadUserData]);
+
+  const profileShareUrl = typeof window !== "undefined" ? `${window.location.origin}/member/${user?.profileSlug || user?.id || ""}` : "";
   const shareText = `Check out ${profile.name || "my"} profile on TaxComPro!`;
 
   const handleCopyLink = () => {
@@ -335,7 +344,8 @@ export default function MemberProfile() {
   const isProOrVIP = user?.role === "PROFESSIONAL" || user?.tier === "VIP";
 
   return (
-    <div className="max-w-[1440px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div className="profile-editor max-w-[1440px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="profile-editor-heading"><div><p>Your professional identity</p><h1>Make your profile yours<span>.</span></h1></div><Link href={`/member/${user?.profileSlug || user?.id}`} className="profile-primary"><ExternalLink size={18} /> View public profile</Link></div>
       <input type="file" ref={avatarInputRef} onChange={handleAvatarUpload} accept="image/*" className="hidden" />
       <input type="file" ref={coverInputRef} onChange={handleCoverUpload} accept="image/*" className="hidden" />
 
@@ -350,13 +360,13 @@ export default function MemberProfile() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-bold tracking-normal transition-all text-left group ${isActive ? "bg-[#EAF2FC] dark:bg-[#1E56A0]/20 text-[#1E56A0] dark:text-[#60a5fa] shadow-xs" : "text-slate-600 dark:text-slate-300 hover:text-[#0A1628] dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50"}`}
+                  className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-bold tracking-normal transition-all text-left group ${isActive ? "profile-menu-active" : "text-slate-600 dark:text-slate-300 hover:text-[#0A1628] dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50"}`}
                 >
                   <div className="flex items-center gap-3.5">
-                    <tab.icon className={`w-5 h-5 shrink-0 transition-colors ${isActive ? "text-[#1E56A0] dark:text-[#60a5fa]" : "text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300"}`} />
+                    <tab.icon className={`w-5 h-5 shrink-0 transition-colors ${isActive ? "profile-accent" : "text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300"}`} />
                     <span className="leading-snug">{tab.label}</span>
                   </div>
-                  {isActive && <ChevronRight className="w-4 h-4 text-[#1E56A0] dark:text-[#60a5fa] shrink-0" />}
+                  {isActive && <ChevronRight className="w-4 h-4 profile-accent shrink-0" />}
                 </button>
               );
             })}
@@ -379,7 +389,7 @@ export default function MemberProfile() {
         <div className="flex-1 min-w-0 space-y-6">
 
           {/* HERO CARD */}
-          <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
+          <div className="rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
             {/* Cover */}
             {profile.coverImage ? (
               <div className="relative h-40 sm:h-48 w-full overflow-hidden">
@@ -432,7 +442,7 @@ export default function MemberProfile() {
                   </div>
                   {profile.headline && <p className="text-sm font-medium text-slate-600 dark:text-slate-300">{profile.headline}</p>}
                   <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-500 dark:text-slate-400 pt-0.5">
-                    {profile.location && <span className="flex items-center gap-1 text-[#1E56A0] dark:text-[#60a5fa]"><MapPin className="w-3.5 h-3.5" />{profile.location}</span>}
+                    {profile.location && <span className="flex items-center gap-1 profile-accent"><MapPin className="w-3.5 h-3.5" />{profile.location}</span>}
                     {stats.memberSince && <span className="text-slate-400 dark:text-slate-500">Member Since: {stats.memberSince}</span>}
                   </div>
 
@@ -467,7 +477,7 @@ export default function MemberProfile() {
           </div>
 
           {/* ── PRO NETWORK STATS BAR (100% DYNAMIC) ────────────────────────── */}
-          <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200/90 dark:border-slate-800 p-4 sm:p-5 shadow-xs mb-6 transition-colors">
+          <div className="rounded-3xl bg-white dark:bg-[#172135] border border-slate-200/90 dark:border-slate-800 p-4 sm:p-5 shadow-xs mb-6 transition-colors">
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-y sm:divide-y-0 sm:divide-x divide-slate-100 dark:divide-slate-800/80 gap-y-4">
               {/* 1. FOLLOWERS */}
               <div className="flex items-center gap-3.5 px-3 sm:first:pl-2">
@@ -552,10 +562,10 @@ export default function MemberProfile() {
               <div className="grid lg:grid-cols-12 gap-6">
               <div className="lg:col-span-7 space-y-6">
                 {/* ABOUT ME */}
-                <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
+                <div className="rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
                   <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-                    <h3 className="text-xs font-black text-[#0A1628] dark:text-white uppercase tracking-widest flex items-center gap-2"><UserCheck className="w-4 h-4 text-[#1E56A0] dark:text-[#60a5fa]" /> ABOUT ME</h3>
-                    <button onClick={() => setActiveTab("basic")} className="text-xs font-bold text-[#1E56A0] dark:text-[#60a5fa] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Edit</button>
+                    <h3 className="text-xs font-black text-[#0A1628] dark:text-white uppercase tracking-widest flex items-center gap-2"><UserCheck className="w-4 h-4 profile-accent" /> ABOUT ME</h3>
+                    <button onClick={() => setActiveTab("basic")} className="text-xs font-bold profile-accent hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Edit</button>
                   </div>
                   {profile.bio ? (
                     <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">{profile.bio}</p>
@@ -568,7 +578,7 @@ export default function MemberProfile() {
                     <div className="flex flex-wrap gap-3 pt-2">
                       {stats.completedCourses > 0 && (
                         <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-100 dark:border-slate-700/80">
-                          <BookOpen className="w-4 h-4 text-[#1E56A0] dark:text-[#60a5fa]" />
+                          <BookOpen className="w-4 h-4 profile-accent" />
                           <div>
                             <p className="text-sm font-black text-[#0A1628] dark:text-white">{stats.completedCourses}</p>
                             <p className="text-[10px] font-bold text-slate-400 dark:text-slate-400">Courses Done</p>
@@ -598,7 +608,7 @@ export default function MemberProfile() {
                 </div>
 
                 {/* ── JOIN MY PRO NETWORK (MATCHES SCREENSHOT) ── */}
-                <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
+                <div className="rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
                   <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                     <h3 className="text-xs font-black text-[#0A1628] dark:text-white uppercase tracking-widest flex items-center gap-2">
                       <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
@@ -689,9 +699,9 @@ export default function MemberProfile() {
 
                 {/* FOCUS AREAS */}
                 {profile.specialties.length > 0 && (
-                  <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
+                  <div className="rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
                     <h3 className="text-xs font-black text-[#0A1628] dark:text-white uppercase tracking-widest flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
-                      <Award className="w-4 h-4 text-[#1E56A0] dark:text-[#60a5fa]" /> TAX FOCUS AREAS
+                      <Award className="w-4 h-4 profile-accent" /> TAX FOCUS AREAS
                     </h3>
                     <div className="flex flex-wrap gap-2">
                       {profile.specialties.map((spec) => (
@@ -705,13 +715,13 @@ export default function MemberProfile() {
               {/* RIGHT COLUMN */}
               <div className="lg:col-span-5 space-y-6">
                 {/* ── MY PRO NETWORKS (MATCHES SCREENSHOT) ── */}
-                <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
+                <div className="rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
                   <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                     <h3 className="text-xs font-black text-[#0A1628] dark:text-white uppercase tracking-widest flex items-center gap-2">
                       <Crown className="w-4 h-4 text-amber-500" />
                       MY PRO NETWORKS
                     </h3>
-                    <Link href="/pro-networks" className="text-xs font-bold text-[#1E56A0] dark:text-[#60a5fa] hover:underline">
+                    <Link href="/pro-networks" className="text-xs font-bold profile-accent hover:underline">
                       View All
                     </Link>
                   </div>
@@ -776,7 +786,7 @@ export default function MemberProfile() {
                 </div>
 
                 {/* MEMBERSHIP */}
-                <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
+                <div className="rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
                   <h3 className="text-xs font-black text-[#0A1628] dark:text-white uppercase tracking-widest flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
                     <Crown className="w-4 h-4 text-amber-500" /> MEMBERSHIP STATUS
                   </h3>
@@ -792,7 +802,7 @@ export default function MemberProfile() {
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-xs font-bold text-slate-700 dark:text-slate-300 pt-1">
                     {["Free Platform Access", "Training Library", "Community Forums", "Find a Pro Directory", "Certificates Record", "Support Center"].map((b) => (
-                      <div key={b} className="flex items-center gap-1.5"><span className="text-[#1E56A0] dark:text-[#60a5fa]">✓</span><span>{b}</span></div>
+                      <div key={b} className="flex items-center gap-1.5"><span className="profile-accent">✓</span><span>{b}</span></div>
                     ))}
                   </div>
                 </div>
@@ -814,7 +824,7 @@ export default function MemberProfile() {
             {/* ── MY BADGES & NOTE (MATCHES SCREENSHOT) ── */}
             <div className="grid lg:grid-cols-12 gap-6 pt-2">
               {/* Left: MY BADGES (7 cols) */}
-              <div className="lg:col-span-7 rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
+              <div className="lg:col-span-7 rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
                 <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                   <h3 className="text-xs font-black text-[#0A1628] dark:text-white uppercase tracking-widest flex items-center gap-2">
                     <Crown className="w-4 h-4 text-amber-500" />
@@ -822,7 +832,7 @@ export default function MemberProfile() {
                   </h3>
                   <Link
                     href={primaryNetwork ? `/pro-networks/${primaryNetwork.slug}` : "/pro-networks/create"}
-                    className="text-xs font-bold text-[#1E56A0] dark:text-[#60a5fa] hover:underline"
+                    className="text-xs font-bold profile-accent hover:underline"
                   >
                     Manage Badges
                   </Link>
@@ -909,7 +919,7 @@ export default function MemberProfile() {
               </div>
 
               {/* Right: NOTE Disclaimer (5 cols) */}
-              <div className="lg:col-span-5 rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-3">
+              <div className="lg:col-span-5 rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-3">
                 <h3 className="text-xs font-black text-[#0A1628] dark:text-white uppercase tracking-widest flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
                   <Info className="w-4 h-4 text-slate-400" />
                   NOTE
@@ -931,9 +941,9 @@ export default function MemberProfile() {
 
           {/* ── BASIC INFO ────────────────────────────────────────────────── */}
           {activeTab === "basic" && (
-            <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-xs space-y-6">
+            <div className="rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-xs space-y-6">
               <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
-                <h2 className="text-base font-black text-[#0A1628] dark:text-white uppercase tracking-wider flex items-center gap-2"><Edit3 className="w-5 h-5 text-[#1E56A0] dark:text-[#60a5fa]" /> Basic Information</h2>
+                <h2 className="text-base font-black text-[#0A1628] dark:text-white uppercase tracking-wider flex items-center gap-2"><Edit3 className="w-5 h-5 profile-accent" /> Basic Information</h2>
                 <button onClick={saveInPageProfile} disabled={savingInPage} className="px-5 py-2.5 rounded-xl bg-[#1E56A0] hover:bg-[#16437E] text-white text-xs font-bold transition-all disabled:opacity-50 flex items-center gap-1.5">
                   {savingInPage ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
                   {saveToast ? "Saved!" : "Save Changes"}
@@ -943,6 +953,13 @@ export default function MemberProfile() {
                 <div>
                   <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Full Name</label>
                   <input type="text" value={profile.name} onChange={(e) => setProfile((p) => ({ ...p, name: e.target.value }))} className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm font-medium focus:border-[#1E56A0] focus:ring-2 focus:ring-[#1E56A0]/10 outline-none" />
+                </div>
+                <div>
+                  <label htmlFor="editor-professional-title" className="block text-sm font-semibold mb-2">Professional title / role</label>
+                  <select id="editor-professional-title" value={profile.professionalTitle || ""} onChange={e => setProfile(p => ({ ...p, professionalTitle: e.target.value }))} className="w-full rounded-xl border border-slate-200 dark:border-slate-700 px-3.5 py-3 text-sm">
+                    <option value="">Select your title</option>
+                    {PROFESSIONAL_TITLES.map(title => <option key={title}>{title}</option>)}
+                  </select>
                 </div>
                 <div>
                   <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Location</label>
@@ -958,9 +975,9 @@ export default function MemberProfile() {
 
           {/* ── LEARNING ──────────────────────────────────────────────────── */}
           {activeTab === "learning" && (
-            <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-xs space-y-6">
+            <div className="rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-xs space-y-6">
               <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
-                <h2 className="text-base font-black text-[#0A1628] dark:text-white uppercase tracking-wider flex items-center gap-2"><BookOpen className="w-5 h-5 text-[#1E56A0] dark:text-[#60a5fa]" /> My Courses</h2>
+                <h2 className="text-base font-black text-[#0A1628] dark:text-white uppercase tracking-wider flex items-center gap-2"><BookOpen className="w-5 h-5 profile-accent" /> My Courses</h2>
                 <Link href="/courses" className="px-4 py-2 rounded-xl bg-[#1E56A0] text-white text-xs font-bold hover:bg-[#16437E] transition-all">Browse Courses</Link>
               </div>
               <div className="p-5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -975,7 +992,7 @@ export default function MemberProfile() {
 
           {/* ── BADGES ────────────────────────────────────────────────────── */}
           {activeTab === "badges" && (
-            <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-xs space-y-6">
+            <div className="rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-xs space-y-6">
               <div className="border-b border-slate-100 dark:border-slate-800 pb-4">
                 <h2 className="text-base font-black text-[#0A1628] dark:text-white uppercase tracking-wider flex items-center gap-2"><ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400" /> Badges & Due Diligence</h2>
                 <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Your verified compliance credentials.</p>
@@ -1001,10 +1018,10 @@ export default function MemberProfile() {
 
           {/* ── PURCHASES ─────────────────────────────────────────────────── */}
           {activeTab === "purchases" && (
-            <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-xs space-y-6">
+            <div className="rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-xs space-y-6">
               <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
                 <div>
-                  <h2 className="text-base font-black text-[#0A1628] dark:text-white uppercase tracking-wider flex items-center gap-2"><FolderDown className="w-5 h-5 text-[#1E56A0] dark:text-[#60a5fa]" /> Purchased Toolkits</h2>
+                  <h2 className="text-base font-black text-[#0A1628] dark:text-white uppercase tracking-wider flex items-center gap-2"><FolderDown className="w-5 h-5 profile-accent" /> Purchased Toolkits</h2>
                   <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Download your IRS compliance toolkits.</p>
                 </div>
                 <Link href="/toolkits" className="px-4 py-2 rounded-xl bg-[#1E56A0] text-white text-xs font-bold hover:bg-[#16437E] transition-all">Explore Toolkits</Link>
@@ -1034,7 +1051,7 @@ export default function MemberProfile() {
 
           {/* ── MEMBERSHIP ────────────────────────────────────────────────── */}
           {activeTab === "membership" && (
-            <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-xs space-y-6">
+            <div className="rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-xs space-y-6">
               <div className="border-b border-slate-100 dark:border-slate-800 pb-4">
                 <h2 className="text-base font-black text-[#0A1628] dark:text-white uppercase tracking-wider flex items-center gap-2"><Crown className="w-5 h-5 text-amber-500" /> Membership Plan</h2>
                 <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Manage your plan and benefits.</p>

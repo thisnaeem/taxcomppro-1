@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { useSession } from "@/lib/auth-client";
@@ -84,6 +85,10 @@ const views = [
   { id: "following", label: "Following", icon: Bell },
 ] as const;
 export default function ProNetworksDirectoryPage() {
+  return <Suspense fallback={<div className="pn-page" role="status">Loading networks…</div>}><ProNetworksDirectory /></Suspense>;
+}
+function ProNetworksDirectory() {
+  const searchParams = useSearchParams();
   const directoryRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const navbar = document.querySelector(".site-navbar");
@@ -108,7 +113,7 @@ export default function ProNetworksDirectoryPage() {
   const [category, setCategory] = useState("All");
   const [query, setQuery] = useState("");
   const [view, setView] = useState<"all" | "joined" | "mine" | "following">(
-    "all",
+    searchParams.get("filter") === "mine" ? "mine" : "all",
   );
   useEffect(() => {
     const controller = new AbortController();
@@ -118,7 +123,7 @@ export default function ProNetworksDirectoryPage() {
       try {
         const params = new URLSearchParams();
         if (category !== "All") params.set("category", category);
-        if (view !== "all" && userId) params.set("filter", view);
+        if (view !== "all") params.set("filter", view);
         if (query.trim()) params.set("q", query.trim());
         const response = await fetch("/api/pro-networks?" + params, {
           signal: controller.signal,

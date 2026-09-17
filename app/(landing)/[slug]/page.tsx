@@ -749,6 +749,7 @@ export default function ListingDetailPage() {
                   const isFree = !listing.price || listing.price <= 0;
                   const isOwner = user?.id === listing.user.id || user?.role === "ADMIN";
                   const downloadUrl = listing.metadata?.downloadUrl;
+                  if (listing.metadata?.isDemo) return <div className="rounded-2xl border border-amber-400/30 bg-amber-400/10 p-4 text-center text-sm font-semibold text-amber-700 dark:text-amber-300">Demo listing · Preview only<br /><span className="text-xs font-normal">Purchases and downloads are disabled for this sample.</span></div>;
                   const linkUrl = listing.metadata?.linkUrl || listing.metadata?.externalUrl || listing.metadata?.actionUrl;
                   const hasAccess = isFree || listing.hasPurchased || isOwner;
 

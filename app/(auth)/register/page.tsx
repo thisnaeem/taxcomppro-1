@@ -1,4 +1,6 @@
 "use client";
+import { PROFESSIONAL_TITLES } from "@/lib/professionalTitles";
+import ProfessionalTitleEditor from "@/components/networks/ProfessionalTitleEditor";
 
 import Link from "next/link";
 import Image from "next/image";
@@ -52,6 +54,7 @@ const schema = z
   .object({
     name: z.string().min(2, "Name must be at least 2 characters"),
     email: z.string().email("Please enter a valid email address"),
+    professionalTitle: z.enum(PROFESSIONAL_TITLES),
     phone: z.string().min(1, "Phone number is required"),
     password: z.string().min(8, "Password must be at least 8 characters"),
     confirmPassword: z.string(),
@@ -157,7 +160,7 @@ function RegisterForm() {
 
   // Email verification (OTP) state. The account is only created once the code checks out.
   const [pendingSignup, setPendingSignup] = useState<{
-    name: string; email: string; password: string; phone: string;
+    name: string; email: string; password: string; phone: string; professionalTitle: string;
   } | null>(null);
   const [otpCode, setOtpCode] = useState("");
   const [otpError, setOtpError] = useState("");
@@ -271,6 +274,7 @@ function RegisterForm() {
         email: data.email,
         password: data.password,
         phone: fullPhoneNumber,
+        professionalTitle: data.professionalTitle,
       });
       setOtpCode("");
       setOtpError("");
@@ -430,6 +434,7 @@ function RegisterForm() {
             aria-label="Membership plan"
             className="grid grid-cols-1 items-start gap-5 md:grid-cols-3"
           >
+            {!pendingSignup && <ProfessionalTitleEditor />}
             {membershipPlans.map((p) => {
               const isSelected = selectedTier === p.id;
               const Icon = p.icon;
@@ -674,6 +679,7 @@ function RegisterForm() {
           {errors.name && <p className={fieldError}>{errors.name.message}</p>}
         </div>
 
+        <div className="space-y-2"><label htmlFor="professional-title" className={fieldLabel}>Title / Role</label><select id="professional-title" className={`${inputBase} ${inputOk} p-3`} {...register("professionalTitle")} defaultValue=""><option value="" disabled>Select your professional title</option>{PROFESSIONAL_TITLES.map(title => <option key={title} value={title}>{title}</option>)}</select>{errors.professionalTitle && <p className={fieldError}>Please select your title / role.</p>}</div>
         {/* Email */}
         <div className="space-y-2">
           <label htmlFor="reg-email" className={fieldLabel}>Email address</label>

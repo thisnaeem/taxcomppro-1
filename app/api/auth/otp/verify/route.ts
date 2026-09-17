@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { PROFESSIONAL_TITLES } from "@/lib/professionalTitles";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -12,6 +13,7 @@ import { normalizeEmail, verifyOtp } from "@/lib/otp";
  */
 
 const bodySchema = z.object({
+  professionalTitle: z.enum(PROFESSIONAL_TITLES).optional(),
   email: z.string().email(),
   code: z.string().regex(/^\d{6}$/, "Enter the 6-digit code."),
   name: z.string().trim().min(2).max(120),
@@ -51,7 +53,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { code, name, password, phone } = parsed.data;
+  const { code, name, password, phone, professionalTitle } = parsed.data;
   const email = normalizeEmail(parsed.data.email);
 
   const result = await verifyOtp(email, code);
@@ -82,7 +84,7 @@ export async function POST(request: NextRequest) {
   let signUpResponse: Response;
   try {
     signUpResponse = (await auth.api.signUpEmail({
-      body: { email, password, name, ...(phone ? { phone } : {}) },
+      body: { email, password, name, professionalTitle, ...(phone ? { phone } : {}) },
       headers: request.headers,
       asResponse: true,
     })) as Response;

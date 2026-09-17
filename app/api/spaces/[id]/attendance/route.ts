@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { canAccessSpace } from "@/lib/spaceAccess";
 import { prisma } from "@/lib/prisma";
 
 type Params = { params: Promise<{ id: string }> };
@@ -13,6 +14,7 @@ export async function POST(req: NextRequest, { params }: Params) {
 
     const space = await prisma.space.findUnique({ where: { id } });
     if (!space) return NextResponse.json({ error: "Space not found" }, { status: 404 });
+    if (!canAccessSpace(req, space, session?.user)) return NextResponse.json({ error: "Invitation required" }, { status: 403 });
 
     if (userId) {
       // Upsert attendance record for logged in user to strictly prevent duplicate counting
@@ -74,6 +76,9 @@ export async function GET(req: NextRequest, { params }: Params) {
         id: true,
         name: true,
         hostId: true,
+        coHostIds: true,
+        visibility: true,
+        shareToken: true,
         totalAttendees: true,
         peakAttendees: true,
         createdAt: true,
@@ -82,6 +87,7 @@ export async function GET(req: NextRequest, { params }: Params) {
     });
 
     if (!space) return NextResponse.json({ error: "Space not found" }, { status: 404 });
+    if (!canAccessSpace(req, space, session?.user)) return NextResponse.json({ error: "Invitation required" }, { status: 403 });
 
     const isHost = session?.user?.id === space.hostId || session?.user?.role === "ADMIN";
 

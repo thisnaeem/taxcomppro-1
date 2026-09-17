@@ -4,59 +4,65 @@ import React, { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/lib/auth-client";
+import { networkAccentInk } from "@/lib/networkBranding";
+import NetworkBranding from "@/components/networks/NetworkBranding";
+import NetworkEvents from "@/components/networks/NetworkEvents";
+import ProfessionalTitleEditor from "@/components/networks/ProfessionalTitleEditor";
+import "@/components/networks/network-settings.css";
 import NetworkBadge from "@/components/networks/NetworkBadge";
 import "@/components/networks/networks.css";
 import "@/components/networks/networks-light.css";
+import "@/components/networks/network-hub-theme.css";
 import MemberBubbleCloud from "@/components/networks/MemberBubbleCloud";
 import {
-  Home,
-  MessageSquare,
-  Images,
-  FolderDown,
-  Radio,
-  Calendar,
-  Users,
-  LayoutGrid,
-  MessagesSquare,
-  Settings,
-  Pencil,
-  BarChart2,
-  Shield,
-  Mail,
-  Headphones,
-  Bell,
-  MoreHorizontal,
-  Search,
-  Plus,
-  Play,
-  FileText,
-  Download,
-  CheckCircle2,
-  Lock,
-  ChevronRight,
-  ChevronLeft,
-  Crown,
-  Share2,
-  X,
-  Send,
-  Loader2,
-  ArrowRight,
-  Sparkles,
-  ExternalLink,
-  MessageCircle,
-  Phone,
-  HelpCircle,
-  Eye,
-  DollarSign,
-  TrendingUp,
-  UserPlus,
-  Upload,
-  Video,
-  File,
-  Image as ImageIcon,
-  Mic,
-  AlertCircle,
-} from "lucide-react";
+  Home01Icon as Home,
+  BubbleChatIcon as MessageSquare,
+  Image01Icon as Images,
+  FolderDownloadIcon as FolderDown,
+  LiveStreaming01Icon as Radio,
+  Calendar03Icon as Calendar,
+  UserGroupIcon as Users,
+  GridViewIcon as LayoutGrid,
+  BubbleChatIcon as MessagesSquare,
+  Settings01Icon as Settings,
+  Edit01Icon as Pencil,
+  ChartHistogramIcon as BarChart2,
+  Shield01Icon as Shield,
+  Mail01Icon as Mail,
+  HeadphonesIcon as Headphones,
+  Notification01Icon as Bell,
+  MoreHorizontalIcon as MoreHorizontal,
+  Search01Icon as Search,
+  Add01Icon as Plus,
+  PlayIcon as Play,
+  File01Icon as FileText,
+  Download01Icon as Download,
+  CheckmarkCircle02Icon as CheckCircle2,
+  LockIcon as Lock,
+  ArrowRight01Icon as ChevronRight,
+  ArrowLeft01Icon as ChevronLeft,
+  CrownIcon as Crown,
+  Share08Icon as Share2,
+  Cancel01Icon as X,
+  SentIcon as Send,
+  Loading03Icon as Loader2,
+  ArrowRight02Icon as ArrowRight,
+  SparklesIcon as Sparkles,
+  LinkSquare02Icon as ExternalLink,
+  BubbleChatIcon as MessageCircle,
+  Call02Icon as Phone,
+  HelpCircleIcon as HelpCircle,
+  ViewIcon as Eye,
+  Dollar01Icon as DollarSign,
+  ChartIncreaseIcon as TrendingUp,
+  UserAdd01Icon as UserPlus,
+  Upload01Icon as Upload,
+  Video01Icon as Video,
+  File01Icon as File,
+  Image01Icon as ImageIcon,
+  Mic01Icon as Mic,
+  AlertCircleIcon as AlertCircle
+} from "hugeicons-react";
 
 const NETWORK_TABS = [
   { id: "home", label: "Overview", icon: Home },
@@ -78,6 +84,7 @@ interface ProNetworkDetails {
   coverImage: string | null;
   logoImage: string | null;
   monthlyPrice: number;
+  accentColor: string;
   memberCount: number;
   followerCount: number;
   memberBenefits: string[];
@@ -250,6 +257,7 @@ export default function ProNetworkHubPage({
       editPriceType === "free"
         ? 0
         : Math.max(0, parseFloat(editMonthlyPrice || "0"));
+    if (!Number.isFinite(finalPrice) || (editPriceType === "paid" && finalPrice <= 0)) { alert("Enter a monthly price greater than zero, or choose Free."); return; }
     setSavingPrice(true);
     try {
       const res = await fetch(`/api/pro-networks/${slug}`, {
@@ -518,7 +526,7 @@ export default function ProNetworkHubPage({
                 to host <strong>{network.owner.name}</strong>
               </>
             ) : (
-              "Free Community Access — 100% free for all verified tax professionals"
+              "Free Network Access — 100% free for all verified tax professionals"
             )}
           </span>
         </div>
@@ -961,7 +969,7 @@ export default function ProNetworkHubPage({
     matchesSearch(item.title, item.description),
   );
   const filteredMembers = membersList.filter((item) =>
-    matchesSearch(item.user?.name, item.user?.headline, item.user?.location),
+    matchesSearch(item.user?.name, item.user?.professionalTitle, item.user?.headline, item.user?.location),
   );
   const filteredChat = chatMessages.filter((item) =>
     matchesSearch(item.content, item.sender?.name),
@@ -991,7 +999,7 @@ export default function ProNetworkHubPage({
   }
 
   return (
-    <div className="pn-page pn-hub">
+    <div className="pn-page pn-hub" style={{"--pn-accent": network.accentColor || "#e8c449", "--pn-accent-ink": networkAccentInk(network.accentColor || "#e8c449")} as React.CSSProperties}>
       {/* ── TOP NETWORK BRAND HEADER (Dynamic — Clean Background, No Watermark/Dummy Text) ── */}
       <header className="pn-network-header">
         <div className="pn-network-header-inner">
@@ -1059,6 +1067,7 @@ export default function ProNetworkHubPage({
           </div>
         </div>
       </header>
+      {network.coverImage && <div className="pn-network-cover"><img src={network.coverImage} alt={`${network.name} cover`} /></div>}
       {/* ── MAIN LAYOUT: Sidebar + Tabs + 100% Dynamic Content ── */}
       <div className="pn-hub-layout">
         {/* Left Internal Network Navigation Sidebar */}
@@ -1067,7 +1076,7 @@ export default function ProNetworkHubPage({
             {/* YOUR NETWORK Section */}
             <div>
               <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 px-3 mb-2">
-                MY NETWORK
+                MY NETWORKS
               </p>
               <div className="space-y-1">
                 {[
@@ -1158,7 +1167,7 @@ export default function ProNetworkHubPage({
 
                   <button
                     type="button"
-                    onClick={() => setShowHostProTalkModal(true)}
+                    onClick={() => setActiveTab("events")}
                     className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 text-left"
                   >
                     <span className="flex items-center gap-3">
@@ -1170,6 +1179,9 @@ export default function ProNetworkHubPage({
               </div>
             )}
 
+            <Link className="pn-button pn-secondary" href="/pro-networks?filter=mine"><Users size={18}/>My Networks</Link>
+            <Link className="pn-button pn-secondary" href="/pro-networks?filter=mine">View All Networks <ArrowRight size={16}/></Link>
+            <Link className="pn-button pn-secondary" href="/groups">Groups <ArrowRight size={16}/></Link>
             {/* Need Help Box */}
             <div className="pt-4 border-t border-slate-100 dark:border-white/10">
               <Link
@@ -1614,7 +1626,7 @@ export default function ProNetworkHubPage({
                       {network.isOwner && (
                         <button
                           type="button"
-                          onClick={() => setShowHostProTalkModal(true)}
+                          onClick={() => setActiveTab("events")}
                           className="bg-rose-600 hover:bg-rose-500 text-white font-black text-xs px-2.5 py-1 rounded-xl shadow-sm flex items-center gap-1"
                         >
                           <Radio className="w-3 h-3" />
@@ -1640,7 +1652,7 @@ export default function ProNetworkHubPage({
                       {network.isOwner && (
                         <button
                           type="button"
-                          onClick={() => setShowHostProTalkModal(true)}
+                          onClick={() => setActiveTab("events")}
                           className="text-rose-500 font-bold hover:underline inline-block mt-1"
                         >
                           + Host or schedule a live Pro Talk
@@ -1686,7 +1698,7 @@ export default function ProNetworkHubPage({
                           <div className="flex items-center justify-between pt-1">
                             {ev.isLive ? (
                               <Link
-                                href={ev.liveUrl || "/pro-talks"}
+                                href="#network-events" onClick={(e) => {e.preventDefault();setActiveTab("events");}}
                                 className="px-4 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-black shadow-md flex items-center gap-1.5"
                               >
                                 <Radio className="w-3.5 h-3.5" /> Join Live
@@ -1840,7 +1852,7 @@ export default function ProNetworkHubPage({
                             </h5>
                             <p className="text-[10px] text-slate-400 truncate">
                               {m.user.location ||
-                                m.user.headline ||
+                                m.user.professionalTitle || m.user.headline ||
                                 "Tax Professional"}
                             </p>
                           </div>
@@ -2172,130 +2184,9 @@ export default function ProNetworkHubPage({
               </div>
             ))}
 
-          {/* ── TAB 5: PRO TALKS & EVENTS FULL TAB ── */}
-          {(activeTab === "protalks" || activeTab === "events") &&
-            (!network.isMember && !network.isOwner ? (
-              renderPaywall(
-                "Live Pro Talks & Events",
-                "Live audio rooms, training masterclasses, and Q&A sessions.",
-              )
-            ) : (
-              <div className="bg-white dark:bg-[#121e33] border border-slate-200 dark:border-white/10 rounded-3xl p-6 shadow-sm space-y-6">
-                <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-4">
-                  <div>
-                    <h3 className="text-lg font-black text-slate-900 dark:text-white">
-                      Network Pro Talks &amp; Live Events
-                    </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                      Live audio rooms, training masterclasses, and Q&amp;A
-                      sessions.
-                    </p>
-                  </div>
-
-                  {network.isOwner && (
-                    <button
-                      type="button"
-                      onClick={() => setShowHostProTalkModal(true)}
-                      className="bg-rose-600 hover:bg-rose-500 text-white font-black text-xs px-4 py-2.5 rounded-full shadow-md flex items-center gap-1.5"
-                    >
-                      <Radio className="w-4 h-4" />
-                      <span>Host / Schedule Pro Talk</span>
-                    </button>
-                  )}
-                </div>
-
-                {filteredEvents.length === 0 ? (
-                  <div className="text-center py-16 text-xs text-slate-400 space-y-3">
-                    <Radio className="w-10 h-10 text-slate-400 mx-auto" />
-                    <p className="font-bold text-sm">
-                      {searchTerm
-                        ? "No matches in this section."
-                        : "No Pro Talks or events scheduled yet."}
-                    </p>
-                    {network.isOwner && (
-                      <button
-                        type="button"
-                        onClick={() => setShowHostProTalkModal(true)}
-                        className="px-5 py-2.5 rounded-full bg-rose-600 text-white font-bold text-xs"
-                      >
-                        Host Live Pro Talk
-                      </button>
-                    )}
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {filteredEvents.map((ev) => (
-                      <div
-                        key={ev.id}
-                        className="p-5 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/5 flex flex-col justify-between space-y-4"
-                      >
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            {ev.isLive ? (
-                              <span className="inline-flex items-center gap-1.5 bg-rose-500 text-white text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider animate-pulse">
-                                <span className="w-1.5 h-1.5 rounded-full bg-white" />
-                                LIVE NOW
-                              </span>
-                            ) : (
-                              <span className="text-xs font-bold text-blue-500">
-                                {new Date(ev.scheduledAt).toLocaleDateString(
-                                  [],
-                                  {
-                                    weekday: "short",
-                                    month: "short",
-                                    day: "numeric",
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  },
-                                )}
-                              </span>
-                            )}
-                          </div>
-
-                          <h4 className="text-sm font-black text-slate-900 dark:text-white">
-                            {ev.title}
-                          </h4>
-                          {ev.description && (
-                            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                              {ev.description}
-                            </p>
-                          )}
-                        </div>
-
-                        <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-white/5">
-                          <span className="text-xs font-bold text-slate-400">
-                            {ev.rsvpCount} Registered
-                          </span>
-
-                          {ev.isLive ? (
-                            <Link
-                              href={ev.liveUrl || "/pro-talks"}
-                              className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-black shadow-md flex items-center gap-1.5"
-                            >
-                              <Radio className="w-4 h-4" /> Join Live
-                            </Link>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => handleToggleEventRsvp(ev.id)}
-                              className={`px-4 py-2 rounded-xl text-xs font-black transition-all ${
-                                ev.isRegistered
-                                  ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30"
-                                  : "bg-blue-600 hover:bg-blue-500 text-white shadow-md"
-                              }`}
-                            >
-                              {ev.isRegistered
-                                ? "✓ Registered"
-                                : "Register to Attend"}
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
+          {(activeTab === "events" || activeTab === "protalks") &&
+            (!network.isMember && !network.isOwner ? renderPaywall("Network events", "Join to attend live events and workshops.") :
+              <NetworkEvents slug={slug} isOwner={network.isOwner || (session?.user as {role?: string})?.role === "ADMIN"} onEventsChange={setEventsList} />)}
 
           {/* ── TAB 6: MEMBERS CHAT ── */}
           {activeTab === "chat" &&
@@ -2458,6 +2349,7 @@ export default function ProNetworkHubPage({
                   </div>
                 </div>
 
+                <ProfessionalTitleEditor onSaved={() => { fetch(`/api/pro-networks/${slug}/members`).then(r => r.json()).then(data => setMembersList(data.members || [])).catch(() => {}); }} />
                 {/* ── BUBBLE GALAXY VIEW ── */}
                 {memberViewMode === "bubble" ? (
                   <MemberBubbleCloud
@@ -2498,7 +2390,7 @@ export default function ProNetworkHubPage({
                               )}
                             </h4>
                             <p className="text-[10px] text-slate-400 truncate">
-                              {m.user.headline ||
+                              {m.user.professionalTitle || m.user.headline ||
                                 m.user.location ||
                                 "Tax Professional"}
                             </p>
@@ -2621,6 +2513,8 @@ export default function ProNetworkHubPage({
                 </div>
               )}
 
+              <NetworkBranding slug={slug} initial={{accentColor:network.accentColor || "#e8c449", logoImage:network.logoImage, coverImage:network.coverImage}} onSaved={branding => setNetwork(previous => previous ? {...previous,...branding} : previous)} />
+              <section className="pn-settings-card"><h3>Bots &amp; integrations</h3><p>Network-specific bots are not available yet. You can open Atlas AI from the site navigation for personal assistance.</p></section>
               {/* ── Network Pricing & Subscription Model Settings ── */}
               <div className="bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-6 space-y-4">
                 <div className="flex items-start sm:items-center justify-between gap-4 flex-col sm:flex-row border-b border-slate-200/60 dark:border-white/10 pb-4">
@@ -2641,13 +2535,13 @@ export default function ProNetworkHubPage({
                           }`}
                         >
                           {network.monthlyPrice <= 0
-                            ? "Active: Free Community"
+                            ? "Active: Free Network"
                             : `Active: $${network.monthlyPrice.toFixed(2)} / month`}
                         </span>
                       </div>
                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                         Set your membership dues or make this Pro Network free
-                        to join anytime.
+                        to join anytime. Changes apply to new signups; existing subscriptions retain their current billing terms.
                       </p>
                     </div>
                   </div>
@@ -2897,7 +2791,7 @@ export default function ProNetworkHubPage({
 
                 <button
                   type="button"
-                  onClick={() => setShowHostProTalkModal(true)}
+                  onClick={() => setActiveTab("events")}
                   className="p-5 rounded-2xl border border-slate-200 dark:border-white/10 hover:border-rose-500 bg-slate-50 dark:bg-white/5 transition-all text-left space-y-2 group"
                 >
                   <Radio className="w-6 h-6 text-rose-500" />
@@ -3706,7 +3600,7 @@ export default function ProNetworkHubPage({
                 <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-xs space-y-1">
                   <div className="flex items-center gap-2 font-bold">
                     <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                    <span>Free Community Membership ($0.00 / month)</span>
+                    <span>Free Network Membership ($0.00 / month)</span>
                   </div>
                   <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
                     Existing and new members will have instant access to your

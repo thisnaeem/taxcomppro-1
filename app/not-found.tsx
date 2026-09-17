@@ -89,7 +89,7 @@ export default function NotFound() {
               className="p-3.5 rounded-xl bg-slate-900/60 hover:bg-slate-900 border border-slate-800/80 hover:border-amber-500/40 transition-all group"
             >
               <UserGroupIcon className="w-5 h-5 text-blue-400 mb-2 group-hover:scale-110 transition-transform" />
-              <div className="font-bold text-sm text-slate-200 group-hover:text-amber-400 transition-colors">Communities</div>
+              <div className="font-bold text-sm text-slate-200 group-hover:text-amber-400 transition-colors">Groups</div>
               <div className="text-xs text-slate-500">Pro Network</div>
             </Link>
 

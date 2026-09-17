@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { hasNetworkMembership } from "@/lib/networkAccess";
 import { auth } from "@/lib/auth";
 
 // POST /api/pro-networks/[slug]/events/[eventId]/rsvp - Toggle RSVP
@@ -23,6 +24,9 @@ export async function POST(
       return NextResponse.json({ error: "Network not found" }, { status: 404 });
     }
 
+    const event = await prisma.proNetworkEvent.findFirst({where: {id: eventId, networkId: network.id}});
+    if (!event) return NextResponse.json({error: "Event not found"}, {status: 404});
+
     // Check membership
     const isOwner = session.user.id === network.ownerId;
     if (!isOwner) {
@@ -34,7 +38,7 @@ export async function POST(
           },
         },
       });
-      if (!member || member.status !== "ACTIVE") {
+      if (!hasNetworkMembership(member)) {
         return NextResponse.json({ error: "Must be a member to register for events" }, { status: 403 });
       }
     }

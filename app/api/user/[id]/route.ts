@@ -10,7 +10,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
     prisma.user.findUnique({
       where: { id },
       select: {
-        id: true, name: true, image: true, coverImage: true,
+        id: true, name: true, image: true, coverImage: true, profileSlug: true, professionalTitle: true,
         headline: true, bio: true, mission: true, location: true,
         yearsExperience: true, website: true, linkedIn: true,
         twitter: true, facebook: true, specialties: true,
@@ -58,7 +58,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
         },
         _count: {
           select: {
-            posts: true,
+            posts: { where: { communityId: null, scheduledAt: null } },
             instructorCourses: true,
             listings: true,
             reviewsReceived: true,

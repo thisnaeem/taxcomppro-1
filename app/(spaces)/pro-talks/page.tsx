@@ -37,6 +37,7 @@ interface Space {
   roomName: string;
   category: string;
   mediaType: string;
+  visibility?: "PUBLIC" | "PRIVATE";
   isLive: boolean;
   scheduledAt: string | null;
   shareToken: string | null;
@@ -262,6 +263,7 @@ function CreateFormModal({
   const [desc, setDesc] = useState("");
   const [category, setCategory] = useState("Tax Law & Updates");
   const [mediaType, setMediaType] = useState<"AUDIO_VIDEO" | "AUDIO">("AUDIO_VIDEO");
+  const [visibility, setVisibility] = useState<"PUBLIC" | "PRIVATE">("PUBLIC");
   const [schedDate, setSchedDate] = useState("");
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -279,6 +281,7 @@ function CreateFormModal({
       description: desc.trim() || null,
       category,
       mediaType,
+      visibility,
     };
     if (hostPaid && hostSessionId) body.hostSessionId = hostSessionId;
     if (tab === "schedule") body.scheduledAt = new Date(schedDate).toISOString();
@@ -414,6 +417,18 @@ function CreateFormModal({
             </div>
           </div>
 
+          <fieldset>
+            <legend className="text-emerald-300/80 text-xs font-semibold mb-2 uppercase tracking-wide">Who can join?</legend>
+            <div className="grid grid-cols-2 gap-3">
+              {(["PUBLIC", "PRIVATE"] as const).map(value => (
+                <label key={value} className={`cursor-pointer rounded-xl border p-3 text-sm ${visibility === value ? "border-emerald-400 bg-emerald-500/20 text-white" : "border-emerald-500/20 bg-[#050f1d] text-slate-300"}`}>
+                  <span className="flex items-center gap-2 font-bold"><input type="radio" name="talk-visibility" value={value} checked={visibility === value} onChange={() => setVisibility(value)} className="accent-emerald-400" />{value === "PUBLIC" ? "Public" : "Private / Invite only"}</span>
+                  <span className="block mt-2 text-xs leading-relaxed text-slate-400">{value === "PUBLIC" ? "Visible in Pro Talks. Anyone can join." : "Hidden from discovery. Join with an invitation link."}</span>
+                </label>
+              ))}
+            </div>
+            <p className="text-xs text-slate-400 mt-2">Everyone enters muted. The host controls who can speak.</p>
+          </fieldset>
           <div>
             <label className="block text-emerald-300/80 text-xs font-semibold mb-1 uppercase tracking-wide">
               Description (Optional)

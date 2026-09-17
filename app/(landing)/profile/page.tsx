@@ -7,7 +7,7 @@ import { Suspense, useEffect, useState } from "react";
 import { Loader2, CheckCircle2, X, CreditCard } from "lucide-react";
 import dynamic from "next/dynamic";
 
-import ProfileDashboardShell from "@/components/profile/ProfileDashboardShell";
+import "@/components/profile/profile-ui.css";
 
 const MemberProfile = dynamic(() => import("@/components/profile/MemberProfile"), {
   loading: () => <div className="min-h-[60vh] flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#1E56A0]" /></div>,
@@ -129,7 +129,7 @@ function ProfileContent() {
   );
 
   return (
-    <div className="min-h-screen bg-[#F5F7FB] py-4">
+    <div className="profile-editor-page min-h-screen py-4">
       {showBanner && (
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
           <UpgradeBanner tier={upgradedTier} onDismiss={() => setShowBanner(false)} />

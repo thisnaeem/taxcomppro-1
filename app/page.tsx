@@ -23,7 +23,7 @@ const features = [
   },
   {
     img: "/features/communitues.webp",
-    title: "Niche Communities",
+    title: "Niche Groups",
     desc: "Join high-level masterminds or launch your own branded community for peer support and industry masterclasses."
   },
   {
@@ -90,13 +90,13 @@ const plans = [
   {
     name: "Basic Members Only", price: "FREE", period: "", img: "/plan-basic.webp",
     popular: false, badge: null, savings: null,
-    features: ["Email Support","Marketplace Access (View)","Member Directory Access","Communities Access (View)","Marketplace Feed Access","Secure Members-Only Environment"],
+    features: ["Email Support","Marketplace Access (View)","Member Directory Access","Groups Access (View)","Marketplace Feed Access","Secure Members-Only Environment"],
     cta: "Join For Free", href: "/register",
   },
   {
     name: "VIP Members Only", price: "$39.99", period: "/month", img: "/plan-vip.webp",
     popular: false, badge: "2 Months FREE", savings: null,
-    features: ["Priority Email Support","Private Messaging & DMs","Training & Educational Support","Marketplace Feed Interaction","Communities Interaction","Private Discussion Forums","Ongoing Education & Training","Ability to Connect","Pro Training Access","ATLAS AI Tax Bot","Professional Networking"],
+    features: ["Priority Email Support","Private Messaging & DMs","Training & Educational Support","Marketplace Feed Interaction","Groups Interaction","Private Discussion Forums","Ongoing Education & Training","Ability to Connect","Pro Training Access","ATLAS AI Tax Bot","Professional Networking"],
     cta: "Join VIP", href: "/register?plan=VIP",
   },
   {
@@ -543,7 +543,7 @@ export default function LandingPage() {
               href="/groups"
               className="inline-flex items-center gap-2 bg-[#0a1628] dark:bg-white text-white dark:text-[#0a1628] font-bold px-8 py-3.5 rounded-full hover:bg-[#1a3a6b] dark:hover:bg-slate-100 transition-all text-base shadow-lg"
             >
-              Explore Communities <ArrowRight className="w-4 h-4" />
+              Explore Groups <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
 

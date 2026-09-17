@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { canAccessSpace } from "@/lib/spaceAccess";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { nanoid } from "nanoid";
 import { RoomServiceClient } from "livekit-server-sdk";
 
 type Params = { params: Promise<{ id: string }> };
@@ -43,6 +44,10 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   if (body.visibility !== undefined) {
     if (body.visibility !== "PUBLIC" && body.visibility !== "PRIVATE") return NextResponse.json({ error: "Invalid visibility" }, { status: 400 });
     dataToUpdate.visibility = body.visibility;
+    if (body.visibility === "PRIVATE" && space.visibility !== "PRIVATE") {
+      // An old public link must not become an invitation to a private room.
+      dataToUpdate.shareToken = nanoid(32);
+    }
   }
 
   if (typeof body.isLive === "boolean") {

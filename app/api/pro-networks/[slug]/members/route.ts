@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { hasNetworkMembership } from "@/lib/networkAccess";
 import { auth } from "@/lib/auth";
 
 // GET /api/pro-networks/[slug]/members - Member directory
@@ -35,7 +36,7 @@ export async function GET(
             },
           },
         });
-        isMember = member?.status === "ACTIVE";
+        isMember = hasNetworkMembership(member);
       }
     }
 
@@ -53,6 +54,7 @@ export async function GET(
         OR: [
           { name: { contains: search, mode: "insensitive" } },
           { headline: { contains: search, mode: "insensitive" } },
+          { professionalTitle: { contains: search, mode: "insensitive" } },
           { location: { contains: search, mode: "insensitive" } },
         ],
       };
@@ -71,6 +73,7 @@ export async function GET(
             role: true,
             tier: true,
             headline: true,
+            professionalTitle: true,
             location: true,
             digitalCard: {
               select: {

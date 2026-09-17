@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { RoomServiceClient } from "livekit-server-sdk";
+import { proTalkPublishPermissions } from "@/lib/proTalkPermissions";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -21,7 +22,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const role = action === "cohost" ? "CO_HOST" : action === "speaker" ? "SPEAKER" : "ATTENDEE";
     await service.updateParticipant(space.roomName, identity, {
       metadata: JSON.stringify({ ...metadata, role, isCoHost: action === "cohost" }),
-      permission: { canPublish: action !== "audience", canSubscribe: true, canPublishData: true, canUpdateMetadata: false },
+      permission: proTalkPublishPermissions(action !== "audience"),
     });
     const coHostIds = space.coHostIds.filter(value => value !== identity);
     if (action === "cohost") coHostIds.push(identity);

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { hasNetworkMembership } from "@/lib/networkAccess";
 import { auth } from "@/lib/auth";
 
 // GET /api/pro-networks/[slug] - Get full network details
@@ -81,9 +82,9 @@ export async function GET(
       if (isOwner) {
         isMember = true;
         membershipRole = "OWNER";
-      } else if (member && member.status === "ACTIVE") {
+      } else if (hasNetworkMembership(member)) {
         isMember = true;
-        membershipRole = member.role;
+        membershipRole = member!.role;
       }
 
       isFollowing = !!follower;
@@ -134,6 +135,7 @@ export async function PATCH(
       coverImage,
       logoImage,
       monthlyPrice,
+      accentColor,
       rules,
       welcomeMessage,
       previewContent,
@@ -161,6 +163,9 @@ export async function PATCH(
       notifyEvents,
     } = body;
 
+    if (accentColor !== undefined && (typeof accentColor !== "string" || !/^#[0-9a-fA-F]{6}$/.test(accentColor))) return NextResponse.json({ error: "Choose a valid accent color" }, { status: 400 });
+    if (monthlyPrice !== undefined && (!Number.isFinite(Number(monthlyPrice)) || Number(monthlyPrice) < 0 || Number(monthlyPrice) > 999999)) return NextResponse.json({ error: "Enter a valid non-negative monthly price" }, { status: 400 });
+
     const updated = await prisma.proNetwork.update({
       where: { slug },
       data: {
@@ -170,8 +175,9 @@ export async function PATCH(
         ...(category !== undefined && { category }),
         ...(coverImage !== undefined && { coverImage }),
         ...(logoImage !== undefined && { logoImage }),
+        ...(accentColor !== undefined && { accentColor }),
         ...(monthlyPrice !== undefined && {
-          monthlyPrice: Math.max(0, isNaN(Number(monthlyPrice)) ? 0 : Number(monthlyPrice)),
+          monthlyPrice: Math.round(Number(monthlyPrice) * 100) / 100,
         }),
         ...(rules !== undefined && { rules }),
         ...(welcomeMessage !== undefined && { welcomeMessage }),

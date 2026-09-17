@@ -5,39 +5,40 @@ import Link from "next/link";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setUser } from "@/store/slices/authSlice";
 import {
-  Loader2,
-  MapPin,
-  UserCheck,
-  Share2,
-  Clock,
-  Award,
-  ShieldCheck,
-  Check,
-  CreditCard,
-  ChevronRight,
-  Sparkles,
-  Camera,
-  Edit3,
-  Mic,
-  Image as ImageIcon,
-  Briefcase,
-  Target,
-  Crown,
-  X,
-  Link2,
-  Mail,
-  Users,
-  Users2,
-  Star,
-  MessageSquare,
-  Video,
-  Megaphone,
-  Globe,
-  Plus,
-  Info,
-  Copy,
-  ExternalLink,
-} from "lucide-react";
+  Loading03Icon as Loader2,
+  Location01Icon as MapPin,
+  UserCheck01Icon as UserCheck,
+  Share08Icon as Share2,
+  Clock01Icon as Clock,
+  Award01Icon as Award,
+  Shield01Icon as ShieldCheck,
+  Tick02Icon as Check,
+  CreditCardIcon as CreditCard,
+  ArrowRight01Icon as ChevronRight,
+  SparklesIcon as Sparkles,
+  Camera01Icon as Camera,
+  Edit01Icon as Edit3,
+  Mic01Icon as Mic,
+  Image01Icon as ImageIcon,
+  Briefcase01Icon as Briefcase,
+  Target01Icon as Target,
+  CrownIcon as Crown,
+  Cancel01Icon as X,
+  Link01Icon as Link2,
+  Mail01Icon as Mail,
+  UserGroupIcon as Users,
+  UserMultipleIcon as Users2,
+  StarIcon as Star,
+  BubbleChatIcon as MessageSquare,
+  Video01Icon as Video,
+  Megaphone01Icon as Megaphone,
+  Globe02Icon as Globe,
+  Add01Icon as Plus,
+  InformationCircleIcon as Info,
+  Copy01Icon as Copy,
+  LinkSquare02Icon as ExternalLink
+} from "hugeicons-react";
+import { PROFESSIONAL_TITLES } from "@/lib/professionalTitles";
 import EditProfileModal, { type ProfileFormData } from "@/components/profile/EditProfileModal";
 import { VoiceMemoPlayer, VoiceMemoEditor } from "@/components/profile/VoiceMemo";
 import ServiceEditor from "@/components/profile/ServiceEditor";
@@ -186,6 +187,7 @@ export default function ProProfileEditor() {
         const u = await res.json();
         setProfile({
           name: u.name || "",
+          professionalTitle: u.professionalTitle || "",
           headline: u.headline || "",
           bio: u.bio || "",
           mission: u.mission || "",
@@ -346,6 +348,7 @@ export default function ProProfileEditor() {
       });
       if (res.ok) {
         setSaveToast(true);
+        window.dispatchEvent(new Event("profile-updated"));
         if (user) {
           dispatch(
             setUser({
@@ -367,7 +370,13 @@ export default function ProProfileEditor() {
     }
   };
 
-  const profileShareUrl = typeof window !== "undefined" ? `${window.location.origin}/find-a-pro/${user?.id || ""}` : "";
+  useEffect(() => {
+    const refresh = () => { void loadUserData(); };
+    window.addEventListener("profile-updated", refresh);
+    return () => window.removeEventListener("profile-updated", refresh);
+  }, [loadUserData]);
+
+  const profileShareUrl = typeof window !== "undefined" ? `${window.location.origin}/member/${user?.profileSlug || user?.id || ""}` : "";
   const shareText = `Check out ${profile.name || "this tax professional"} on TaxComPro!`;
 
   const handleCopyLink = () => {
@@ -422,7 +431,8 @@ export default function ProProfileEditor() {
   const yearsExp = profile.yearsExperience || "–";
 
   return (
-    <div className="max-w-[1440px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div className="profile-editor max-w-[1440px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="profile-editor-heading"><div><p>Your professional identity</p><h1>Make your profile yours<span>.</span></h1></div><Link href={`/member/${user?.profileSlug || user?.id}`} className="profile-primary"><ExternalLink size={18} /> View public profile</Link></div>
       {/* Hidden file inputs */}
       <input type="file" ref={avatarInputRef} onChange={handleAvatarUpload} accept="image/*" className="hidden" />
       <input type="file" ref={coverInputRef} onChange={handleCoverUpload} accept="image/*" className="hidden" />
@@ -442,19 +452,19 @@ export default function ProProfileEditor() {
                   onClick={() => setActiveTab(tab.id)}
                   className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-bold tracking-normal transition-all text-left group ${
                     isActive
-                      ? "bg-[#EAF2FC] dark:bg-[#1E56A0]/20 text-[#1E56A0] dark:text-[#60a5fa] shadow-xs"
+                      ? "profile-menu-active"
                       : "text-slate-600 dark:text-slate-300 hover:text-[#0A1628] dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50"
                   }`}
                 >
                   <div className="flex items-center gap-3.5">
                     <tab.icon
                       className={`w-5 h-5 shrink-0 transition-colors ${
-                        isActive ? "text-[#1E56A0] dark:text-[#60a5fa]" : "text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300"
+                        isActive ? "profile-accent" : "text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300"
                       }`}
                     />
                     <span className="leading-snug">{tab.label}</span>
                   </div>
-                  {isActive && <ChevronRight className="w-4 h-4 text-[#1E56A0] dark:text-[#60a5fa] shrink-0" />}
+                  {isActive && <ChevronRight className="w-4 h-4 profile-accent shrink-0" />}
                 </button>
               );
             })}
@@ -484,7 +494,7 @@ export default function ProProfileEditor() {
         <div className="flex-1 min-w-0 space-y-6">
 
           {/* ── HERO PROFILE CARD ─────────────────────────────────────────── */}
-          <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
+          <div className="rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
 
             {/* Cover Image Area */}
             {profile.coverImage ? (
@@ -552,7 +562,7 @@ export default function ProProfileEditor() {
 
                   <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-500 dark:text-slate-400 pt-0.5">
                     {location && (
-                      <span className="flex items-center gap-1 text-[#1E56A0] dark:text-[#60a5fa]">
+                      <span className="flex items-center gap-1 profile-accent">
                         <MapPin className="w-3.5 h-3.5" />
                         {location}
                       </span>
@@ -594,7 +604,7 @@ export default function ProProfileEditor() {
           </div>
 
           {/* ── PRO NETWORK STATS BAR (100% DYNAMIC) ────────────────────────── */}
-          <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200/90 dark:border-slate-800 p-4 sm:p-5 shadow-xs mb-6 transition-colors">
+          <div className="rounded-3xl bg-white dark:bg-[#172135] border border-slate-200/90 dark:border-slate-800 p-4 sm:p-5 shadow-xs mb-6 transition-colors">
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-y sm:divide-y-0 sm:divide-x divide-slate-100 dark:divide-slate-800/80 gap-y-4">
               {/* 1. FOLLOWERS */}
               <div className="flex items-center gap-3.5 px-3 sm:first:pl-2">
@@ -679,13 +689,13 @@ export default function ProProfileEditor() {
               <div className="grid lg:grid-cols-12 gap-6">
               <div className="lg:col-span-7 space-y-6">
                 {/* ABOUT ME */}
-                <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
+                <div className="rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
                   <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                     <h3 className="text-xs font-black text-[#0A1628] dark:text-white uppercase tracking-widest flex items-center gap-2">
-                      <UserCheck className="w-4 h-4 text-[#1E56A0] dark:text-[#60a5fa]" />
+                      <UserCheck className="w-4 h-4 profile-accent" />
                       ABOUT ME
                     </h3>
-                    <button onClick={() => setActiveTab("basic")} className="text-xs font-bold text-[#1E56A0] dark:text-[#60a5fa] hover:underline flex items-center gap-1">
+                    <button onClick={() => setActiveTab("basic")} className="text-xs font-bold profile-accent hover:underline flex items-center gap-1">
                       <Edit3 className="w-3 h-3" /> Edit
                     </button>
                   </div>
@@ -701,7 +711,7 @@ export default function ProProfileEditor() {
                     <div className="flex flex-wrap gap-3 pt-2">
                       {yearsExp !== "–" && (
                         <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-100 dark:border-slate-700/80">
-                          <Clock className="w-4 h-4 text-[#1E56A0] dark:text-[#60a5fa]" />
+                          <Clock className="w-4 h-4 profile-accent" />
                           <div>
                             <p className="text-sm font-black text-[#0A1628] dark:text-white">{yearsExp}+ Years</p>
                             <p className="text-[10px] font-bold text-slate-400 dark:text-slate-400">Experience</p>
@@ -722,7 +732,7 @@ export default function ProProfileEditor() {
                 </div>
 
                 {/* ── JOIN MY PRO NETWORK (MATCHES SCREENSHOT) ── */}
-                <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
+                <div className="rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
                   <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                     <h3 className="text-xs font-black text-[#0A1628] dark:text-white uppercase tracking-widest flex items-center gap-2">
                       <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
@@ -813,13 +823,13 @@ export default function ProProfileEditor() {
 
                 {/* EXPERTISE */}
                 {profile.specialties.length > 0 && (
-                  <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
+                  <div className="rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
                     <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                       <h3 className="text-xs font-black text-[#0A1628] dark:text-white uppercase tracking-widest flex items-center gap-2">
-                        <Award className="w-4 h-4 text-[#1E56A0] dark:text-[#60a5fa]" />
+                        <Award className="w-4 h-4 profile-accent" />
                         EXPERTISE
                       </h3>
-                      <button onClick={() => setActiveTab("credentials")} className="text-[11px] font-bold text-[#1E56A0] dark:text-[#60a5fa] hover:underline">Manage</button>
+                      <button onClick={() => setActiveTab("credentials")} className="text-[11px] font-bold profile-accent hover:underline">Manage</button>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {profile.specialties.map((spec) => (
@@ -831,19 +841,19 @@ export default function ProProfileEditor() {
 
                 {/* SERVICES */}
                 {services.length > 0 && (
-                  <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
+                  <div className="rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
                     <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                       <h3 className="text-xs font-black text-[#0A1628] dark:text-white uppercase tracking-widest flex items-center gap-2">
-                        <Check className="w-4 h-4 text-[#1E56A0] dark:text-[#60a5fa]" />
+                        <Check className="w-4 h-4 profile-accent" />
                         SERVICES OFFERED
                       </h3>
-                      <button onClick={() => setActiveTab("services")} className="text-[11px] font-bold text-[#1E56A0] dark:text-[#60a5fa] hover:underline">Manage</button>
+                      <button onClick={() => setActiveTab("services")} className="text-[11px] font-bold profile-accent hover:underline">Manage</button>
                     </div>
                     <ul className="space-y-2 text-xs font-bold text-slate-700 dark:text-slate-200">
                       {services.map((svc) => (
                         <li key={svc.id} className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-2">
-                            <span className="text-[#1E56A0] dark:text-[#60a5fa]">✓</span>
+                            <span className="profile-accent">✓</span>
                             <span>{svc.title}</span>
                           </div>
                           {svc.price && <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">{svc.price}</span>}
@@ -855,13 +865,13 @@ export default function ProProfileEditor() {
 
                 {/* CREDENTIALS */}
                 {profile.certifications.length > 0 && (
-                  <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
+                  <div className="rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
                     <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                       <h3 className="text-xs font-black text-[#0A1628] dark:text-white uppercase tracking-widest flex items-center gap-2">
                         <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                         CREDENTIALS
                       </h3>
-                      <button onClick={() => setActiveTab("credentials")} className="text-[11px] font-bold text-[#1E56A0] dark:text-[#60a5fa] hover:underline">Edit</button>
+                      <button onClick={() => setActiveTab("credentials")} className="text-[11px] font-bold profile-accent hover:underline">Edit</button>
                     </div>
                     <div className="grid sm:grid-cols-2 gap-3">
                       {profile.certifications.map((cert) => (
@@ -878,10 +888,10 @@ export default function ProProfileEditor() {
 
                 {/* VOICE MEMO */}
                 {profile.voiceMemoUrl && (
-                  <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-3">
+                  <div className="rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-3">
                     <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
                       <h3 className="text-xs font-black uppercase tracking-widest text-[#0A1628] dark:text-white">Voice Introduction</h3>
-                      <button onClick={() => setActiveTab("voice")} className="text-[11px] font-bold text-[#1E56A0] dark:text-[#60a5fa] hover:underline">Record New</button>
+                      <button onClick={() => setActiveTab("voice")} className="text-[11px] font-bold profile-accent hover:underline">Record New</button>
                     </div>
                     <VoiceMemoPlayer url={profile.voiceMemoUrl} name={profile.name} />
                   </div>
@@ -891,13 +901,13 @@ export default function ProProfileEditor() {
               {/* RIGHT COLUMN */}
               <div className="lg:col-span-5 space-y-6">
                 {/* ── MY PRO NETWORKS (MATCHES SCREENSHOT) ── */}
-                <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
+                <div className="rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
                   <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                     <h3 className="text-xs font-black text-[#0A1628] dark:text-white uppercase tracking-widest flex items-center gap-2">
                       <Crown className="w-4 h-4 text-amber-500" />
                       MY PRO NETWORKS
                     </h3>
-                    <Link href="/pro-networks" className="text-xs font-bold text-[#1E56A0] dark:text-[#60a5fa] hover:underline">
+                    <Link href="/pro-networks" className="text-xs font-bold profile-accent hover:underline">
                       View All
                     </Link>
                   </div>
@@ -962,7 +972,7 @@ export default function ProProfileEditor() {
                 </div>
 
                 {/* MEMBERSHIP */}
-                <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
+                <div className="rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
                   <h3 className="text-xs font-black text-[#0A1628] dark:text-white uppercase tracking-widest flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
                     <Crown className="w-4 h-4 text-amber-500" />
                     MEMBERSHIP STATUS
@@ -990,7 +1000,7 @@ export default function ProProfileEditor() {
                   <div className="grid grid-cols-2 gap-2 text-xs font-bold text-slate-700 dark:text-slate-300 pt-1">
                     {["Unlimited Toolkit Access", "Priority Support", "All Course Access", "Exclusive Discounts", "Pro Talks Access", "Community Access"].map((b) => (
                       <div key={b} className="flex items-center gap-1.5">
-                        <span className="text-[#1E56A0] dark:text-[#60a5fa]">✓</span>
+                        <span className="profile-accent">✓</span>
                         <span>{b}</span>
                       </div>
                     ))}
@@ -998,13 +1008,13 @@ export default function ProProfileEditor() {
                 </div>
 
                 {/* PRO CONNECT CARD PREVIEW */}
-                <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
+                <div className="rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
                   <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                     <h3 className="text-xs font-black text-[#0A1628] dark:text-white uppercase tracking-widest flex items-center gap-2">
-                      <CreditCard className="w-4 h-4 text-[#1E56A0] dark:text-[#60a5fa]" />
+                      <CreditCard className="w-4 h-4 profile-accent" />
                       PRO CONNECT CARD
                     </h3>
-                    <button onClick={() => setActiveTab("card")} className="text-[11px] font-bold text-[#1E56A0] dark:text-[#60a5fa] hover:underline">Configure</button>
+                    <button onClick={() => setActiveTab("card")} className="text-[11px] font-bold profile-accent hover:underline">Configure</button>
                   </div>
                   <div className="rounded-xl bg-gradient-to-br from-[#0A1628] to-[#1C3658] p-4 text-white flex items-center justify-between gap-3">
                     <div className="space-y-1 flex-1 min-w-0">
@@ -1035,7 +1045,7 @@ export default function ProProfileEditor() {
             {/* ── MY BADGES & NOTE (MATCHES SCREENSHOT) ── */}
             <div className="grid lg:grid-cols-12 gap-6 pt-2">
               {/* Left: MY BADGES (7 cols) */}
-              <div className="lg:col-span-7 rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
+              <div className="lg:col-span-7 rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
                 <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                   <h3 className="text-xs font-black text-[#0A1628] dark:text-white uppercase tracking-widest flex items-center gap-2">
                     <Crown className="w-4 h-4 text-amber-500" />
@@ -1043,7 +1053,7 @@ export default function ProProfileEditor() {
                   </h3>
                   <Link
                     href={primaryNetwork ? `/pro-networks/${primaryNetwork.slug}` : "/pro-networks/create"}
-                    className="text-xs font-bold text-[#1E56A0] dark:text-[#60a5fa] hover:underline"
+                    className="text-xs font-bold profile-accent hover:underline"
                   >
                     Manage Badges
                   </Link>
@@ -1130,7 +1140,7 @@ export default function ProProfileEditor() {
               </div>
 
               {/* Right: NOTE Disclaimer (5 cols) */}
-              <div className="lg:col-span-5 rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-3">
+              <div className="lg:col-span-5 rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-3">
                 <h3 className="text-xs font-black text-[#0A1628] dark:text-white uppercase tracking-widest flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
                   <Info className="w-4 h-4 text-slate-400" />
                   NOTE
@@ -1152,10 +1162,10 @@ export default function ProProfileEditor() {
 
           {/* ── BASIC INFO TAB ────────────────────────────────────────────── */}
           {activeTab === "basic" && (
-            <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-xs space-y-6">
+            <div className="rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-xs space-y-6">
               <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
                 <h2 className="text-base font-black text-[#0A1628] dark:text-white uppercase tracking-wider flex items-center gap-2">
-                  <Edit3 className="w-5 h-5 text-[#1E56A0] dark:text-[#60a5fa]" />
+                  <Edit3 className="w-5 h-5 profile-accent" />
                   Basic Information
                 </h2>
                 <button
@@ -1171,6 +1181,13 @@ export default function ProProfileEditor() {
                 <div>
                   <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Full Name & Suffix</label>
                   <input type="text" value={profile.name} onChange={(e) => setProfile((p) => ({ ...p, name: e.target.value }))} className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm font-medium focus:border-[#1E56A0] focus:ring-2 focus:ring-[#1E56A0]/10 outline-none" />
+                </div>
+                <div>
+                  <label htmlFor="editor-professional-title" className="block text-sm font-semibold mb-2">Professional title / role</label>
+                  <select id="editor-professional-title" value={profile.professionalTitle || ""} onChange={e => setProfile(p => ({ ...p, professionalTitle: e.target.value }))} className="w-full rounded-xl border border-slate-200 dark:border-slate-700 px-3.5 py-3 text-sm">
+                    <option value="">Select your title</option>
+                    {PROFESSIONAL_TITLES.map(title => <option key={title}>{title}</option>)}
+                  </select>
                 </div>
                 <div>
                   <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Location</label>
@@ -1194,10 +1211,10 @@ export default function ProProfileEditor() {
 
           {/* ── MISSION TAB ───────────────────────────────────────────────── */}
           {activeTab === "mission" && (
-            <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-xs space-y-6">
+            <div className="rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-xs space-y-6">
               <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
                 <h2 className="text-base font-black text-[#0A1628] dark:text-white uppercase tracking-wider flex items-center gap-2">
-                  <Target className="w-5 h-5 text-[#1E56A0] dark:text-[#60a5fa]" />
+                  <Target className="w-5 h-5 profile-accent" />
                   Mission &amp; Professional Philosophy
                 </h2>
                 <button onClick={saveInPageProfile} disabled={savingInPage} className="px-5 py-2.5 rounded-xl bg-[#1E56A0] hover:bg-[#16437E] text-white text-xs font-bold transition-all disabled:opacity-50 flex items-center gap-1.5">
@@ -1214,10 +1231,10 @@ export default function ProProfileEditor() {
 
           {/* ── SERVICES TAB ──────────────────────────────────────────────── */}
           {activeTab === "services" && (
-            <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-xs space-y-6">
+            <div className="rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-xs space-y-6">
               <div className="border-b border-slate-100 dark:border-slate-800 pb-4">
                 <h2 className="text-base font-black text-[#0A1628] dark:text-white uppercase tracking-wider flex items-center gap-2">
-                  <Briefcase className="w-5 h-5 text-[#1E56A0] dark:text-[#60a5fa]" /> Services &amp; Pricing
+                  <Briefcase className="w-5 h-5 profile-accent" /> Services &amp; Pricing
                 </h2>
                 <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Add and manage the tax services displayed on your public profile.</p>
               </div>
@@ -1227,7 +1244,7 @@ export default function ProProfileEditor() {
 
           {/* ── CREDENTIALS TAB ───────────────────────────────────────────── */}
           {activeTab === "credentials" && (
-            <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-xs space-y-6">
+            <div className="rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-xs space-y-6">
               <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
                 <div>
                   <h2 className="text-base font-black text-[#0A1628] dark:text-white uppercase tracking-wider flex items-center gap-2">
@@ -1267,10 +1284,10 @@ export default function ProProfileEditor() {
 
           {/* ── VOICE INTRO TAB ───────────────────────────────────────────── */}
           {activeTab === "voice" && (
-            <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-xs space-y-6">
+            <div className="rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-xs space-y-6">
               <div className="border-b border-slate-100 dark:border-slate-800 pb-4">
                 <h2 className="text-base font-black text-[#0A1628] dark:text-white uppercase tracking-wider flex items-center gap-2">
-                  <Mic className="w-5 h-5 text-[#1E56A0] dark:text-[#60a5fa]" /> Voice Introduction Memo
+                  <Mic className="w-5 h-5 profile-accent" /> Voice Introduction Memo
                 </h2>
                 <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Record a voice intro that plays on your public profile.</p>
               </div>
@@ -1280,10 +1297,10 @@ export default function ProProfileEditor() {
 
           {/* ── MEDIA GALLERY TAB ─────────────────────────────────────────── */}
           {activeTab === "media" && (
-            <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-xs space-y-6">
+            <div className="rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-xs space-y-6">
               <div className="border-b border-slate-100 dark:border-slate-800 pb-4">
                 <h2 className="text-base font-black text-[#0A1628] dark:text-white uppercase tracking-wider flex items-center gap-2">
-                  <ImageIcon className="w-5 h-5 text-[#1E56A0] dark:text-[#60a5fa]" /> Media &amp; Certificate Gallery
+                  <ImageIcon className="w-5 h-5 profile-accent" /> Media &amp; Certificate Gallery
                 </h2>
                 <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Upload photos of your office, speaking events, and certificates.</p>
               </div>
@@ -1293,10 +1310,10 @@ export default function ProProfileEditor() {
 
           {/* ── CONNECT CARD TAB ──────────────────────────────────────────── */}
           {activeTab === "card" && (
-            <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-xs space-y-6">
+            <div className="rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-xs space-y-6">
               <div className="border-b border-slate-100 dark:border-slate-800 pb-4">
                 <h2 className="text-base font-black text-[#0A1628] dark:text-white uppercase tracking-wider flex items-center gap-2">
-                  <CreditCard className="w-5 h-5 text-[#1E56A0] dark:text-[#60a5fa]" /> Pro Connect NFC &amp; Digital Tap Card
+                  <CreditCard className="w-5 h-5 profile-accent" /> Pro Connect NFC &amp; Digital Tap Card
                 </h2>
                 <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Manage links, QR code, and business contact settings.</p>
               </div>
@@ -1306,7 +1323,7 @@ export default function ProProfileEditor() {
 
           {/* ── MEMBERSHIP TAB ────────────────────────────────────────────── */}
           {activeTab === "membership" && (
-            <div className="rounded-2xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-xs space-y-6">
+            <div className="rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-xs space-y-6">
               <div className="border-b border-slate-100 dark:border-slate-800 pb-4">
                 <h2 className="text-base font-black text-[#0A1628] dark:text-white uppercase tracking-wider flex items-center gap-2">
                   <Crown className="w-5 h-5 text-amber-500" /> Membership &amp; Subscription

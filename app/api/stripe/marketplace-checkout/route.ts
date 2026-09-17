@@ -21,6 +21,9 @@ export async function POST(req: NextRequest) {
     include: { user: { select: { id: true, name: true } } },
   });
   if (!listing) return NextResponse.json({ error: "Listing not found" }, { status: 404 });
+  if (listing.metadata && typeof listing.metadata === "object" && !Array.isArray(listing.metadata) && listing.metadata.isDemo) {
+    return NextResponse.json({ error: "This is a demo listing for preview only. Checkout is disabled." }, { status: 400 });
+  }
 
   // If user is seller, return error
   if (listing.userId === session.user.id) {

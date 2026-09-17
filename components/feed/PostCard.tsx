@@ -13,14 +13,14 @@ import FeedVideoPlayer from "./FeedVideoPlayer";
 import PostLikesModal from "./PostLikesModal";
 
 interface Author {
-  id: string; name: string; image: string | null;
+  id: string; profileSlug?: string | null; name: string; image: string | null;
   headline: string | null; role: string; tier: string;
   hasDueDiligenceBadge?: boolean;
 }
 
 interface Comment {
   id: string; content: string; createdAt: string;
-  author: { id: string; name: string; image: string | null };
+  author: { id: string; profileSlug?: string | null; name: string; image: string | null };
 }
 
 export interface FeedPost {
@@ -164,14 +164,14 @@ export default function PostCard({ post, onUpdate, onDelete }: { post: FeedPost;
       {post.community && <Link href={`/groups/${post.community.slug}`} className="feed-post-group"><UserGroupIcon size={17} /><span>{post.community.name}</span>{post.community.isPublic ? <GlobeIcon size={14} /> : <LockIcon size={14} />}</Link>}
       {/* Header */}
       <div className="flex items-start gap-3 p-5 pb-3">
-        <Link href={`/member/${post.author.id}`} aria-label={`View ${post.author.name}’s profile`} className="w-12 h-12 rounded-xl bg-[#0a1628] flex items-center justify-center overflow-hidden shrink-0">
+        <Link href={`/member/${post.author.profileSlug || post.author.id}`} aria-label={`View ${post.author.name}’s profile`} className="w-12 h-12 rounded-xl bg-[#0a1628] flex items-center justify-center overflow-hidden shrink-0">
           {post.author.image
             ? <img loading="lazy" decoding="async" src={post.author.image} alt={post.author.name} referrerPolicy="no-referrer" className="w-full h-full object-cover" />
             : <span className="text-white font-bold text-base">{post.author.name?.[0]?.toUpperCase()}</span>}
         </Link>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <Link href={`/member/${post.author.id}`} className="feed-author-link font-bold text-[#0a1628] text-base">{post.author.name}</Link>
+            <Link href={`/member/${post.author.profileSlug || post.author.id}`} className="feed-author-link font-bold text-[#0a1628] text-base">{post.author.name}</Link>
             {post.author.hasDueDiligenceBadge && (
               <DueDiligenceBadge size={22} />
             )}
@@ -325,7 +325,7 @@ export default function PostCard({ post, onUpdate, onDelete }: { post: FeedPost;
                       : <span className="text-white text-xs font-bold">{c.author.name?.[0]?.toUpperCase()}</span>}
                   </div>
                   <div className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5">
-                    <Link href={`/member/${c.author.id}`} className="feed-author-link text-sm font-bold text-[#0a1628]">{c.author.name}</Link>
+                    <Link href={`/member/${c.author.profileSlug || c.author.id}`} className="feed-author-link text-sm font-bold text-[#0a1628]">{c.author.name}</Link>
                     <div className="text-sm text-slate-600 mt-0.5 leading-relaxed">{c.content}</div>
                   </div>
                 </div>

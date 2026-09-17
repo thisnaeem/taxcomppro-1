@@ -1,5 +1,6 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
+import { ensureProfileSlug } from "@/lib/profileSlug";
 import { prisma } from "@/lib/prisma";
 import { sendPasswordResetEmail } from "@/lib/email";
 
@@ -7,6 +8,7 @@ const appUrl = process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_APP_URL ||
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, { provider: "postgresql" }),
+  databaseHooks: { user: { create: { after: async user => { await ensureProfileSlug(user.id, user.name); } } } },
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: false,
@@ -32,6 +34,7 @@ export const auth = betterAuth({
   },
   user: {
     additionalFields: {
+      professionalTitle: { type: "string", required: false, input: true },
       phone:     { type: "string", required: false, input: true  },
       role:      { type: "string", required: false, defaultValue: "MEMBER", input: false },
       tier:      { type: "string", required: false, defaultValue: "FREE",   input: false },

@@ -118,6 +118,8 @@ enum TrainingStatus {
 }
 
 model User {
+  profileSlug String? @unique
+  professionalTitle String?
   id               String           @id @default(cuid())
   email            String           @unique
   emailVerified    Boolean          @default(false)
@@ -1661,6 +1663,7 @@ model NfcCard {
 
 // ── Pro Networks (Private Subscription Communities) ─────────────────────────
 model ProNetwork {
+  accentColor String @default("#e8c449")
   id                  String   @id @default(cuid())
   name                String
   slug                String   @unique
@@ -1669,7 +1672,7 @@ model ProNetwork {
   category            String   @default("General")
   coverImage          String?
   logoImage           String?
-  monthlyPrice        Float    @default(19.99)
+  monthlyPrice        Float    @default(0)
   isPublished         Boolean  @default(true)
   memberCount         Int      @default(1)
   followerCount       Int      @default(0)

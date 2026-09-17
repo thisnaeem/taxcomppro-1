@@ -11,7 +11,7 @@ type Category = "ALL" | "SERVICE" | "PRODUCT" | "NETWORK" | "TRAINING";
 type Price = "all" | "free" | "under100" | "100plus";
 type Sort = "recommended" | "newest" | "low" | "high";
 interface Listing {
-  id: string; slug: string | null; title: string; description: string;
+  href?: string; billingPeriod?: string; id: string; slug: string | null; title: string; description: string;
   category: string; price: number | null; tags: string[]; images: string[];
   isFeatured: boolean; viewCount: number; createdAt: string;
   user: { id: string; name: string; image: string | null };
@@ -28,14 +28,14 @@ const prices: {value: Price; label: string}[] = [{value:"all",label:"Any price"}
 function ListingCard({ listing: l }: { listing: Listing }) {
   const category = categories.find(c => c.value === l.category) ?? categories[0];
   const Icon = category.icon;
-  return <Link className="mk-card" href={`/${l.slug || l.id}`}>
+  return <Link className="mk-card" href={l.href || `/${l.slug || l.id}`}>
     <div className="mk-cover">
       {l.images?.[0] ? <img src={l.images[0]} alt={l.title} loading="lazy" /> : <div className="mk-cover-placeholder"><Icon size={44} /><span>{category.label}</span></div>}
       <span className="mk-category">{category.label}</span>
       {l.isFeatured && <span className="mk-featured"><StarIcon size={14} /> Featured</span>}
     </div>
     <div className="mk-card-body">
-      <strong className="mk-price">{l.price == null ? "Contact for pricing" : l.price === 0 ? "Free" : new Intl.NumberFormat("en-US", {style:"currency",currency:"USD",maximumFractionDigits:2}).format(l.price)}</strong>
+      <strong className="mk-price">{l.price == null ? "Contact for pricing" : l.price === 0 ? "Free" : new Intl.NumberFormat("en-US", {style:"currency",currency:"USD",maximumFractionDigits:2}).format(l.price)}{l.billingPeriod && !!l.price && "/mo"}</strong>
       <h2>{l.title}</h2><p>{l.description}</p>
       <div className="mk-seller"><span className="mk-avatar">{l.user.image ? <img src={l.user.image} alt="" loading="lazy" referrerPolicy="no-referrer" /> : l.user.name?.[0]}</span><span>{l.user.name}</span><ArrowRight01Icon size={18} /></div>
     </div>

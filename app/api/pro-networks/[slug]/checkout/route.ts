@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { prisma } from "@/lib/prisma";
+import { hasNetworkMembership } from "@/lib/networkAccess";
 import { auth } from "@/lib/auth";
 
 const stripe = process.env.STRIPE_SECRET_KEY
@@ -59,7 +60,7 @@ export async function POST(
       },
     });
 
-    if (existingMember && existingMember.status === "ACTIVE") {
+    if (hasNetworkMembership(existingMember)) {
       return NextResponse.json({
         success: true,
         alreadyMember: true,
@@ -87,6 +88,7 @@ export async function POST(
         update: {
           status: "ACTIVE",
           joinedAt: new Date(),
+          expiresAt: null,
         },
       });
 

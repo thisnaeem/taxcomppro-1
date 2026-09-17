@@ -96,11 +96,12 @@ export default function CreateProNetworkPage() {
   const [tagline, setTagline] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("Tax Strategy");
-  const [pricingType, setPricingType] = useState<"free" | "paid">("paid");
-  const [monthlyPrice, setMonthlyPrice] = useState("19.99");
+  const [pricingType, setPricingType] = useState<"free" | "paid">("free");
+  const [monthlyPrice, setMonthlyPrice] = useState("0");
   const [coverImage, setCoverImage] = useState(coverPresets[0]);
   const [customCoverUrl, setCustomCoverUrl] = useState("");
   const [logoImage, setLogoImage] = useState("");
+  const [accentColor, setAccentColor] = useState("#e8c449");
 
   // Badge Config
   const [badge, setBadge] = useState<BadgeConfig>({
@@ -161,7 +162,8 @@ export default function CreateProNetworkPage() {
           tagline,
           description,
           category,
-          monthlyPrice: parseFloat(monthlyPrice || "0"),
+          monthlyPrice: pricingType === "free" ? 0 : parseFloat(monthlyPrice || "0"),
+          accentColor,
           coverImage: customCoverUrl || coverImage,
           logoImage: logoImage || null,
           badgeShape: badge.badgeShape,
@@ -828,6 +830,7 @@ export default function CreateProNetworkPage() {
               </div>
             )}
 
+            <label className="block p-4">Network accent color <input type="color" value={accentColor} onChange={e => setAccentColor(e.target.value)} aria-label="Network accent color" className="ml-3 h-10 w-16 cursor-pointer" /></label>
             {/* STEP 5: Direct Access & Privacy Settings */}
             {step === 5 && (
               <div className="space-y-6">

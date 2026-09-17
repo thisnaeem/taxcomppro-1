@@ -26,6 +26,7 @@ export interface NetworkMemberItem {
     role: string;
     tier?: string;
     headline?: string | null;
+    professionalTitle?: string | null;
     location?: string | null;
     digitalCard?: {
       username: string;
@@ -91,6 +92,7 @@ export default function MemberBubbleCloud({
       const matchesSearch =
         !searchFilter ||
         m.user.name.toLowerCase().includes(searchFilter.toLowerCase()) ||
+        (m.user.professionalTitle?.toLowerCase().includes(searchFilter.toLowerCase())) ||
         (m.user.headline && m.user.headline.toLowerCase().includes(searchFilter.toLowerCase())) ||
         (m.user.location && m.user.location.toLowerCase().includes(searchFilter.toLowerCase()));
 
@@ -374,7 +376,7 @@ export default function MemberBubbleCloud({
               {/* Bio / Headline */}
               <div className="space-y-1 text-xs">
                 <p className="font-semibold text-slate-600 dark:text-slate-300 leading-relaxed line-clamp-2">
-                  {hoveredMember.user.headline ||
+                  {hoveredMember.user.professionalTitle || hoveredMember.user.headline ||
                     (hoveredMember.role.toUpperCase() === "OWNER"
                       ? `Host and creator of ${networkName}.`
                       : "Verified Member of this private Pro Network.")}

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { proTalkPublishPermissions } from "@/lib/proTalkPermissions";
 import { canAccessSpace } from "@/lib/spaceAccess";
 import { prisma } from "@/lib/prisma";
 import { AccessToken } from "livekit-server-sdk";
@@ -29,13 +30,14 @@ export async function POST(req: NextRequest, { params }: Params) {
   const token = new AccessToken(apiKey, apiSecret, {
     identity,
     name,
-    metadata: JSON.stringify({ image: null, isGuest: true }),
+    metadata: JSON.stringify({ image: null, isGuest: true, role: "ATTENDEE" }),
   });
 
   token.addGrant({
     roomJoin:       true,
     room:           space.roomName,
-    canPublish:     false,
+    ...proTalkPublishPermissions(false),
+    canUpdateOwnMetadata: false,
     canPublishData: true,
     canSubscribe:   true,
     roomAdmin:      false,
