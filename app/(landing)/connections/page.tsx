@@ -1,387 +1,115 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useAppSelector } from "@/store/hooks";
-import { Loader2 } from "lucide-react";
-import {
-  Search01Icon, UserAdd01Icon, UserCheck01Icon, UserGroupIcon,
-  Clock01Icon, Tick02Icon, Cancel01Icon, Message01Icon,
-  UserRemove02Icon, ArrowRight01Icon,
-} from "hugeicons-react";
+import { Search01Icon, UserAdd01Icon, UserCheck01Icon, UserGroupIcon, Clock01Icon, Tick02Icon, Cancel01Icon, Message01Icon, ArrowRight01Icon, Home01Icon, Location01Icon } from "hugeicons-react";
 import UpgradeGate from "@/components/ui/UpgradeGate";
+import "./connections.css";
 
-interface Person { id: string; name: string; image: string | null; headline: string | null; role: string; tier?: string; }
-interface Connection { id: string; status: string; requester: Person; receiver: Person; }
-interface PendingIn { id: string; requester: Person; }
-interface PendingSent { id: string; receiver: Person; }
+interface Person { id: string; profileSlug?: string | null; name: string; image: string | null; headline: string | null; professionalTitle?: string | null; location?: string | null; }
+interface Connection { id: string; requester: Person; receiver: Person; }
+interface Data { connections: Connection[]; received: Connection[]; sent: Connection[]; }
+type Tab = "home" | "requests" | "suggestions" | "connected" | "sent";
+const labels: Record<Tab, string> = { home: "Your connections", requests: "Connection requests", suggestions: "People you may know", connected: "All connections", sent: "Sent requests" };
 
-type Tab = "discover" | "requests" | "connected";
-
-function Avatar({ user, size = "md" }: { user: { name: string; image: string | null }; size?: "sm"|"md"|"lg" }) {
-  const sz = size === "lg" ? "w-[72px] h-[72px] text-2xl" : size === "sm" ? "w-8 h-8 text-xs" : "w-10 h-10 text-sm";
-  return (
-    <div className={`${sz} rounded-full bg-[#0a1628] overflow-hidden flex items-center justify-center shrink-0`}>
-      {user.image
-        ? <img src={user.image} alt={user.name} referrerPolicy="no-referrer" className="w-full h-full object-cover" />
-        : <span className="text-white font-bold">{user.name?.[0]?.toUpperCase()}</span>}
+function PersonCard({ person, children }: { person: Person; children: ReactNode }) {
+  const [failed, setFailed] = useState(false);
+  const href = `/member/${person.profileSlug || person.id}`;
+  return <article className="cn-card">
+    <Link href={href} className="cn-photo" aria-label={`View ${person.name}'s profile`}>
+      {person.image && !failed ? <img src={person.image} alt="" loading="lazy" referrerPolicy="no-referrer" onError={() => setFailed(true)} /> : <span>{person.name.split(" ").filter(Boolean).slice(0, 2).map(n => n[0]).join("")}</span>}
+    </Link>
+    <div className="cn-card-body"><Link href={href} className="cn-name">{person.name}</Link>
+      <p className="cn-role">{person.professionalTitle || person.headline || "Community member"}</p>
+      <p className="cn-detail">{person.location ? <><Location01Icon size={14} />{person.location}</> : <><UserGroupIcon size={14} />TaxCompPro community</>}</p>
+      <div className="cn-actions">{children}</div>
     </div>
-  );
+  </article>;
 }
-
-function RoleBadge({ role, tier }: { role: string; tier?: string }) {
-  const tierCls = tier === "MARKETPLACE_PLUS"
-    ? "bg-emerald-100 text-emerald-700"
-    : tier === "VIP"
-    ? "bg-amber-100 text-amber-700"
-    : tier === "MARKETPLACE"
-    ? "bg-indigo-100 text-indigo-700"
-    : null;
-
-  const roleCls = role === "ADMIN" ? "bg-purple-100 text-purple-700"
-    : role === "PROFESSIONAL" ? "bg-blue-100 text-blue-700"
-    : "bg-slate-100 text-slate-500";
-
-  return (
-    <div className="flex flex-wrap gap-1 mt-1">
-      {tierCls && tier && tier !== "FREE" && (
-        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full inline-block ${tierCls}`}>
-          {tier === "MARKETPLACE_PLUS" ? "Marketplace Plus" : tier}
-        </span>
-      )}
-      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full inline-block ${roleCls}`}>{role}</span>
-    </div>
-  );
-}
-
-/* ─── Skeleton person card ──────────────────────────────────── */
-function SkeletonPerson() {
-  return (
-    <div className="bg-white rounded-2xl p-4 flex items-center gap-3 animate-pulse">
-      <div className="w-10 h-10 rounded-full bg-slate-200 shrink-0" />
-      <div className="flex-1 space-y-1.5">
-        <div className="h-4 bg-slate-200 rounded w-1/2" />
-        <div className="h-3 bg-slate-200 rounded w-3/4" />
-      </div>
-      <div className="h-8 w-20 bg-slate-200 rounded-full shrink-0" />
-    </div>
-  );
-}
+function Skeletons() { return <div className="cn-grid" role="status" aria-label="Loading connections">{Array.from({ length: 6 }, (_, i) => <div className="cn-card cn-skeleton" key={i}><div className="cn-photo" /><div className="cn-card-body"><span /><span /><span /><span /></div></div>)}</div>; }
+function Empty({ title, children }: { title: string; children: ReactNode }) { return <div className="cn-empty"><div><UserGroupIcon size={28} /></div><h3>{title}</h3><p>{children}</p></div>; }
 
 export default function ConnectionsPage() {
   const user = useAppSelector(s => s.auth.user);
-  const [tab,         setTab]         = useState<Tab>("discover");
-  const [search,      setSearch]      = useState("");
-  const [query,       setQuery]       = useState("");
-  const [people,      setPeople]      = useState<Person[]>([]);
-  const [connections, setConnections] = useState<Connection[]>([]);
-  const [received,    setReceived]    = useState<PendingIn[]>([]);
-  const [sent,        setSent]        = useState<PendingSent[]>([]);
-  const [loading,     setLoading]     = useState(true);
-  const [acting,      setActing]      = useState<Record<string, boolean>>({});
-  const [sentIds,     setSentIds]     = useState<Set<string>>(new Set());
-
-  const loadConnections = useCallback(async () => {
-    if (!user) return;
-    try {
-      const res = await fetch("/api/connections");
-      const data = await res.json();
-      setConnections(data.connections ?? []);
-      setReceived(data.received ?? []);
-      setSent(data.sent ?? []);
-      setSentIds(new Set((data.sent ?? []).map((s: PendingSent) => s.receiver.id)));
-    } catch { /* ignore */ }
-  }, [user]);
-
+  const allowed = !!user && (user.tier !== "FREE" || user.role === "ADMIN");
+  const [tab, setTab] = useState<Tab>("home");
+  const [search, setSearch] = useState("");
+  const [data, setData] = useState<Data>({ connections: [], received: [], sent: [] });
+  const [people, setPeople] = useState<Person[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+  const [retry, setRetry] = useState(0);
+  const [acting, setActing] = useState<Record<string, boolean>>({});
+  const [hidden, setHidden] = useState<string[]>([]);
+  const [limit, setLimit] = useState(24);
+  const userId = user?.id;
   useEffect(() => {
-    window.scrollTo(0, 0);
-    if (!user) return;
-    const params = new URLSearchParams();
-    if (query) params.set("search", query);
-    setLoading(true);
-    fetch(`/api/connections/people?${params}`)
-      .then(r => r.json()).then(d => setPeople(Array.isArray(d) ? d : []))
-      .catch(() => {}).finally(() => setLoading(false));
-  }, [query, user]);
-
-  useEffect(() => { loadConnections(); }, [loadConnections]);
-  useEffect(() => {
-    const t = setTimeout(() => setQuery(search), 400);
-    return () => clearTimeout(t);
-  }, [search]);
-
-  const sendRequest = async (receiverId: string) => {
-    setActing(p => ({ ...p, [receiverId]: true }));
+    if (!allowed || !userId) return;
+    const controller = new AbortController();
+    async function load() {
+      setLoading(true); setError("");
+      try {
+        const responses = await Promise.all([fetch("/api/connections", { signal: controller.signal }), fetch("/api/connections/people", { signal: controller.signal })]);
+        if (responses.some(r => !r.ok)) throw new Error("We couldn’t load your connections. Please try again.");
+        const [connections, suggestions] = await Promise.all(responses.map(r => r.json()));
+        if (!controller.signal.aborted) { setData(connections); setPeople(suggestions);
+    try { const saved = JSON.parse(localStorage.getItem(`connections-hidden:${userId}`) || "[]"); if (Array.isArray(saved)) setHidden(saved.filter(v => typeof v === "string")); } catch { /* Storage is optional. */ } }
+      } catch (e) { if (!controller.signal.aborted) setError(e instanceof Error ? e.message : "Couldn’t load connections."); }
+      finally { if (!controller.signal.aborted) setLoading(false); }
+    }
+    void load();
+    return () => controller.abort();
+  }, [allowed, userId, retry]);
+  function navigate(next: Tab) { setTab(next); setSearch(""); setLimit(24); }
+  function dismiss(id: string) { const next = [...hidden, id]; setHidden(next); try { localStorage.setItem(`connections-hidden:${userId}`, JSON.stringify(next)); } catch { /* Keep dismissal for this visit. */ } }
+  async function act(key: string, url: string, method: string, body: unknown, success: () => void, message: string) {
+    setActing(a => ({ ...a, [key]: true })); setNotice(""); setError("");
     try {
-      const res = await fetch("/api/connections", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ receiverId }),
-      });
-      if (res.ok || res.status === 409) setSentIds(p => new Set([...p, receiverId]));
-    } catch { /* ignore */ } finally { setActing(p => ({ ...p, [receiverId]: false })); }
-  };
-
-  const respond = async (id: string, action: "accept" | "decline") => {
-    setActing(p => ({ ...p, [id]: true }));
+      const response = await fetch(url, { method, ...(body ? { headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) } : {}) });
+      if (!response.ok) { const result = await response.json().catch(() => ({})); throw new Error(result.error || "That action failed. Please try again."); }
+      await response.json(); success(); setNotice(message);
+    } catch (e) { setError(e instanceof Error ? e.message : "Please try again."); }
+    finally { setActing(a => ({ ...a, [key]: false })); }
+  }
+  async function send(person: Person) {
+    setActing(a => ({ ...a, [person.id]: true })); setError("");
     try {
-      await fetch(`/api/connections/${id}`, {
-        method: "PATCH", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action }),
-      });
-      await loadConnections();
-    } catch { /* ignore */ } finally { setActing(p => ({ ...p, [id]: false })); }
-  };
-
-  const remove = async (id: string) => {
-    setActing(p => ({ ...p, [id]: true }));
-    try {
-      await fetch(`/api/connections/${id}`, { method: "DELETE" });
-      await loadConnections();
-    } catch { /* ignore */ } finally { setActing(p => ({ ...p, [id]: false })); }
-  };
-
-  if (!user) return (
-    <div className="min-h-screen bg-slate-100 flex items-center justify-center text-center px-4">
-      <div className="bg-white rounded-2xl p-12 max-w-md">
-        <UserGroupIcon className="w-16 h-16 text-slate-200 mx-auto mb-4" />
-        <h1 className="text-xl font-black text-[#0a1628] mb-2">Sign in to connect</h1>
-        <Link href="/login" className="inline-flex items-center gap-2 bg-[#0a1628] text-white font-bold text-sm px-6 py-3 rounded-xl mt-3 hover:bg-[#1a3a6b] transition-all">Sign In</Link>
-      </div>
+      const response = await fetch("/api/connections", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ receiverId: person.id }) });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Couldn’t send your request.");
+      setData(d => ({ ...d, sent: [{ ...result, receiver: person }, ...d.sent] }));
+      setPeople(p => p.filter(v => v.id !== person.id)); setNotice(`Request sent to ${person.name}.`);
+    } catch (e) { setError(e instanceof Error ? e.message : "Please try again."); }
+    finally { setActing(a => ({ ...a, [person.id]: false })); }
+  }
+  const matches = (p: Person) => `${p.name} ${p.headline || ""} ${p.professionalTitle || ""} ${p.location || ""}`.toLowerCase().includes(search.trim().toLowerCase());
+  const excluded = new Set([...data.received.map(c => c.requester.id), ...data.sent.map(c => c.receiver.id), ...data.connections.map(c => c.requester.id === userId ? c.receiver.id : c.requester.id)]);
+  const suggestions = people.filter(p => !hidden.includes(p.id) && !excluded.has(p.id) && matches(p));
+  const received = data.received.filter(c => matches(c.requester));
+  const sent = data.sent.filter(c => matches(c.receiver));
+  const connected = data.connections.filter(c => matches(c.requester.id === userId ? c.receiver : c.requester));
+  const nav = [{ id: "home" as Tab, icon: Home01Icon, label: "Home" }, { id: "requests" as Tab, icon: UserAdd01Icon, label: "Connection requests", count: data.received.length }, { id: "suggestions" as Tab, icon: UserGroupIcon, label: "Suggestions" }, { id: "connected" as Tab, icon: UserCheck01Icon, label: "All connections", count: data.connections.length }, { id: "sent" as Tab, icon: Clock01Icon, label: "Sent requests", count: data.sent.length }];
+  if (!user) return <div className="cn-page cn-signed-out"><Empty title="Sign in to connect">Meet your professional community.<br /><Link href="/login" className="cn-primary">Sign in</Link></Empty></div>;
+  if (!allowed) return <UpgradeGate feature="Connections & Networking" description="Connect and build your professional network with other tax professionals. Available exclusively for VIP members." />;
+  const requestCards = received.slice(0, tab === "home" ? 6 : limit).map(c => <PersonCard person={c.requester} key={c.id}>
+    <button className="cn-primary" disabled={acting[c.id]} onClick={() => act(c.id, `/api/connections/${c.id}`, "PATCH", { action: "accept" }, () => setData(d => ({ ...d, received: d.received.filter(r => r.id !== c.id), connections: [{ ...c, receiver: user as Person }, ...d.connections] })), `You’re now connected with ${c.requester.name}.`)}><Tick02Icon size={16} />{acting[c.id] ? "Updating…" : "Confirm"}</button>
+    <button className="cn-secondary" disabled={acting[c.id]} onClick={() => act(c.id, `/api/connections/${c.id}`, "PATCH", { action: "decline" }, () => setData(d => ({ ...d, received: d.received.filter(r => r.id !== c.id) })), "Request removed.")}>Delete request</button>
+  </PersonCard>);
+  return <div className="cn-page">
+    <aside className="cn-sidebar"><h1>Connections</h1><p>Good people. Great possibilities.</p><nav aria-label="Connections navigation">{nav.map(n => <button key={n.id} aria-current={tab === n.id ? "page" : undefined} onClick={() => navigate(n.id)}><n.icon size={21} /><span>{n.label}</span>{n.count !== undefined && !loading && <small>{n.count}</small>}</button>)}</nav>
+      <div className="cn-sidebar-bottom"><p>KEEP THE CONVERSATION GOING</p><Link href="/messages"><Message01Icon size={20} />Messages<ArrowRight01Icon size={16} /></Link><Link href="/groups"><UserGroupIcon size={20} />Explore groups<ArrowRight01Icon size={16} /></Link><Link href="/find-a-pro"><UserCheck01Icon size={20} />Find a Pro<ArrowRight01Icon size={16} /></Link></div>
+    </aside>
+    <div className="cn-main"><header className="cn-heading"><div><span className="cn-eyebrow">YOUR PROFESSIONAL CIRCLE</span><h2>{labels[tab]}<span>.</span></h2><p>Connect with peers, share expertise, and grow together.</p></div><label className="cn-search"><Search01Icon size={20} /><input aria-label="Search connections and people" placeholder="Search people…" value={search} onChange={e => { setSearch(e.target.value); setLimit(24); }} />{search && <button aria-label="Clear search" onClick={() => setSearch("")}><Cancel01Icon size={17} /></button>}</label></header>
+      {error && <div className="cn-alert" role="alert">{error}<button onClick={() => setRetry(r => r + 1)}>Refresh</button></div>}{notice && <p className="cn-notice" role="status">{notice}</p>}
+      {loading ? <Skeletons /> : <>
+        {(tab === "home" || tab === "requests") && <section className="cn-section"><div className="cn-section-title"><h3>Connection requests <small>{received.length}</small></h3>{tab === "home" && <button onClick={() => navigate("requests")}>See all<ArrowRight01Icon size={16} /></button>}</div>{received.length ? <div className="cn-grid">{requestCards}</div> : <Empty title={search ? "No matching requests" : "You’re all caught up"}>New connection requests will appear here.</Empty>}</section>}
+        {(tab === "home" || tab === "suggestions") && <section className="cn-section"><div className="cn-section-title"><h3>People you may know</h3>{tab === "home" && <button onClick={() => navigate("suggestions")}>See all<ArrowRight01Icon size={16} /></button>}</div>{suggestions.length ? <div className="cn-grid">{suggestions.slice(0, tab === "home" ? 12 : limit).map(p => <PersonCard person={p} key={p.id}><button className="cn-primary" disabled={acting[p.id]} onClick={() => send(p)}><UserAdd01Icon size={16} />{acting[p.id] ? "Sending…" : "Connect"}</button><button className="cn-secondary" disabled={acting[p.id]} onClick={() => dismiss(p.id)}>Remove suggestion</button></PersonCard>)}</div> : <Empty title={search ? "No people found" : "No new suggestions right now"}>Try another search or explore your professional community.</Empty>}{tab === "suggestions" && hidden.length > 0 && <button className="cn-text-button" onClick={() => { setHidden([]); try { localStorage.removeItem(`connections-hidden:${userId}`); } catch {} }}>Restore removed suggestions</button>}</section>}
+        {tab === "connected" && <section className="cn-section">{connected.length ? <div className="cn-grid">{connected.slice(0, limit).map(c => { const p = c.requester.id === userId ? c.receiver : c.requester; return <PersonCard person={p} key={c.id}><Link className="cn-primary" href={`/messages?user=${p.id}`}><Message01Icon size={16} />Message</Link><button className="cn-secondary" disabled={acting[c.id]} onClick={() => act(c.id, `/api/connections/${c.id}`, "DELETE", null, () => { setData(d => ({ ...d, connections: d.connections.filter(r => r.id !== c.id) })); setPeople(v => [...v.filter(a => a.id !== p.id), p]); }, "Connection removed.")}>{acting[c.id] ? "Removing…" : "Remove connection"}</button></PersonCard>; })}</div> : <Empty title={search ? "No matching connections" : "Your circle starts here"}>Explore suggestions and connect with someone new.<br /><button className="cn-primary" onClick={() => navigate("suggestions")}>Discover people</button></Empty>}</section>}
+        {tab === "sent" && <section className="cn-section">{sent.length ? <div className="cn-grid">{sent.slice(0, limit).map(c => <PersonCard person={c.receiver} key={c.id}><span className="cn-pending"><Clock01Icon size={16} />Request pending</span><button className="cn-secondary" disabled={acting[c.id]} onClick={() => act(c.id, `/api/connections/${c.id}`, "DELETE", null, () => { setData(d => ({ ...d, sent: d.sent.filter(r => r.id !== c.id) })); setPeople(v => [...v.filter(p => p.id !== c.receiver.id), c.receiver]); }, "Request canceled.")}>{acting[c.id] ? "Canceling…" : "Cancel request"}</button></PersonCard>)}</div> : <Empty title={search ? "No matching requests" : "No sent requests"}>Requests you send will appear here until they’re accepted.</Empty>}</section>}
+        {tab !== "home" && (tab === "suggestions" ? suggestions.length : tab === "requests" ? received.length : tab === "sent" ? sent.length : connected.length) > limit && <button className="cn-secondary cn-more" onClick={() => setLimit(l => l + 24)}>Show more</button>}
+      </>}
     </div>
-  );
-
-  if (user.tier === "FREE" && user.role !== "ADMIN") return (
-    <UpgradeGate
-      feature="Connections & Networking"
-      description="Connect and build your professional network with other tax professionals. Available exclusively for VIP members."
-    />
-  );
-
-  const navItems = [
-    { id: "discover"  as Tab, label: "Discover People", icon: UserAdd01Icon,   count: people.length },
-    { id: "requests"  as Tab, label: "Requests",        icon: Clock01Icon,     count: received.length },
-    { id: "connected" as Tab, label: "My Network",      icon: UserCheck01Icon, count: connections.length },
-  ];
-
-  return (
-    <div className="min-h-screen bg-slate-100 pt-4 pb-12">
-      <div className="max-w-[1100px] mx-auto px-4">
-        <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-5 items-start">
-
-          {/* ── Fixed sidebar ── */}
-          <div className="hidden lg:block self-start sticky top-[100px] h-fit max-h-[calc(100vh-100px)] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] space-y-2.5">
-
-            {/* Profile mini-card */}
-            <div className="bg-white rounded-2xl overflow-hidden">
-              <div className="h-20 bg-gradient-to-br from-[#0a1628] via-[#1a3a6b] to-[#0d2a50] relative">
-                <div className="absolute inset-0 opacity-10"
-                  style={{ backgroundImage: "radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
-                <div className="absolute -bottom-9 left-4">
-                  <Avatar user={user as { name: string; image: string | null }} size="lg" />
-                </div>
-              </div>
-              <div className="px-4 pt-12 pb-4">
-                <div className="font-black text-[#0a1628] text-sm">{user.name}</div>
-                {user.headline
-                  ? <div className="text-xs text-slate-500 mt-0.5 line-clamp-2">{user.headline}</div>
-                  : <div className="text-xs text-slate-400 italic mt-0.5">No headline</div>}
-                <div className="flex gap-2 mt-3">
-                  <div className="flex-1 bg-slate-50 rounded-xl py-2 text-center">
-                    <div className="text-[10px] text-slate-400">Network</div>
-                    <div className="text-sm font-black text-[#0a1628]">{connections.length}</div>
-                  </div>
-                  <div className="flex-1 bg-slate-50 rounded-xl py-2 text-center">
-                    <div className="text-[10px] text-slate-400">Pending</div>
-                    <div className="text-sm font-black text-[#0a1628]">{received.length}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Nav */}
-            <div className="bg-white rounded-2xl p-3 space-y-0.5">
-              {navItems.map(item => (
-                <button key={item.id} onClick={() => setTab(item.id)}
-                  className={`flex items-center justify-between w-full text-left text-sm font-semibold px-3 py-2.5 rounded-xl transition-all ${tab === item.id ? "bg-[#0a1628] text-white" : "text-slate-600 hover:bg-slate-50 hover:text-[#0a1628]"}`}>
-                  <span className="flex items-center gap-2.5">
-                    <item.icon className="w-4 h-4" />{item.label}
-                  </span>
-                  {item.count > 0 && (
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${tab === item.id ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500"}`}>
-                      {item.count}
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div>
-
-            {/* Messages CTA */}
-            <Link href="/messages"
-              className="flex items-center justify-center gap-2 bg-[#0a1628] text-white font-bold text-sm px-4 py-3 rounded-xl hover:bg-[#1a3a6b] transition-all w-full">
-              <Message01Icon className="w-4 h-4" /> Open Messages
-            </Link>
-          </div>
-
-          {/* ── Main content ── */}
-          <div className="space-y-4">
-            <div>
-              <h1 className="text-2xl font-black text-[#0a1628]">
-                {tab === "discover" ? "Discover People" : tab === "requests" ? "Connection Requests" : "My Network"}
-              </h1>
-              <p className="text-slate-500 text-sm mt-0.5">
-                {tab === "discover"
-                  ? `${people.length} professional${people.length !== 1 ? "s" : ""} to connect with`
-                  : tab === "requests"
-                    ? `${received.length} pending request${received.length !== 1 ? "s" : ""}`
-                    : `${connections.length} connection${connections.length !== 1 ? "s" : ""}`}
-              </p>
-            </div>
-
-            {/* Search — discover only */}
-            {tab === "discover" && (
-              <div className="bg-white rounded-xl px-4 py-3 flex items-center gap-3">
-                <Search01Icon className="w-4 h-4 text-slate-400 shrink-0" />
-                <input type="text" placeholder="Search by name or headline…" value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  className="flex-1 bg-transparent font-[inherit] text-sm text-slate-700 outline-none placeholder-slate-400" />
-                {search && <button onClick={() => { setSearch(""); setQuery(""); }} className="text-xs text-slate-400 hover:text-slate-600 font-semibold">Clear</button>}
-              </div>
-            )}
-
-            {/* ── Discover ── */}
-            {tab === "discover" && (
-              loading ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {[1,2,3,4].map(i => <SkeletonPerson key={i} />)}
-                </div>
-              ) : people.length === 0 ? (
-                <div className="bg-white rounded-2xl py-20 text-center">
-                  <UserAdd01Icon className="w-12 h-12 text-slate-200 mx-auto mb-3" />
-                  <p className="font-bold text-slate-400">No new people to connect with</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {people.map(p => (
-                    <div key={p.id} className="bg-white rounded-2xl p-4 flex items-start gap-3 hover:-translate-y-0.5 transition-all">
-                      <Link href={`/member/${p.id}`}><Avatar user={p} /></Link>
-                      <div className="flex-1 min-w-0">
-                        <Link href={`/member/${p.id}`} className="font-bold text-[#0a1628] text-sm truncate hover:text-[#1a3a6b] transition-colors block">{p.name}</Link>
-                        {p.headline && <div className="text-xs text-slate-400 truncate mt-0.5">{p.headline}</div>}
-                        <RoleBadge role={p.role} tier={p.tier} />
-                      </div>
-                      {sentIds.has(p.id) ? (
-                        <span className="text-xs font-bold text-slate-400 shrink-0 flex items-center gap-1 mt-1">
-                          <Clock01Icon className="w-3 h-3" /> Sent
-                        </span>
-                      ) : (
-                        <button onClick={() => sendRequest(p.id)} disabled={!!acting[p.id]}
-                          className="shrink-0 flex items-center gap-1.5 bg-[#0a1628] text-white text-xs font-bold px-3 py-2 rounded-xl hover:bg-[#1a3a6b] transition-all disabled:opacity-50 mt-1">
-                          {acting[p.id] ? <Loader2 className="w-3 h-3 animate-spin" /> : <UserAdd01Icon className="w-3 h-3" />}
-                          Connect
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )
-            )}
-
-            {/* ── Requests ── */}
-            {tab === "requests" && (
-              received.length === 0 && sent.length === 0 ? (
-                <div className="bg-white rounded-2xl py-20 text-center">
-                  <Clock01Icon className="w-12 h-12 text-slate-200 mx-auto mb-3" />
-                  <p className="font-bold text-slate-400">No pending requests</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {received.length > 0 && (
-                    <>
-                      <p className="text-xs font-black uppercase tracking-widest text-slate-400">Received</p>
-                      {received.map(r => (
-                        <div key={r.id} className="bg-white rounded-2xl p-4 flex items-center gap-3">
-                          <Link href={`/member/${r.requester.id}`}><Avatar user={r.requester} /></Link>
-                          <div className="flex-1 min-w-0">
-                            <Link href={`/member/${r.requester.id}`} className="font-bold text-[#0a1628] text-sm hover:text-[#1a3a6b] transition-colors">{r.requester.name}</Link>
-                            {r.requester.headline && <div className="text-xs text-slate-400 truncate">{r.requester.headline}</div>}
-                            <RoleBadge role={r.requester.role} tier={r.requester.tier} />
-                          </div>
-                          <div className="flex gap-2 shrink-0">
-                            <button onClick={() => respond(r.id, "accept")} disabled={!!acting[r.id]}
-                              className="flex items-center gap-1 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold px-3 py-2 rounded-xl transition-all disabled:opacity-50">
-                              {acting[r.id] ? <Loader2 className="w-3 h-3 animate-spin" /> : <Tick02Icon className="w-3 h-3" />} Accept
-                            </button>
-                            <button onClick={() => respond(r.id, "decline")} disabled={!!acting[r.id]}
-                              className="flex items-center gap-1 bg-slate-100 text-slate-500 hover:bg-slate-200 text-xs font-bold px-3 py-2 rounded-xl transition-all disabled:opacity-50">
-                              <Cancel01Icon className="w-3 h-3" /> Decline
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </>
-                  )}
-                  {sent.length > 0 && (
-                    <>
-                      <p className="text-xs font-black uppercase tracking-widest text-slate-400 mt-4">Sent</p>
-                      {sent.map(s => (
-                        <div key={s.id} className="bg-white rounded-2xl p-4 flex items-center gap-3">
-                          <Avatar user={s.receiver} size="sm" />
-                          <div className="flex-1">
-                            <div className="text-sm font-semibold text-[#0a1628]">{s.receiver.name}</div>
-                          </div>
-                          <span className="text-xs text-slate-400 flex items-center gap-1">
-                            <Clock01Icon className="w-3 h-3" /> Pending
-                          </span>
-                        </div>
-                      ))}
-                    </>
-                  )}
-                </div>
-              )
-            )}
-
-            {/* ── My Network ── */}
-            {tab === "connected" && (
-              connections.length === 0 ? (
-                <div className="bg-white rounded-2xl py-20 text-center">
-                  <UserGroupIcon className="w-12 h-12 text-slate-200 mx-auto mb-3" />
-                  <p className="font-bold text-slate-400 mb-4">No connections yet</p>
-                  <button onClick={() => setTab("discover")}
-                    className="inline-flex items-center gap-2 bg-[#0a1628] text-white font-bold text-sm px-5 py-2.5 rounded-xl hover:bg-[#1a3a6b] transition-all">
-                    Discover People <ArrowRight01Icon className="w-4 h-4" />
-                  </button>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {connections.map(c => {
-                    const partner = c.requester.id === user.id ? c.receiver : c.requester;
-                    return (
-                      <div key={c.id} className="bg-white rounded-2xl p-4 flex items-start gap-3 hover:-translate-y-0.5 transition-all">
-                        <Link href={`/member/${partner.id}`}><Avatar user={partner} /></Link>
-                        <div className="flex-1 min-w-0">
-                          <Link href={`/member/${partner.id}`} className="font-bold text-[#0a1628] text-sm hover:text-[#1a3a6b] transition-colors block">{partner.name}</Link>
-                          {partner.headline && <div className="text-xs text-slate-400 truncate mt-0.5">{partner.headline}</div>}
-                          <RoleBadge role={partner.role} tier={partner.tier} />
-                        </div>
-                        <div className="flex flex-col gap-1.5 shrink-0 mt-1">
-                          <Link href={`/messages?user=${partner.id}`}
-                            className="flex items-center gap-1 bg-[#0a1628] text-white text-xs font-bold px-3 py-1.5 rounded-xl hover:bg-[#1a3a6b] transition-all">
-                            <Message01Icon className="w-3 h-3" /> Message
-                          </Link>
-                          <button onClick={() => remove(c.id)} disabled={!!acting[c.id]}
-                            className="flex items-center gap-1 text-xs text-slate-400 hover:text-red-500 transition-colors justify-center">
-                            <UserRemove02Icon className="w-3 h-3" /> Remove
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  </div>;
 }

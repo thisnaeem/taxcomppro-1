@@ -35,6 +35,7 @@ interface Community {
 }
 
 interface Pro {
+  profileSlug?: string | null;
   id: string; name: string; image: string | null;
   headline: string | null; specialties: string[];
 }
@@ -419,7 +420,7 @@ function TopProsSection() {
           ))
         ) : (
           pros.map((p, i) => (
-            <Link key={p.id} href={`/member/${p.id}`}
+            <Link key={p.id} href={`/member/${p.profileSlug || p.id}`}
               className="flex items-center gap-2.5 group">
               <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${BG[i % 5]} flex items-center justify-center text-white font-black text-sm shrink-0 overflow-hidden ring-2 ring-white shadow-sm`}>
                 {p.image

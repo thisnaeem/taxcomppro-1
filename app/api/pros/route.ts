@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 const publicSelect = {
-  id: true, name: true, image: true, coverImage: true, headline: true, bio: true,
+  id: true, profileSlug: true, name: true, image: true, coverImage: true, headline: true, bio: true,
   mission: true, location: true, yearsExperience: true, website: true, linkedIn: true, twitter: true,
   specialties: true, certifications: true, languages: true, createdAt: true,
 };

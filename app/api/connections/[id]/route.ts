@@ -10,8 +10,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const { id } = await params;
   const { action } = await req.json(); // "accept" | "decline"
 
+  if (action !== "accept" && action !== "decline") return NextResponse.json({ error: "Invalid action" }, { status: 400 });
+
   const connection = await prisma.connection.findUnique({ where: { id } });
-  if (!connection || connection.receiverId !== session.user.id) {
+  if (!connection || connection.receiverId !== session.user.id || connection.status !== "PENDING") {
     return NextResponse.json({ error: "Not found or not authorized" }, { status: 404 });
   }
 

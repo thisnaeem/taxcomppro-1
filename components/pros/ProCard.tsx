@@ -14,6 +14,7 @@ import type { GridViewType } from "./GridSwitcher";
 
 export interface ProData {
   id: string;
+  profileSlug?: string | null;
   name: string;
   image: string | null;
   coverImage?: string | null;
@@ -57,7 +58,7 @@ export function ProCard({
   const mission = pro.mission?.trim();
   return (
     <Link
-      href={`/find-a-pro/${pro.id}`}
+      href={`/member/${pro.profileSlug || pro.id}`}
       className={`fp-pro-card ${viewMode === "list" ? "fp-pro-list" : ""}`}
       aria-label={`View ${pro.name}'s professional profile`}
     >
