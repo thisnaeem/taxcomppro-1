@@ -30,6 +30,7 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
+      { source: "/communities/:path*", destination: "/groups/:path*", permanent: true },
       {
         source: "/affiliate",
         destination: "https://affiliate.taxcomppro.com",

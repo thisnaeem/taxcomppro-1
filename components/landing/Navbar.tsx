@@ -9,7 +9,7 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useSession, signOut } from "@/lib/auth-client";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setUser, clearUser, type AuthUser } from "@/store/slices/authSlice";
@@ -39,6 +39,7 @@ import {
   Moon02Icon,
 } from "hugeicons-react";
 import "./navbar.css";
+import { SiteSearch } from "./SiteSearch";
 
 const groups = [
   {
@@ -80,8 +81,8 @@ const groups = [
         description: "Ideas worth talking about",
       },
       {
-        label: "Communities",
-        href: "/communities",
+        label: "Groups",
+        href: "/groups",
         icon: UserGroupIcon,
         description: "Find your people",
       },
@@ -201,7 +202,6 @@ function NavModal({
   );
 }
 export default function Navbar() {
-  const router = useRouter();
   const pathname = usePathname();
   const { data: session, isPending } = useSession();
   const user = session?.user;
@@ -216,7 +216,6 @@ export default function Navbar() {
   const isDark = mounted && resolvedTheme === "dark";
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [query, setQuery] = useState("");
   const [counts, setCounts] = useState({ notifications: 0, messages: 0 });
   const headerRef = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -307,14 +306,6 @@ export default function Navbar() {
       .forEach((detail) => {
         detail.open = false;
       });
-  }
-  function search(event: React.FormEvent) {
-    event.preventDefault();
-    if (!query.trim()) return;
-    router.push(`/marketplace?search=${encodeURIComponent(query.trim())}`);
-    setSearchOpen(false);
-    setMobileOpen(false);
-    setQuery("");
   }
   const home = user ? "/feed" : "/";
   const accountLinks =
@@ -495,14 +486,17 @@ export default function Navbar() {
             </a>
             <span className="site-action-divider" />
             <button
-              className="site-icon site-theme"
+              type="button"
+              className="site-theme-toggle"
+              role="switch"
+              aria-checked={isDark}
               onClick={() => setTheme(isDark ? "light" : "dark")}
-              aria-label={
-                isDark ? "Switch to light theme" : "Switch to dark theme"
-              }
-              title={isDark ? "Light theme" : "Dark theme"}
+              aria-label="Dark mode"
+              title={isDark ? "Switch to light theme" : "Switch to dark theme"}
             >
-              {isDark ? <Sun01Icon size={19} /> : <Moon02Icon size={19} />}
+              <span className="site-theme-thumb" aria-hidden="true" />
+              <span className="site-theme-option site-theme-light" aria-hidden="true"><Sun01Icon size={17} /></span>
+              <span className="site-theme-option site-theme-dark" aria-hidden="true"><Moon02Icon size={17} /></span>
             </button>
             <button
               className="site-icon site-search-toggle"
@@ -585,32 +579,7 @@ export default function Navbar() {
           title="Search TaxCompPro"
           onClose={() => setSearchOpen(false)}
         >
-          <form onSubmit={search} className="site-search-form">
-            <label htmlFor="site-search">What are you looking for?</label>
-            <div>
-              <Search01Icon size={20} />
-              <input
-                id="site-search"
-                autoFocus
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search the marketplace…"
-              />
-              <button
-                type="submit"
-                disabled={!query.trim()}
-                aria-label="Submit search"
-              >
-                <ArrowRight01Icon size={20} />
-              </button>
-            </div>
-            <p>
-              Looking for a professional?{" "}
-              <Link href="/find-a-pro" onClick={() => setSearchOpen(false)}>
-                Explore the directory.
-              </Link>
-            </p>
-          </form>
+          <SiteSearch onClose={() => setSearchOpen(false)} />
         </NavModal>
       )}
       {mobileOpen && (
@@ -619,18 +588,7 @@ export default function Navbar() {
           onClose={() => setMobileOpen(false)}
           drawer
         >
-          <form className="site-mobile-search" onSubmit={search}>
-            <Search01Icon size={19} />
-            <input
-              aria-label="Search marketplace"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search the marketplace…"
-            />
-            <button type="submit" aria-label="Submit marketplace search">
-              <ArrowRight01Icon size={19} />
-            </button>
-          </form>
+          <button type="button" className="site-mobile-search ss-mobile-trigger" onClick={() => { setMobileOpen(false); setSearchOpen(true); }}><Search01Icon size={19} />Search all of TaxCompPro<ArrowRight01Icon size={19} /></button>
           <nav aria-label="Mobile navigation">
             <div className="site-mobile-primary">
               <Link href={home} onClick={closeMenus}>

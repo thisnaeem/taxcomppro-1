@@ -17,7 +17,7 @@ export const VISIBILITY_OPTIONS: { value: Visibility; label: string; hint: strin
 export const RESERVED_USERNAMES = new Set([
   "connect", "pro", "dashboard", "login", "register", "api", "admin", "join",
   "find-a-pro", "marketplace", "profile", "feed", "messages", "notifications",
-  "communities", "courses", "my-courses", "my-listings", "seller-dashboard",
+  "communities", "groups", "courses", "my-courses", "my-listings", "seller-dashboard",
   "spaces", "pro-talks", "toolkits", "tools", "upgrade", "security", "privacy",
   "terms", "cookie-policy", "community-guidelines", "about", "contact", "affiliate",
   "apply-professional", "connections", "pro-hub", "pro-marketing", "pros",

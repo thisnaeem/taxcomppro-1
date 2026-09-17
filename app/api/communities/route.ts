@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { groupCreateSchema } from "@/lib/group-create-schema";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -9,8 +10,10 @@ export async function GET(req: NextRequest) {
 
   const communities = await prisma.community.findMany({
     where: {
-      isPublic: true,
-      ...(search ? { OR: [{ name: { contains: search, mode: "insensitive" } }, { description: { contains: search, mode: "insensitive" } }] } : {}),
+      AND: [
+        { OR: [{ isPublic: true }, ...(session ? [{ creatorId: session.user.id }, { members: { some: { userId: session.user.id } } }] : [])] },
+        ...(search ? [{ OR: [{ name: { contains: search, mode: "insensitive" as const } }, { description: { contains: search, mode: "insensitive" as const } }] }] : []),
+      ],
     },
     include: { creator: { select: { id: true, name: true, image: true } }, _count: { select: { members: true, posts: true } } },
     orderBy: { memberCount: "desc" },
@@ -35,15 +38,17 @@ export async function POST(req: NextRequest) {
 
   const dbUser = await prisma.user.findUnique({ where: { id: session.user.id } });
   if (dbUser?.role !== "ADMIN") {
-    return NextResponse.json({ error: "Only admins can create communities" }, { status: 403 });
+    return NextResponse.json({ error: "Only admins can create groups" }, { status: 403 });
   }
 
-  const body = await req.json();
+  const parsed = groupCreateSchema.safeParse(await req.json().catch(() => null));
+  if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
+  const body = parsed.data;
 
   // Auto-generate slug from name
   const baseSlug = (body.name as string)
-    .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 50);
-  let slug = baseSlug;
+    .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 50) || "group";
+  let slug = baseSlug === "create" ? `group-${baseSlug}` : baseSlug;
   const existing = await prisma.community.findUnique({ where: { slug } });
   if (existing) slug = `${baseSlug}-${Math.random().toString(36).slice(2, 6)}`;
 
@@ -53,14 +58,11 @@ export async function POST(req: NextRequest) {
       slug,
       description: body.description,
       icon:        body.icon ?? null,
+      coverImage:  body.coverImage ?? null,
       isPublic:    body.isPublic ?? true,
       creatorId:   session.user.id,
+      members: { create: { userId: session.user.id, role: "ADMIN" } },
     },
-  });
-
-  // Auto-join creator as admin
-  await prisma.communityMember.create({
-    data: { userId: session.user.id, communityId: community.id, role: "ADMIN" },
   });
 
   return NextResponse.json(community, { status: 201 });

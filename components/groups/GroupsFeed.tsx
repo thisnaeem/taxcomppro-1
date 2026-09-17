@@ -1,0 +1,17 @@
+"use client";
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { GroupEmptyState } from "./GroupEmptyState";
+import { GroupPostSkeleton } from "./GroupSkeletons";
+type FeedPost = { id: string; content: string; createdAt: string; author: { name: string; image: string | null }; community: { name: string; slug: string }; _count: { likes: number; comments: number } };
+export function GroupsFeed({ search, onClearSearch }: { search: string; onClearSearch: () => void }) {
+  return <FeedResults key={search} search={search} onClearSearch={onClearSearch} />;
+}
+function FeedResults({ search, onClearSearch }: { search: string; onClearSearch: () => void }) {
+  const [posts, setPosts] = useState<FeedPost[]>([]), [loading, setLoading] = useState(true), [error, setError] = useState("");
+  const [cursor, setCursor] = useState<string | null>(null), [more, setMore] = useState(false), [retry, setRetry] = useState(0);
+  useEffect(() => { const controller = new AbortController(); const timer = setTimeout(() => { fetch(`/api/groups/feed?search=${encodeURIComponent(search)}`, { signal: controller.signal }).then(r => { if (!r.ok) throw Error("Couldn’t load your feed."); return r.json(); }).then(d => { setPosts(d.posts); setCursor(d.nextCursor); }).catch(e => { if (!controller.signal.aborted) setError(e.message); }).finally(() => { if (!controller.signal.aborted) setLoading(false); }); }, 250); return () => { clearTimeout(timer); controller.abort(); }; }, [search, retry]);
+  async function loadMore() { setMore(true); setError(""); try { const r = await fetch(`/api/groups/feed?search=${encodeURIComponent(search)}&cursor=${encodeURIComponent(cursor!)}`); if (!r.ok) throw Error("Couldn’t load more discussions."); const d = await r.json(); setPosts(p => [...p, ...d.posts]); setCursor(d.nextCursor); } catch(e) { setError((e as Error).message); } finally { setMore(false); } }
+  return <div className="gf-feed">{error && <div className="gp-form-error" role="alert">{error}<button onClick={() => { setError(""); setRetry(v=>v+1); }}>Retry</button></div>}{loading ? <><GroupPostSkeleton /><GroupPostSkeleton /></> : posts.length ? posts.map(post => <article className="gf-feed-post" key={post.id}><header><span className="gf-feed-avatar">{post.author.image ? <Image src={post.author.image} alt="" width={42} height={42} unoptimized /> : post.author.name.slice(0,1)}</span><div><Link href={`/groups/${post.community.slug}`}>{post.community.name}</Link><p>{post.author.name} · {new Date(post.createdAt).toLocaleDateString()}</p></div></header><p className="gf-feed-content">{post.content}</p><footer><span>{post._count.likes} likes · {post._count.comments} comments</span><Link href={`/groups/${post.community.slug}#post-${post.id}`}>Open discussion</Link></footer></article>) : <GroupEmptyState kind={search ? "search" : "feed"} title={search ? "No matching discussions" : "Your conversations start here"} description={search ? "Try a different word or clear your search to see recent conversations." : "Posts from the groups you join will appear here. Find your people and start a conversation."}>{search ? <button className="gp-join" onClick={onClearSearch}>Clear search</button> : <Link className="gp-join" href="/groups?view=discover">Discover groups</Link>}</GroupEmptyState>}{cursor && <button className="gd-secondary" disabled={more} onClick={loadMore}>{more ? "Loading…" : "Load more discussions"}</button>}</div>;
+}

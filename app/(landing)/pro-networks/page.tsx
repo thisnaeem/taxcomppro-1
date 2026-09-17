@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSession } from "@/lib/auth-client";
@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import "@/components/networks/networks.css";
 import "@/components/networks/networks-light.css";
+import "@/components/networks/networks-directory.css";
 interface ProNetworkItem {
   id: string;
   name: string;
@@ -83,6 +84,21 @@ const views = [
   { id: "following", label: "Following", icon: Bell },
 ] as const;
 export default function ProNetworksDirectoryPage() {
+  const directoryRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const navbar = document.querySelector(".site-navbar");
+    if (!navbar) return;
+    const updateOffset = () => {
+      directoryRef.current?.style.setProperty(
+        "--pn-nav-height",
+        `${navbar.getBoundingClientRect().height}px`,
+      );
+    };
+    updateOffset();
+    const observer = new ResizeObserver(updateOffset);
+    observer.observe(navbar);
+    return () => observer.disconnect();
+  }, []);
   const { data: session } = useSession();
   const userId = session?.user?.id;
   const [networks, setNetworks] = useState<ProNetworkItem[]>([]);
@@ -131,7 +147,7 @@ export default function ProNetworksDirectoryPage() {
     setView("all");
   }
   return (
-    <div className="pn-page">
+    <div className="pn-page pn-directory" ref={directoryRef}>
       <div className="pn-container">
         <div className="pn-page-top">
           <span className="pn-eyebrow">THE PROFESSIONAL COMMUNITY</span>
@@ -224,49 +240,51 @@ export default function ProNetworksDirectoryPage() {
             </div>
             <p>Explore a network. Get to know your people.</p>
           </div>
-          <div className="pn-discovery-toolbar">
-            {session?.user && (
-              <div className="pn-view-tabs" aria-label="Network views">
-                {views.map((item) => (
-                  <button
-                    key={item.id}
-                    aria-pressed={view === item.id}
-                    onClick={() => setView(item.id)}
-                  >
-                    <item.icon size={16} />
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-            )}
-            <div className="pn-search">
-              <Search size={19} />
-              <input
-                aria-label="Search pro networks"
-                placeholder="Search networks, topics, or hosts…"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-              />
-              {query && (
-                <button
-                  aria-label="Clear network search"
-                  onClick={() => setQuery("")}
-                >
-                  <X size={17} />
-                </button>
+          <div className="pn-sticky-filters" role="region" aria-label="Find networks">
+            <div className="pn-discovery-toolbar">
+              {session?.user && (
+                <div className="pn-view-tabs" aria-label="Network views">
+                  {views.map((item) => (
+                    <button
+                      key={item.id}
+                      aria-pressed={view === item.id}
+                      onClick={() => setView(item.id)}
+                    >
+                      <item.icon size={16} />
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
               )}
+              <div className="pn-search">
+                <Search size={19} />
+                <input
+                  aria-label="Search pro networks"
+                  placeholder="Search networks, topics, or hosts…"
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                />
+                {query && (
+                  <button
+                    aria-label="Clear network search"
+                    onClick={() => setQuery("")}
+                  >
+                    <X size={17} />
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
-          <div className="pn-categories" aria-label="Network categories">
-            {categories.map((item) => (
-              <button
-                key={item}
-                aria-pressed={category === item}
-                onClick={() => setCategory(item)}
-              >
-                {item === "All" ? "All interests" : item}
-              </button>
-            ))}
+            <div className="pn-categories" aria-label="Network categories">
+              {categories.map((item) => (
+                <button
+                  key={item}
+                  aria-pressed={category === item}
+                  onClick={() => setCategory(item)}
+                >
+                  {item === "All" ? "All interests" : item}
+                </button>
+              ))}
+            </div>
           </div>
           <div className="pn-result-info" aria-live="polite">
             <span>
@@ -275,9 +293,9 @@ export default function ProNetworksDirectoryPage() {
                 : error
                   ? "Directory unavailable"
                   : networks.length +
-                    " network" +
-                    (networks.length === 1 ? "" : "s") +
-                    " to explore"}
+                  " network" +
+                  (networks.length === 1 ? "" : "s") +
+                  " to explore"}
             </span>
             {(query || category !== "All" || view !== "all") && (
               <button onClick={reset}>
@@ -341,92 +359,101 @@ export default function ProNetworksDirectoryPage() {
             <div className="pn-network-grid">
               {networks.map((net) => (
                 <article className="pn-network-card" key={net.id}>
-                  <div className="pn-network-cover">
-                    {net.coverImage ? (
-                      <Image
-                        src={net.coverImage}
-                        alt=""
-                        fill
-                        unoptimized
-                        sizes="(max-width:700px) 100vw, 450px"
-                      />
-                    ) : (
-                      <div className="pn-cover-placeholder">
-                        <Users size={52} />
-                        <span>{net.name.slice(0, 3).toUpperCase()}</span>
-                      </div>
-                    )}
-                    <div className="pn-cover-shade" />
-                    <span className="pn-category-label">{net.category}</span>
-                    <span className="pn-price-label">
-                      {net.monthlyPrice > 0
-                        ? "$" + net.monthlyPrice.toFixed(2) + "/mo"
-                        : "Free to join"}
-                    </span>
-                    <div className="pn-cover-badge">
-                      <NetworkBadge
-                        shape={net.badgeShape}
-                        initials={net.badgeInitials}
-                        text={net.badgeText}
-                        icon={net.badgeIcon}
-                        bgColor={net.badgeBgColor}
-                        textColor={net.badgeTextColor}
-                        borderColor={net.badgeBorderColor}
-                        customImage={net.badgeCustomImage}
-                        size="sm"
-                      />
+                  <div className="pn-card-core">
+                    <div className="pn-card-backdrop" aria-hidden="true">
+                      {net.coverImage ? (
+                        <Image
+                          src={net.coverImage}
+                          alt=""
+                          fill
+                          unoptimized
+                          sizes="(max-width:700px) 100vw, 450px"
+                        />
+                      ) : (
+                        null
+                      )}
                     </div>
-                  </div>
-                  <div className="pn-network-body">
-                    <div className="pn-network-owner">
-                      <span>
-                        {net.owner.image ? (
-                          <Image
-                            src={net.owner.image}
-                            alt=""
-                            width={32}
-                            height={32}
-                            unoptimized
-                          />
+                    <div className="pn-card-header">
+                      <Link href={"/pro-networks/" + net.slug} className="pn-card-photo" aria-label={`Explore ${net.name}`}>
+                        {net.logoImage || net.coverImage ? (
+                          <Image src={net.logoImage || net.coverImage!} alt="" fill unoptimized sizes="126px" />
                         ) : (
-                          net.owner.name[0]
+                          <Users size={40} aria-hidden="true" />
                         )}
-                      </span>
-                      <div>
-                        <small>HOSTED BY</small>
-                        <strong>{net.owner.name}</strong>
-                      </div>
-                      {net.isOwner && (
-                        <span className="pn-member-tag">Your network</span>
-                      )}
-                      {!net.isOwner && net.isMember && (
-                        <span className="pn-member-tag">Member</span>
-                      )}
-                    </div>
-                    <h3>
-                      <Link href={"/pro-networks/" + net.slug}>{net.name}</Link>
-                    </h3>
-                    <p>{net.tagline || net.description}</p>
-                    <div className="pn-benefits">
-                      {net.memberBenefits?.slice(0, 2).map((benefit, i) => (
-                        <span key={i}>{benefit}</span>
-                      ))}
-                    </div>
-                    <footer>
-                      <span>
-                        <Users size={16} />
-                        {net.memberCount.toLocaleString()}{" "}
-                        {net.memberCount === 1 ? "member" : "members"}
-                      </span>
-                      <Link href={"/pro-networks/" + net.slug}>
-                        {net.isMember || net.isOwner
-                          ? "Open network"
-                          : "Explore"}
-                        <span>
-                          <ArrowUpRight size={17} />
-                        </span>
                       </Link>
-                    </footer>
+                      <div className="pn-card-intro">
+                        <p>{net.tagline || net.description}</p>
+                        <span className="pn-card-price">
+                          {net.monthlyPrice > 0
+                            ? "$" + net.monthlyPrice.toFixed(2) + "/mo"
+                            : "Free to join"}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="pn-network-body">
+                      <h3>
+                        <Link href={"/pro-networks/" + net.slug}>{net.name}</Link>
+                      </h3>
+                      <div className="pn-card-labels">
+                        <span className="pn-card-category">{net.category}</span>
+                        <NetworkBadge
+                          shape={net.badgeShape}
+                          initials={net.badgeInitials}
+                          text={net.badgeText}
+                          icon={net.badgeIcon}
+                          bgColor={net.badgeBgColor}
+                          textColor={net.badgeTextColor}
+                          borderColor={net.badgeBorderColor}
+                          customImage={net.badgeCustomImage}
+                          size="sm"
+                        />
+                      </div>
+                      <div className="pn-network-owner">
+                        <span>
+                          {net.owner.image ? (
+                            <Image
+                              src={net.owner.image}
+                              alt=""
+                              width={32}
+                              height={32}
+                              unoptimized
+                            />
+                          ) : (
+                            net.owner.name[0]
+                          )}
+                        </span>
+                        <div>
+                          <small>HOSTED BY</small>
+                          <strong>{net.owner.name}</strong>
+                        </div>
+                        {net.isOwner && (
+                          <span className="pn-member-tag">Your network</span>
+                        )}
+                        {!net.isOwner && net.isMember && (
+                          <span className="pn-member-tag">Member</span>
+                        )}
+                      </div>
+                      <div className="pn-benefits">
+                        {net.memberBenefits?.slice(0, 2).map((benefit, i) => (
+                          <span key={i}>{benefit}</span>
+                        ))}
+                      </div>
+                      <footer>
+                        <span>
+                          <Users size={16} />
+                          {net.memberCount.toLocaleString()}{" "}
+                          {net.memberCount === 1 ? "member" : "members"}
+                        </span>
+                        <Link href={"/pro-networks/" + net.slug}>
+                          {net.isMember || net.isOwner
+                            ? "Open network"
+                            : "Explore"}
+                          <span>
+                            <ArrowUpRight size={17} />
+                          </span>
+                        </Link>
+                      </footer>
+                    </div>
                   </div>
                 </article>
               ))}

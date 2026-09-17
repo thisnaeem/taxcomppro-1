@@ -540,7 +540,7 @@ export default function LandingPage() {
 
           <div className="flex justify-center">
             <Link
-              href="/communities"
+              href="/groups"
               className="inline-flex items-center gap-2 bg-[#0a1628] dark:bg-white text-white dark:text-[#0a1628] font-bold px-8 py-3.5 rounded-full hover:bg-[#1a3a6b] dark:hover:bg-slate-100 transition-all text-base shadow-lg"
             >
               Explore Communities <ArrowRight className="w-4 h-4" />
@@ -692,7 +692,7 @@ export default function LandingPage() {
               <p className="text-white/45 text-sm leading-relaxed">The professional community for tax experts across America.</p>
             </div>
             {[
-              { title: "Platform", links: [["Marketplace","/marketplace"],["Communities","/communities"],["Pro Talks","/pro-talks"],["Pricing Plans","/#pricing"]] },
+              { title: "Platform", links: [["Marketplace","/marketplace"],["Groups","/groups"],["Pro Talks","/pro-talks"],["Pricing Plans","/#pricing"]] },
               { title: "Company",  links: [["About Us","/about"],["Contact","/contact"],["Become an Affiliate","https://affiliate.taxcomppro.com"],["Security","/security"]] },
               { title: "Legal",    links: [["Terms of Service","/terms"],["Privacy Policy","/privacy"],["Community Guidelines","/community-guidelines"],["Cookie Policy","/cookie-policy"]] },
             ].map((col) => (

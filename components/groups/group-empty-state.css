@@ -1,0 +1,10 @@
+.gp-page .ge-empty { box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; min-width: 0; padding: 48px 28px; background: var(--gp-panel); border: 1px solid var(--gp-line); border-radius: 16px; text-align: center; }
+.ge-empty-icon { display: flex; align-items: center; justify-content: center; width: 72px; height: 72px; flex-shrink: 0; margin: 0 0 22px; border: 1px solid var(--gp-line); border-radius: 22px; color: var(--gp-gold); background: var(--gp-inner); }
+.ge-empty-icon > svg { display: block; flex-shrink: 0; position: static; margin: 0; }
+.gp-page .ge-empty > h2 { margin: 0; max-width: 520px; font-size: clamp(21px,2.2vw,28px); font-weight: 750; line-height: 1.25; letter-spacing: -.025em; text-wrap: balance; }
+.gp-page .ge-empty > p { margin: 12px 0 0; max-width: 440px; color: var(--gp-muted); font-size: 14px; line-height: 1.7; }
+.ge-empty-actions { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+.gp-page .ge-empty-compact { padding: 30px 18px; border: 0; background: transparent; }
+.gp-page .ge-empty-compact > h2 { font-size: 20px; }
+@media(max-width:600px) { .gp-page .ge-empty { padding: 36px 20px; } .ge-empty-icon { width: 64px; height: 64px; border-radius: 18px; } }
+

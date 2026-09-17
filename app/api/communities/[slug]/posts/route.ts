@@ -8,9 +8,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
   const community = await prisma.community.findUnique({ where: { slug } });
   if (!community) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
+  const session = await auth.api.getSession({ headers: req.headers });
   const posts = await prisma.post.findMany({
     where: { communityId: community.id },
     include: {
+      likes: { where: { userId: session?.user.id ?? "" }, select: { userId: true } },
       author:   { select: { id: true, name: true, image: true, headline: true } },
       _count:   { select: { comments: true, likes: true } },
     },
@@ -18,7 +20,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
     take: 30,
   });
 
-  return NextResponse.json(posts);
+  return NextResponse.json(posts.map(({ likes, ...post }) => ({ ...post, isLiked: likes.length > 0 })));
 }
 
 // POST new post in community

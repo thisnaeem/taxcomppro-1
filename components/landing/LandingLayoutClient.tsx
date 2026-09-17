@@ -10,11 +10,13 @@ export default function LandingLayoutClient({ children }: { children: React.Reac
   const pathname = usePathname();
   const isProfile = pathname === "/profile" || pathname === "/my-profile";
 
+  const isGroups = pathname === "/groups" || pathname.startsWith("/groups/");
+
   return (
     <>
       <Navbar />
       <main className="flex-1 pb-16 md:pb-0">{children}</main>
-      {!isProfile && <Footer />}
+      {!isProfile && !isGroups && <Footer />}
       <MobileBottomNav />
     </>
   );

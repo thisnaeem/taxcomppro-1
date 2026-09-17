@@ -350,7 +350,7 @@ function CommunitiesSection() {
   if (!loading && communities.length === 0) return null;
 
   return (
-    <Section title="Communities" icon={Users} href="/communities">
+    <Section title="Groups" icon={Users} href="/groups">
       <div className="space-y-3">
         {loading ? (
           [1, 2, 3].map(i => (

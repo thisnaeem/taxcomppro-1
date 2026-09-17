@@ -1,0 +1,16 @@
+"use client";
+import { useEffect, useState } from "react";
+import { GroupEmptyState } from "./GroupEmptyState";
+import Image from "next/image";
+import { Search01Icon } from "hugeicons-react";
+type Member = { id: string; role: string; user: { id: string; name: string; image: string | null } };
+export function GroupMembers({ slug, creatorId }: { slug: string; creatorId: string }) {
+  const [search, setSearch] = useState("");
+  return <div className="gd-panel"><h2>People in this group</h2><label className="gf-search gf-member-search"><Search01Icon size={18} /><input aria-label="Search group members" placeholder="Search members by name" value={search} onChange={e=>setSearch(e.target.value)} /></label><MemberResults key={`${slug}:${search}`} slug={slug} search={search} creatorId={creatorId} onClearSearch={() => setSearch("")} /></div>;
+}
+function MemberResults({ slug, search, creatorId, onClearSearch }: { slug: string; search: string; creatorId: string; onClearSearch: () => void }) {
+  const [members, setMembers] = useState<Member[]>([]), [cursor, setCursor] = useState<string | null>(null), [loading, setLoading] = useState(true), [error, setError] = useState(""), [retry, setRetry] = useState(0), [more, setMore] = useState(false);
+  useEffect(()=>{ const controller=new AbortController(); const timer=setTimeout(()=>{ fetch(`/api/communities/${encodeURIComponent(slug)}/members?search=${encodeURIComponent(search)}`, {signal:controller.signal}).then(r=>{if(!r.ok)throw Error("Couldn’t load members.");return r.json();}).then(d=>{setMembers(d.members);setCursor(d.nextCursor);}).catch(e=>{if(!controller.signal.aborted)setError(e.message);}).finally(()=>{if(!controller.signal.aborted)setLoading(false);}); },250); return()=>{clearTimeout(timer);controller.abort();}; },[slug,search,retry]);
+  async function loadMore(){setMore(true);try{const r=await fetch(`/api/communities/${encodeURIComponent(slug)}/members?search=${encodeURIComponent(search)}&cursor=${encodeURIComponent(cursor!)}`);if(!r.ok)throw Error("Couldn’t load more members.");const d=await r.json();setMembers(m=>[...m,...d.members]);setCursor(d.nextCursor);}catch(e){setError((e as Error).message);}finally{setMore(false);}}
+  return <>{error && <p role="alert" className="gp-form-error">{error}<button onClick={()=>{setError("");setRetry(v=>v+1);}}>Retry</button></p>}{loading ? <p role="status" className="gd-muted">Loading members…</p> : <div className="gd-members">{members.map(({id,user})=><div key={id}>{user.image ? <Image src={user.image} alt="" width={48} height={48} unoptimized className="gd-avatar" /> : <span className="gd-avatar" style={{width:48,height:48}}>{user.name.slice(0,1)}</span>}<strong>{user.name}</strong><span>{user.id===creatorId ? "Group host" : "Member"}</span></div>)}</div>}{!loading && !error && !members.length && <GroupEmptyState compact kind={search ? "search" : "groups"} title={search ? "No matching members" : "Your people will appear here"} description={search ? "Try another name or clear your search to see everyone." : "Members will appear here when they join the group."}>{search && <button className="gp-join" onClick={onClearSearch}>Clear search</button>}</GroupEmptyState>}{cursor && <button className="gd-secondary" disabled={more} onClick={loadMore}>{more ? "Loading…" : "Load more members"}</button>}</>;
+}

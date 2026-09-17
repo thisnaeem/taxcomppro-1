@@ -85,7 +85,7 @@ export default function NotFound() {
             </Link>
 
             <Link
-              href="/communities"
+              href="/groups"
               className="p-3.5 rounded-xl bg-slate-900/60 hover:bg-slate-900 border border-slate-800/80 hover:border-amber-500/40 transition-all group"
             >
               <UserGroupIcon className="w-5 h-5 text-blue-400 mb-2 group-hover:scale-110 transition-transform" />

@@ -148,7 +148,7 @@ export default function ProfileDashboardShell({
     { label: "MY COURSES", icon: GraduationCap, href: "/my-courses" },
     { label: "MY CERTIFICATES", icon: Award, href: "/my-courses" },
     { label: "PRO TALKS", icon: Radio, href: "/courses" },
-    { label: "COMMUNITIES", icon: Users, href: "/communities" },
+    { label: "GROUPS", icon: Users, href: "/groups" },
     { label: "FIND A PRO", icon: Search, href: "/find-a-pro" },
     { label: "MARKETPLACE", icon: ShoppingCart, href: "/marketplace", badge: "PLUS" },
     { label: "PRO CONNECT CARD", icon: Contact2, href: "/profile?tab=card" },

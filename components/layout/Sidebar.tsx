@@ -248,7 +248,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
                   <button
                     type="button"
                     onClick={() => setActiveModal("communities")}
-                    title={isCollapsed ? "Clear Communities" : undefined}
+                    title={isCollapsed ? "Clear Groups" : undefined}
                     className={`flex items-center rounded-xl font-semibold text-rose-300 hover:bg-rose-500/15 hover:text-rose-200 transition-all group cursor-pointer ${
                       isCollapsed
                         ? "justify-center px-0 py-2.5 w-full"
@@ -256,7 +256,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
                     }`}
                   >
                     <Trash2 className="w-4 h-4 text-rose-400 group-hover:scale-110 transition-transform shrink-0" />
-                    {!isCollapsed && <span className="truncate">Clear Communities</span>}
+                    {!isCollapsed && <span className="truncate">Clear Groups</span>}
                   </button>
                 </div>
               </div>
@@ -350,12 +350,12 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
             </div>
             <div className="text-center space-y-2">
               <h3 className="text-xl font-black">
-                {activeModal === "marketplace" ? "Clear All Marketplace Listings?" : "Clear All Communities?"}
+                {activeModal === "marketplace" ? "Clear All Marketplace Listings?" : "Clear All Groups?"}
               </h3>
               <p className="text-sm text-white/65 leading-relaxed">
                 {activeModal === "marketplace"
                   ? "This will permanently delete all marketplace listings, purchases, and related records across the entire platform. This action cannot be undone."
-                  : "This will permanently delete all communities, member memberships, community discussion posts, and comments across the entire platform. This action cannot be undone."}
+                  : "This will permanently delete all groups, member memberships, group discussion posts, and comments across the entire platform. This action cannot be undone."}
               </p>
             </div>
             <div className="flex items-center gap-3 pt-2">

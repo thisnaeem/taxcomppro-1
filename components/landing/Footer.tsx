@@ -1,36 +1,75 @@
+import Image from "next/image";
 import Link from "next/link";
+import { ArrowRight01Icon, ArrowUpRight01Icon } from "hugeicons-react";
+import "./footer.css";
+
+const sections = [
+  { title: "Explore & connect", links: [
+    ["Your feed", "/feed"], ["Find a Pro", "/find-a-pro"], ["Groups", "/groups"],
+    ["Pro Network", "/pro-networks"], ["Pro Talks", "/pro-talks"], ["Pro Hub", "/pro-hub"],
+  ] },
+  { title: "Learn & grow", links: [
+    ["Courses", "/courses"], ["Toolkits", "/toolkits"], ["Practice bundles", "/toolkits#bundles"],
+    ["My courses", "/my-courses"], ["Pro Marketing", "/pro-marketing"], ["Ask Atlas AI", "https://alwaysaskatlas.com/"],
+  ] },
+  { title: "For your practice", links: [
+    ["Marketplace", "/marketplace"], ["Pricing & plans", "/upgrade"], ["Become a Pro", "/apply-professional"],
+    ["Seller dashboard", "/seller-dashboard"], ["My purchases", "/marketplace-purchases"],
+    ["Become an affiliate", "https://affiliate.taxcomppro.com"],
+  ] },
+  { title: "Company & support", links: [
+    ["About us", "/about"], ["Contact us", "/contact"], ["My profile", "/my-profile"],
+    ["Security", "/security"], ["Community guidelines", "/community-guidelines"],
+  ] },
+] as const;
 
 export default function PublicFooter() {
   return (
-    <footer className="bg-[#0a1628] pt-14 pb-8">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
+    <footer className="site-footer">
+      <div className="site-footer-inner">
+        <div className="site-footer-intro">
           <div>
-            <Link href="/" className="inline-block mb-4">
-              <img src="/logo_dark.webp" alt="TaxCompPro" className="h-12 w-auto" />
-            </Link>
-            <p className="text-white/45 text-sm leading-relaxed">The professional community for tax experts across America.</p>
+            <p className="site-footer-eyebrow">Your next step starts here</p>
+            <h2>Build your expertise. <span>Grow your circle.</span></h2>
+            <p>Learning, resources, and connections for every stage of your tax career.</p>
           </div>
-          {[
-            { title: "Platform",  links: [["Marketplace","/marketplace"],["Communities","/communities"],["Pricing & Plans","/upgrade"],["Upgrade Membership","/upgrade"],["Dashboard","/dashboard"]] },
-            { title: "Company",   links: [["About Us","/about"],["Contact","/contact"],["Become an Affiliate","https://affiliate.taxcomppro.com"],["Security","/security"]] },
-            { title: "Legal",     links: [["Terms of Service","/terms"],["Privacy Policy","/privacy"],["Community Guidelines","/community-guidelines"],["Cookie Policy","/cookie-policy"]] },
-          ].map((col) => (
-            <div key={col.title}>
-              <h4 className="text-white font-bold text-sm mb-4">{col.title}</h4>
-              {col.links.map(([label, href]) => (
-                href.startsWith("http") ? (
-                  <a key={label} href={href} target="_blank" rel="noopener noreferrer" className="block text-white/45 text-sm mb-2.5 hover:text-[#f0c040] transition-colors">{label}</a>
-                ) : (
-                  <Link key={label} href={href} className="block text-white/45 text-sm mb-2.5 hover:text-[#f0c040] transition-colors">{label}</Link>
-                )
-              ))}
-            </div>
-          ))}
+          <Link href="/upgrade" className="site-footer-cta">Explore membership <ArrowRight01Icon size={19} aria-hidden="true" /></Link>
         </div>
-        <div className="border-t border-white/10 pt-6 flex flex-col md:flex-row justify-between items-center gap-3 text-white/30 text-xs">
+
+        <div className="site-footer-directory">
+          <div className="site-footer-brand">
+            <Link href="/" aria-label="Tax Compliance Pro home" className="site-footer-logo">
+              <Image src="/logo.webp" alt="Tax Compliance Pro" width={160} height={64} className="site-footer-logo-light" />
+              <Image src="/logo_dark.webp" alt="Tax Compliance Pro" width={160} height={64} className="site-footer-logo-dark" />
+            </Link>
+            <p>The professional community for tax experts across America.</p>
+            <Link href="/contact" className="site-footer-contact">Let’s connect <ArrowUpRight01Icon size={18} aria-hidden="true" /></Link>
+          </div>
+          <nav className="site-footer-navigation" aria-label="Footer navigation">
+            {sections.map((section) => (
+              <section key={section.title} className="site-footer-section" aria-label={section.title}>
+                <h3>{section.title}</h3>
+                <ul>
+                  {section.links.map(([label, href]) => (
+                    <li key={href}>
+                      <Link href={href} {...(href.startsWith("https://") ? { target: "_blank", rel: "noopener noreferrer" } : {})}>
+                        {label}{href.startsWith("https://") && <ArrowUpRight01Icon size={14} aria-label="Opens in a new tab" />}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ))}
+          </nav>
+        </div>
+
+        <div className="site-footer-bottom">
           <p>© {new Date().getFullYear()} TaxCompPro. All rights reserved.</p>
-          <p>Built for tax professionals</p>
+          <nav aria-label="Legal information">
+            <Link href="/terms">Terms of service</Link>
+            <Link href="/privacy">Privacy policy</Link>
+            <Link href="/cookie-policy">Cookie policy</Link>
+          </nav>
         </div>
       </div>
     </footer>

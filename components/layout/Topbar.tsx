@@ -27,7 +27,7 @@ const pageTitles: Record<string, string> = {
   "/dashboard":              "Dashboard",
   "/marketplace":            "Marketplace",
   "/marketplace/create":     "Create Listing",
-  "/communities":            "Communities",
+  "/groups":            "Groups",
   "/notifications":          "Notifications",
   "/profile":                "My Profile",
   "/upgrade":                "Upgrade Plan",
