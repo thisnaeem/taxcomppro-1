@@ -91,7 +91,7 @@ export async function proxy(request: NextRequest) {
   // Not logged in & page is NOT public → send to login
   if (!session && !PUBLIC_PAGES.has(pathname) && !PUBLIC_PREFIXES.some(p => pathname.startsWith(p))) {
     const dest = new URL("/login", request.url);
-    dest.searchParams.set("next", pathname);
+    dest.searchParams.set("next", pathname + request.nextUrl.search);
     return NextResponse.redirect(dest);
   }
 
@@ -120,3 +120,4 @@ export async function proxy(request: NextRequest) {
 export const config = {
   matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };
+

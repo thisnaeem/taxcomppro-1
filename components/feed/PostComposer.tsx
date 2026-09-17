@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback } from "react";
 import { useAppSelector } from "@/store/hooks";
-import { Loader2, X, AlertCircle, Calendar, Clock, Crown } from "lucide-react";
+import { Loading03Icon as Loader2, Cancel01Icon as X, Alert02Icon as AlertCircle, Calendar03Icon as Calendar, Clock01Icon as Clock, CrownIcon as Crown } from "hugeicons-react";
 import { Image01Icon, SentIcon, Video02Icon } from "hugeicons-react";
 import type { FeedPost } from "@/components/feed/PostCard";
 import UpgradeModal from "@/components/ui/UpgradeModal";
@@ -166,7 +166,7 @@ export default function PostComposer({ onPostCreated, onScheduled }: Props) {
     <>
       {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} feature="Posting & interacting" />}
 
-    <div className="bg-white rounded-2xl overflow-hidden">
+    <div className="feed-surface feed-composer overflow-hidden">
       {/* VIP required strip for FREE members */}
       {isFree && (
         <div className="flex items-center gap-2 bg-gradient-to-r from-amber-50 to-amber-100 border-b border-amber-200 px-4 py-2">

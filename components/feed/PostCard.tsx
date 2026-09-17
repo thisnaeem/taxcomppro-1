@@ -1,9 +1,12 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
+import PostActions from "./PostActions";
+import type { ReactionCounts } from "@/lib/reactions";
 import { useAppSelector } from "@/store/hooks";
-import { Loader2, MoreHorizontal, Pencil, Trash2, Check, X, ChevronLeft, ChevronRight } from "lucide-react";
-import { ThumbsUpIcon, Comment01Icon, Share01Icon, SentIcon } from "hugeicons-react";
+import { Loading03Icon as Loader2, MoreHorizontalIcon as MoreHorizontal, Edit01Icon as Pencil, Delete02Icon as Trash2, Tick02Icon as Check, Cancel01Icon as X, ArrowLeft01Icon as ChevronLeft, ArrowRight01Icon as ChevronRight } from "hugeicons-react";
+import { SentIcon, UserGroupIcon, GlobeIcon, LockIcon } from "hugeicons-react";
 import DueDiligenceBadge from "@/components/badges/DueDiligenceBadge";
 import UpgradeModal from "@/components/ui/UpgradeModal";
 import FeedVideoPlayer from "./FeedVideoPlayer";
@@ -27,7 +30,9 @@ export interface FeedPost {
   author: Author;
   comments: Comment[];
   _count: { likes: number; comments: number };
-  likes: { id: string }[];
+  likes: { id: string; reaction?: string }[];
+  reactionCounts?: ReactionCounts;
+  community?: { name: string; slug: string; isPublic: boolean } | null;
 }
 
 function timeAgo(d: string) {
@@ -48,9 +53,7 @@ export default function PostCard({ post, onUpdate, onDelete }: { post: FeedPost;
   const user = useAppSelector(s => s.auth.user);
   const isFree = (user?.tier === "FREE" || !user?.tier) && user?.role !== "ADMIN" && user?.role !== "PROFESSIONAL";
   const [showUpgrade, setShowUpgrade] = useState(false);
-  const [liked, setLiked]           = useState(post.likes.length > 0);
   const [likeCount, setLikeCount]   = useState(post._count.likes);
-  const [liking, setLiking]         = useState(false);
   const [showLikesModal, setShowLikesModal] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments]     = useState<Comment[]>(post.comments);
@@ -102,7 +105,7 @@ export default function PostCard({ post, onUpdate, onDelete }: { post: FeedPost;
       });
       if (res.ok) {
         const updated = await res.json() as FeedPost;
-        onUpdate(updated);
+        onUpdate({ ...post, ...updated, community: post.community, reactionCounts: post.reactionCounts });
         setEditing(false);
       }
     } finally { setSaving(false); }
@@ -114,21 +117,6 @@ export default function PostCard({ post, onUpdate, onDelete }: { post: FeedPost;
       const res = await fetch(`/api/feed/${post.id}`, { method: "DELETE" });
       if (res.ok) onDelete?.(post.id);
     } finally { setDeleting(false); setConfirmDelete(false); }
-  };
-
-  const handleLike = async () => {
-    if (!user || isFree) { setShowUpgrade(true); return; }
-    if (liking) return;
-    setLiking(true);
-    const newLiked = !liked;
-    setLiked(newLiked);
-    setLikeCount(n => newLiked ? n + 1 : n - 1);
-    try {
-      await fetch(`/api/feed/${post.id}/like`, { method: "POST" });
-    } catch {
-      setLiked(!newLiked);
-      setLikeCount(n => newLiked ? n - 1 : n + 1);
-    } finally { setLiking(false); }
   };
 
   const handleToggleComments = async () => {
@@ -147,7 +135,7 @@ export default function PostCard({ post, onUpdate, onDelete }: { post: FeedPost;
 
   const handleAddComment = async () => {
     if (!commentText.trim() || postingComment) return;
-    if (isFree) { setShowUpgrade(true); return; }
+    if (isFree && !post.community) { setShowUpgrade(true); return; }
     setPostingComment(true);
     try {
       const res = await fetch(`/api/feed/${post.id}/comment`, {
@@ -171,7 +159,8 @@ export default function PostCard({ post, onUpdate, onDelete }: { post: FeedPost;
   return (
     <>
       {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} feature="Liking & commenting" />}
-      <div className="bg-white rounded-2xl overflow-hidden transition-all">
+      <div className="feed-surface feed-post-card overflow-hidden">
+      {post.community && <Link href={`/groups/${post.community.slug}`} className="feed-post-group"><UserGroupIcon size={17} /><span>{post.community.name}</span>{post.community.isPublic ? <GlobeIcon size={14} /> : <LockIcon size={14} />}</Link>}
       {/* Header */}
       <div className="flex items-start gap-3 p-5 pb-3">
         <div className="w-12 h-12 rounded-xl bg-[#0a1628] flex items-center justify-center overflow-hidden shrink-0">
@@ -194,7 +183,7 @@ export default function PostCard({ post, onUpdate, onDelete }: { post: FeedPost;
           {post.author.headline && (
             <div className="text-sm text-slate-400 truncate mt-0.5">{post.author.headline}</div>
           )}
-          <div className="text-sm text-slate-400 mt-0.5">{timeAgo(post.createdAt)}</div>
+          <Link href={`/feed?post=${post.id}`} className="feed-post-time">{timeAgo(post.createdAt)}<span aria-hidden="true"> · </span>{post.community?.isPublic === false ? <LockIcon size={13} /> : <GlobeIcon size={13} />}</Link>
         </div>
         {/* Three-dot menu for own posts */}
         {isOwn && (
@@ -253,7 +242,7 @@ export default function PostCard({ post, onUpdate, onDelete }: { post: FeedPost;
 
       {/* Images */}
       {post.images && post.images.length > 0 && (
-        <div className="px-5 pb-4">
+        <div className="feed-post-media">
           {/* ── 1 image ── */}
           {post.images.length === 1 && (
             <button onClick={() => setLightboxIdx(0)}
@@ -269,7 +258,7 @@ export default function PostCard({ post, onUpdate, onDelete }: { post: FeedPost;
                 <button key={i} onClick={() => setLightboxIdx(i)}
                   className="block rounded-xl overflow-hidden bg-slate-100 cursor-zoom-in">
                   <img src={url} alt={`Post image ${i + 1}`}
-                    className="w-full h-56 object-cover hover:opacity-95 transition-opacity" />
+                    className="w-full aspect-[3/4] object-cover hover:opacity-95 transition-opacity" />
                 </button>
               ))}
             </div>
@@ -318,45 +307,7 @@ export default function PostCard({ post, onUpdate, onDelete }: { post: FeedPost;
         </div>
       )}
 
-      {/* Like / Comment counts */}
-      {(likeCount > 0 || commentCount > 0) && (
-        <div className="px-5 py-3 border-t border-slate-100 flex items-center justify-between text-sm font-medium text-slate-500">
-          {likeCount > 0 && (
-            <button
-              type="button"
-              onClick={() => setShowLikesModal(true)}
-              className="flex items-center gap-1.5 hover:underline hover:text-[#0a1628] transition-colors cursor-pointer group text-slate-500"
-              title="See who liked this post"
-            >
-              <span className="w-4 h-4 rounded-full bg-[#1877F2] text-white flex items-center justify-center shadow-xs group-hover:scale-110 transition-transform">
-                <ThumbsUpIcon className="w-2.5 h-2.5 fill-white stroke-none" />
-              </span>
-              <span className="font-semibold text-xs text-slate-600 group-hover:text-[#0a1628]">{likeCount}</span>
-            </button>
-          )}
-          {commentCount > 0 && (
-            <button onClick={handleToggleComments} className="hover:text-[#0a1628] transition-colors">
-              {commentCount} comment{commentCount !== 1 ? "s" : ""}
-            </button>
-          )}
-        </div>
-      )}
-
-      {/* Actions */}
-      <div className="border-t border-slate-100 px-3 py-1.5 flex items-center gap-2">
-        <button onClick={handleLike}
-          className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-bold transition-all ${liked ? "text-[#1a3a6b] bg-[#1a3a6b]/5" : "text-slate-500 hover:bg-slate-50 hover:text-[#0a1628]"}`}>
-          {liking ? <Loader2 className="w-4 h-4 animate-spin" /> : <ThumbsUpIcon className={`w-4 h-4 ${liked ? "fill-[#1a3a6b] stroke-none" : ""}`} />}
-          Like
-        </button>
-        <button onClick={handleToggleComments}
-          className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-50 hover:text-[#0a1628] transition-all">
-          <Comment01Icon className="w-4 h-4" /> Comment
-        </button>
-        <button className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-50 hover:text-[#0a1628] transition-all">
-          <Share01Icon className="w-4 h-4" /> Share
-        </button>
-      </div>
+      <PostActions postId={post.id} content={post.content} initialReaction={post.likes[0]?.reaction ?? (post.likes.length ? "LIKE" : null)} initialCounts={post.reactionCounts} initialCount={post._count.likes} commentCount={commentCount} canReact={!!user && (!isFree || !!post.community)} onRequireUpgrade={() => setShowUpgrade(true)} onComments={handleToggleComments} onShowReactions={() => setShowLikesModal(true)} onCountChange={setLikeCount} privateGroup={post.community?.isPublic === false} />
 
       {/* Comments section */}
       {showComments && (
@@ -502,12 +453,12 @@ export default function PostCard({ post, onUpdate, onDelete }: { post: FeedPost;
     )}
 
     {/* ── Likes modal (Facebook style) ── */}
-    <PostLikesModal
+    {showLikesModal && <PostLikesModal
       postId={post.id}
       isOpen={showLikesModal}
       onClose={() => setShowLikesModal(false)}
       initialCount={likeCount}
-    />
+    />}
 
     {/* ── Upgrade modal ── */}
     {showUpgrade && (

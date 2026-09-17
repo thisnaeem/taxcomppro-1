@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Play, Pause, Volume2, VolumeX, Maximize, Minimize, Loader2 } from "lucide-react";
+import { PlayIcon as Play, PauseIcon as Pause, VolumeHighIcon as Volume2, VolumeMute01Icon as VolumeX, Maximize01Icon as Maximize, Minimize01Icon as Minimize, Loading03Icon as Loader2 } from "hugeicons-react";
 
 interface Props {
   src: string;
@@ -111,9 +111,9 @@ export default function FeedVideoPlayer({ src, poster, className = "" }: Props) 
       try {
         if (container.requestFullscreen) {
           await container.requestFullscreen();
-        } else if ((video as any).webkitEnterFullscreen) {
+        } else if ((video as HTMLVideoElement & { webkitEnterFullscreen?: () => void }).webkitEnterFullscreen) {
           // iOS Safari fallback
-          (video as any).webkitEnterFullscreen();
+          (video as HTMLVideoElement & { webkitEnterFullscreen?: () => void }).webkitEnterFullscreen?.();
         }
         setIsFullscreen(true);
       } catch {}
@@ -327,3 +327,4 @@ export default function FeedVideoPlayer({ src, poster, className = "" }: Props) 
     </div>
   );
 }
+

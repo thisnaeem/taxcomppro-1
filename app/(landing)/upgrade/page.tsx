@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
-import { Loader2, CheckCircle2, Lock } from "lucide-react";
+import { useRef, useState } from "react";
+import { Tick02Icon, LockKeyIcon, ArrowRight01Icon, ArrowDown01Icon } from "hugeicons-react";
 import { useAppSelector } from "@/store/hooks";
 
 // Tier hierarchy: higher index = higher tier
@@ -22,7 +22,7 @@ const plans = [
       "Email Support",
       "Marketplace Access (View)",
       "Member Directory Access",
-      "Communities Access (View)",
+      "Groups Access (View)",
       "Marketplace Feed Access",
       "Secure Members-Only Environment",
     ],
@@ -37,7 +37,7 @@ const plans = [
       "Private Messaging & DMs",
       "Training & Educational Support",
       "Marketplace Feed Interaction",
-      "Communities Interaction",
+      "Groups Interaction",
       "Private Discussion Forums",
       "Ongoing Education & Training",
       "Ability to Connect",
@@ -84,157 +84,109 @@ const plans = [
   },
 ];
 
+import "@/components/landing/member-pages.css";
+
+const descriptions: Record<string, string> = {
+  FREE: "Explore the community and discover your next connection.",
+  VIP: "Build your expertise with training and professional connections.",
+  MARKETPLACE: "Put your practice in front of your next client.",
+  MARKETPLACE_PLUS: "Grow your visibility with live sessions and more ways to share.",
+};
+
 export default function UpgradePage() {
   const [loading, setLoading] = useState<string | null>(null);
-  const user = useAppSelector(s => s.auth.user);
+  const [error, setError] = useState("");
+  const [expanded, setExpanded] = useState(false);
+  const checkoutPending = useRef(false);
+  const { user, isLoading } = useAppSelector(s => s.auth);
   const userTier = user?.tier ?? "FREE";
   const userRank = TIER_RANK[userTier] ?? 0;
 
   const handleUpgrade = async (tier: string) => {
+    if (checkoutPending.current) return;
+    checkoutPending.current = true;
     setLoading(tier);
+    setError("");
     try {
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ tier }),
       });
+      if (res.status === 401) {
+        window.location.assign("/login?next=%2Fupgrade");
+        return;
+      }
       const data = await res.json();
-      if (data.url) window.location.href = data.url;
+      if (!res.ok || typeof data.url !== "string" || !data.url) {
+        throw new Error("Checkout could not be started. Please try again or contact support.");
+      }
+      window.location.assign(data.url);
     } catch {
-      alert("Failed to start checkout. Please try again.");
+      setError("Checkout could not be started. Please try again or contact support.");
     } finally {
+      checkoutPending.current = false;
       setLoading(null);
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 pt-8 pb-16">
-      <div className="max-w-7xl mx-auto px-4">
+    <div className="mp-page pricing-page">
+      <div className="mp-container">
+        <header className="mp-hero">
+          <p className="mp-eyebrow">Memberships for your next chapter</p>
+          <h1>Upgrade your plan.<br /><span>Move your practice forward.</span></h1>
+          <p>All paid plans include 2 months free community access. Cancel anytime.</p>
+          <div className="mp-hero-links"><a href="#plans">Explore plans <ArrowDown01Icon size={18} /></a><Link href="/contact">Need help choosing? <ArrowRight01Icon size={18} /></Link></div>
+        </header>
 
-        {/* Header */}
-        <div className="text-center mb-12">
-          <p className="text-sm font-bold uppercase tracking-widest text-[#d4a017] mb-3">Pricing</p>
-          <h1 className="text-4xl font-black text-[#0a1628] mb-3">Upgrade Your Plan</h1>
-          <p className="text-slate-500 text-lg max-w-lg mx-auto">
-            All paid plans include 2 months free community access. Cancel anytime.
-          </p>
-        </div>
-
-        {/* Plans grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 items-stretch">
-          {plans.map((plan) => {
-            const planRank = TIER_RANK[plan.tier] ?? 0;
-            const isCurrentPlan = userTier === plan.tier;
-            const isLowerTier = planRank < userRank;
-            const showCurrentPlan = isCurrentPlan || isLowerTier;
-
-            return (
-              <div key={plan.name} className={`relative bg-white rounded-2xl flex flex-col overflow-hidden transition-all hover:-translate-y-1 ${
-                plan.popular
-                  ? "shadow-xl border-2 border-[#d4a017]"
-                  : "shadow-md border border-slate-200 hover:shadow-xl"
-              }`}>
-                {/* Gold top accent bar */}
-                {plan.popular && <div className="h-1.5 w-full bg-gradient-to-r from-[#f0c040] to-[#d4a017]" />}
-
-                {/* Badge */}
-                {plan.badge && !showCurrentPlan && (
-                  <div className="absolute top-4 right-4">
-                    <span className={`text-xs font-black px-3 py-1 rounded-full uppercase tracking-wide ${
-                      plan.popular
-                        ? "bg-gradient-to-r from-[#f0c040] to-[#d4a017] text-[#0a1628]"
-                        : "bg-[#0a1628] text-white"
-                    }`}>{plan.badge}</span>
+        <section id="plans" aria-label="Membership plans">
+          <div className="pricing-toolbar"><p>Find the right fit for your practice</p><span>Monthly memberships · USD</span></div>
+          {error && <div className="mp-error" role="alert">{error} <Link href="/contact">Contact support</Link></div>}
+          <div className="pricing-grid">
+            {plans.map((plan) => {
+              const isCurrent = !!user && userTier === plan.tier;
+              const included = !!user && (TIER_RANK[plan.tier] ?? 0) < userRank;
+              return (
+                <article key={plan.tier} className={`pricing-card ${plan.popular ? "pricing-featured" : ""}`}>
+                  <div className="pricing-art">
+                    <Image src={plan.img} alt="" width={120} height={120} />
+                    {(isCurrent || included || plan.badge) && <span className="pricing-badge">{isCurrent ? "Current plan" : included ? "Included" : plan.badge}</span>}
                   </div>
-                )}
-
-                {/* "Current Plan" badge when user is on this tier or above */}
-                {showCurrentPlan && (
-                  <div className="absolute top-4 right-4">
-                    <span className="text-xs font-black px-3 py-1 rounded-full uppercase tracking-wide bg-emerald-500 text-white">
-                      {isCurrentPlan ? "Current Plan" : "Included"}
-                    </span>
-                  </div>
-                )}
-
-                <div className="p-7 flex flex-col flex-1">
-                  {/* Plan image */}
-                  <div className="flex justify-center mb-5">
-                    <Image src={plan.img} alt={plan.name} width={130} height={130} className="object-contain" style={{ width: "auto", height: "auto" }} />
-                  </div>
-
-                  {/* Name */}
-                  <h3 className="text-center font-black text-base text-[#0a1628] mb-1">{plan.name}</h3>
-
-                  {/* Savings */}
-                  {plan.savings && !showCurrentPlan && (
-                    <p className="text-center text-xs font-bold text-[#d4a017] mb-3">{plan.savings}</p>
-                  )}
-
-                  {/* Price */}
-                  <div className="flex items-baseline justify-center gap-1 mb-6">
-                    <span className="text-4xl font-black text-[#0a1628]">{plan.label}</span>
-                    <span className="text-sm text-slate-400">{plan.period}</span>
-                  </div>
-
-                  {/* Features */}
-                  <ul className="space-y-2.5 mb-7 flex-1">
-                    {plan.features.map((f) => {
-                      const isBold =
-                        plan.tier === "MARKETPLACE_PLUS" &&
-                        (f.toLowerCase().includes("live audio") ||
-                         f.toLowerCase().includes("live video") ||
-                         f.toLowerCase().includes("post ads"));
-                      return (
-                        <li key={f} className={`flex gap-2 items-start text-sm ${isBold ? "text-[#0a1628] font-bold" : "text-slate-600"}`}>
-                          <CheckCircle2 className={`w-4 h-4 shrink-0 mt-px ${isBold ? "text-emerald-600 stroke-[2.5]" : "text-emerald-500"}`} />
-                          <span className={isBold ? "font-bold text-[#0a1628]" : ""}>{f}</span>
-                        </li>
-                      );
-                    })}
-                  </ul>
-
-                  {/* CTA */}
-                  {showCurrentPlan ? (
-                    <div className="w-full text-center text-sm font-bold py-3.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 cursor-default">
-                      {isCurrentPlan ? "✓ Current Plan" : "✓ Included in Your Plan"}
+                  <div className="pricing-body">
+                    <h2>{plan.name}</h2>
+                    <p className="pricing-description">{descriptions[plan.tier]}</p>
+                    <div className="pricing-price"><strong>{plan.label}</strong><span>{plan.period || "Forever"}</span></div>
+                    <p className="pricing-savings">{plan.savings || (plan.price === 0 ? "Start with the essentials" : "Invest in your professional growth")}</p>
+                    <div className="pricing-action">
+                      {isCurrent || included ? <span className="mp-button mp-button-secondary"><Tick02Icon size={18} />{isCurrent ? "Current plan" : "Included in your plan"}</span>
+                        : !user && !isLoading ? <Link className={`mp-button ${plan.popular ? "" : "mp-button-secondary"}`} href={plan.tier === "FREE" ? "/register" : "/login?next=%2Fupgrade"}>{plan.tier === "FREE" ? "Get started free" : "Sign in to upgrade"}<ArrowRight01Icon size={17} /></Link>
+                        : <button className={`mp-button ${plan.popular ? "" : "mp-button-secondary"}`} onClick={() => handleUpgrade(plan.tier)} disabled={!!loading || isLoading}>{isLoading ? "Loading your plan…" : loading === plan.tier ? "Opening checkout…" : plan.cta}<ArrowRight01Icon size={17} /></button>}
                     </div>
-                  ) : plan.tier === "FREE" ? (
-                    <div className="w-full text-center text-sm font-bold py-3.5 rounded-full bg-slate-100 text-slate-400 cursor-default">
-                      {plan.cta}
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => handleUpgrade(plan.tier)}
-                      disabled={loading === plan.tier}
-                      className={`w-full text-sm font-bold py-3.5 rounded-full transition-all disabled:opacity-60 flex items-center justify-center gap-2 ${
-                        plan.popular
-                          ? "bg-gradient-to-r from-[#f0c040] to-[#d4a017] text-[#0a1628] hover:shadow-[0_0_20px_rgba(212,160,23,0.4)]"
-                          : "bg-[#0a1628] text-white hover:bg-[#1a3a6b]"
-                      }`}>
-                      {loading === plan.tier ? <><Loader2 className="w-4 h-4 animate-spin" />Redirecting…</> : plan.cta}
-                    </button>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Trust strip */}
-        <div className="mt-8 bg-white rounded-2xl p-5 text-center flex flex-col sm:flex-row items-center justify-center gap-4 border border-slate-200 shadow-sm">
-          <span className="flex items-center gap-2 text-sm text-slate-500">
-            <Lock className="w-4 h-4 text-slate-400" />
-            Secure payments powered by <strong className="text-[#0a1628]">Stripe</strong>.
-            Cancel anytime. No hidden fees.
-          </span>
-          <span className="text-slate-300 hidden sm:inline">|</span>
-          <span className="text-sm text-slate-400">
-            Questions?{" "}
-            <Link href="/contact" className="text-[#0a1628] font-semibold hover:underline">Contact support</Link>
-          </span>
-        </div>
+                    <p className="pricing-list-label">What’s included</p>
+                    <ul id={`features-${plan.tier}`} className="pricing-features">
+                      {(expanded ? plan.features : plan.tier === "MARKETPLACE_PLUS" ? [...plan.features.slice(-3), ...plan.features.slice(0, 2)] : plan.features.slice(0, 5)).map(feature => <li key={feature}><Tick02Icon size={17} aria-hidden="true" /><span>{feature}</span></li>)}
+                    </ul>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+          <div className="pricing-compare"><button type="button" onClick={() => setExpanded(!expanded)} aria-expanded={expanded} aria-controls={plans.map(p => `features-${p.tier}`).join(" ")}>{expanded ? "Show key features" : "Compare all plan features"}<ArrowDown01Icon size={18} className={expanded ? "mp-rotate" : ""} /></button></div>
+        </section>
+        <div className="pricing-trust"><LockKeyIcon size={21} aria-hidden="true" /><p>Secure payments powered by <strong>Stripe</strong>. Cancel anytime. No hidden fees.</p><Link href="/contact">Contact support <ArrowRight01Icon size={17} /></Link></div>
+        <section className="mp-faq" aria-labelledby="pricing-faq">
+          <div><p className="mp-eyebrow">A little clarity</p><h2 id="pricing-faq">Before you choose.</h2><p>Have a question about the right membership for your practice? <Link href="/contact">Talk to our team.</Link></p></div>
+          <div className="mp-faq-items">
+            <details><summary>Can I get started for free?<ArrowDown01Icon size={18} /></summary><p>Yes. Basic membership includes email support, member directory access, and view access to the marketplace and groups. Create an account to get started.</p></details>
+            <details><summary>Which plan is right for my practice?<ArrowDown01Icon size={18} /></summary><p>Choose VIP for training and professional connections. The Marketplace Bundle adds a professional listing and seller profile. Marketplace Plus adds live audio and video hosting and the ability to post ads, products, and services.</p></details>
+            <details><summary>How am I billed?<ArrowDown01Icon size={18} /></summary><p>Paid plans are monthly memberships, with prices shown in US dollars. Review your payment details in Stripe checkout before confirming your subscription.</p></details>
+            <details><summary>Can I cancel my membership?<ArrowDown01Icon size={18} /></summary><p>You can cancel anytime. Contact support if you need help with your membership or billing.</p></details>
+          </div>
+        </section>
       </div>
     </div>
   );
 }
+
+

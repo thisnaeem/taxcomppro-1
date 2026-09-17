@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Calendar, Trash2, Loader2, Clock, ImageIcon, Video, RefreshCw } from "lucide-react";
+import { Calendar03Icon as Calendar, Delete02Icon as Trash2, Loading03Icon as Loader2, Clock01Icon as Clock, Image01Icon as ImageIcon, Video02Icon as Video, RefreshIcon as RefreshCw } from "hugeicons-react";
 
 interface ScheduledPost {
   id: string;
@@ -32,14 +32,10 @@ export default function ScheduledPostsPanel({ refreshKey = 0 }: Props) {
   const [deleting, setDeleting] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/feed/scheduled");
-      if (res.ok) setPosts(await res.json() as ScheduledPost[]);
-    } finally { setLoading(false); }
-  }, []);
-
+  const load = useCallback(() => fetch("/api/feed/scheduled")
+    .then(async res => { if (res.ok) setPosts(await res.json() as ScheduledPost[]); })
+    .catch(() => { /* Preserve the current list if a refresh fails. */ })
+    .finally(() => setLoading(false)), []);
   useEffect(() => { load(); }, [load, refreshKey]);
 
   const deletePost = async (id: string) => {
@@ -53,7 +49,7 @@ export default function ScheduledPostsPanel({ refreshKey = 0 }: Props) {
   if (!loading && posts.length === 0) return null;
 
   return (
-    <div className="bg-white rounded-2xl border border-blue-100 overflow-hidden">
+    <div className="feed-surface feed-scheduled overflow-hidden">
       {/* Header */}
       <div
         role="button"
@@ -73,7 +69,7 @@ export default function ScheduledPostsPanel({ refreshKey = 0 }: Props) {
           )}
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={e => { e.stopPropagation(); load(); }}
+          <button aria-label="Refresh scheduled posts" onClick={e => { e.stopPropagation(); setLoading(true); load(); }}
             className="p-1 text-slate-400 hover:text-slate-600 rounded transition-all">
             <RefreshCw className="w-3.5 h-3.5" />
           </button>
@@ -134,3 +130,4 @@ export default function ScheduledPostsPanel({ refreshKey = 0 }: Props) {
     </div>
   );
 }
+

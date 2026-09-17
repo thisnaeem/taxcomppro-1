@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { reactionSummaries } from "@/lib/post-reactions";
 
 // Auto-publish any due scheduled posts (runs on every GET — cheap, indexed query)
 async function publishDuePosts() {
@@ -19,12 +20,17 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const cursor = searchParams.get("cursor");
   const take = 10;
+  const postId = searchParams.get("post");
 
   const posts = await prisma.post.findMany({
-    where: { communityId: null, scheduledAt: null }, // only show published posts
-    orderBy: { createdAt: "desc" },
-    take,
-    ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
+    where: { scheduledAt: null, ...(postId ? { id: postId } : {}), OR: [
+      { communityId: null },
+      ...(session ? [{ community: { members: { some: { userId: session.user.id } } } }] : []),
+      ...(postId ? [{ community: { isPublic: true } }] : []),
+    ] },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    take: postId ? 1 : take,
+    ...(!postId && cursor ? { skip: 1, cursor: { id: cursor } } : {}),
     include: {
       author: { select: { id: true, name: true, image: true, headline: true, role: true, tier: true } },
       comments: {
@@ -32,10 +38,11 @@ export async function GET(req: NextRequest) {
         orderBy: { createdAt: "asc" as const },
         take: 3,
       },
+      community: { select: { name: true, slug: true, isPublic: true } },
       _count: { select: { likes: true, comments: true } },
       likes: session
-        ? { where: { userId: session.user.id }, select: { id: true } }
-        : { where: { userId: "__none__" }, select: { id: true } },
+        ? { where: { userId: session.user.id }, select: { id: true, reaction: true } }
+        : { where: { userId: "__none__" }, select: { id: true, reaction: true } },
     },
   });
 
@@ -58,13 +65,15 @@ export async function GET(req: NextRequest) {
     ...toolkitPurchases.map(t => t.userId),
   ]);
 
+  const summaries = await reactionSummaries(posts.map(post => post.id));
   const postsWithBadge = posts.map(p => ({
     ...p,
+    reactionCounts: summaries[p.id] ?? {},
     author: { ...p.author, hasDueDiligenceBadge: badgeUserIds.has(p.author.id) },
   }));
 
-  const nextCursor = posts.length === take ? posts[posts.length - 1].id : null;
-  return NextResponse.json({ posts: postsWithBadge, nextCursor });
+  const nextCursor = !postId && posts.length === take ? posts[posts.length - 1].id : null;
+  return NextResponse.json({ posts: postsWithBadge, nextCursor }, { headers: { "Cache-Control": "private, no-store" } });
 }
 
 
@@ -101,10 +110,12 @@ export async function POST(req: NextRequest) {
         orderBy: { createdAt: "asc" as const },
         take: 3,
       },
+      community: { select: { name: true, slug: true, isPublic: true } },
       _count: { select: { likes: true, comments: true } },
-      likes: { select: { id: true } },
+      likes: { select: { id: true, reaction: true } },
     },
   });
 
   return NextResponse.json(post, { status: 201 });
 }
+

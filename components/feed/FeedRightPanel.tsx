@@ -2,11 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import {
-  ArrowUpRight, ExternalLink, Users, ShoppingBag,
-  CheckCircle2, RefreshCw, Newspaper, ChevronRight,
-  Briefcase, Star, Radio, Mic, Calendar, Sparkles,
-} from "lucide-react";
+import { ArrowUpRight01Icon as ArrowUpRight, ArrowUpRight01Icon as ExternalLink, UserGroupIcon as Users, ShoppingBag01Icon as ShoppingBag, CheckmarkCircle02Icon as CheckCircle2, RefreshIcon as RefreshCw, News01Icon as Newspaper, ArrowRight01Icon as ChevronRight, Briefcase01Icon as Briefcase, StarIcon as Star, Radio01Icon as Radio, Mic01Icon as Mic, Calendar03Icon as Calendar, SparklesIcon as Sparkles } from "hugeicons-react";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -86,7 +82,7 @@ function Section({ title, icon: Icon, href, linkLabel, children }: {
   children: React.ReactNode;
 }) {
   return (
-    <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100">
+    <div className="feed-surface feed-discovery overflow-hidden">
       <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-slate-50">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded-lg bg-[#0a1628]/8 flex items-center justify-center">

@@ -1,0 +1,1 @@
+ALTER TABLE "post_likes" ADD COLUMN "reaction" TEXT NOT NULL DEFAULT 'LIKE';

@@ -9,7 +9,7 @@ import {
   ShoppingBag01Icon, Chart01Icon, BookOpen01Icon,
   UserAdd01Icon, Home01Icon, Edit01Icon, Tick01Icon, Cancel01Icon,
 } from "hugeicons-react";
-import { MonitorPlay, ExternalLink } from "lucide-react";
+import { ComputerVideoIcon as MonitorPlay, ArrowUpRight01Icon as ExternalLink } from "hugeicons-react";
 import DueDiligenceBadge from "@/components/badges/DueDiligenceBadge";
 
 const tierLabel: Record<string, string> = {
@@ -102,7 +102,7 @@ export default function FeedLeftPanel() {
     <aside className="w-full space-y-2.5">
 
       {/* ── Profile card ── */}
-      <div className="bg-white rounded-2xl overflow-hidden">
+      <div className="feed-surface feed-profile overflow-hidden">
 
         {/* Cover banner — displays coverImage set from profile page, or falls back to gradient */}
         <div className="h-24 relative">
@@ -201,7 +201,7 @@ export default function FeedLeftPanel() {
       </div>
 
       {/* ── Navigation links ── */}
-      <div className="bg-white rounded-2xl p-3">
+      <div className="feed-surface feed-navigation p-3">
         <div className="space-y-0.5">
           {[
             { icon: Home01Icon,           label: "Feed",                    href: "/feed" },
@@ -214,6 +214,7 @@ export default function FeedLeftPanel() {
             ...(user.role === "ADMIN" ? [{ icon: Chart01Icon, label: "Admin Panel", href: "/admin", isExternal: false }] : []),
           ].map(l => (
             <Link key={l.href} href={l.href}
+              aria-current={l.href === "/feed" ? "page" : undefined}
               className="flex items-center gap-3 px-3 py-3 rounded-xl text-slate-600 text-base font-medium hover:bg-slate-50 hover:text-[#0a1628] transition-all group">
               <l.icon className="w-5 h-5 text-slate-400 group-hover:text-[#0a1628] transition-colors" />
               {l.label}

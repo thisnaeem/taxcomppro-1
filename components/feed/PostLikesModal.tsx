@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
-import { X, Loader2, Search } from "lucide-react";
+import { REACTIONS } from "@/lib/reactions";
+import { Cancel01Icon as X, Loading03Icon as Loader2, Search01Icon as Search } from "hugeicons-react";
 import { ThumbsUpIcon } from "hugeicons-react";
 import DueDiligenceBadge from "@/components/badges/DueDiligenceBadge";
 
@@ -17,6 +18,7 @@ interface LikeUser {
 }
 
 interface LikeEntry {
+  reaction?: string;
   id: string;
   createdAt: string;
   user: LikeUser;
@@ -44,7 +46,7 @@ export default function PostLikesModal({ postId, isOpen, onClose, initialCount }
     if (!isOpen) return;
 
     let isMounted = true;
-    setLoading(true);
+
 
     fetch(`/api/feed/${postId}/like`, { cache: "no-store" })
       .then((res) => {
@@ -105,7 +107,7 @@ export default function PostLikesModal({ postId, isOpen, onClose, initialCount }
             {/* Active reaction tab pill */}
             <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-50 text-[#1877F2] text-sm font-bold border border-blue-100">
               <span className="w-5 h-5 rounded-full bg-[#1877F2] text-white flex items-center justify-center shrink-0 shadow-xs">
-                <ThumbsUpIcon className="w-3 h-3 fill-white stroke-none" />
+                <ThumbsUpIcon className="w-3 h-3 " />
               </span>
               <span>All</span>
               <span className="text-slate-500 font-semibold text-xs ml-0.5">
@@ -161,10 +163,10 @@ export default function PostLikesModal({ postId, isOpen, onClose, initialCount }
             </div>
           ) : filteredLikes.length === 0 ? (
             <div className="py-12 text-center text-slate-400 text-sm">
-              {searchQuery ? "No members match your search." : "No likes yet."}
+              {searchQuery ? "No members match your search." : "No reactions yet."}
             </div>
           ) : (
-            filteredLikes.map(({ user }) => {
+            filteredLikes.map(({ user, reaction }) => {
               const badge = tierBadge[user.tier];
               const isAdmin = user.role === "ADMIN";
 
@@ -196,7 +198,7 @@ export default function PostLikesModal({ postId, isOpen, onClose, initialCount }
                       </div>
                       {/* Thumbs up badge attached to avatar corner */}
                       <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-[#1877F2] text-white flex items-center justify-center border-2 border-white shadow-xs">
-                        <ThumbsUpIcon className="w-2.5 h-2.5 fill-white stroke-none" />
+                        <span aria-label={REACTIONS.find(item => item.type === reaction)?.label ?? "Like"}>{REACTIONS.find(item => item.type === reaction)?.emoji ?? "👍"}</span>
                       </span>
                     </div>
 

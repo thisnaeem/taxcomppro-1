@@ -7,8 +7,10 @@ import PostCard, { type FeedPost } from "@/components/feed/PostCard";
 import FeedLeftPanel from "@/components/feed/FeedLeftPanel";
 import FeedRightPanel from "@/components/feed/FeedRightPanel";
 import ScheduledPostsPanel from "@/components/feed/ScheduledPostsPanel";
-import { PostSkeleton, LeftPanelSkeleton, RightPanelSkeleton } from "@/components/feed/FeedSkeletons";
-import { RefreshCw, MonitorPlay, ExternalLink, Sparkles, X } from "lucide-react";
+import { PostSkeleton, LeftPanelSkeleton, RightPanelSkeleton, FeedPageSkeleton, ComposerSkeleton } from "@/components/feed/FeedSkeletons";
+import { RefreshIcon as RefreshCw, ComputerVideoIcon as MonitorPlay, ArrowUpRight01Icon as ExternalLink, SparklesIcon as Sparkles, Cancel01Icon as X } from "hugeicons-react";
+import Link from "next/link";
+import "@/components/feed/feed.css";
 import { NoteEditIcon } from "hugeicons-react";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { setUser } from "@/store/slices/authSlice";
@@ -16,11 +18,13 @@ import { setUser } from "@/store/slices/authSlice";
 function FeedContent() {
   const searchParams = useSearchParams();
   const dispatch = useAppDispatch();
+  const sharedPost = searchParams.get("post");
   const isWelcome = searchParams.get("welcome") === "1" || searchParams.get("registered") === "1" || searchParams.get("upgraded") === "1";
   const [showWelcomeBanner, setShowWelcomeBanner] = useState(isWelcome);
   const user = useAppSelector(s => s.auth.user);
   const [posts, setPosts]             = useState<FeedPost[]>([]);
   const [loading, setLoading]         = useState(true);
+  const [feedError, setFeedError] = useState("");
   const [loadingMore, setLoadingMore] = useState(false);
   const [nextCursor, setNextCursor]   = useState<string | null>(null);
   const [hasNew, setHasNew]           = useState(false);
@@ -83,30 +87,35 @@ function FeedContent() {
   const latestIdRef  = useRef<string | null>(null);
 
   const fetchFeed = useCallback(async (cursor?: string) => {
-    const url = cursor ? `/api/feed?cursor=${cursor}` : "/api/feed";
+    const url = sharedPost ? `/api/feed?post=${encodeURIComponent(sharedPost)}` : cursor ? `/api/feed?cursor=${encodeURIComponent(cursor)}` : "/api/feed";
     const res = await fetch(url);
+    if (!res.ok) throw new Error("Feed unavailable");
     const data = await res.json() as { posts?: FeedPost[]; nextCursor?: string | null };
     return {
       posts: Array.isArray(data.posts) ? data.posts : [],
       nextCursor: data.nextCursor ?? null,
     };
-  }, []);
+  }, [sharedPost]);
 
   // Initial load
   useEffect(() => {
     window.scrollTo(0, 0);
+    let active = true;
     fetchFeed()
       .then(({ posts: p, nextCursor: nc }) => {
+        if (!active) return;
+        setFeedError("");
         setPosts(p);
         setNextCursor(nc);
         if (p[0]) latestIdRef.current = p[0].id;
       })
-      .catch(() => {})
-      .finally(() => setLoading(false));
+      .catch(() => { if (active) setFeedError("We couldn’t load your feed. Please try again."); })
+      .finally(() => { if (active) setLoading(false); });
     // Fetch center column ads
     fetch("/api/pro-ads/active?placement=CENTER_COLUMN")
       .then(r => r.json()).then(d => setCenterAds(Array.isArray(d) ? d : []))
       .catch(() => {});
+    return () => { active = false; };
   }, [fetchFeed]);
 
   // Poll every 30s for new posts
@@ -123,11 +132,14 @@ function FeedContent() {
   const refreshFeed = async () => {
     setHasNew(false);
     setLoading(true);
-    const { posts: p, nextCursor: nc } = await fetchFeed();
-    setPosts(p);
-    setNextCursor(nc);
-    if (p[0]) latestIdRef.current = p[0].id;
-    setLoading(false);
+    setFeedError("");
+    try {
+      const { posts: p, nextCursor: nc } = await fetchFeed();
+      setPosts(p);
+      setNextCursor(nc);
+      if (p[0]) latestIdRef.current = p[0].id;
+    } catch { setFeedError("We couldn’t load your feed. Please try again."); }
+    finally { setLoading(false); }
   };
 
   // Infinite scroll (Facebook / LinkedIn style with threshold & rootMargin)
@@ -160,8 +172,8 @@ function FeedContent() {
     setPosts(prev => prev.filter(p => p.id !== id));
 
   return (
-    <div className="min-h-screen bg-slate-100 pt-5 pb-12">
-      <div className="max-w-[1320px] mx-auto px-4">
+    <div className="feed-page">
+      <div className="feed-container">
         {/* Welcome Celebration Banner */}
         {showWelcomeBanner && (
           <div className="mb-6 bg-gradient-to-r from-amber-500 via-[#f0c040] to-amber-600 rounded-3xl p-5 sm:p-6 text-[#0a1628] shadow-xl flex items-center justify-between gap-4 animate-in fade-in slide-in-from-top-4 duration-300">
@@ -179,6 +191,7 @@ function FeedContent() {
               </div>
             </div>
             <button
+              aria-label="Dismiss welcome message"
               onClick={() => setShowWelcomeBanner(false)}
               className="p-2 rounded-xl bg-[#0a1628]/10 hover:bg-[#0a1628]/20 transition-all text-[#0a1628] shrink-0"
             >
@@ -187,15 +200,18 @@ function FeedContent() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr_300px] gap-6">
+        <div className="feed-layout">
 
           {/* LEFT — profile panel */}
-          <div className="hidden lg:block self-start sticky top-[100px] h-fit max-h-[calc(100vh-100px)] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <div className="feed-sidebar">
             {loading || !user ? <LeftPanelSkeleton /> : <FeedLeftPanel />}
           </div>
 
           {/* CENTER — feed */}
-          <div className="space-y-4">
+          <div className="feed-center space-y-4">
+            <header className="feed-heading"><div><p>Your professional community</p><h1>{sharedPost ? "Shared post" : "Your feed"}<span>.</span></h1></div><button type="button" onClick={refreshFeed} disabled={loading} aria-label="Refresh feed"><RefreshCw size={19} /></button></header>
+            <nav className="feed-quick-links" aria-label="Explore your community">{sharedPost && <Link href="/feed">Back to your feed</Link>}<Link href="/groups">Groups</Link><Link href="/pro-networks">Pro Network</Link><Link href="/find-a-pro">Find a Pro</Link></nav>
+            {!user && loading && <ComposerSkeleton />}
             {/* Post Composer starts showing immediately at top for logged-in users */}
             {user && <PostComposer onPostCreated={handlePostCreated} onScheduled={() => setScheduleRefreshKey(k => k + 1)} />}
 
@@ -217,13 +233,15 @@ function FeedContent() {
                 <PostSkeleton />
                 <PostSkeleton />
               </div>
+            ) : feedError ? (
+              <div className="feed-empty" role="alert"><NoteEditIcon size={30} /><h2>Your feed will be right back.</h2><p>{feedError}</p><button onClick={refreshFeed}>Try again</button></div>
             ) : posts.length === 0 ? (
-              <div className="bg-white dark:bg-[#0c182b] border border-slate-200 dark:border-slate-800 rounded-2xl p-12 text-center flex flex-col items-center shadow-sm">
+              <div className="feed-empty">
                 <div className="w-16 h-16 rounded-2xl bg-amber-50 dark:bg-amber-400/10 border border-amber-200/80 dark:border-amber-400/20 flex items-center justify-center mb-4 text-[#d4a017] dark:text-[#f0c040] shadow-sm">
                   <NoteEditIcon className="w-8 h-8" />
                 </div>
-                <h3 className="font-black text-[#0a1628] dark:text-white text-xl mb-2">Nothing in the feed yet</h3>
-                <p className="text-slate-400 dark:text-slate-500 text-sm max-w-sm">Be the first to share a tax insight with the community!</p>
+                <h3 className="font-black text-[#0a1628] dark:text-white text-xl mb-2">{sharedPost ? "This post isn’t available" : "Start a conversation"}</h3>
+                <p className="text-slate-400 dark:text-slate-500 text-sm max-w-sm">{sharedPost ? "The post may have been removed, or you may need to sign in and join its group to view it." : "Share an insight, ask a question, or find a group of professionals who share your interests."}</p>
               </div>
             ) : (
               <>
@@ -278,7 +296,7 @@ function FeedContent() {
           </div>
 
           {/* RIGHT — sidebar */}
-          <div className="hidden lg:block self-start sticky top-[100px] h-fit max-h-[calc(100vh-100px)] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <div className="feed-sidebar">
             {loading ? <RightPanelSkeleton /> : <FeedRightPanel />}
           </div>
 
@@ -288,10 +306,15 @@ function FeedContent() {
   );
 }
 
+function FeedRoute() {
+  const params = useSearchParams();
+  return <FeedContent key={params.get("post") ?? "all"} />;
+}
+
 export default function FeedPage() {
   return (
-    <Suspense>
-      <FeedContent />
+    <Suspense fallback={<FeedPageSkeleton />}>
+      <FeedRoute />
     </Suspense>
   );
 }

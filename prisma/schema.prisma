@@ -423,6 +423,7 @@ model Comment {
 }
 
 model PostLike {
+  reaction  String   @default("LIKE")
   id        String   @id @default(cuid())
   userId    String
   postId    String
@@ -1956,3 +1957,4 @@ model EmailLog {
   @@index([createdAt])
   @@map("email_logs")
 }
+
