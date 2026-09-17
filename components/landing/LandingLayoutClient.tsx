@@ -19,7 +19,7 @@ export default function LandingLayoutClient({ children }: { children: React.Reac
     <>
       <Navbar />
       <main className="flex-1 pb-16 md:pb-0">{children}</main>
-      {!isProfile && !isGroups && !isMarketplace && pathname !== "/connections" && pathname !== "/seller-dashboard" && <Footer />}
+      {!isProfile && !isGroups && !isMarketplace && pathname !== "/connections" && pathname !== "/messages" && pathname !== "/seller-dashboard" && <Footer />}
       <MobileBottomNav />
       <ProfileCompletion />
     </>

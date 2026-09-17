@@ -14,12 +14,16 @@ export async function GET(req: NextRequest) {
     where: { OR: [{ senderId: userId }, { receiverId: userId }] },
     orderBy: { createdAt: "desc" },
     include: {
-      sender:   { select: { id: true, name: true, image: true } },
-      receiver: { select: { id: true, name: true, image: true } },
+      sender:   { select: { id: true, profileSlug: true, name: true, image: true, headline: true } },
+      receiver: { select: { id: true, profileSlug: true, name: true, image: true, headline: true } },
     },
   });
 
   // Deduplicate by partner ID — keep only the latest message per thread
+  const unread = new Map<string, number>();
+  for (const message of messages) {
+    if (message.receiverId === userId && !message.isRead) unread.set(message.senderId, (unread.get(message.senderId) || 0) + 1);
+  }
   const seen  = new Set<string>();
   const threads = messages.filter(m => {
     const partnerId = m.senderId === userId ? m.receiverId : m.senderId;
@@ -28,7 +32,7 @@ export async function GET(req: NextRequest) {
     return true;
   }).map(m => {
     const partner = m.senderId === userId ? m.receiver : m.sender;
-    return { ...m, partner };
+    return { ...m, partner, unreadCount: unread.get(partner.id) || 0 };
   });
 
   return NextResponse.json(threads);

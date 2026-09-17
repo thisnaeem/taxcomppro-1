@@ -10,8 +10,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
   const { userId: partnerId } = await params;
   const myId = session.user.id;
 
+  const before = new URL(req.url).searchParams.get("before");
+
   // Mark messages from partner as read
-  await prisma.message.updateMany({
+  if (!before) await prisma.message.updateMany({
     where: { senderId: partnerId, receiverId: myId, isRead: false },
     data:  { isRead: true },
   });
@@ -23,16 +25,19 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
         { senderId: partnerId, receiverId: myId },
       ],
     },
-    orderBy: { createdAt: "asc" },
-    take: 100,
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    ...(before ? { cursor: { id: before }, skip: 1 } : {}),
+    take: 101,
   });
 
   const partner = await prisma.user.findUnique({
     where: { id: partnerId },
-    select: { id: true, name: true, image: true, headline: true, role: true },
+    select: { id: true, profileSlug: true, name: true, image: true, headline: true, role: true },
   });
 
-  return NextResponse.json({ messages, partner });
+  const hasMore = messages.length > 100;
+  const page = messages.slice(0, 100).reverse();
+  return NextResponse.json({ messages: page, partner, hasMore, nextCursor: page[0]?.id || null });
 }
 
 // POST: send message to [userId]
