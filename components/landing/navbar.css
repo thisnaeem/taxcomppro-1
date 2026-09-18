@@ -115,14 +115,18 @@
   background: var(--sn-hover);
   color: var(--sn-text);
 }
+/* Active nav item: brand yellow fill, black label (both themes).
+   !important beats the global `.dark header nav a` white-text override. */
 .site-navbar .site-nav-link[aria-current="page"],
-.site-navbar .site-nav-link.is-current {
-  background: #ffbe2420;
-  color: #ffbe24;
-}
+.site-navbar .site-nav-link.is-current,
+.dark .site-navbar .site-nav-link[aria-current="page"],
 .dark .site-navbar .site-nav-link.is-current,
-.dark .site-navbar .site-nav-link[aria-current="page"] {
-  color: #ffbe24;
+.site-navbar .site-nav-link[aria-current="page"]:hover,
+.site-navbar .site-nav-link.is-current:hover,
+.dark .site-navbar .site-nav-link[aria-current="page"]:hover,
+.dark .site-navbar .site-nav-link.is-current:hover {
+  background: #ffbe24 !important;
+  color: #000 !important;
 }
 .site-disclosure {
   position: relative;

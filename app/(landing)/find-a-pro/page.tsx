@@ -163,14 +163,16 @@ export default function FindAProPage() {
               EXPERTISE MEETS CONNECTION
             </span>
             <h1 id="directory-title">
-              Find a pro.
+              The Right Service.
               <br />
-              <span>Move forward.</span>
+              The Right Pro.
+              <br />
+              <span>Right Here.</span>
             </h1>
             <p>
-              The right expertise makes all the difference. Meet tax and
-              accounting professionals who bring a fresh perspective to your
-              next step.
+              Find a Pro makes it easier to discover trusted expertise, compare
+              your options, and connect with professionals who offer the
+              services you need.
             </p>
             <div className="fp-hero-actions">
               <button
