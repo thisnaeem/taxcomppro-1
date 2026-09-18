@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { directoryUserWhere } from "@/lib/proDirectory";
 
 const publicSelect = {
   id: true, profileSlug: true, name: true, image: true, coverImage: true, headline: true, bio: true,
@@ -14,7 +15,7 @@ export async function GET(req: NextRequest) {
 
   const pros = await prisma.user.findMany({
     where: {
-      role: "PROFESSIONAL",
+      AND: [directoryUserWhere],
       ...(q ? { OR: [
         { name: { contains: q, mode: "insensitive" } },
         { headline: { contains: q, mode: "insensitive" } },

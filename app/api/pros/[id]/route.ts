@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { directoryUserWhere } from "@/lib/proDirectory";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -8,7 +9,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
 
   const [pro, ownedNetworks, discussionsStarted, proTalksHosted] = await Promise.all([
     prisma.user.findFirst({
-      where: { id, role: { in: ["PROFESSIONAL", "ADMIN"] } },
+      where: { id, OR: [{ role: "ADMIN" }, ...(directoryUserWhere.OR ?? [])] },
       select: {
         id: true,
         name: true,
