@@ -68,11 +68,6 @@
 @media(prefers-reduced-motion:reduce){.profile-skeleton{animation:none}.member-profile *{scroll-behavior:auto!important;transition:none!important}}
 
 /* Overview cards share one grid rather than two independently stacked columns. */
-.profile-editor .profile-overview-layout{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;align-items:start}
-.profile-editor .profile-overview-contents{display:contents}
-.profile-editor .profile-overview-contents>div:not(.profile-overview-contents){grid-column:auto;min-width:0;margin:0}
-.profile-editor .profile-overview-contents>.profile-overview-about{grid-column:1/-1}
-@media(max-width:1100px){.profile-editor .profile-overview-layout{grid-template-columns:minmax(0,1fr);gap:16px}}
 
 /* Move / minimize controls for the profile completion widget */
 .profile-completion.is-right{left:auto;right:232px} /* clear of the Atlas AI robot (200px wide, bottom-right) */
@@ -88,3 +83,26 @@
 .profile-completion-pill:focus-visible{outline:3px solid #ffbe24;outline-offset:3px}
 .profile-completion-pill.is-right{left:auto;right:232px}
 @media(max-width:767px){.profile-completion.is-right{right:16px;left:auto;bottom:196px}.profile-completion-pill{left:16px;bottom:80px}.profile-completion-pill.is-right{left:auto;right:16px;bottom:196px}}
+
+/* ── Overview: two equal columns of stacked cards + full-width media strip ── */
+.profile-editor .profile-overview{display:flex;flex-direction:column;gap:16px}
+.profile-editor .profile-overview-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:stretch}
+/* Equal-height columns: the last card in each column grows to fill, so there's no gap under the shorter side */
+.profile-editor .profile-overview-col>:last-child{flex:1 1 auto;display:flex;flex-direction:column}
+.profile-editor .profile-overview-col>:last-child>:last-child{margin-top:auto}
+.profile-editor .profile-overview-col{display:flex;flex-direction:column;gap:16px;min-width:0}
+.profile-editor .profile-overview-col>*{margin:0!important}
+.profile-editor :is(.profile-overview-col,.profile-overview)>.rounded-3xl{padding:20px}
+@media(max-width:1100px){.profile-editor .profile-overview-grid{grid-template-columns:minmax(0,1fr)}}
+/* sections inside the About card (expertise / services / credentials) */
+.profile-about-section{border-top:1px solid var(--profile-border);padding-top:14px;margin-top:14px}
+.profile-about-section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.profile-about-section-head>span{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--profile-muted)}
+.profile-about-section-head>button{font-size:11px;font-weight:700;color:var(--profile-accent)}
+.profile-about-section-head>button:hover{text-decoration:underline}
+/* view-only media strip */
+.profile-media-strip{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(180px,1fr);gap:12px;overflow-x:auto;padding-bottom:4px;scroll-snap-type:x mandatory;scrollbar-width:thin}
+.profile-media-tile{display:block;aspect-ratio:4/3;border-radius:14px;overflow:hidden;border:1px solid var(--profile-border);scroll-snap-align:start}
+.profile-media-tile img{width:100%;height:100%;object-fit:cover;transition:transform .25s}
+.profile-media-tile:hover img{transform:scale(1.04)}
+.profile-overview-note p{font-size:11px;line-height:1.6;color:var(--profile-muted);padding:0 4px}

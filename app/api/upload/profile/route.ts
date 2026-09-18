@@ -36,7 +36,13 @@ export async function POST(req: NextRequest) {
   };
   const transformation = transformMap[type] ?? transformMap.media;
 
+  if (!process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+    console.error("[upload/profile] Cloudinary env vars missing");
+    return NextResponse.json({ error: "Image uploads are not configured." }, { status: 500 });
+  }
+
   const urls: string[] = [];
+  try {
   for (const file of files) {
     const buf     = Buffer.from(await file.arrayBuffer());
     const dataUri = `data:${file.type};base64,${buf.toString("base64")}`;
@@ -67,6 +73,11 @@ export async function POST(req: NextRequest) {
       const result = await cloudinary.uploader.upload(dataUri, { folder, resource_type: "image", transformation });
       urls.push(result.secure_url);
     }
+  }
+  } catch (error) {
+    console.error("[upload/profile] Cloudinary upload failed", error);
+    const message = (error as { message?: string })?.message || "Upload failed";
+    return NextResponse.json({ error: `Upload failed: ${message}` }, { status: 502 });
   }
 
   return NextResponse.json({ urls });

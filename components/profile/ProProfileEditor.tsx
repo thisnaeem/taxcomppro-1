@@ -33,11 +33,10 @@ import {
   Video01Icon as Video,
   Megaphone01Icon as Megaphone,
   Globe02Icon as Globe,
-  Add01Icon as Plus,
-  InformationCircleIcon as Info,
   Copy01Icon as Copy,
   LinkSquare02Icon as ExternalLink
 } from "hugeicons-react";
+import NetworkEmblem from "@/components/networks/NetworkEmblem";
 import NetworksViewAllMenu from "@/components/profile/NetworksViewAllMenu";
 import { PROFESSIONAL_TITLES } from "@/lib/professionalTitles";
 import EditProfileModal, { type ProfileFormData } from "@/components/profile/EditProfileModal";
@@ -339,6 +338,17 @@ export default function ProProfileEditor() {
       setCoverUploading(false);
       e.target.value = "";
     }
+  };
+
+  // Gallery edits save immediately — there is no separate save button for photos
+  const updateMediaPhotos = async (photos: string[]) => {
+    setProfile((p) => ({ ...p, mediaPhotos: photos }));
+    const res = await fetch("/api/user/profile", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mediaPhotos: photos }),
+    });
+    if (res.ok) window.dispatchEvent(new Event("profile-updated"));
   };
 
   const saveInPageProfile = async () => {
@@ -691,10 +701,9 @@ export default function ProProfileEditor() {
 
           {/* ── OVERVIEW TAB ──────────────────────────────────────────────── */}
           {activeTab === "overview" && (
-            <div className="profile-overview-layout">
-              <div className="profile-overview-contents">
-              <div className="profile-overview-contents">
-                {/* ABOUT ME */}
+          <div className="profile-overview">
+            <div className="profile-overview-grid">
+              <div className="profile-overview-col">
                 <div className="profile-overview-about rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
                   <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                     <h3 className="text-xs font-black text-[#0A1628] dark:text-white uppercase tracking-widest flex items-center gap-2">
@@ -735,88 +744,167 @@ export default function ProProfileEditor() {
                       )}
                     </div>
                   )}
+                  {/* Expertise, services and credentials live inside About — one card, not four */}
+                  {profile.specialties.length > 0 && (
+                    <div className="profile-about-section">
+                      <div className="profile-about-section-head"><span>Expertise</span><button onClick={() => setActiveTab("credentials")}>Manage</button></div>
+                      <div className="flex flex-wrap gap-2">
+                        {profile.specialties.map((spec) => (
+                          <span key={spec} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#EAF2FC] dark:bg-blue-500/15 text-[#1E56A0] dark:text-blue-300 border border-[#1E56A0]/20 dark:border-blue-500/30">{spec}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {services.length > 0 && (
+                    <div className="profile-about-section">
+                      <div className="profile-about-section-head"><span>Services Offered</span><button onClick={() => setActiveTab("services")}>Manage</button></div>
+                      <ul className="grid sm:grid-cols-2 gap-x-4 gap-y-2 text-xs font-bold text-slate-700 dark:text-slate-200">
+                        {services.map((svc) => (
+                          <li key={svc.id} className="flex items-center justify-between gap-2">
+                            <span className="flex items-center gap-2"><span className="profile-accent">✓</span>{svc.title}</span>
+                            {svc.price && <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">{svc.price}</span>}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {profile.certifications.length > 0 && (
+                    <div className="profile-about-section">
+                      <div className="profile-about-section-head"><span>Credentials</span><button onClick={() => setActiveTab("credentials")}>Edit</button></div>
+                      <div className="flex flex-wrap gap-2">
+                        {profile.certifications.map((cert) => (
+                          <span key={cert} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/30"><Award className="w-3.5 h-3.5" />{cert}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                {/* EXPERTISE */}
-                {profile.specialties.length > 0 && (
-                  <div className="rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
-                    <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-                      <h3 className="text-xs font-black text-[#0A1628] dark:text-white uppercase tracking-widest flex items-center gap-2">
-                        <Award className="w-4 h-4 profile-accent" />
-                        EXPERTISE
-                      </h3>
-                      <button onClick={() => setActiveTab("credentials")} className="text-[11px] font-bold profile-accent hover:underline">Manage</button>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {profile.specialties.map((spec) => (
-                        <span key={spec} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#EAF2FC] dark:bg-blue-500/15 text-[#1E56A0] dark:text-blue-300 border border-[#1E56A0]/20 dark:border-blue-500/30">{spec}</span>
-                      ))}
-                    </div>
+                <div className="rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
+                  <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                    <h3 className="text-xs font-black text-[#0A1628] dark:text-white uppercase tracking-widest flex items-center gap-2">
+                      <CreditCard className="w-4 h-4 profile-accent" />
+                      PRO CONNECT CARD
+                    </h3>
+                    <button onClick={() => setActiveTab("card")} className="text-[11px] font-bold profile-accent hover:underline">Configure</button>
                   </div>
-                )}
-
-                {/* SERVICES */}
-                {services.length > 0 && (
-                  <div className="rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
-                    <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-                      <h3 className="text-xs font-black text-[#0A1628] dark:text-white uppercase tracking-widest flex items-center gap-2">
-                        <Check className="w-4 h-4 profile-accent" />
-                        SERVICES OFFERED
-                      </h3>
-                      <button onClick={() => setActiveTab("services")} className="text-[11px] font-bold profile-accent hover:underline">Manage</button>
+                  <div className="rounded-xl bg-gradient-to-br from-[#0A1628] to-[#1C3658] p-4 text-white flex items-center justify-between gap-3">
+                    <div className="space-y-1 flex-1 min-w-0">
+                      <h5 className="text-sm font-black truncate">{displayName}</h5>
+                      <p className="text-[11px] text-slate-300 truncate">{headline}</p>
+                      <p className="text-[10px] text-slate-400 italic">Let&apos;s Connect &amp; Grow Together</p>
                     </div>
-                    <ul className="space-y-2 text-xs font-bold text-slate-700 dark:text-slate-200">
-                      {services.map((svc) => (
-                        <li key={svc.id} className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-2">
-                            <span className="profile-accent">✓</span>
-                            <span>{svc.title}</span>
-                          </div>
-                          {svc.price && <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">{svc.price}</span>}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {/* CREDENTIALS */}
-                {profile.certifications.length > 0 && (
-                  <div className="rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
-                    <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-                      <h3 className="text-xs font-black text-[#0A1628] dark:text-white uppercase tracking-widest flex items-center gap-2">
-                        <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                        CREDENTIALS
-                      </h3>
-                      <button onClick={() => setActiveTab("credentials")} className="text-[11px] font-bold profile-accent hover:underline">Edit</button>
-                    </div>
-                    <div className="grid sm:grid-cols-2 gap-3">
-                      {profile.certifications.map((cert) => (
-                        <div key={cert} className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-100 dark:border-slate-700/80 flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-lg bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0">
-                            <Award className="w-4 h-4" />
-                          </div>
-                          <p className="text-xs font-bold text-[#0A1628] dark:text-white">{cert}</p>
+                    <div className="w-16 h-20 rounded-lg overflow-hidden ring-2 ring-amber-400/40 bg-[#0A1628] shrink-0">
+                      {profile.image ? (
+                        <img src={profile.image} alt={profile.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-white font-bold text-lg">
+                          {(profile.name || "?")[0]}
                         </div>
-                      ))}
+                      )}
                     </div>
                   </div>
-                )}
+                  <button
+                    onClick={() => setActiveTab("card")}
+                    className="w-full py-2.5 rounded-xl bg-[#1E56A0] hover:bg-[#16437E] text-white font-bold text-xs uppercase tracking-wider transition-all"
+                  >
+                    VIEW MY PRO CONNECT CARD
+                  </button>
+                </div>
+              </div>
+              <div className="profile-overview-col">
+                <div className="rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
+                  <h3 className="text-xs font-black text-[#0A1628] dark:text-white uppercase tracking-widest flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
+                    <Crown className="w-4 h-4 text-amber-500" />
+                    MEMBERSHIP STATUS
+                  </h3>
+                  <div className="flex items-center justify-between gap-3 p-3.5 rounded-xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-500/20">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 text-white flex items-center justify-center shrink-0">
+                        <Crown className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-black text-[#0A1628] dark:text-white">{memberStats.tierName}</h4>
+                        {memberStats.validThru && (
+                          <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">Valid Thru: {memberStats.validThru}</p>
+                        )}
+                      </div>
+                    </div>
+                    <button
+                      onClick={openStripePortal}
+                      disabled={portalLoading}
+                      className="px-3 py-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-[#0A1628] dark:text-white hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shrink-0"
+                    >
+                      {portalLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "MANAGE"}
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-xs font-bold text-slate-700 dark:text-slate-300 pt-1">
+                    {["Unlimited Toolkit Access", "Priority Support", "All Course Access", "Exclusive Discounts", "Pro Talks Access", "Community Access"].map((b) => (
+                      <div key={b} className="flex items-center gap-1.5">
+                        <span className="profile-accent">✓</span>
+                        <span>{b}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
 
-                {/* VOICE MEMO */}
-                {profile.voiceMemoUrl && (
-                  <div className="rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-3">
-                    <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
-                      <h3 className="text-xs font-black uppercase tracking-widest text-[#0A1628] dark:text-white">Voice Introduction</h3>
-                      <button onClick={() => setActiveTab("voice")} className="text-[11px] font-bold profile-accent hover:underline">Record New</button>
-                    </div>
-                    <VoiceMemoPlayer url={profile.voiceMemoUrl} name={profile.name} />
-                  </div>
-                )}
+              <div className="lg:col-span-7 rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                  <h3 className="text-xs font-black text-[#0A1628] dark:text-white uppercase tracking-widest flex items-center gap-2">
+                    <Crown className="w-4 h-4 text-amber-500" />
+                    MY BADGES
+                  </h3>
+                  <Link
+                    href={primaryNetwork ? `/pro-networks/${primaryNetwork.slug}` : "/pro-networks/create"}
+                    className="text-xs font-bold profile-accent hover:underline"
+                  >
+                    Manage Badges
+                  </Link>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-6 pt-2">
+                  {myBadges.map((badge) => (
+                    <Link
+                      key={badge.id}
+                      href={`/pro-networks/${badge.networkSlug}`}
+                      className="flex flex-col items-center gap-2 group cursor-pointer"
+                    >
+                      <NetworkEmblem
+                        name={badge.networkName}
+                        image={badge.customImage || badge.logoImage || badge.ownerImage || profile.image}
+                        initials={badge.initials}
+                        role={badge.role}
+                        shape={badge.shape}
+                        bgColor={badge.bgColor}
+                        textColor={badge.textColor}
+                        borderColor={badge.borderColor}
+                      />
+
+                      <div className="flex flex-col items-center text-center max-w-[125px] pt-1">
+                        <span className="text-xs font-black text-[#0A1628] dark:text-white line-clamp-1 group-hover:text-[#1E56A0] dark:group-hover:text-[#60a5fa] transition-colors">
+                          {badge.networkName}
+                        </span>
+                        {badge.role === "OWNER" ? (
+                          <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 line-clamp-1">
+                            Owner: {badge.ownerName || displayName}
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 line-clamp-1">
+                            Member • {badge.ownerName ? `By ${badge.ownerName}` : "Active"}
+                          </span>
+                        )}
+                      </div>
+                    </Link>
+                  ))}
+
+                  {/* Decorative empty badge slot (no action) */}
+                  <svg aria-hidden="true" width="88" height="102" viewBox="0 0 100 116" className="text-slate-300 dark:text-slate-600">
+                    <path d="M50 3 L93 17 V55 C93 84 73 103 50 113 C27 103 7 84 7 55 V17 Z" fill="currentColor" fillOpacity="0.08" stroke="currentColor" strokeWidth="2" strokeDasharray="6 5" />
+                    <path d="M50 44 V68 M38 56 H62" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                  </svg>
+                </div>
               </div>
 
-              {/* RIGHT COLUMN */}
-              <div className="profile-overview-contents">
-                {/* ── MY PRO NETWORKS (MATCHES SCREENSHOT) ── */}
                 <div className="rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
                   <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                     <h3 className="text-xs font-black text-[#0A1628] dark:text-white uppercase tracking-widest flex items-center gap-2">
@@ -891,180 +979,53 @@ export default function ProProfileEditor() {
                   </Link>
                 </div>
 
-                {/* MEMBERSHIP */}
-                <div className="rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
-                  <h3 className="text-xs font-black text-[#0A1628] dark:text-white uppercase tracking-widest flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
-                    <Crown className="w-4 h-4 text-amber-500" />
-                    MEMBERSHIP STATUS
-                  </h3>
-                  <div className="flex items-center justify-between gap-3 p-3.5 rounded-xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-500/20">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 text-white flex items-center justify-center shrink-0">
-                        <Crown className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-black text-[#0A1628] dark:text-white">{memberStats.tierName}</h4>
-                        {memberStats.validThru && (
-                          <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">Valid Thru: {memberStats.validThru}</p>
-                        )}
-                      </div>
-                    </div>
-                    <button
-                      onClick={openStripePortal}
-                      disabled={portalLoading}
-                      className="px-3 py-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-[#0A1628] dark:text-white hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shrink-0"
-                    >
-                      {portalLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "MANAGE"}
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 text-xs font-bold text-slate-700 dark:text-slate-300 pt-1">
-                    {["Unlimited Toolkit Access", "Priority Support", "All Course Access", "Exclusive Discounts", "Pro Talks Access", "Community Access"].map((b) => (
-                      <div key={b} className="flex items-center gap-1.5">
-                        <span className="profile-accent">✓</span>
-                        <span>{b}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* PRO CONNECT CARD PREVIEW */}
-                <div className="rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
+                {/* VOICE INTRODUCTION — always shown; prompts to record when empty */}
+                <div className="rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-3">
                   <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                     <h3 className="text-xs font-black text-[#0A1628] dark:text-white uppercase tracking-widest flex items-center gap-2">
-                      <CreditCard className="w-4 h-4 profile-accent" />
-                      PRO CONNECT CARD
+                      <Mic className="w-4 h-4 text-amber-500" />
+                      VOICE INTRODUCTION
                     </h3>
-                    <button onClick={() => setActiveTab("card")} className="text-[11px] font-bold profile-accent hover:underline">Configure</button>
+                    <button onClick={() => setActiveTab("voice")} className="text-[11px] font-bold profile-accent hover:underline">
+                      {profile.voiceMemoUrl ? "Record New" : "Record"}
+                    </button>
                   </div>
-                  <div className="rounded-xl bg-gradient-to-br from-[#0A1628] to-[#1C3658] p-4 text-white flex items-center justify-between gap-3">
-                    <div className="space-y-1 flex-1 min-w-0">
-                      <h5 className="text-sm font-black truncate">{displayName}</h5>
-                      <p className="text-[11px] text-slate-300 truncate">{headline}</p>
-                      <p className="text-[10px] text-slate-400 italic">Let&apos;s Connect &amp; Grow Together</p>
-                    </div>
-                    <div className="w-16 h-20 rounded-lg overflow-hidden ring-2 ring-amber-400/40 bg-[#0A1628] shrink-0">
-                      {profile.image ? (
-                        <img src={profile.image} alt={profile.name} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-white font-bold text-lg">
-                          {(profile.name || "?")[0]}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setActiveTab("card")}
-                    className="w-full py-2.5 rounded-xl bg-[#1E56A0] hover:bg-[#16437E] text-white font-bold text-xs uppercase tracking-wider transition-all"
-                  >
-                    VIEW MY PRO CONNECT CARD
-                  </button>
+                  {profile.voiceMemoUrl ? (
+                    <VoiceMemoPlayer url={profile.voiceMemoUrl} name={profile.name} />
+                  ) : (
+                    <button onClick={() => setActiveTab("voice")} className="w-full flex items-center gap-3 p-3.5 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 hover:border-amber-400 text-left transition-colors">
+                      <span className="w-10 h-10 rounded-full bg-amber-500/15 text-amber-500 flex items-center justify-center shrink-0"><Mic className="w-5 h-5" /></span>
+                      <span className="text-xs text-slate-500 dark:text-slate-400">Introduce yourself and tell the community what you do. <strong className="profile-accent">Record your intro</strong></span>
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
 
-            {/* ── MY BADGES & NOTE (MATCHES SCREENSHOT) ── */}
-            <div className="profile-overview-contents">
-              {/* Left: MY BADGES (7 cols) */}
-              <div className="lg:col-span-7 rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
-                <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-                  <h3 className="text-xs font-black text-[#0A1628] dark:text-white uppercase tracking-widest flex items-center gap-2">
-                    <Crown className="w-4 h-4 text-amber-500" />
-                    MY BADGES
-                  </h3>
-                  <Link
-                    href={primaryNetwork ? `/pro-networks/${primaryNetwork.slug}` : "/pro-networks/create"}
-                    className="text-xs font-bold profile-accent hover:underline"
-                  >
-                    Manage Badges
-                  </Link>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-6 pt-2">
-                  {myBadges.map((badge) => (
-                    <Link
-                      key={badge.id}
-                      href={`/pro-networks/${badge.networkSlug}`}
-                      className="flex flex-col items-center gap-2 group cursor-pointer"
-                    >
-                      <div
-                        className="w-20 h-20 rounded-full border-[3px] p-1.5 flex items-center justify-center shadow-md group-hover:scale-105 group-hover:shadow-lg transition-all relative bg-white dark:bg-[#0a1628]"
-                        style={{
-                          borderColor: badge.borderColor || "#ffbe24",
-                        }}
-                      >
-                        {(badge.customImage || badge.logoImage || badge.ownerImage || profile.image) ? (
-                          <img
-                            src={badge.customImage || badge.logoImage || badge.ownerImage || profile.image || ""}
-                            alt={badge.networkName}
-                            className="w-full h-full object-contain rounded-full"
-                          />
-                        ) : (
-                          <div
-                            className="w-full h-full rounded-full flex flex-col items-center justify-center text-center p-1"
-                            style={{ backgroundColor: badge.bgColor || "#0a1628" }}
-                          >
-                            <span
-                              className="font-black text-[11px] leading-tight tracking-wider"
-                              style={{ color: badge.textColor || "#ffbe24" }}
-                            >
-                              {badge.initials || badge.networkName.slice(0, 4).toUpperCase()}
-                            </span>
-                          </div>
-                        )}
-
-                        {/* Role pill tag pinned at bottom */}
-                        <span
-                          className={`absolute -bottom-1 px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider shadow-sm border ${
-                            badge.role === "OWNER"
-                              ? "bg-gradient-to-r from-amber-400 to-amber-500 text-[#0a1628] border-amber-300"
-                              : "bg-blue-600 text-white border-blue-400"
-                          }`}
-                        >
-                          {badge.role === "OWNER" ? "OWNER" : "MEMBER"}
-                        </span>
-                      </div>
-
-                      <div className="flex flex-col items-center text-center max-w-[125px] pt-1">
-                        <span className="text-xs font-black text-[#0A1628] dark:text-white line-clamp-1 group-hover:text-[#1E56A0] dark:group-hover:text-[#60a5fa] transition-colors">
-                          {badge.networkName}
-                        </span>
-                        {badge.role === "OWNER" ? (
-                          <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 line-clamp-1">
-                            Owner: {badge.ownerName || displayName}
-                          </span>
-                        ) : (
-                          <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 line-clamp-1">
-                            Member • {badge.ownerName ? `By ${badge.ownerName}` : "Active"}
-                          </span>
-                        )}
-                      </div>
-                    </Link>
-                  ))}
-
-                  {/* Plus / Add Badge circle */}
-                  <Link
-                    href="/pro-networks/create"
-                    className="flex flex-col items-center gap-2 group cursor-pointer"
-                    title="Create New Pro Network / Badge"
-                  >
-                    <div className="w-20 h-20 rounded-full border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-[#1E56A0] dark:hover:border-blue-400 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-center text-slate-400 hover:text-[#1E56A0] dark:hover:text-blue-400 group-hover:scale-105 transition-all">
-                      <Plus className="w-6 h-6 stroke-[1.5]" />
-                    </div>
-                    <div className="flex flex-col items-center text-center max-w-[125px] pt-1">
-                      <span className="text-xs font-bold text-slate-400 group-hover:text-[#1E56A0] transition-colors">
-                        Add Network
-                      </span>
-                    </div>
-                  </Link>
-                </div>
-              </div>
-
-              {/* Right: NOTE Disclaimer (5 cols) */}
-              <div className="lg:col-span-5 rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-3">
-                <h3 className="text-xs font-black text-[#0A1628] dark:text-white uppercase tracking-widest flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
-                  <Info className="w-4 h-4 text-slate-400" />
-                  NOTE
+            {/* MEDIA GALLERY — view only; uploads live in the Media Gallery tab */}
+            <div className="profile-overview-media rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-5 shadow-xs space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                <h3 className="text-xs font-black text-[#0A1628] dark:text-white uppercase tracking-widest flex items-center gap-2">
+                  <ImageIcon className="w-4 h-4 text-amber-500" />
+                  MEDIA GALLERY
                 </h3>
+                <button onClick={() => setActiveTab("media")} className="text-xs font-bold profile-accent hover:underline">View All</button>
+              </div>
+              {profile.mediaPhotos.length > 0 ? (
+                <div className="profile-media-strip">
+                  {profile.mediaPhotos.map((src, i) => (
+                    <a key={src} href={src} target="_blank" rel="noopener noreferrer" className="profile-media-tile">
+                      <img src={src} alt={`Media ${i + 1}`} loading="lazy" />
+                    </a>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-slate-400 py-2">No photos yet. Add them from the Media Gallery tab.</p>
+              )}
+            </div>
+
+            {/* Disclaimer */}
+            <div className="profile-overview-note">
                 <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
                   All services and resources offered on the{" "}
                   <span className="font-bold text-slate-700 dark:text-slate-300">
@@ -1075,7 +1036,6 @@ export default function ProProfileEditor() {
                   <span className="font-semibold text-slate-700 dark:text-slate-300">Tax Compliance Pro</span>{" "}
                   does not endorse or moderate these services.
                 </p>
-              </div>
             </div>
           </div>
         )}
@@ -1224,7 +1184,7 @@ export default function ProProfileEditor() {
                 </h2>
                 <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Upload photos of your office, speaking events, and certificates.</p>
               </div>
-              <MediaGallery photos={profile.mediaPhotos} onChange={(photos) => setProfile((p) => ({ ...p, mediaPhotos: photos }))} />
+              <MediaGallery photos={profile.mediaPhotos} onChange={updateMediaPhotos} />
             </div>
           )}
 
