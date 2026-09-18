@@ -39,8 +39,25 @@ const PUBLIC_PREFIXES = [
   "/reset-password/",
 ];
 
-// Auth pages — logged-in users get bounced away from these
-const AUTH_PAGES = ["/login", "/register", "/forgot-password", "/reset-password"];
+function isPublicPath(pathname: string) {
+  return PUBLIC_PAGES.has(pathname) || PUBLIC_PREFIXES.some(prefix => pathname.startsWith(prefix));
+}
+
+function nextResponseWithReferralCookie(request: NextRequest) {
+  const response = NextResponse.next();
+  const ref = request.nextUrl.searchParams.get("ref");
+
+  if (ref && /^[a-zA-Z0-9_-]{6,32}$/.test(ref)) {
+    response.cookies.set("ref_code", ref, {
+      httpOnly: true,
+      path: "/",
+      maxAge: 60 * 60 * 24 * 30,
+      sameSite: "lax",
+    });
+  }
+
+  return response;
+}
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -76,20 +93,33 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const session = await auth.api.getSession({ headers: request.headers });
-
-  // Logged-in user hits landing page → send to feed
-  if (session && pathname === "/") {
-    return NextResponse.redirect(new URL("/feed", request.url));
+  // Public pages must not depend on a database-backed session lookup. This
+  // prevents a temporary auth/database issue from taking down public content.
+  if (isPublicPath(pathname)) {
+    return nextResponseWithReferralCookie(request);
   }
 
-  // Logged-in user tries to visit login/register → send to feed
-  if (session && AUTH_PAGES.some(p => pathname.startsWith(p))) {
-    return NextResponse.redirect(new URL("/feed", request.url));
+  let session: Awaited<ReturnType<typeof auth.api.getSession>> = null;
+
+  try {
+    session = await auth.api.getSession({ headers: request.headers });
+  } catch (error) {
+    console.error(JSON.stringify({
+      level: "error",
+      message: "Proxy session lookup failed",
+      pathname,
+      requestId: request.headers.get("x-vercel-id"),
+      error: error instanceof Error ? error.message : String(error),
+    }));
+
+    // Fail closed for protected content, but return a usable page instead of a
+    // platform 500. /login is public, so this redirect cannot recurse.
+    const dest = new URL("/login", request.url);
+    dest.searchParams.set("next", pathname + request.nextUrl.search);
+    return NextResponse.redirect(dest);
   }
 
-  // Not logged in & page is NOT public → send to login
-  if (!session && !PUBLIC_PAGES.has(pathname) && !PUBLIC_PREFIXES.some(p => pathname.startsWith(p))) {
+  if (!session) {
     const dest = new URL("/login", request.url);
     dest.searchParams.set("next", pathname + request.nextUrl.search);
     return NextResponse.redirect(dest);
@@ -103,21 +133,9 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // ── Referral cookie ─────────────────────────────────────────
-  const ref = request.nextUrl.searchParams.get("ref");
-  const response = NextResponse.next();
-  if (ref && /^[a-zA-Z0-9_-]{6,32}$/.test(ref)) {
-    response.cookies.set("ref_code", ref, {
-      httpOnly: true,
-      path: "/",
-      maxAge: 60 * 60 * 24 * 30,
-      sameSite: "lax",
-    });
-  }
-  return response;
+  return nextResponseWithReferralCookie(request);
 }
 
 export const config = {
   matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };
-
