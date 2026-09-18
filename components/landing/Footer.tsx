@@ -51,7 +51,7 @@ export default function PublicFooter() {
                 <h3>{section.title}</h3>
                 <ul>
                   {section.links.map(([label, href]) => (
-                    <li key={href}>
+                    <li key={label}>
                       <Link href={href} {...(href.startsWith("https://") ? { target: "_blank", rel: "noopener noreferrer" } : {})}>
                         {label}{href.startsWith("https://") && <ArrowUpRight01Icon size={14} aria-label="Opens in a new tab" />}
                       </Link>

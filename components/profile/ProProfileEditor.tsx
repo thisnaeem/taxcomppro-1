@@ -37,6 +37,7 @@ import {
   LinkSquare02Icon as ExternalLink
 } from "hugeicons-react";
 import BalancedColumns, { Column } from "@/components/profile/BalancedColumns";
+import ProfileMediaStrip, { type FeedMedia } from "@/components/profile/ProfileMediaStrip";
 import NetworkEmblem from "@/components/networks/NetworkEmblem";
 import NetworksViewAllMenu from "@/components/profile/NetworksViewAllMenu";
 import { PROFESSIONAL_TITLES } from "@/lib/professionalTitles";
@@ -97,7 +98,7 @@ export default function ProProfileEditor() {
   });
 
   // Dynamic Networks, Badges, and Primary Network
-  const [feedPhotos, setFeedPhotos] = useState<Array<{ url: string; postId: string }>>([]);
+  const [feedPhotos, setFeedPhotos] = useState<FeedMedia[]>([]);
   const [proNetworks, setProNetworks] = useState<Array<{
     id: string;
     role?: string;
@@ -1010,33 +1011,13 @@ export default function ProProfileEditor() {
               </Column>
             </BalancedColumns>
 
-            {/* MEDIA GALLERY — view only; uploads live in the Media Gallery tab */}
-            <div className="profile-overview-media rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-5 shadow-xs space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-                <h3 className="text-xs font-black text-[#0A1628] dark:text-white uppercase tracking-widest flex items-center gap-2">
-                  <ImageIcon className="w-4 h-4 text-amber-500" />
-                  MEDIA GALLERY
-                </h3>
-                <button onClick={() => setActiveTab("media")} className="text-xs font-bold profile-accent hover:underline">View All</button>
-              </div>
-              {profile.mediaPhotos.length + feedPhotos.length > 0 ? (
-                <div className="profile-media-strip">
-                  {profile.mediaPhotos.map((src, n) => (
-                    <a key={src} href={src} target="_blank" rel="noopener noreferrer" className="profile-media-tile">
-                      <img src={src} alt={`Media ${n + 1}`} loading="lazy" />
-                    </a>
-                  ))}
-                  {feedPhotos.filter((f) => !profile.mediaPhotos.includes(f.url)).map((f) => (
-                    <Link key={`${f.postId}-${f.url}`} href={`/feed?post=${f.postId}`} className="profile-media-tile" title="Open feed post">
-                      <img src={f.url} alt="Feed post photo" loading="lazy" />
-                      <span className="profile-media-tag">Feed</span>
-                    </Link>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-xs text-slate-400 py-2">No photos yet. Add them from the Media Gallery tab.</p>
-              )}
-            </div>
+            {/* MEDIA GALLERY — view only, filterable; uploads live in the Media Gallery tab */}
+            <ProfileMediaStrip
+              uploads={profile.mediaPhotos}
+              feed={feedPhotos}
+              emptyText="No media yet. Add photos, videos or documents from the Media Gallery tab."
+              action={<button onClick={() => setActiveTab("media")} className="text-xs font-bold profile-accent hover:underline">View All</button>}
+            />
 
             {/* Disclaimer */}
             <div className="profile-overview-note">
@@ -1196,19 +1177,21 @@ export default function ProProfileEditor() {
                 <h2 className="text-base font-black text-[#0A1628] dark:text-white uppercase tracking-wider flex items-center gap-2">
                   <ImageIcon className="w-5 h-5 profile-accent" /> Media &amp; Certificate Gallery
                 </h2>
-                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Upload photos of your office, speaking events, and certificates.</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Upload photos, videos and documents — your office, speaking events, certificates and more.</p>
               </div>
               <MediaGallery photos={profile.mediaPhotos} onChange={updateMediaPhotos} />
               {feedPhotos.length > 0 && (
                 <div className="border-t border-slate-100 dark:border-slate-800 pt-5 space-y-3">
                   <div>
                     <h3 className="text-xs font-black text-[#0A1628] dark:text-white uppercase tracking-widest">From your feed</h3>
-                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Photos from your feed posts appear in your gallery automatically.</p>
+                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Photos and videos from your feed posts appear in your gallery automatically.</p>
                   </div>
                   <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3">
                     {feedPhotos.map((f) => (
                       <Link key={`${f.postId}-${f.url}`} href={`/feed?post=${f.postId}`} className="profile-media-tile" title="Open feed post">
-                        <img src={f.url} alt="Feed post photo" loading="lazy" />
+                        {f.type === "video"
+                          ? <video src={`${f.url}#t=0.5`} preload="metadata" muted playsInline />
+                          : <img src={f.url} alt="Feed post photo" loading="lazy" />}
                         <span className="profile-media-tag">Feed</span>
                       </Link>
                     ))}

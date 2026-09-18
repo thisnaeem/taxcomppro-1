@@ -178,15 +178,17 @@ export async function GET(req: NextRequest) {
     prisma.proNetworkEvent.count({
       where: { hostId: session.user.id },
     }),
-    // Images the user posted to the main feed (not group posts, not still-scheduled posts)
+    // Photos and videos the user posted to the main feed (not group posts, not still-scheduled posts)
     prisma.post.findMany({
       where: {
         authorId: session.user.id,
         communityId: null,
-        images: { isEmpty: false },
-        OR: [{ scheduledAt: null }, { scheduledAt: { lte: new Date() } }],
+        AND: [
+          { OR: [{ images: { isEmpty: false } }, { videoUrl: { not: null } }] },
+          { OR: [{ scheduledAt: null }, { scheduledAt: { lte: new Date() } }] },
+        ],
       },
-      select: { id: true, images: true, createdAt: true },
+      select: { id: true, images: true, videoUrl: true, createdAt: true },
       orderBy: { createdAt: "desc" },
       take: 30,
     }),
@@ -324,7 +326,10 @@ export async function GET(req: NextRequest) {
     hasDueDiligenceBadge,
     proNetworks: [...formattedOwnedNetworks, ...formattedJoinedNetworks],
     feedPhotos: feedImagePosts
-      .flatMap((post) => post.images.map((url) => ({ url, postId: post.id, createdAt: post.createdAt })))
+      .flatMap((post) => [
+        ...(post.videoUrl ? [{ url: post.videoUrl, postId: post.id, createdAt: post.createdAt, type: "video" as const }] : []),
+        ...post.images.map((url) => ({ url, postId: post.id, createdAt: post.createdAt, type: "photo" as const })),
+      ])
       .slice(0, 48),
     myBadges,
     primaryNetwork: primaryNetwork

@@ -60,6 +60,13 @@ export async function POST(req: NextRequest) {
       const gifUrl = `${base}/upload/e_loop,w_400,h_400,c_fill,g_face,f_gif,so_0,eo_6/${pubId}.gif`;
       urls.push(gifUrl);
 
+    } else if (type === "media" && (isVideo || !file.type.startsWith("image/"))) {
+      // Gallery videos and documents (PDF etc.) — let Cloudinary pick the resource type, no image transforms
+      const result = await cloudinary.uploader.upload(dataUri, {
+        folder, resource_type: isVideo ? "video" : "auto", use_filename: true, unique_filename: true,
+      });
+      urls.push(result.secure_url);
+
     } else if (isGif) {
       // Animated GIF — preserve animation with fl_animated flag
       const result = await cloudinary.uploader.upload(dataUri, {
