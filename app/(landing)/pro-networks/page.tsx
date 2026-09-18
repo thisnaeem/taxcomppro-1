@@ -167,14 +167,15 @@ function ProNetworksDirectory() {
               GOOD PEOPLE. SHARED AMBITION.
             </span>
             <h1>
-              Your people.
+              Your People.
               <br />
-              <em>Your next chapter.</em>
+              <em>Your Network.</em>
             </h1>
             <p>
-              Find a circle that moves you forward. Join professional
-              communities to trade ideas, deepen your expertise, and grow
-              together.
+              Build a network that grows with you. Create or join a network,
+              make valuable connections, share expertise, and turn your network
+              into opportunities — including the ability to earn monthly
+              residual income with no platform fees.
             </p>
             <div className="pn-hero-actions">
               <a className="pn-button pn-primary" href="#explore">
