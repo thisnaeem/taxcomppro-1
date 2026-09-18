@@ -79,3 +79,6 @@
 .cd-hero-art { overflow:visible; border-color:color-mix(in srgb,#ffbe24 30%,var(--cd-line)); box-shadow:0 0 60px 6px rgba(255,190,36,.22), 0 0 140px 30px rgba(255,190,36,.12); }
 .cd-hero-art > img { position:relative; }
 .dark .cd-hero-art { box-shadow:0 0 70px 10px rgba(255,190,36,.28), 0 0 160px 40px rgba(255,190,36,.14); }
+
+/* Course thumbnails are 1254×1254 (square) — match the frame so nothing is cropped */
+.cd-card-image { aspect-ratio:1 / 1; }

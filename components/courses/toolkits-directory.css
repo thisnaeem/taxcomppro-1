@@ -46,3 +46,7 @@
 .cd-eyebrow.tk-eyebrow-box svg { color:#ffbe24; }
 .cd-eyebrow.tk-eyebrow-box svg path { fill:currentColor; }
 :root:not(.dark) .cd-eyebrow.tk-eyebrow-box { background:#0a1628; border-color:#ffbe2480; }
+
+/* Toolkit + bundle artwork is 1536×1024 (3:2) — match the frame so nothing is cropped */
+.tk-page .cd-card-image.tk-art { aspect-ratio:3 / 2; }
+.tk-bundle-cover { aspect-ratio:3 / 2; }
