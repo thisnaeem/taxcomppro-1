@@ -1067,7 +1067,6 @@ export default function ProNetworkHubPage({
           </div>
         </div>
       </header>
-      {network.coverImage && <div className="pn-network-cover"><img src={network.coverImage} alt={`${network.name} cover`} /></div>}
       {/* ── MAIN LAYOUT: Sidebar + Tabs + 100% Dynamic Content ── */}
       <div className="pn-hub-layout">
         {/* Left Internal Network Navigation Sidebar */}
