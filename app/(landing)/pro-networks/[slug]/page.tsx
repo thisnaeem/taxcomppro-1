@@ -577,8 +577,8 @@ export default function ProNetworkHubPage({
             text={network.badgeText || "MEMBER"}
             icon={network.badgeIcon || "Star"}
             bgColor={network.badgeBgColor || "#0a1628"}
-            textColor={network.badgeTextColor || "#f0c040"}
-            borderColor={network.badgeBorderColor || "#d4a017"}
+            textColor={network.badgeTextColor || "#ffbe24"}
+            borderColor={network.badgeBorderColor || "#ffbe24"}
             customImage={network.badgeCustomImage}
           />
         </div>
@@ -999,7 +999,7 @@ export default function ProNetworkHubPage({
   }
 
   return (
-    <div className="pn-page pn-hub" style={{"--pn-accent": network.accentColor || "#e8c449", "--pn-accent-ink": networkAccentInk(network.accentColor || "#e8c449")} as React.CSSProperties}>
+    <div className="pn-page pn-hub" style={{"--pn-accent": network.accentColor || "#ffbe24", "--pn-accent-ink": networkAccentInk(network.accentColor || "#ffbe24")} as React.CSSProperties}>
       {/* ── TOP NETWORK BRAND HEADER (Dynamic — Clean Background, No Watermark/Dummy Text) ── */}
       <header className="pn-network-header">
         <div className="pn-network-header-inner">
@@ -2513,7 +2513,7 @@ export default function ProNetworkHubPage({
                 </div>
               )}
 
-              <NetworkBranding slug={slug} initial={{accentColor:network.accentColor || "#e8c449", logoImage:network.logoImage, coverImage:network.coverImage}} onSaved={branding => setNetwork(previous => previous ? {...previous,...branding} : previous)} />
+              <NetworkBranding slug={slug} initial={{accentColor:network.accentColor || "#ffbe24", logoImage:network.logoImage, coverImage:network.coverImage}} onSaved={branding => setNetwork(previous => previous ? {...previous,...branding} : previous)} />
               <section className="pn-settings-card"><h3>Bots &amp; integrations</h3><p>Network-specific bots are not available yet. You can open Atlas AI from the site navigation for personal assistance.</p></section>
               {/* ── Network Pricing & Subscription Model Settings ── */}
               <div className="bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-6 space-y-4">

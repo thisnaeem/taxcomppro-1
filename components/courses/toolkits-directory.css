@@ -2,7 +2,7 @@
 .tk-page .cd-hero h1 { font-size:clamp(36px,4.2vw,60px); }
 .tk-hero-actions { display:flex; flex-wrap:wrap; gap:12px; margin-top:25px; }
 .tk-primary,.tk-secondary { display:inline-flex; align-items:center; justify-content:center; gap:10px; padding:12px 20px; border-radius:999px; font-size:13px; font-weight:700; }
-.tk-primary { background:#f0c040; color:#0a1628; }
+.tk-primary { background:#ffbe24; color:#0a1628; }
 .tk-secondary { border:1px solid var(--cd-line); color:var(--cd-text); background:var(--cd-panel); }
 .tk-art { background:var(--cd-inner); aspect-ratio:1.85; }
 .tk-art > img { object-fit:cover; padding:0; }
@@ -31,3 +31,18 @@
 .tk-final p { max-width:570px; font-size:15px; line-height:1.8; color:var(--cd-muted); margin-bottom:24px; }
 @media(max-width:1000px) { .tk-bundles { grid-template-columns:1fr; } .tk-benefit-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media(max-width:600px) { .tk-benefit-grid { grid-template-columns:1fr; } .tk-bundle { padding:22px; } .tk-bundle-cover { margin:-22px -22px 22px; } .tk-bundle-heading { align-items:flex-start; flex-direction:column; } .tk-bundle ul { grid-template-columns:1fr; } .tk-final h2 { font-size:25px; } }
+
+/* Readability: larger body copy */
+.tk-primary,.tk-secondary { font-size:15px; }
+.tk-badge { font-size:14px; }
+.tk-bundle p { font-size:16px; }
+.tk-bundle li { font-size:15px; }
+.tk-benefit-grid h3 { font-size:19px; }
+.tk-benefit-grid p { font-size:16px; }
+.tk-final p { font-size:18px; }
+
+/* Gold boxed eyebrow — "Practice Growth & Defense Systems" */
+.cd-eyebrow.tk-eyebrow-box { display:inline-flex; padding:9px 16px; border:1px solid #ffbe2466; background:#ffbe241a; color:#ffbe24; border-radius:10px; font-size:13px; letter-spacing:.06em; }
+.cd-eyebrow.tk-eyebrow-box svg { color:#ffbe24; }
+.cd-eyebrow.tk-eyebrow-box svg path { fill:currentColor; }
+:root:not(.dark) .cd-eyebrow.tk-eyebrow-box { background:#0a1628; border-color:#ffbe2480; }

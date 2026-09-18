@@ -5,9 +5,21 @@
   --color-navy:        #0a1628;
   --color-navy-light:  #112240;
   --color-navy-mid:    #1a3a6b;
-  --color-gold:        #d4a017;
-  --color-gold-light:  #f0c040;
-  --color-gold-dark:   #a07810;
+  --color-gold:        #ffbe24;
+  --color-gold-light:  #ffcb4d;
+
+  /* Brand yellow — every amber/yellow utility resolves to #ffbe24 */
+  --color-amber-300:   #ffcb4d;
+  --color-amber-400:   #ffbe24;
+  --color-amber-500:   #ffbe24;
+  --color-amber-600:   #ffbe24;
+  --color-amber-700:   #ffbe24;
+  --color-yellow-300:  #ffcb4d;
+  --color-yellow-400:  #ffbe24;
+  --color-yellow-500:  #ffbe24;
+  --color-yellow-600:  #ffbe24;
+  --color-yellow-700:  #ffbe24;
+  --color-gold-dark:   #ffbe24;
 }
 
 /* Enable class-based dark mode in Tailwind v4 */
@@ -20,7 +32,7 @@
 }
 .dark header nav a:hover,
 .dark header nav button:hover {
-  color: #f0c040 !important;
+  color: #ffbe24 !important;
   background-color: rgba(255, 255, 255, 0.08) !important;
 }
 

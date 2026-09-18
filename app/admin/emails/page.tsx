@@ -404,7 +404,7 @@ export default function AdminEmailsPage() {
 
     const buttonHtml =
       buttonLabel && buttonUrl
-        ? `<div style="text-align:center;margin:28px 0;"><a href="${buttonUrl}" style="display:inline-block;padding:14px 32px;background:#d4a017;color:#0a1628;font-weight:700;font-size:15px;text-decoration:none;border-radius:999px;letter-spacing:0.3px;">${buttonLabel}</a></div>`
+        ? `<div style="text-align:center;margin:28px 0;"><a href="${buttonUrl}" style="display:inline-block;padding:14px 32px;background:#ffbe24;color:#0a1628;font-weight:700;font-size:15px;text-decoration:none;border-radius:999px;letter-spacing:0.3px;">${buttonLabel}</a></div>`
         : "";
 
     return `
@@ -419,7 +419,7 @@ export default function AdminEmailsPage() {
           .body-content { padding:36px 32px; line-height:1.65; font-size:15px; }
           .body-content h1 { color:${textHeading}; font-size:24px; font-weight:800; margin:0 0 20px 0; line-height:1.25; }
           .footer { padding:22px 28px; text-align:center; font-size:12px; color:#94a3b8; border-top:1px solid ${borderCol}; }
-          a { color:#d4a017; }
+          a { color:#ffbe24; }
         </style>
       </head>
       <body>

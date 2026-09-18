@@ -50,9 +50,9 @@ export default function CookiePolicyPage() {
     <main className="min-h-screen bg-white">
       {/* Hero */}
       <section className="bg-[#0a1628] pt-24 pb-16 px-6 text-center">
-        <p className="text-[#d4a017] font-bold text-sm uppercase tracking-widest mb-4">Legal</p>
+        <p className="text-[#ffbe24] font-bold text-sm uppercase tracking-widest mb-4">Legal</p>
         <h1 className="text-4xl font-black text-white mb-4 flex items-center justify-center gap-3">
-          <Cookie className="w-9 h-9 text-[#d4a017]" /> Cookie Policy
+          <Cookie className="w-9 h-9 text-[#ffbe24]" /> Cookie Policy
         </h1>
         <p className="text-white/50 text-sm">Effective date: January 1, 2025</p>
       </section>

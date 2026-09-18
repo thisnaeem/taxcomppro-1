@@ -33,7 +33,7 @@ function Stars({ value, size="sm" }: { value:number; size?:"sm"|"lg" }) {
   return (
     <span className="inline-flex items-center gap-0.5">
       {[1,2,3,4,5].map(i=>(
-        <Star key={i} className={`${size==="lg"?"w-5 h-5":"w-3.5 h-3.5"} ${i<=Math.round(value)?"fill-[#f0c040] text-[#f0c040]":"fill-slate-200 text-slate-200"}`}/>
+        <Star key={i} className={`${size==="lg"?"w-5 h-5":"w-3.5 h-3.5"} ${i<=Math.round(value)?"fill-[#ffbe24] text-[#ffbe24]":"fill-slate-200 text-slate-200"}`}/>
       ))}
     </span>
   );
@@ -43,7 +43,7 @@ export default function CourseDetailPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <Loader2 className="w-8 h-8 text-[#d4a017] animate-spin" />
+        <Loader2 className="w-8 h-8 text-[#ffbe24] animate-spin" />
       </div>
     }>
       <CourseDetailContent />
@@ -215,7 +215,7 @@ function CourseDetailContent() {
   if (loading || checkoutLoading) return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50">
       <div className="text-center">
-        <Loader2 className="w-8 h-8 text-[#d4a017] animate-spin mx-auto mb-2"/>
+        <Loader2 className="w-8 h-8 text-[#ffbe24] animate-spin mx-auto mb-2"/>
         {checkoutLoading && <p className="text-sm text-slate-500">Activating your enrollment…</p>}
       </div>
     </div>
@@ -224,7 +224,7 @@ function CourseDetailContent() {
     <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-slate-50">
       <GraduationCap className="w-14 h-14 text-slate-200"/>
       <p className="text-slate-500 font-bold">Course not found</p>
-      <Link href="/courses" className="text-[#d4a017] font-bold text-sm hover:underline">← Back to Courses</Link>
+      <Link href="/courses" className="text-[#ffbe24] font-bold text-sm hover:underline">← Back to Courses</Link>
     </div>
   );
 
@@ -251,7 +251,7 @@ function CourseDetailContent() {
                 <span className="text-xs font-semibold text-slate-500 bg-white border border-slate-200 px-3 py-1 rounded-full">{course.category}</span>
                 {course.avgRating>0 && (
                   <span className="flex items-center gap-1 text-xs font-bold text-[#0a1628] bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full">
-                    <Star className="w-3.5 h-3.5 fill-[#f0c040] text-[#f0c040]"/>{course.avgRating} ({course.ratingCount})
+                    <Star className="w-3.5 h-3.5 fill-[#ffbe24] text-[#ffbe24]"/>{course.avgRating} ({course.ratingCount})
                   </span>
                 )}
               </div>
@@ -291,7 +291,7 @@ function CourseDetailContent() {
                   <h2 className="text-lg font-black text-[#0a1628]">Course Curriculum</h2>
                   <p className="text-xs text-slate-500 mt-0.5">{course.sections.length} sections • {totalLessons} lessons • {fmtDur(course.totalDuration)} total</p>
                 </div>
-                <button onClick={toggleAll} className="text-xs font-bold text-[#d4a017] hover:underline">
+                <button onClick={toggleAll} className="text-xs font-bold text-[#ffbe24] hover:underline">
                   {allOpen?"Collapse all":"Expand all"}
                 </button>
               </div>
@@ -373,14 +373,14 @@ function CourseDetailContent() {
                   <div className="flex gap-1 mb-3">
                     {[1,2,3,4,5].map(s=>(
                       <button key={s} onClick={()=>setMyRating(s)}>
-                        <Star className={`w-7 h-7 transition-all ${s<=myRating?"fill-[#f0c040] text-[#f0c040]":"text-slate-200 hover:text-[#f0c040]"}`}/>
+                        <Star className={`w-7 h-7 transition-all ${s<=myRating?"fill-[#ffbe24] text-[#ffbe24]":"text-slate-200 hover:text-[#ffbe24]"}`}/>
                       </button>
                     ))}
                   </div>
                   <textarea value={myReview} onChange={e=>setMyReview(e.target.value)} rows={3} placeholder="Share your experience…"
                     className="w-full font-[inherit] text-sm border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-[#0a1628] resize-none mb-3"/>
                   <button onClick={submitRating} disabled={!myRating||ratingSubmitting}
-                    className="flex items-center gap-2 bg-gradient-to-r from-[#f0c040] to-[#d4a017] text-[#0a1628] font-bold px-5 py-2.5 rounded-xl hover:shadow disabled:opacity-40 transition-all text-sm">
+                    className="flex items-center gap-2 bg-gradient-to-r from-[#ffbe24] to-[#ffbe24] text-[#0a1628] font-bold px-5 py-2.5 rounded-xl hover:shadow disabled:opacity-40 transition-all text-sm">
                     {ratingSubmitting?<Loader2 className="w-4 h-4 animate-spin"/>:<Star className="w-4 h-4"/>}
                     Submit Rating
                   </button>
@@ -390,13 +390,13 @@ function CourseDetailContent() {
 
             {!enrolled && (
               <div className="bg-gradient-to-r from-[#0a1628] to-[#1a3a6b] rounded-2xl p-8 text-white text-center mb-10">
-                <GraduationCap className="w-12 h-12 text-[#f0c040] mx-auto mb-4"/>
+                <GraduationCap className="w-12 h-12 text-[#ffbe24] mx-auto mb-4"/>
                 <h3 className="text-2xl font-black mb-2">Ready to get started?</h3>
                 <p className="text-white/60 text-lg mb-5">
                   {course.isFree ? "This course is completely free." : appliedCoupon ? `Enroll with discount for just $${appliedCoupon.discountedPrice} (${appliedCoupon.label}).` : `Enroll for just $${course.price}.`}
                 </p>
                 <button onClick={handleEnroll} disabled={enrolling}
-                  className="inline-flex items-center gap-2 bg-gradient-to-r from-[#f0c040] to-[#d4a017] text-[#0a1628] font-black px-8 py-3.5 rounded-xl hover:shadow-lg transition-all disabled:opacity-60">
+                  className="inline-flex items-center gap-2 bg-gradient-to-r from-[#ffbe24] to-[#ffbe24] text-[#0a1628] font-black px-8 py-3.5 rounded-xl hover:shadow-lg transition-all disabled:opacity-60">
                   {enrolling?<Loader2 className="w-4 h-4 animate-spin"/>:<GraduationCap className="w-4 h-4"/>}
                   {session?"Enroll Now":"Sign In to Enroll"}
                 </button>
@@ -458,19 +458,19 @@ function CourseDetailContent() {
                   <div>
                     <div className="flex justify-between text-xs text-slate-500 mb-1"><span>Progress</span><span className="font-bold">{course.progressPercent}%</span></div>
                     <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-gradient-to-r from-[#f0c040] to-[#d4a017] rounded-full transition-all" style={{width:`${course.progressPercent}%`}}/>
+                      <div className="h-full bg-gradient-to-r from-[#ffbe24] to-[#ffbe24] rounded-full transition-all" style={{width:`${course.progressPercent}%`}}/>
                     </div>
                   </div>
                 )}
                 <button onClick={handleEnroll} disabled={enrolling || checkoutLoading}
-                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#f0c040] to-[#d4a017] text-[#0a1628] font-black py-3.5 rounded-xl hover:shadow-lg transition-all disabled:opacity-60 text-base">
+                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#ffbe24] to-[#ffbe24] text-[#0a1628] font-black py-3.5 rounded-xl hover:shadow-lg transition-all disabled:opacity-60 text-base">
                   {(enrolling || checkoutLoading) ? <Loader2 className="w-5 h-5 animate-spin"/> : enrolled ? <PlayCircle className="w-5 h-5"/> : <GraduationCap className="w-5 h-5"/>}
                   {(enrolling || checkoutLoading) ? (enrolled ? "Starting…" : "Processing…") : enrolled ? (course.progressPercent>0?"Continue Learning":"Start Course") : session ? (course.isFree ? "Enroll Free" : `Buy Now — $${appliedCoupon ? appliedCoupon.discountedPrice : course.price}`) : "Sign In to Enroll"}
                 </button>
                 <div className="space-y-2 pt-4 border-t border-slate-100">
                   {[ { icon:BookOpen, text:`${totalLessons} on-demand lessons` }, { icon:Award, text:"Certificate on completion" }, { icon:CheckCircle2, text:"Full lifetime access" }, { icon:Users, text:`${course._count.enrollments} fellow learners` }, ].map(({icon:Icon,text})=>(
                     <div key={text} className="flex items-center gap-2 text-base text-slate-600">
-                      <Icon className="w-4 h-4 text-[#d4a017] shrink-0"/>{text}
+                      <Icon className="w-4 h-4 text-[#ffbe24] shrink-0"/>{text}
                     </div>
                   ))}
                 </div>

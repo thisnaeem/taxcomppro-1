@@ -101,7 +101,7 @@ export default function CreateProNetworkPage() {
   const [coverImage, setCoverImage] = useState(coverPresets[0]);
   const [customCoverUrl, setCustomCoverUrl] = useState("");
   const [logoImage, setLogoImage] = useState("");
-  const [accentColor, setAccentColor] = useState("#e8c449");
+  const [accentColor, setAccentColor] = useState("#ffbe24");
 
   // Badge Config
   const [badge, setBadge] = useState<BadgeConfig>({
@@ -110,8 +110,8 @@ export default function CreateProNetworkPage() {
     badgeText: "MEMBER",
     badgeIcon: "Star",
     badgeBgColor: "#0a1628",
-    badgeTextColor: "#f0c040",
-    badgeBorderColor: "#d4a017",
+    badgeTextColor: "#ffbe24",
+    badgeBorderColor: "#ffbe24",
     badgeCustomImage: null,
   });
 

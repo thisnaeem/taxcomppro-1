@@ -31,7 +31,7 @@ export const DEFAULT_EMAIL_TEMPLATES: DefaultEmailTemplateDef[] = [
   "subject": "{{senderName}} wants to connect with you",
   "preheader": "{{senderName}} would like to connect with you.",
   "heading": "A new connection starts here",
-  "bodyHtml": "<p class=\"dark-body\" style=\"font-family:Arial,Helvetica,sans-serif;margin:0 0 20px;font-size:15px;line-height:1.7;color:#475569;\">Hi {{recipientName}},</p>\n<table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" class=\"panel\" style=\"font-family:Arial,Helvetica,sans-serif;background:#f4f6fa;border:1px solid #e2e8f0;border-radius:16px;\"><tr><td style=\"font-family:Arial,Helvetica,sans-serif;padding:24px;\">\n<p style=\"font-family:Arial,Helvetica,sans-serif;margin:0 0 12px;color:#a17a18;font-size:10px;font-weight:800;letter-spacing:2px;\">YOUR PROFESSIONAL COMMUNITY</p>\n<p class=\"dark-heading\" style=\"font-family:Arial,Helvetica,sans-serif;margin:0 0 6px;font-size:21px;font-weight:750;color:#101b2e;\">{{senderName}}</p>\n<p class=\"dark-body\" style=\"font-family:Arial,Helvetica,sans-serif;margin:0;font-size:14px;line-height:1.7;color:#64748b;\">would like to connect with you.</p>\n</td></tr></table>\n<p class=\"dark-body\" style=\"font-family:Arial,Helvetica,sans-serif;margin:22px 0 4px;font-size:15px;line-height:1.7;color:#475569;\">Grow your circle with a new professional connection. Review their profile and respond when you’re ready.</p>",
+  "bodyHtml": "<p class=\"dark-body\" style=\"font-family:Arial,Helvetica,sans-serif;margin:0 0 20px;font-size:15px;line-height:1.7;color:#475569;\">Hi {{recipientName}},</p>\n<table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" class=\"panel\" style=\"font-family:Arial,Helvetica,sans-serif;background:#f4f6fa;border:1px solid #e2e8f0;border-radius:16px;\"><tr><td style=\"font-family:Arial,Helvetica,sans-serif;padding:24px;\">\n<p style=\"font-family:Arial,Helvetica,sans-serif;margin:0 0 12px;color:#ffbe24;font-size:10px;font-weight:800;letter-spacing:2px;\">YOUR PROFESSIONAL COMMUNITY</p>\n<p class=\"dark-heading\" style=\"font-family:Arial,Helvetica,sans-serif;margin:0 0 6px;font-size:21px;font-weight:750;color:#101b2e;\">{{senderName}}</p>\n<p class=\"dark-body\" style=\"font-family:Arial,Helvetica,sans-serif;margin:0;font-size:14px;line-height:1.7;color:#64748b;\">would like to connect with you.</p>\n</td></tr></table>\n<p class=\"dark-body\" style=\"font-family:Arial,Helvetica,sans-serif;margin:22px 0 4px;font-size:15px;line-height:1.7;color:#475569;\">Grow your circle with a new professional connection. Review their profile and respond when you’re ready.</p>",
   "buttonLabel": "Review connection request",
   "buttonUrl": "{{actionUrl}}",
   "footerNote": "You received this notification because you are a member of Tax Compliance Pro. Open the site to respond.",
@@ -56,7 +56,7 @@ export const DEFAULT_EMAIL_TEMPLATES: DefaultEmailTemplateDef[] = [
   "subject": "New message from {{senderName}}",
   "preheader": "{{senderName}} sent you a private message.",
   "heading": "You have a new message",
-  "bodyHtml": "<p class=\"dark-body\" style=\"font-family:Arial,Helvetica,sans-serif;margin:0 0 20px;font-size:15px;line-height:1.7;color:#475569;\">Hi {{recipientName}},</p>\n<table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" class=\"panel\" style=\"font-family:Arial,Helvetica,sans-serif;background:#f4f6fa;border:1px solid #e2e8f0;border-radius:16px;\"><tr><td style=\"font-family:Arial,Helvetica,sans-serif;padding:24px;\">\n<p style=\"font-family:Arial,Helvetica,sans-serif;margin:0 0 12px;color:#a17a18;font-size:10px;font-weight:800;letter-spacing:2px;\">YOUR PROFESSIONAL COMMUNITY</p>\n<p class=\"dark-heading\" style=\"font-family:Arial,Helvetica,sans-serif;margin:0 0 6px;font-size:21px;font-weight:750;color:#101b2e;\">{{senderName}}</p>\n<p class=\"dark-body\" style=\"font-family:Arial,Helvetica,sans-serif;margin:0;font-size:14px;line-height:1.7;color:#64748b;\">sent you a private message.</p>\n</td></tr></table>\n<p class=\"dark-body\" style=\"font-family:Arial,Helvetica,sans-serif;margin:22px 0 4px;font-size:15px;line-height:1.7;color:#475569;\">Your conversation is waiting. Open your inbox to read the message and reply.</p>",
+  "bodyHtml": "<p class=\"dark-body\" style=\"font-family:Arial,Helvetica,sans-serif;margin:0 0 20px;font-size:15px;line-height:1.7;color:#475569;\">Hi {{recipientName}},</p>\n<table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" class=\"panel\" style=\"font-family:Arial,Helvetica,sans-serif;background:#f4f6fa;border:1px solid #e2e8f0;border-radius:16px;\"><tr><td style=\"font-family:Arial,Helvetica,sans-serif;padding:24px;\">\n<p style=\"font-family:Arial,Helvetica,sans-serif;margin:0 0 12px;color:#ffbe24;font-size:10px;font-weight:800;letter-spacing:2px;\">YOUR PROFESSIONAL COMMUNITY</p>\n<p class=\"dark-heading\" style=\"font-family:Arial,Helvetica,sans-serif;margin:0 0 6px;font-size:21px;font-weight:750;color:#101b2e;\">{{senderName}}</p>\n<p class=\"dark-body\" style=\"font-family:Arial,Helvetica,sans-serif;margin:0;font-size:14px;line-height:1.7;color:#64748b;\">sent you a private message.</p>\n</td></tr></table>\n<p class=\"dark-body\" style=\"font-family:Arial,Helvetica,sans-serif;margin:22px 0 4px;font-size:15px;line-height:1.7;color:#475569;\">Your conversation is waiting. Open your inbox to read the message and reply.</p>",
   "buttonLabel": "Read and reply",
   "buttonUrl": "{{actionUrl}}",
   "footerNote": "You received this notification because you are a member of Tax Compliance Pro. Open the site to respond.",
@@ -84,10 +84,10 @@ export const DEFAULT_EMAIL_TEMPLATES: DefaultEmailTemplateDef[] = [
     heading: "Confirm your email address",
     bodyHtml: `<p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#475569;">Hi {{userName}},</p>
 <p style="margin:0 0 20px 0;font-size:15px;line-height:1.6;color:#475569;">Enter this code to confirm <strong style="color:#0f172a;">{{email}}</strong> and finish creating your account.</p>
-<div style="background-color:#f8fafc;border:1px dashed #d4a017;border-radius:12px;padding:22px;margin:24px 0;text-align:center;">
+<div style="background-color:#f8fafc;border:1px dashed #ffbe24;border-radius:12px;padding:22px;margin:24px 0;text-align:center;">
   <span style="font-family:'SF Mono',Menlo,Consolas,monospace;font-size:36px;font-weight:800;letter-spacing:8px;color:#0a1628;display:inline-block;">{{code}}</span>
 </div>
-<div style="background-color:#f8fafc;border-left:4px solid #d4a017;border-radius:8px;padding:14px 18px;margin:20px 0;">
+<div style="background-color:#f8fafc;border-left:4px solid #ffbe24;border-radius:8px;padding:14px 18px;margin:20px 0;">
   <p style="font-size:13px;line-height:1.6;color:#475569;margin:0;">
     <strong style="color:#0f172a;">This code expires in {{expiresInMinutes}} minutes.</strong>
     If you did not try to create an account, you can ignore this email and no account will be made.
@@ -117,7 +117,7 @@ export const DEFAULT_EMAIL_TEMPLATES: DefaultEmailTemplateDef[] = [
     bodyHtml: `<p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#475569;">Hello {{userName}},</p>
 <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#475569;">We received a request to reset the password for the account linked to <strong style="color:#0f172a;">{{email}}</strong>.</p>
 <p style="margin:0 0 20px 0;font-size:15px;line-height:1.6;color:#475569;">Choose a new password using the button below. This link is valid for 60 minutes and can only be used once.</p>
-<div style="background-color:#f8fafc;border-left:4px solid #d4a017;border-radius:8px;padding:14px 18px;margin:20px 0;">
+<div style="background-color:#f8fafc;border-left:4px solid #ffbe24;border-radius:8px;padding:14px 18px;margin:20px 0;">
   <p style="font-size:13px;line-height:1.6;color:#475569;margin:0;">
     <strong style="color:#0f172a;">Security notice:</strong> If you did not request a password reset, you can safely ignore this email. Your account remains secure and your password is unchanged.
   </p>
@@ -183,7 +183,7 @@ export const DEFAULT_EMAIL_TEMPLATES: DefaultEmailTemplateDef[] = [
     subject: "[New ticket #{{ticketShortId}}] {{subject}} (from {{userName}})",
     preheader: "{{userName}} opened ticket #{{ticketShortId}}: {{subject}}",
     heading: "New support ticket #{{ticketShortId}}",
-    bodyHtml: `<p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#475569;">A new support ticket <strong style="color:#0f172a;">#{{ticketShortId}}</strong> was opened by <strong style="color:#0f172a;">{{userName}}</strong> (<a href="mailto:{{email}}" style="color:#d4a017;text-decoration:none;">{{email}}</a>).</p>
+    bodyHtml: `<p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#475569;">A new support ticket <strong style="color:#0f172a;">#{{ticketShortId}}</strong> was opened by <strong style="color:#0f172a;">{{userName}}</strong> (<a href="mailto:{{email}}" style="color:#ffbe24;text-decoration:none;">{{email}}</a>).</p>
 <div style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:18px;margin:0 0 20px 0;">
   <p style="margin:0 0 8px 0;font-size:14px;color:#0f172a;"><strong>Subject:</strong> {{subject}}</p>
   <p style="margin:0 0 12px 0;font-size:14px;color:#0f172a;"><strong>User ID:</strong> {{ticketId}}</p>
@@ -270,7 +270,7 @@ export const DEFAULT_EMAIL_TEMPLATES: DefaultEmailTemplateDef[] = [
     bodyHtml: `<p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#475569;">Congratulations, <strong style="color:#0f172a;">{{userName}}</strong>.</p>
 <p style="margin:0 0 20px 0;font-size:15px;line-height:1.6;color:#475569;">Your upgrade is live! Your account now has full access to all features and exclusive benefits included in the <strong style="color:#0f172a;">{{tierName}}</strong> plan.</p>
 <div style="background-color:#0a1628;background-image:linear-gradient(135deg,#0a1628 0%,#16305c 100%);border-radius:14px;padding:24px;margin:0 0 24px 0;color:#ffffff;">
-  <div style="font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#f0c040;margin-bottom:6px;">Active Plan</div>
+  <div style="font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#ffbe24;margin-bottom:6px;">Active Plan</div>
   <div style="font-size:22px;font-weight:800;color:#ffffff;line-height:1.3;margin-bottom:10px;">{{tierName}}</div>
   <div style="font-size:13px;color:#a9b8d0;line-height:1.5;">
     Status: <strong style="color:#4ade80;">Active</strong><br />

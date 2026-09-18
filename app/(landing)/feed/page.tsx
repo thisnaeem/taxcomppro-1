@@ -203,7 +203,7 @@ function FeedContent() {
         {celebrateFirstPost && <FirstPostCelebration onClose={closeCelebration} />}
         {/* Welcome Celebration Banner */}
         {showWelcomeBanner && (
-          <div className="mb-6 bg-gradient-to-r from-amber-500 via-[#f0c040] to-amber-600 rounded-3xl p-5 sm:p-6 text-[#0a1628] shadow-xl flex items-center justify-between gap-4 animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className="mb-6 bg-gradient-to-r from-amber-500 via-[#ffbe24] to-amber-600 rounded-3xl p-5 sm:p-6 text-[#0a1628] shadow-xl flex items-center justify-between gap-4 animate-in fade-in slide-in-from-top-4 duration-300">
             <div className="flex items-start sm:items-center gap-3.5">
               <div className="w-12 h-12 rounded-2xl bg-[#0a1628] text-amber-400 flex items-center justify-center shrink-0 shadow-lg">
                 <Sparkles className="w-6 h-6" />
@@ -255,7 +255,7 @@ function FeedContent() {
               <div className="feed-empty" role="alert"><NoteEditIcon size={30} /><h2>Your feed will be right back.</h2><p>{feedError}</p><button onClick={refreshFeed}>Try again</button></div>
             ) : posts.length === 0 ? (
               <div className="feed-empty">
-                <div className="w-16 h-16 rounded-2xl bg-amber-50 dark:bg-amber-400/10 border border-amber-200/80 dark:border-amber-400/20 flex items-center justify-center mb-4 text-[#d4a017] dark:text-[#f0c040] shadow-sm">
+                <div className="w-16 h-16 rounded-2xl bg-amber-50 dark:bg-amber-400/10 border border-amber-200/80 dark:border-amber-400/20 flex items-center justify-center mb-4 text-[#ffbe24] dark:text-[#ffbe24] shadow-sm">
                   <NoteEditIcon className="w-8 h-8" />
                 </div>
                 <h3 className="font-black text-[#0a1628] dark:text-white text-xl mb-2">{sharedPost ? "This post isn’t available" : "Start a conversation"}</h3>

@@ -15,8 +15,8 @@
 export const BRAND = {
   navy: "#0a1628",
   navyMid: "#16305c",
-  gold: "#d4a017",
-  goldLight: "#f0c040",
+  gold: "#ffbe24",
+  goldLight: "#ffbe24",
   heading: "#0f172a",
   body: "#475569",
   muted: "#94a3b8",

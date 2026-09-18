@@ -128,7 +128,7 @@ export default function CreateCoursePage() {
       <h2 className="text-2xl font-black text-white mb-2">Course Created!</h2>
       <p className="text-slate-400 mb-8">Your course has been saved successfully.</p>
       <div className="flex gap-3 justify-center">
-        <Link href="/admin/courses" className="bg-[#f0c040] hover:bg-amber-400 text-slate-950 font-black px-6 py-3 rounded-xl transition-all shadow-lg shadow-amber-400/20">Back to Courses</Link>
+        <Link href="/admin/courses" className="bg-[#ffbe24] hover:bg-amber-400 text-slate-950 font-black px-6 py-3 rounded-xl transition-all shadow-lg shadow-amber-400/20">Back to Courses</Link>
         <Link href="/courses" className="bg-slate-800 text-slate-200 border border-white/10 font-bold px-6 py-3 rounded-xl hover:bg-slate-700 transition-all">View Catalog</Link>
       </div>
     </div>
@@ -144,7 +144,7 @@ export default function CreateCoursePage() {
       <div className="flex items-center gap-3">
         {[{n:1,label:"Course Details"},{n:2,label:"Curriculum"}].map(({n,label}) => (
           <button key={n} onClick={() => n <= step && setStep(n)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${step===n?"bg-[#f0c040] text-slate-950 font-black shadow-md shadow-amber-400/20":step>n?"bg-emerald-500/15 text-emerald-300 border border-emerald-500/20":"bg-slate-800/80 text-slate-400 border border-white/10"}`}>
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${step===n?"bg-[#ffbe24] text-slate-950 font-black shadow-md shadow-amber-400/20":step>n?"bg-emerald-500/15 text-emerald-300 border border-emerald-500/20":"bg-slate-800/80 text-slate-400 border border-white/10"}`}>
             {step>n ? <CheckCircle2 className="w-4 h-4"/> : n} {label}
           </button>
         ))}
@@ -271,7 +271,7 @@ export default function CreateCoursePage() {
                   </div>
                 ))}
                 <button onClick={()=>setLearningOutcomes(p=>[...p,""])}
-                  className="flex items-center gap-1.5 text-xs font-bold text-[#d4a017] hover:underline">
+                  className="flex items-center gap-1.5 text-xs font-bold text-[#ffbe24] hover:underline">
                   <Plus className="w-3.5 h-3.5"/> Add outcome
                 </button>
               </div>
@@ -295,7 +295,7 @@ export default function CreateCoursePage() {
                   </div>
                 ))}
                 <button onClick={()=>setRequirements(p=>[...p,""])}
-                  className="flex items-center gap-1.5 text-xs font-bold text-[#d4a017] hover:underline">
+                  className="flex items-center gap-1.5 text-xs font-bold text-[#ffbe24] hover:underline">
                   <Plus className="w-3.5 h-3.5"/> Add requirement
                 </button>
               </div>
@@ -423,7 +423,7 @@ export default function CreateCoursePage() {
                                 </div>
                               ))}
                               <button onClick={()=>addQ(sec.id,l.id)}
-                                className="w-full flex items-center justify-center gap-1.5 text-xs font-bold text-[#d4a017] border border-dashed border-[#d4a017]/30 py-2 rounded-lg hover:bg-[#f0c040]/5 transition-all">
+                                className="w-full flex items-center justify-center gap-1.5 text-xs font-bold text-[#ffbe24] border border-dashed border-[#ffbe24]/30 py-2 rounded-lg hover:bg-[#ffbe24]/5 transition-all">
                                 <Plus className="w-3.5 h-3.5"/> Add Question
                               </button>
                             </div>
@@ -432,7 +432,7 @@ export default function CreateCoursePage() {
                       );
                     })}
                     <button onClick={()=>addLesson(sec.id)}
-                      className="w-full flex items-center justify-center gap-2 text-sm font-bold text-[#d4a017] border-2 border-dashed border-[#d4a017]/30 py-2.5 rounded-xl hover:bg-[#f0c040]/5 transition-all">
+                      className="w-full flex items-center justify-center gap-2 text-sm font-bold text-[#ffbe24] border-2 border-dashed border-[#ffbe24]/30 py-2.5 rounded-xl hover:bg-[#ffbe24]/5 transition-all">
                       <Plus className="w-4 h-4"/> Add Lesson
                     </button>
                   </div>
@@ -456,7 +456,7 @@ export default function CreateCoursePage() {
                 {saving&&<Loader2 className="w-4 h-4 animate-spin"/>} Save Draft
               </button>
               <button onClick={()=>handlePublish(true)} disabled={saving}
-                className="flex items-center gap-2 text-sm font-bold bg-gradient-to-r from-[#f0c040] to-[#d4a017] text-[#0a1628] px-5 py-2.5 rounded-xl hover:shadow-lg disabled:opacity-40 transition-all">
+                className="flex items-center gap-2 text-sm font-bold bg-gradient-to-r from-[#ffbe24] to-[#ffbe24] text-[#0a1628] px-5 py-2.5 rounded-xl hover:shadow-lg disabled:opacity-40 transition-all">
                 {saving?<Loader2 className="w-4 h-4 animate-spin"/>:<GraduationCap className="w-4 h-4"/>} Publish
               </button>
             </div>

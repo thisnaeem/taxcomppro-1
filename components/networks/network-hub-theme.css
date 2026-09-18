@@ -1,6 +1,6 @@
 /* The workspace uses the site's navy surfaces; only accents are owner-customizable. */
-html .pn-page.pn-hub,html .pn-page.pn-hub-status{--pn-text:#f3f5fb;--pn-muted:#afbbcf;--pn-line:#2a354c;--pn-panel:#1b2335;--pn-inner:#232e43;--pn-bg:#0f1526;--pn-gold:#e8c449;background:var(--pn-bg)!important;color:var(--pn-text);color-scheme:dark}
-html:not(.dark) .pn-page.pn-hub,html:not(.dark) .pn-page.pn-hub-status{--pn-text:#111827;--pn-muted:#66758c;--pn-line:#e0e6ef;--pn-panel:#fff;--pn-inner:#eef1f7;--pn-bg:#f3f5fa;--pn-gold:#987317;color-scheme:light}
+html .pn-page.pn-hub,html .pn-page.pn-hub-status{--pn-text:#f3f5fb;--pn-muted:#afbbcf;--pn-line:#2a354c;--pn-panel:#1b2335;--pn-inner:#232e43;--pn-bg:#0f1526;--pn-gold:#ffbe24;background:var(--pn-bg)!important;color:var(--pn-text);color-scheme:dark}
+html:not(.dark) .pn-page.pn-hub,html:not(.dark) .pn-page.pn-hub-status{--pn-text:#111827;--pn-muted:#66758c;--pn-line:#e0e6ef;--pn-panel:#fff;--pn-inner:#eef1f7;--pn-bg:#f3f5fa;--pn-gold:#ffbe24;color-scheme:light}
 html .pn-page.pn-hub :is(.bg-white,[class*="dark:bg-[#121e33]"],[class*="dark:bg-[#172135]"]){background:var(--pn-panel)!important;border-color:var(--pn-line)!important;box-shadow:none!important}
 html .pn-page.pn-hub :is(.bg-slate-50,.bg-slate-100,.bg-slate-200,.bg-slate-300,[class*="dark:bg-white/5"],[class*="dark:bg-slate-900"]){background:var(--pn-inner)!important}
 html .pn-page.pn-hub :is(.text-slate-900,.text-slate-800,.text-slate-700,.text-white,.text-slate-300,.text-slate-200){color:var(--pn-text)!important}

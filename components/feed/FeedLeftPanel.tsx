@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setUser } from "@/store/slices/authSlice";
 import {
-  UserCircleIcon, Rocket01Icon, Notification01Icon,
+  UserGroupIcon, Rocket01Icon, Notification01Icon,
   ShoppingBag01Icon, Chart01Icon, BookOpen01Icon,
   UserAdd01Icon, Home01Icon, Edit01Icon, Tick01Icon, Cancel01Icon,
 } from "hugeicons-react";
@@ -206,7 +206,7 @@ export default function FeedLeftPanel() {
         <div className="space-y-0.5">
           {[
             { icon: Home01Icon,           label: "Feed",                    href: "/feed" },
-            { icon: UserCircleIcon,       label: "My Profile",              href: "/profile" },
+            { icon: UserGroupIcon,        label: "My Network",              href: "/pro-networks?filter=mine" },
             { icon: Notification01Icon,   label: "Notifications",           href: "/notifications" },
             { icon: UserAdd01Icon,        label: "Connections",             href: "/connections" },
             { icon: BookOpen01Icon,       label: "Marketplace Purchases",   href: "/marketplace-purchases", isExternal: false },
@@ -245,10 +245,10 @@ export default function FeedLeftPanel() {
       {/* ── Upgrade promo (free users only) ── */}
       {!canSell && (
         <div className="feed-upgrade bg-gradient-to-br from-[#0a1628] to-[#1a3a6b] rounded-2xl p-4 text-white">
-          <div className="text-xs font-black uppercase tracking-widest text-[#f0c040] mb-1">Go Pro</div>
+          <div className="text-xs font-black uppercase tracking-widest text-[#ffbe24] mb-1">Go Pro</div>
           <div className="text-sm font-bold leading-snug mb-2">Unlock marketplace selling & premium courses</div>
           <Link href="/upgrade"
-            className="feed-sidebar-button block text-center text-xs font-bold bg-[#f0c040] text-[#0a1628] rounded-lg py-2 hover:bg-[#d4a017] transition-all">
+            className="feed-sidebar-button block text-center text-xs font-bold bg-[#ffbe24] text-[#0a1628] rounded-lg py-2 hover:bg-[#ffbe24] transition-all">
             Upgrade Now
           </Link>
         </div>

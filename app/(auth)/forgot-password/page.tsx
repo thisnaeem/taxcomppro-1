@@ -150,7 +150,7 @@ function ForgotPasswordForm() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#f0c040] to-[#d4a017] text-[#0a1628] font-bold text-sm py-3.5 rounded-full hover:shadow-[0_0_20px_rgba(212,160,23,0.4)] hover:-translate-y-0.5 transition-all disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
+          className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#ffbe24] to-[#ffbe24] text-[#0a1628] font-bold text-sm py-3.5 rounded-full hover:shadow-[0_0_20px_rgba(255, 190, 36,0.4)] hover:-translate-y-0.5 transition-all disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
         >
           {loading ? (
             "Sending reset link…"
@@ -206,7 +206,7 @@ export default function ForgotPasswordPage() {
         <Suspense
           fallback={
             <div className="bg-white rounded-2xl border border-slate-200 shadow-lg p-8 flex items-center justify-center min-h-[300px]">
-              <div className="w-8 h-8 border-2 border-[#d4a017] border-t-transparent rounded-full animate-spin" />
+              <div className="w-8 h-8 border-2 border-[#ffbe24] border-t-transparent rounded-full animate-spin" />
             </div>
           }
         >

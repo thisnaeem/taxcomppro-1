@@ -16,7 +16,7 @@ interface Stats {
 
 const tierColors: Record<string, string> = {
   FREE: "bg-slate-500",
-  VIP: "bg-[#f0c040]",
+  VIP: "bg-[#ffbe24]",
   MARKETPLACE: "bg-indigo-400",
   MARKETPLACE_PLUS: "bg-emerald-400",
 };

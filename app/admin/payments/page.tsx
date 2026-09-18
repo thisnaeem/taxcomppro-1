@@ -837,7 +837,7 @@ export default function PaymentsPage() {
                     onClick={() => setSubFilter(f)}
                     className={`px-3 py-1.5 rounded-lg text-xs font-bold capitalize transition-all ${
                       subFilter === f
-                        ? "bg-[#f0c040] text-[#0a1628]"
+                        ? "bg-[#ffbe24] text-[#0a1628]"
                         : "bg-slate-700/60 text-slate-400 hover:text-white"
                     }`}
                   >

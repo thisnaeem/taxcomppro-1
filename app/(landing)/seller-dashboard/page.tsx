@@ -229,7 +229,7 @@ function ListingRow({ l, onDelete }: { l: Listing; onDelete: (id: string) => voi
         <div className="flex items-center gap-2 flex-wrap">
           <span className="font-bold text-[#0a1628] text-sm truncate max-w-[240px]">{l.title}</span>
           {l.isFeatured && (
-            <span className="flex items-center gap-0.5 text-[9px] font-black text-[#d4a017] bg-amber-50 px-1.5 py-0.5 rounded-full">
+            <span className="flex items-center gap-0.5 text-[9px] font-black text-[#ffbe24] bg-amber-50 px-1.5 py-0.5 rounded-full">
               <Star className="w-2.5 h-2.5" /> Featured
             </span>
           )}

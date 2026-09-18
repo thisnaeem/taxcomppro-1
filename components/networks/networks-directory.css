@@ -10,7 +10,7 @@ html .pn-page.pn-directory {
   --pn-nav-height: 81px;
   --pn-accent: #0a1628;
   --pn-on-accent: #fff;
-  --pn-gold: var(--color-gold-dark, #a07810);
+  --pn-gold: var(--color-gold-dark, #ffbe24);
   --pn-hover: #1a3a6b;
   background: #f1f5f9 !important;
   color: var(--pn-text);
@@ -196,19 +196,20 @@ html .pn-page.pn-directory {
 }
 
 html.dark .pn-page.pn-directory {
-  --pn-text: #e2e8f0;
-  --pn-muted: #94a3b8;
+  --pn-text: #ffffff;
+  --pn-muted: #e2e8f0;
   --pn-line: #243550;
   --pn-panel: #172135;
   --pn-inner: #1e2e45;
   --pn-background: #0c1527;
   --pn-accent: #e2e8f0;
   --pn-on-accent: #0a1628;
-  --pn-gold: var(--color-gold-light, #f0c040);
+  --pn-gold: var(--color-gold-light, #ffbe24);
   --pn-hover: #fff;
   background: #0c1527 !important;
   color-scheme: dark;
   .pn-card-backdrop img { opacity: 0.3; }
+  .pn-art-inner > p, .pn-art-tags > span { color: #f1f5f9; }
 }
 
 @media (max-width: 1179px) {
@@ -239,5 +240,45 @@ html.dark .pn-page.pn-directory {
     .pn-card-core { padding: 20px; }
     .pn-card-header { gap: 16px; }
     .pn-card-photo { width: 96px; height: 108px; }
+  }
+}
+
+/* Readability: larger body copy on the directory */
+html .pn-page.pn-directory {
+  .pn-eyebrow, .pn-kicker { font-size: 12px; }
+  .pn-page-top > a { font-size: 14px; }
+  .pn-hero > div > p { font-size: 19px; }
+  .pn-button { font-size: 15px; }
+  .pn-text-link { font-size: 15px; }
+  .pn-art-inner .pn-eyebrow { font-size: 11px; }
+  .pn-art-inner > p { font-size: 15px; }
+  .pn-art-tags > span { font-size: 12px; }
+  .pn-value-strip > span { font-size: 15px; }
+  .pn-section-title > p { font-size: 16px; }
+  .pn-view-tabs button { font-size: 15px; }
+  .pn-search input { font-size: 16px; }
+  .pn-categories button { font-size: 14px; }
+  .pn-result-info { font-size: 14px; }
+  .pn-result-info > span:last-child { font-size: 13px; }
+  .pn-card-intro p { font-size: 15px; }
+  .pn-card-price { font-size: 15px; }
+  .pn-card-category { font-size: 12px; }
+  .pn-network-owner small { font-size: 11px; }
+  .pn-network-owner strong { font-size: 14px; }
+  .pn-member-tag { font-size: 12px; }
+  .pn-network-body > p { font-size: 15px; }
+  .pn-benefits > span { font-size: 12px; }
+  .pn-network-body footer > span { font-size: 13px; }
+  .pn-network-body footer > a { font-size: 14px; }
+  .pn-empty p { font-size: 16px; }
+  .pn-loading { font-size: 15px; }
+  .pn-create-banner p { font-size: 16px; }
+}
+@media (max-width: 700px) {
+  html .pn-page.pn-directory {
+    .pn-page-top > a { font-size: 12px; }
+    .pn-hero > div > p { font-size: 17px; }
+    .pn-value-strip > span { font-size: 14px; }
+    .pn-view-tabs button { font-size: 13px; }
   }
 }

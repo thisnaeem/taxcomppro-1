@@ -5,7 +5,10 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useAppSelector } from "@/store/hooks";
 import { Search01Icon, ShoppingBag01Icon, StarIcon, Add01Icon, ArrowRight01Icon, Briefcase01Icon, GlobeIcon, School01Icon, Rocket01Icon, Cancel01Icon, FilterIcon, Settings01Icon } from "hugeicons-react";
+import { GridSwitcher, useGridView, type GridViewType } from "@/components/pros/GridSwitcher";
 import "./marketplace.css";
+
+const MK_GRID_OPTIONS: GridViewType[] = ["grid-4", "grid-3", "grid-2"];
 
 type Category = "ALL" | "SERVICE" | "PRODUCT" | "NETWORK" | "TRAINING";
 type Price = "all" | "free" | "under100" | "100plus";
@@ -55,6 +58,7 @@ function MarketplaceContent() {
   const [sort, setSort] = useState<Sort>("recommended");
   const [featured, setFeatured] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [gridView, setGridView] = useGridView("mk-grid-view", "grid-3", MK_GRID_OPTIONS);
   const [request, retry] = useReducer(n=>n+1,0);
   const [data, setData] = useState<{listings:Listing[];loading:boolean;error:string}>({listings:[],loading:true,error:""});
   useEffect(()=>{mount();},[]);
@@ -102,9 +106,9 @@ function MarketplaceContent() {
       <div className="mk-banner"><img src="/mrkeplace_cover.png" alt="TaxCompPro Marketplace — Your Marketplace. Your Opportunity. Sell Your Expertise and Buy Your Opportunity." /></div>
       <section className="mk-results" aria-label="Browse listings">
         <div className="mk-toolbar"><div className="mk-search"><Search01Icon size={21}/><input aria-label="Search marketplace" placeholder="Search services, products, courses, or sellers…" value={search} onChange={e=>setSearch(e.target.value)}/>{search && <button onClick={()=>setSearch("")} aria-label="Clear search"><Cancel01Icon size={18}/></button>}</div><label className="mk-sort"><span>Sort by</span><select value={sort} onChange={e=>setSort(e.target.value as Sort)}><option value="recommended">Recommended</option><option value="newest">Newest first</option><option value="low">Price: low to high</option><option value="high">Price: high to low</option></select></label><button className="mk-mobile-filter" onClick={()=>setFiltersOpen(o=>!o)} aria-expanded={filtersOpen} aria-controls="marketplace-filters"><FilterIcon size={20}/>Filters</button></div>
-        <div className="mk-results-heading"><h2>{category === "ALL" ? "Discover the marketplace" : categories.find(c=>c.value===category)?.label}</h2><span aria-live="polite">{data.loading ? "Finding opportunities…" : data.error ? "" : `${filtered.length} listing${filtered.length === 1 ? "" : "s"}`}</span></div>
+        <div className="mk-results-heading"><h2>{category === "ALL" ? "Discover the marketplace" : categories.find(c=>c.value===category)?.label}</h2><span aria-live="polite">{data.loading ? "Finding opportunities…" : data.error ? "" : `${filtered.length} listing${filtered.length === 1 ? "" : "s"}`}</span><GridSwitcher className="mk-grid-switcher" currentView={gridView} onViewChange={setGridView} options={MK_GRID_OPTIONS}/></div>
         {hasFilters && <div className="mk-active-filters">{query && <button onClick={()=>setSearch("")}>“{search}”<Cancel01Icon size={14}/></button>}{category!=="ALL" && <button onClick={()=>setCategory("ALL")}>{categories.find(c=>c.value===category)?.label}<Cancel01Icon size={14}/></button>}{price!=="all" && <button onClick={()=>setPrice("all")}>{prices.find(p=>p.value===price)?.label}<Cancel01Icon size={14}/></button>}{featured && <button onClick={()=>setFeatured(false)}>Featured<Cancel01Icon size={14}/></button>}<button onClick={clearFilters}>Clear all</button></div>}
-        {data.loading ? <ListingSkeletons/> : data.error ? <div className="mk-empty" role="alert"><span className="mk-empty-icon"><ShoppingBag01Icon size={30}/></span><h2>We couldn’t load the marketplace</h2><p>{data.error}</p><button className="mk-primary" onClick={()=>{setData(d=>({...d,loading:true,error:""}));retry();}}>Try again</button></div> : filtered.length ? <div className="mk-grid">{filtered.map(l=><ListingCard key={l.id} listing={l}/>)}</div> : <div className="mk-empty"><span className="mk-empty-icon">{hasFilters ? <Search01Icon size={30}/> : <ShoppingBag01Icon size={30}/>}</span><h2>{hasFilters ? "No matches just yet" : "Opportunity starts here"}</h2><p>{hasFilters ? "Try another search or clear your filters to explore more listings." : "Share your expertise, products, or courses with a community of tax professionals."}</p>{hasFilters ? <button className="mk-primary" onClick={clearFilters}>Clear filters</button> : <Link className="mk-primary" href={createHref}><Add01Icon size={18}/>{createLabel}</Link>}</div>}
+        {data.loading ? <ListingSkeletons/> : data.error ? <div className="mk-empty" role="alert"><span className="mk-empty-icon"><ShoppingBag01Icon size={30}/></span><h2>We couldn’t load the marketplace</h2><p>{data.error}</p><button className="mk-primary" onClick={()=>{setData(d=>({...d,loading:true,error:""}));retry();}}>Try again</button></div> : filtered.length ? <div className={`mk-grid ${gridView}`}>{filtered.map(l=><ListingCard key={l.id} listing={l}/>)}</div> : <div className="mk-empty"><span className="mk-empty-icon">{hasFilters ? <Search01Icon size={30}/> : <ShoppingBag01Icon size={30}/>}</span><h2>{hasFilters ? "No matches just yet" : "Opportunity starts here"}</h2><p>{hasFilters ? "Try another search or clear your filters to explore more listings." : "Share your expertise, products, or courses with a community of tax professionals."}</p>{hasFilters ? <button className="mk-primary" onClick={clearFilters}>Clear filters</button> : <Link className="mk-primary" href={createHref}><Add01Icon size={18}/>{createLabel}</Link>}</div>}
       </section>
     </main>
   </div>;

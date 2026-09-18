@@ -422,11 +422,11 @@ export default function AdminContentCalendarPage() {
           </button>
           <div className="flex rounded-xl border border-white/10 overflow-hidden bg-slate-800/80">
             <button onClick={() => setView("calendar")}
-              className={`flex items-center gap-1.5 px-4 py-2 text-sm font-bold transition-all ${view === "calendar" ? "bg-[#f0c040] text-slate-950 font-black" : "text-slate-400 hover:text-white"}`}>
+              className={`flex items-center gap-1.5 px-4 py-2 text-sm font-bold transition-all ${view === "calendar" ? "bg-[#ffbe24] text-slate-950 font-black" : "text-slate-400 hover:text-white"}`}>
               <Calendar className="w-4 h-4" /> Calendar
             </button>
             <button onClick={() => setView("list")}
-              className={`flex items-center gap-1.5 px-4 py-2 text-sm font-bold transition-all ${view === "list" ? "bg-[#f0c040] text-slate-950 font-black" : "text-slate-400 hover:text-white"}`}>
+              className={`flex items-center gap-1.5 px-4 py-2 text-sm font-bold transition-all ${view === "list" ? "bg-[#ffbe24] text-slate-950 font-black" : "text-slate-400 hover:text-white"}`}>
               <List className="w-4 h-4" /> List
             </button>
           </div>

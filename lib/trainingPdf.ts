@@ -2,7 +2,7 @@ import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { CERTIFICATE_DISCLAIMER } from "@/lib/training";
 
 const NAVY = rgb(0.039, 0.086, 0.157); // #0a1628
-const GOLD = rgb(0.831, 0.627, 0.090); // #d4a017
+const GOLD = rgb(0.831, 0.627, 0.090); // #ffbe24
 const SLATE = rgb(0.4, 0.45, 0.53);
 
 export async function buildCertificatePdf(input: {

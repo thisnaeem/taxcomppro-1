@@ -63,7 +63,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#060f1e]">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-10 h-10 border-4 border-[#d4a017] border-t-transparent rounded-full animate-spin" />
+          <div className="w-10 h-10 border-4 border-[#ffbe24] border-t-transparent rounded-full animate-spin" />
           <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Loading…</p>
         </div>
       </div>

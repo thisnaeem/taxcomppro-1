@@ -15,7 +15,7 @@ import {
 import { ProCard, type ProData } from "@/components/pros/ProCard";
 import {
   GridSwitcher,
-  type GridViewType,
+  useGridView,
 } from "@/components/pros/GridSwitcher";
 import "@/components/pros/pros.css";
 import "@/components/pros/pros-light.css";
@@ -53,7 +53,7 @@ export default function FindAProPage() {
   const [credential, setCredential] = useState("");
   const [location, setLocation] = useState("");
   const [sort, setSort] = useState("recent");
-  const [viewMode, setViewMode] = useState<GridViewType>("grid-3");
+  const [viewMode, setViewMode] = useGridView("fp-grid-view", "grid-4", ["grid-4", "grid-3", "grid-2", "list"]);
   const results = useRef<HTMLDivElement>(null);
   const search = useRef<HTMLInputElement>(null);
   useEffect(() => {

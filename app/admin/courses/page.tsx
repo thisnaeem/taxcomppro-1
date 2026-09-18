@@ -14,7 +14,7 @@ export default function AdminCoursesPage() {
         </div>
         <Link
           href="/courses"
-          className="flex items-center gap-2 bg-[#f0c040] hover:bg-amber-400 text-slate-950 font-black px-5 py-2.5 rounded-xl shadow-lg shadow-amber-400/20 transition-all text-xs uppercase tracking-wider"
+          className="flex items-center gap-2 bg-[#ffbe24] hover:bg-amber-400 text-slate-950 font-black px-5 py-2.5 rounded-xl shadow-lg shadow-amber-400/20 transition-all text-xs uppercase tracking-wider"
         >
           View Public Course Hub <ArrowRight className="w-4 h-4" />
         </Link>

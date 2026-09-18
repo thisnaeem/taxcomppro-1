@@ -64,7 +64,7 @@ export default function PrivacyPage() {
     <main className="min-h-screen bg-white">
       {/* Hero */}
       <section className="bg-[#0a1628] pt-24 pb-16 px-6 text-center">
-        <p className="text-[#d4a017] font-bold text-sm uppercase tracking-widest mb-4">Legal</p>
+        <p className="text-[#ffbe24] font-bold text-sm uppercase tracking-widest mb-4">Legal</p>
         <h1 className="text-4xl font-black text-white mb-4">Privacy Policy</h1>
         <p className="text-white/50 text-sm">Tax Compliance Pros · Last Updated: May 2026</p>
       </section>
@@ -82,7 +82,7 @@ export default function PrivacyPage() {
             <p className="text-slate-600 text-sm leading-relaxed whitespace-pre-line">{s.body}</p>
             {s.contact && (
               <p className="text-sm mt-2">
-                <a href={`mailto:${s.contact}`} className="text-[#0a1628] font-bold hover:text-[#d4a017] transition-colors">
+                <a href={`mailto:${s.contact}`} className="text-[#0a1628] font-bold hover:text-[#ffbe24] transition-colors">
                   {s.contact}
                 </a>
               </p>

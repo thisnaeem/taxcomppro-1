@@ -135,8 +135,8 @@ const inputErr = "border-red-400 focus:border-red-500 focus:ring-4 focus:ring-re
 const fieldLabel = "block text-sm font-semibold text-[#0a1628] dark:text-white";
 const fieldError = "text-xs font-medium text-red-600 dark:text-red-400";
 const goldCta =
-  "flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#f0c040] to-[#d4a017] py-3.5 text-sm font-bold text-[#0a1628] transition-all " +
-  "hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(212,160,23,0.35)] active:translate-y-0 active:scale-[0.99] " +
+  "flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#ffbe24] to-[#ffbe24] py-3.5 text-sm font-bold text-[#0a1628] transition-all " +
+  "hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(255, 190, 36,0.35)] active:translate-y-0 active:scale-[0.99] " +
   "disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:shadow-none";
 
 function ErrorBanner({ message }: { message: string }) {
@@ -449,24 +449,24 @@ function RegisterForm() {
                     p.popular ? "md:-mt-3 md:pb-8" : ""
                   } ${
                     isSelected
-                      ? "border-[#d4a017] bg-white shadow-[0_12px_36px_rgba(212,160,23,0.18)] dark:bg-white/[0.06]"
+                      ? "border-[#ffbe24] bg-white shadow-[0_12px_36px_rgba(255, 190, 36,0.18)] dark:bg-white/[0.06]"
                       : "border-slate-200 bg-white hover:border-slate-300 dark:border-white/12 dark:bg-white/[0.03] dark:hover:border-white/25"
                   }`}
                 >
                   {p.popular && (
-                    <span className="absolute -top-3 left-6 rounded-full bg-[#0a1628] px-3 py-1 text-[10px] font-black uppercase tracking-wider text-[#f0c040]">
+                    <span className="absolute -top-3 left-6 rounded-full bg-[#0a1628] px-3 py-1 text-[10px] font-black uppercase tracking-wider text-[#ffbe24]">
                       {p.badge}
                     </span>
                   )}
 
                   <div className="mb-4 flex items-start justify-between gap-3">
                     <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0a1628]">
-                      <Icon className="h-5 w-5 text-[#f0c040]" strokeWidth={2} />
+                      <Icon className="h-5 w-5 text-[#ffbe24]" strokeWidth={2} />
                     </span>
                     <span
                       className={`mt-0.5 flex h-5 w-5 items-center justify-center rounded-full border-2 transition-all ${
                         isSelected
-                          ? "border-[#d4a017] bg-[#d4a017]"
+                          ? "border-[#ffbe24] bg-[#ffbe24]"
                           : "border-slate-300 dark:border-white/30"
                       }`}
                     >
@@ -489,7 +489,7 @@ function RegisterForm() {
                   <ul className="mt-5 space-y-2.5 border-t border-slate-100 pt-5 dark:border-white/10">
                     {p.features.map((feat) => (
                       <li key={feat} className="flex items-start gap-2 text-xs leading-snug text-slate-700 dark:text-slate-300">
-                        <CheckCircle2 className="mt-px h-3.5 w-3.5 shrink-0 text-[#d4a017]" />
+                        <CheckCircle2 className="mt-px h-3.5 w-3.5 shrink-0 text-[#ffbe24]" />
                         <span>{feat}</span>
                       </li>
                     ))}
@@ -554,7 +554,7 @@ function RegisterForm() {
 
         <header className="mb-7">
           <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-[#0a1628] dark:bg-amber-400/15">
-            <MailCheck className="h-6 w-6 text-[#f0c040]" strokeWidth={2} />
+            <MailCheck className="h-6 w-6 text-[#ffbe24]" strokeWidth={2} />
           </span>
           <h1 className="text-[28px] font-black leading-tight tracking-tight text-[#0a1628] sm:text-[32px] dark:text-white">
             Check your email
@@ -618,7 +618,7 @@ function RegisterForm() {
             type="button"
             onClick={handleResendOtp}
             disabled={resendIn > 0 || resendLoading}
-            className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#b8860b] hover:underline disabled:cursor-not-allowed disabled:text-slate-600 disabled:no-underline dark:text-[#f0c040] dark:disabled:text-slate-400"
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#ffbe24] hover:underline disabled:cursor-not-allowed disabled:text-slate-600 disabled:no-underline dark:text-[#ffbe24] dark:disabled:text-slate-400"
           >
             <RefreshCw className={`h-4 w-4 ${resendLoading ? "animate-spin" : ""}`} />
             {resendIn > 0 ? `Resend in ${resendIn}s` : resendLoading ? "Sending…" : "Resend code"}
@@ -639,7 +639,7 @@ function RegisterForm() {
         </h1>
         <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
           Already have an account?{" "}
-          <Link href="/login" className="font-bold text-[#b8860b] underline-offset-2 hover:underline dark:text-[#f0c040]">
+          <Link href="/login" className="font-bold text-[#ffbe24] underline-offset-2 hover:underline dark:text-[#ffbe24]">
             Sign in
           </Link>
         </p>
@@ -862,15 +862,15 @@ function RegisterForm() {
             <input
               type="checkbox"
               {...register("agreeTerms")}
-              className="mt-0.5 h-4 w-4 shrink-0 accent-[#d4a017]"
+              className="mt-0.5 h-4 w-4 shrink-0 accent-[#ffbe24]"
             />
             <span className="text-sm text-slate-600 dark:text-slate-300">
               I agree to the{" "}
-              <Link href="/terms" className="font-semibold text-[#0a1628] underline underline-offset-2 dark:text-[#f0c040]">
+              <Link href="/terms" className="font-semibold text-[#0a1628] underline underline-offset-2 dark:text-[#ffbe24]">
                 Terms of Service
               </Link>{" "}
               and{" "}
-              <Link href="/privacy" className="font-semibold text-[#0a1628] underline underline-offset-2 dark:text-[#f0c040]">
+              <Link href="/privacy" className="font-semibold text-[#0a1628] underline underline-offset-2 dark:text-[#ffbe24]">
                 Privacy Policy
               </Link>
             </span>

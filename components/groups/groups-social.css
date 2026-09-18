@@ -32,7 +32,7 @@
 .gf-card-cover { display: block; position: relative; aspect-ratio: 1.8; background: linear-gradient(135deg,#10253f,#254672); overflow: hidden; }
 .gf-card-cover img { object-fit: cover; transition: transform .2s; }
 .gf-card-cover:hover img { transform: scale(1.03); }
-.gf-card-cover > span { height: 100%; padding: 20px; display: flex; align-items: center; justify-content: center; gap: 16px; color: #f0c040; }
+.gf-card-cover > span { height: 100%; padding: 20px; display: flex; align-items: center; justify-content: center; gap: 16px; color: #ffbe24; }
 .gf-card-cover strong { font-size: 18px; color: #fff; max-width: 65%; line-height: 1.2; }
 .gf-card-copy { padding: 15px; display: flex; flex: 1; flex-direction: column; gap: 8px; }
 .gf-card-copy h2 { font-size: 16px; line-height: 1.35; font-weight: 750; overflow-wrap: anywhere; }

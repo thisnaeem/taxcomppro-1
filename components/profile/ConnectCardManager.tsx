@@ -261,7 +261,7 @@ export default function ConnectCardManager() {
         <div className="grid grid-cols-5 gap-2 max-w-xs">
           {CARD_THEMES.map(t => (
             <button key={t.value} type="button" onClick={() => setF(p => ({ ...p, theme: t.value }))}
-              className={`h-12 rounded-lg border-2 transition-all ${f.theme === t.value ? "border-[#d4a017] scale-105" : "border-transparent"}`}
+              className={`h-12 rounded-lg border-2 transition-all ${f.theme === t.value ? "border-[#ffbe24] scale-105" : "border-transparent"}`}
               style={{ background: t.bg }} title={t.label} />
           ))}
         </div>

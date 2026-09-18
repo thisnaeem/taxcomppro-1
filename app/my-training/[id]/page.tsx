@@ -192,7 +192,7 @@ function AssessmentStep({ detail, onPassed, onFailed }: { detail: Detail; onPass
         <p className="font-black text-[#0a1628] mb-1">Final Assessment</p>
         <p className="text-sm text-slate-500 mb-5">{detail.version.questionsToShow} randomly-selected questions • {detail.version.passingScore}% to pass • {detail.version.maxAttempts} attempts allowed</p>
         {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm mb-4">{error}</div>}
-        <button onClick={start} disabled={loading} className="bg-gradient-to-r from-[#f0c040] to-[#d4a017] text-[#0a1628] font-bold text-sm px-6 py-3 rounded-full hover:shadow-lg transition-all disabled:opacity-50">
+        <button onClick={start} disabled={loading} className="bg-gradient-to-r from-[#ffbe24] to-[#ffbe24] text-[#0a1628] font-bold text-sm px-6 py-3 rounded-full hover:shadow-lg transition-all disabled:opacity-50">
           {loading ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : "Start Assessment"}
         </button>
       </div>
@@ -263,7 +263,7 @@ function AcknowledgmentStep({ detail, onSigned }: { detail: Detail; onSigned: ()
       <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5">Type your full legal name to sign</label>
       <input value={signature} onChange={e => setSignature(e.target.value)} placeholder="Jane A. Smith"
         className="w-full text-sm px-4 py-3 border border-slate-200 rounded-xl outline-none focus:border-[#0a1628] focus:ring-2 focus:ring-[#0a1628]/10 mb-4" />
-      <button onClick={submit} disabled={loading} className="w-full bg-gradient-to-r from-[#f0c040] to-[#d4a017] text-[#0a1628] font-bold text-sm py-3 rounded-full hover:shadow-lg transition-all disabled:opacity-50">
+      <button onClick={submit} disabled={loading} className="w-full bg-gradient-to-r from-[#ffbe24] to-[#ffbe24] text-[#0a1628] font-bold text-sm py-3 rounded-full hover:shadow-lg transition-all disabled:opacity-50">
         {loading ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : "Sign & Complete Training"}
       </button>
     </div>

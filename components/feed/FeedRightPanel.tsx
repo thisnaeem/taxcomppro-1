@@ -87,13 +87,13 @@ function Section({ title, icon: Icon, href, linkLabel, children }: {
       <div className="feed-discovery-header flex items-center justify-between px-4 pt-4 pb-3 border-b border-slate-50">
         <div className="flex items-center gap-2">
           <div className="feed-discovery-icon w-6 h-6 rounded-lg bg-[#0a1628]/8 flex items-center justify-center">
-            <Icon className="w-3.5 h-3.5 text-[#d4a017]" />
+            <Icon className="w-3.5 h-3.5 text-[#ffbe24]" />
           </div>
           <h3 className="font-black text-[#0a1628] text-sm">{title}</h3>
         </div>
         {href && (
           <Link href={href}
-            className="text-[11px] font-bold text-[#d4a017] hover:text-amber-600 flex items-center gap-0.5 transition-colors">
+            className="text-[11px] font-bold text-[#ffbe24] hover:text-amber-600 flex items-center gap-0.5 transition-colors">
             {linkLabel ?? "See all"} <ChevronRight className="w-3 h-3" />
           </Link>
         )}
@@ -154,7 +154,7 @@ function LiveProTalksSection() {
         </div>
         <Link
           href="/pro-talks"
-          className="text-[11px] font-bold text-[#f0c040] hover:text-amber-300 flex items-center gap-0.5 transition-colors"
+          className="text-[11px] font-bold text-[#ffbe24] hover:text-amber-300 flex items-center gap-0.5 transition-colors"
         >
           View all <ChevronRight className="w-3 h-3" />
         </Link>
@@ -212,7 +212,7 @@ function LiveProTalksSection() {
         ) : upcomingSpaces.length > 0 ? (
           <div className="space-y-2.5">
             <div className="flex items-center gap-1.5 text-[11px] font-bold text-white/50 mb-1">
-              <Calendar className="w-3.5 h-3.5 text-[#f0c040]" />
+              <Calendar className="w-3.5 h-3.5 text-[#ffbe24]" />
               <span>Upcoming Pro Talks</span>
             </div>
             {upcomingSpaces.slice(0, 2).map((space) => (
@@ -225,7 +225,7 @@ function LiveProTalksSection() {
                   <span>{space.scheduledAt ? formatScheduledShort(space.scheduledAt) : "Upcoming"}</span>
                   <Link
                     href="/pro-talks"
-                    className="text-[#f0c040] hover:text-amber-300 font-bold flex items-center gap-0.5"
+                    className="text-[#ffbe24] hover:text-amber-300 font-bold flex items-center gap-0.5"
                   >
                     RSVP <ChevronRight className="w-2.5 h-2.5" />
                   </Link>
@@ -242,7 +242,7 @@ function LiveProTalksSection() {
             <p className="text-[11px] text-white/50 mb-3">Join or host live audio & video sessions with fellow tax pros.</p>
             <Link
               href="/pro-talks"
-              className="feed-sidebar-button inline-flex items-center justify-center gap-1.5 w-full py-2 rounded-lg bg-gradient-to-r from-[#f0c040] to-[#d4a017] text-[#0a1628] text-xs font-extrabold shadow-sm hover:opacity-95 transition-all"
+              className="feed-sidebar-button inline-flex items-center justify-center gap-1.5 w-full py-2 rounded-lg bg-gradient-to-r from-[#ffbe24] to-[#ffbe24] text-[#0a1628] text-xs font-extrabold shadow-sm hover:opacity-95 transition-all"
             >
               <Mic className="w-3.5 h-3.5" /> Explore Pro Talks
             </Link>
@@ -281,7 +281,7 @@ function IrsNewsSection() {
       ) : stale || news.length === 0 ? (
         <div className="text-center py-4">
           <RefreshCw className="w-6 h-6 text-slate-300 mx-auto mb-2" />
-          <p className="text-xs text-slate-400">Could not load news. <a href="https://www.irs.gov/newsroom" target="_blank" rel="noreferrer" className="text-[#d4a017] underline">Visit IRS.gov →</a></p>
+          <p className="text-xs text-slate-400">Could not load news. <a href="https://www.irs.gov/newsroom" target="_blank" rel="noreferrer" className="text-[#ffbe24] underline">Visit IRS.gov →</a></p>
         </div>
       ) : (
         <div className="space-y-3.5">

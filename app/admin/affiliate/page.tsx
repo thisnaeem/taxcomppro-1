@@ -279,7 +279,7 @@ export default function AdminAffiliatePage() {
               onClick={() => setTab(t.id as any)}
               className={`px-4 py-2.5 rounded-xl text-xs font-black transition-all flex items-center gap-2 whitespace-nowrap shrink-0 ${
                 active
-                  ? "bg-[#f0c040] text-slate-950 shadow-md shadow-amber-400/20"
+                  ? "bg-[#ffbe24] text-slate-950 shadow-md shadow-amber-400/20"
                   : "text-slate-400 hover:text-white hover:bg-white/5"
               }`}
             >
@@ -436,7 +436,7 @@ export default function AdminAffiliatePage() {
                       {/* Detail Page Link Button */}
                       <Link
                         href={`/admin/affiliate/${a.id}`}
-                        className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-[#f0c040] text-slate-300 hover:text-slate-950 font-black text-xs transition-all flex items-center gap-1 shadow-sm shrink-0"
+                        className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-[#ffbe24] text-slate-300 hover:text-slate-950 font-black text-xs transition-all flex items-center gap-1 shadow-sm shrink-0"
                       >
                         <span>Details</span>
                         <ArrowRight className="w-3.5 h-3.5" />
@@ -524,7 +524,7 @@ export default function AdminAffiliatePage() {
                       <button
                         onClick={() => updatePayout(p.id, "PAID")}
                         disabled={processing === p.id}
-                        className="flex items-center gap-1 text-xs font-black bg-[#f0c040] text-slate-950 px-3.5 py-2 rounded-xl hover:bg-amber-400 transition-all disabled:opacity-60 shadow-md shadow-amber-400/20"
+                        className="flex items-center gap-1 text-xs font-black bg-[#ffbe24] text-slate-950 px-3.5 py-2 rounded-xl hover:bg-amber-400 transition-all disabled:opacity-60 shadow-md shadow-amber-400/20"
                       >
                         {processing === p.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />} Mark as Paid
                       </button>
@@ -543,7 +543,7 @@ export default function AdminAffiliatePage() {
                       <button
                         onClick={() => updatePayout(p.id, "PAID")}
                         disabled={processing === p.id}
-                        className="flex items-center gap-1.5 text-xs font-black bg-[#f0c040] hover:bg-amber-400 text-slate-950 px-5 py-2.5 rounded-xl transition-all disabled:opacity-60 shadow-md shadow-amber-400/20"
+                        className="flex items-center gap-1.5 text-xs font-black bg-[#ffbe24] hover:bg-amber-400 text-slate-950 px-5 py-2.5 rounded-xl transition-all disabled:opacity-60 shadow-md shadow-amber-400/20"
                       >
                         {processing === p.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Tick02Icon className="w-3.5 h-3.5" />} Mark as Paid &amp; Deduct Balance
                       </button>
@@ -631,7 +631,7 @@ export default function AdminAffiliatePage() {
                   step={0.5}
                   value={(settings as unknown as Record<string, number>)[f.key]}
                   onChange={(e) => setSettings((s) => (s ? { ...s, [f.key]: parseFloat(e.target.value) } : s))}
-                  className="w-full accent-[#f0c040]"
+                  className="w-full accent-[#ffbe24]"
                 />
                 <div className="text-right text-sm font-black text-amber-400 mt-1">
                   {(settings as unknown as Record<string, number>)[f.key]}%
@@ -647,7 +647,7 @@ export default function AdminAffiliatePage() {
               className={`px-8 py-3 rounded-xl font-black text-sm transition-all flex items-center gap-2 shadow-lg ${
                 saved
                   ? "bg-emerald-500 text-slate-950 shadow-emerald-500/20"
-                  : "bg-[#f0c040] hover:bg-amber-400 text-slate-950 shadow-amber-400/20"
+                  : "bg-[#ffbe24] hover:bg-amber-400 text-slate-950 shadow-amber-400/20"
               } disabled:opacity-60`}
             >
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : saved ? <><Tick02Icon className="w-4 h-4" />Saved!</> : null}

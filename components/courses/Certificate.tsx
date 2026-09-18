@@ -186,7 +186,7 @@ export default function Certificate({
     // Outer circle
     ctx.beginPath(); ctx.arc(0, 0, 44, 0, Math.PI * 2);
     const sealGrd = ctx.createRadialGradient(0, 0, 5, 0, 0, 44);
-    sealGrd.addColorStop(0, "#f0c040"); sealGrd.addColorStop(1, "#b8862e");
+    sealGrd.addColorStop(0, "#ffbe24"); sealGrd.addColorStop(1, "#ffbe24");
     ctx.fillStyle = sealGrd; ctx.fill();
     ctx.strokeStyle = "#0a1628"; ctx.lineWidth = 2; ctx.stroke();
     // Inner circle
@@ -222,12 +222,12 @@ export default function Certificate({
         {/* Modal header */}
         <div className="flex items-center justify-between px-6 py-4 bg-[#0a1628] border-b border-white/10">
           <div className="flex items-center gap-2">
-            <Award className="w-5 h-5 text-[#f0c040]" />
+            <Award className="w-5 h-5 text-[#ffbe24]" />
             <span className="font-bold text-white">Certificate of Completion</span>
           </div>
           <div className="flex items-center gap-3">
             <button onClick={handleDownload} disabled={!ready}
-              className="flex items-center gap-2 text-sm font-bold bg-gradient-to-r from-[#f0c040] to-[#d4a017] text-[#0a1628] px-5 py-2 rounded-xl hover:shadow-lg transition-all disabled:opacity-40">
+              className="flex items-center gap-2 text-sm font-bold bg-gradient-to-r from-[#ffbe24] to-[#ffbe24] text-[#0a1628] px-5 py-2 rounded-xl hover:shadow-lg transition-all disabled:opacity-40">
               <Download className="w-4 h-4" /> Download PNG
             </button>
             <button onClick={onClose} className="text-white/60 hover:text-white transition-colors">

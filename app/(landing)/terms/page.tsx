@@ -155,7 +155,7 @@ export default function TermsPage() {
     <main className="min-h-screen bg-white">
       {/* Hero */}
       <section className="bg-[#0a1628] pt-24 pb-16 px-6 text-center">
-        <p className="text-[#d4a017] font-bold text-sm uppercase tracking-widest mb-4">Legal</p>
+        <p className="text-[#ffbe24] font-bold text-sm uppercase tracking-widest mb-4">Legal</p>
         <h1 className="text-4xl font-black text-white mb-4">Terms &amp; Conditions</h1>
         <p className="text-white/50 text-sm">Effective Date: May 1, 2026 &nbsp;·&nbsp; Tax Compliance Pro LLC</p>
       </section>
@@ -175,7 +175,7 @@ export default function TermsPage() {
               <ul className="mt-2 space-y-1.5 pl-4">
                 {s.bullets.map((b) => (
                   <li key={b} className="flex items-start gap-2 text-sm text-slate-600">
-                    <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[#d4a017] shrink-0" />
+                    <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[#ffbe24] shrink-0" />
                     {b}
                   </li>
                 ))}
@@ -188,7 +188,7 @@ export default function TermsPage() {
 
             {s.contact && (
               <p className="text-sm mt-2">
-                <a href={`mailto:${s.contact}`} className="text-[#0a1628] font-bold hover:text-[#d4a017] transition-colors">
+                <a href={`mailto:${s.contact}`} className="text-[#0a1628] font-bold hover:text-[#ffbe24] transition-colors">
                   {s.contact}
                 </a>
               </p>

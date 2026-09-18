@@ -1,5 +1,5 @@
-.mp-page { --mp-bg:#f1f5f9; --mp-panel:#fff; --mp-inner:#f8fafc; --mp-text:#0a1628; --mp-muted:#64748b; --mp-line:#e2e8f0; --mp-gold:#96700e; background:var(--mp-bg); color:var(--mp-text); font-family:var(--font-urbanist),sans-serif; padding:0 0 72px; }
-.dark .mp-page { --mp-bg:#0c1527; --mp-panel:#172135; --mp-inner:#1e2e45; --mp-text:#e2e8f0; --mp-muted:#94a3b8; --mp-line:#243550; --mp-gold:#f0c040; }
+.mp-page { --mp-bg:#f1f5f9; --mp-panel:#fff; --mp-inner:#f8fafc; --mp-text:#0a1628; --mp-muted:#64748b; --mp-line:#e2e8f0; --mp-gold:#ffbe24; background:var(--mp-bg); color:var(--mp-text); font-family:var(--font-urbanist),sans-serif; padding:0 0 72px; }
+.dark .mp-page { --mp-bg:#0c1527; --mp-panel:#172135; --mp-inner:#1e2e45; --mp-text:#e2e8f0; --mp-muted:#94a3b8; --mp-line:#243550; --mp-gold:#ffbe24; }
 .mp-page *, .mp-page *::before, .mp-page *::after { box-sizing:border-box; }
 .mp-page a { text-decoration:none; }
 .mp-page button, .mp-page input, .mp-page textarea, .mp-page select { font:inherit; }
@@ -14,8 +14,8 @@
 .mp-hero-links { display:flex; flex-wrap:wrap; gap:24px; margin-top:25px; }
 .mp-hero-links a { display:inline-flex; align-items:center; gap:8px; color:var(--mp-text); font-size:15px; font-weight:650; }
 .mp-hero-links a:hover { color:var(--mp-gold); }
-.mp-button { display:inline-flex; align-items:center; justify-content:center; gap:10px; border:1px solid transparent; border-radius:999px; background:#f0c040; color:#0a1628; min-height:48px; padding:12px 19px; font-size:15px; font-weight:750; line-height:1.4; text-align:center; }
-.mp-button:hover { background:#e4b530; }
+.mp-button { display:inline-flex; align-items:center; justify-content:center; gap:10px; border:1px solid transparent; border-radius:999px; background:#ffbe24; color:#0a1628; min-height:48px; padding:12px 19px; font-size:15px; font-weight:750; line-height:1.4; text-align:center; }
+.mp-button:hover { background:#ffcb4d; }
 .mp-button-secondary { border-color:var(--mp-line); background:var(--mp-inner); color:var(--mp-text); }
 .mp-button-secondary:hover { background:var(--mp-inner); border-color:var(--mp-gold); }
 .mp-button:disabled { opacity:.6; cursor:wait; }

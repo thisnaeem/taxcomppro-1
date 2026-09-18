@@ -27,7 +27,7 @@ export default function SecurityPage() {
     <main className="min-h-screen bg-white">
       {/* Hero */}
       <section className="bg-[#0a1628] pt-24 pb-16 px-6 text-center">
-        <p className="text-[#d4a017] font-bold text-sm uppercase tracking-widest mb-4">Trust & Safety</p>
+        <p className="text-[#ffbe24] font-bold text-sm uppercase tracking-widest mb-4">Trust & Safety</p>
         <h1 className="text-4xl md:text-5xl font-black text-white mb-4">Security at TaxCompPro</h1>
         <p className="text-white/60 max-w-2xl mx-auto text-base leading-relaxed">
           Protecting your data, your clients' information, and your professional reputation is our highest priority.
@@ -54,7 +54,7 @@ export default function SecurityPage() {
           {measures.map(m => (
             <div key={m.title} className="bg-slate-50 rounded-2xl p-6 border border-slate-100">
               <div className="w-11 h-11 rounded-xl bg-[#0a1628] flex items-center justify-center mb-4">
-                <m.icon className="w-5 h-5 text-[#d4a017]" />
+                <m.icon className="w-5 h-5 text-[#ffbe24]" />
               </div>
               <h3 className="font-black text-[#0a1628] mb-2 text-sm">{m.title}</h3>
               <p className="text-slate-500 text-xs leading-relaxed">{m.desc}</p>
@@ -103,7 +103,7 @@ export default function SecurityPage() {
         <h2 className="text-2xl font-black text-white mb-3">Found a Vulnerability?</h2>
         <p className="text-white/60 text-sm mb-6 max-w-md mx-auto">We take all security reports seriously and have a responsible disclosure program. Report issues privately and we'll work with you quickly.</p>
         <a href="mailto:security@taxcomppro.com"
-          className="inline-flex items-center gap-2 bg-[#d4a017] text-[#0a1628] font-bold px-6 py-3 rounded-full text-sm hover:bg-[#e6b420] transition-all">
+          className="inline-flex items-center gap-2 bg-[#ffbe24] text-[#0a1628] font-bold px-6 py-3 rounded-full text-sm hover:bg-[#ffcb4d] transition-all">
           <Shield className="w-4 h-4" /> Report a Vulnerability
         </a>
       </section>

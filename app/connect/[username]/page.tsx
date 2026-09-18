@@ -36,7 +36,7 @@ function GatePrompt({ username, onClose }: { username: string; onClose: () => vo
         </p>
         <div className="space-y-2">
           <Link href={`/register?next=/pro/${username}`}
-            className="block w-full bg-gradient-to-r from-[#f0c040] to-[#d4a017] text-[#0a1628] font-bold text-sm py-3 rounded-full hover:shadow-lg transition-all">
+            className="block w-full bg-gradient-to-r from-[#ffbe24] to-[#ffbe24] text-[#0a1628] font-bold text-sm py-3 rounded-full hover:shadow-lg transition-all">
             Create Free Profile
           </Link>
           <Link href={`/login?next=/pro/${username}`}
@@ -204,7 +204,7 @@ export default function TapCardPage() {
 
         {/* View Full Profile */}
         <button onClick={handleViewFullProfile}
-          className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#f0c040] to-[#d4a017] text-[#0a1628] font-bold text-sm py-3.5 rounded-full hover:shadow-lg transition-all mb-4">
+          className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#ffbe24] to-[#ffbe24] text-[#0a1628] font-bold text-sm py-3.5 rounded-full hover:shadow-lg transition-all mb-4">
           View Full Tax Compliance Pro Profile <ArrowRight className="w-4 h-4" />
         </button>
 

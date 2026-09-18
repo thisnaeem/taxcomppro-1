@@ -28,7 +28,7 @@ export default function AuthBrandPanel() {
   return (
     <aside className="relative hidden lg:flex lg:w-[46%] xl:w-[42%] shrink-0 flex-col justify-between overflow-hidden bg-[#0a1628] p-12 xl:p-14">
       {/* Ambient depth. Matches the landing hero treatment. */}
-      <div className="pointer-events-none absolute -top-40 -left-24 h-[420px] w-[420px] rounded-full bg-[#d4a017]/12 blur-[120px]" />
+      <div className="pointer-events-none absolute -top-40 -left-24 h-[420px] w-[420px] rounded-full bg-[#ffbe24]/12 blur-[120px]" />
       <div className="pointer-events-none absolute -bottom-40 -right-20 h-[460px] w-[460px] rounded-full bg-[#1a3a6b]/50 blur-[130px]" />
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.05]"
@@ -52,14 +52,14 @@ export default function AuthBrandPanel() {
       <div className="relative z-10 max-w-[420px]">
         <h2 className="text-[34px] xl:text-[38px] font-black leading-[1.12] tracking-tight text-white">
           Built for the pros who
-          <span className="text-[#f0c040]"> sign the return.</span>
+          <span className="text-[#ffbe24]"> sign the return.</span>
         </h2>
 
         <ul className="mt-10 space-y-7">
           {POINTS.map(({ icon: Icon, title, body }) => (
             <li key={title} className="flex gap-4">
               <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/8">
-                <Icon className="h-[18px] w-[18px] text-[#f0c040]" strokeWidth={2} />
+                <Icon className="h-[18px] w-[18px] text-[#ffbe24]" strokeWidth={2} />
               </span>
               <div>
                 <div className="text-[15px] font-bold text-white">{title}</div>

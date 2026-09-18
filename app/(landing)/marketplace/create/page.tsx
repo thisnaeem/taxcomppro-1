@@ -850,7 +850,7 @@ export default function CreateListingPage() {
     return (
       <div className="min-h-screen bg-[#f8fafc] dark:bg-[#0c1527] py-20 px-4">
         <div className="max-w-md mx-auto text-center bg-white dark:bg-[#172135] p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl space-y-5">
-          <div className="w-16 h-16 rounded-2xl bg-amber-50 dark:bg-amber-500/10 text-[#d4a017] flex items-center justify-center mx-auto border border-amber-200 dark:border-amber-500/20">
+          <div className="w-16 h-16 rounded-2xl bg-amber-50 dark:bg-amber-500/10 text-[#ffbe24] flex items-center justify-center mx-auto border border-amber-200 dark:border-amber-500/20">
             <Sparkles className="w-8 h-8" />
           </div>
           <div className="space-y-2">
@@ -862,7 +862,7 @@ export default function CreateListingPage() {
           <div className="pt-3 flex flex-col gap-3">
             <Link
               href="/upgrade"
-              className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-[#f0c040] to-[#d4a017] text-[#0a1628] font-black text-sm hover:shadow-lg transition-all text-center flex items-center justify-center gap-2"
+              className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-[#ffbe24] to-[#ffbe24] text-[#0a1628] font-black text-sm hover:shadow-lg transition-all text-center flex items-center justify-center gap-2"
             >
               <Sparkles className="w-4 h-4" /> View Upgrade Options
             </Link>
@@ -1763,7 +1763,7 @@ export default function CreateListingPage() {
                           type="button"
                           disabled={loading}
                           onClick={() => handlePublishCourse(true)}
-                          className="px-8 py-3.5 rounded-xl bg-gradient-to-r from-[#f0c040] to-[#d4a017] text-[#0a1628] font-black text-sm hover:shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+                          className="px-8 py-3.5 rounded-xl bg-gradient-to-r from-[#ffbe24] to-[#ffbe24] text-[#0a1628] font-black text-sm hover:shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
                         >
                           {loading ? (
                             <Loader2 className="w-4 h-4 animate-spin" />
@@ -1968,7 +1968,7 @@ export default function CreateListingPage() {
                   <button
                     type="submit"
                     disabled={loading || uploadingImg}
-                    className="px-8 py-3.5 rounded-xl bg-gradient-to-r from-[#f0c040] to-[#d4a017] text-[#0a1628] font-black text-sm hover:shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+                    className="px-8 py-3.5 rounded-xl bg-gradient-to-r from-[#ffbe24] to-[#ffbe24] text-[#0a1628] font-black text-sm hover:shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
                   >
                     {loading ? (
                       <Loader2 className="w-4 h-4 animate-spin" />

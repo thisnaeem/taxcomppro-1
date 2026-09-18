@@ -115,14 +115,14 @@ const plans = [
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen flex flex-col bg-[#f8fafc] dark:bg-[#070f1e] text-slate-900 dark:text-white font-[var(--font-urbanist,Urbanist),sans-serif] selection:bg-[#f0c040] selection:text-[#0a1628]">
+    <div className="min-h-screen flex flex-col bg-[#f8fafc] dark:bg-[#070f1e] text-slate-900 dark:text-white font-[var(--font-urbanist,Urbanist),sans-serif] selection:bg-[#ffbe24] selection:text-[#0a1628]">
 
       <Navbar />
 
       {/* ── HERO SECTION (Sharp bottom border, vibrant glow, no fading gradient, no stats ribbon) ── */}
       <section className="relative pt-[72px] pb-16 md:pb-24 bg-gradient-to-br from-[#060e1a] via-[#0a1628] to-[#102444] text-white border-b border-slate-800 overflow-hidden">
         {/* Glow ambient meshes */}
-        <div className="absolute -top-32 left-1/4 w-[500px] h-[500px] bg-[#d4a017]/15 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute -top-32 left-1/4 w-[500px] h-[500px] bg-[#ffbe24]/15 rounded-full blur-[120px] pointer-events-none" />
         <div className="absolute top-1/3 -right-32 w-[550px] h-[550px] bg-[#1a3a6b]/40 rounded-full blur-[140px] pointer-events-none" />
 
         {/* Grid pattern overlay */}
@@ -137,15 +137,15 @@ export default function LandingPage() {
             {/* Left Content */}
             <div className="flex-1 text-center lg:text-left">
               {/* Badge */}
-              <div className="inline-flex items-center gap-2 bg-[#d4a017]/15 border border-[#d4a017]/40 text-[#f0c040] text-xs sm:text-sm font-bold px-4 py-2 rounded-full mb-6 shadow-[0_0_20px_rgba(212,160,23,0.2)]">
-                <Sparkles className="w-4 h-4 text-[#f0c040]" />
+              <div className="inline-flex items-center gap-2 bg-[#ffbe24]/15 border border-[#ffbe24]/40 text-[#ffbe24] text-xs sm:text-sm font-bold px-4 py-2 rounded-full mb-6 shadow-[0_0_20px_rgba(255, 190, 36,0.2)]">
+                <Sparkles className="w-4 h-4 text-[#ffbe24]" />
                 <span>America&apos;s #1 Tax Professional Community</span>
               </div>
 
               {/* Heading */}
               <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-[62px] font-black leading-[1.08] tracking-tight mb-6">
                 The Professional Hub for{" "}
-                <span className="text-[#f0c040]">Tax &amp; Business Experts</span>
+                <span className="text-[#ffbe24]">Tax &amp; Business Experts</span>
               </h1>
 
               {/* Subtitle */}
@@ -157,14 +157,14 @@ export default function LandingPage() {
               <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
                 <Link
                   href="/register"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 bg-gradient-to-r from-[#f0c040] via-[#e5a919] to-[#d4a017] text-[#0a1628] font-black text-base px-8 py-4 rounded-full hover:shadow-[0_0_35px_rgba(240,192,64,0.45)] hover:scale-[1.02] active:scale-95 transition-all duration-200"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 bg-gradient-to-r from-[#ffbe24] via-[#ffbe24] to-[#ffbe24] text-[#0a1628] font-black text-base px-8 py-4 rounded-full hover:shadow-[0_0_35px_rgba(255, 190, 36,0.45)] hover:scale-[1.02] active:scale-95 transition-all duration-200"
                 >
                   Join For Free
                   <ArrowRight className="w-5 h-5" />
                 </Link>
                 <Link
                   href="#pricing"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/15 text-white font-bold text-base px-7 py-4 rounded-full border border-white/20 backdrop-blur-md transition-all hover:border-[#f0c040]/50"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/15 text-white font-bold text-base px-7 py-4 rounded-full border border-white/20 backdrop-blur-md transition-all hover:border-[#ffbe24]/50"
                 >
                   View Pricing
                 </Link>
@@ -174,14 +174,14 @@ export default function LandingPage() {
             {/* Right Floating Cards */}
             <div className="hidden lg:flex flex-col gap-4 shrink-0 min-w-[280px]">
               {[
-                { icon: ShoppingBag, title: "Pro Marketplace", sub: "Browse verified listings", color: "text-[#f0c040]" },
+                { icon: ShoppingBag, title: "Pro Marketplace", sub: "Browse verified listings", color: "text-[#ffbe24]" },
                 { icon: Users,       title: "Community Hub",    sub: "Live audio sessions",   color: "text-blue-400" },
                 { icon: Radio,       title: "Pro Talks Live",   sub: "Drop-in voice stages",  color: "text-purple-400" },
                 { icon: Shield,      title: "ATLAS AI Assistant", sub: "Real-time tax guidance", color: "text-emerald-400" },
               ].map((c) => (
                 <div
                   key={c.title}
-                  className="flex items-center gap-3.5 bg-white/8 hover:bg-white/12 backdrop-blur-xl border border-white/15 hover:border-[#f0c040]/40 rounded-2xl px-5 py-4 transition-all duration-300 hover:translate-x-1 shadow-lg"
+                  className="flex items-center gap-3.5 bg-white/8 hover:bg-white/12 backdrop-blur-xl border border-white/15 hover:border-[#ffbe24]/40 rounded-2xl px-5 py-4 transition-all duration-300 hover:translate-x-1 shadow-lg"
                 >
                   <div className="w-11 h-11 rounded-xl bg-white/10 flex items-center justify-center shrink-0 border border-white/10">
                     <c.icon className={`w-5 h-5 ${c.color}`} />
@@ -204,7 +204,7 @@ export default function LandingPage() {
           <ul className="flex flex-wrap items-center justify-center gap-x-10 gap-y-3 text-sm text-slate-300">
             {["Verified tax pros", "Encrypted platform", "Members-only access"].map((t) => (
               <li key={t} className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-[#f0c040] shrink-0" />
+                <CheckCircle2 className="w-4 h-4 text-[#ffbe24] shrink-0" />
                 <span>{t}</span>
               </li>
             ))}
@@ -232,7 +232,7 @@ export default function LandingPage() {
 
             {/* Lead tile: navy, oversized art. Carries the section visually. */}
             <article className="md:col-span-2 lg:col-span-8 group relative overflow-hidden rounded-3xl bg-[#0a1628] p-8 sm:p-10 transition-all duration-300 hover:-translate-y-1">
-              <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-[#d4a017]/15 blur-[90px]" />
+              <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-[#ffbe24]/15 blur-[90px]" />
               <div className="relative flex flex-col items-start gap-7 sm:flex-row sm:items-center">
                 <Image
                   src={features[0].img}
@@ -253,7 +253,7 @@ export default function LandingPage() {
             </article>
 
             {/* Tall companion tile */}
-            <article className="md:col-span-2 lg:col-span-4 group flex flex-col justify-center rounded-3xl border border-slate-200 bg-[#f8fafc] p-8 transition-all duration-300 hover:-translate-y-1 hover:border-[#d4a017] dark:border-slate-800 dark:bg-[#0c182b] dark:hover:border-[#f0c040]">
+            <article className="md:col-span-2 lg:col-span-4 group flex flex-col justify-center rounded-3xl border border-slate-200 bg-[#f8fafc] p-8 transition-all duration-300 hover:-translate-y-1 hover:border-[#ffbe24] dark:border-slate-800 dark:bg-[#0c182b] dark:hover:border-[#ffbe24]">
               <Image
                 src={features[1].img}
                 alt={features[1].title}
@@ -273,7 +273,7 @@ export default function LandingPage() {
             {features.slice(2, 5).map((f) => (
               <article
                 key={f.title}
-                className="md:col-span-1 lg:col-span-4 group rounded-3xl border border-slate-200 bg-[#f8fafc] p-8 transition-all duration-300 hover:-translate-y-1 hover:border-[#d4a017] dark:border-slate-800 dark:bg-[#0c182b] dark:hover:border-[#f0c040]"
+                className="md:col-span-1 lg:col-span-4 group rounded-3xl border border-slate-200 bg-[#f8fafc] p-8 transition-all duration-300 hover:-translate-y-1 hover:border-[#ffbe24] dark:border-slate-800 dark:bg-[#0c182b] dark:hover:border-[#ffbe24]"
               >
                 <Image
                   src={f.img}
@@ -292,7 +292,7 @@ export default function LandingPage() {
             ))}
 
             {/* Closing full-width band, gold tinted so the grid does not end flat */}
-            <article className="md:col-span-2 lg:col-span-12 group flex flex-col items-start gap-7 rounded-3xl border border-[#d4a017]/30 bg-gradient-to-r from-[#d4a017]/10 via-[#f0c040]/5 to-transparent p-8 transition-all duration-300 hover:-translate-y-1 sm:flex-row sm:items-center sm:p-10">
+            <article className="md:col-span-2 lg:col-span-12 group flex flex-col items-start gap-7 rounded-3xl border border-[#ffbe24]/30 bg-gradient-to-r from-[#ffbe24]/10 via-[#ffbe24]/5 to-transparent p-8 transition-all duration-300 hover:-translate-y-1 sm:flex-row sm:items-center sm:p-10">
               <Image
                 src={features[5].img}
                 alt={features[5].title}
@@ -318,7 +318,7 @@ export default function LandingPage() {
       {/* ── PRO TALKS SECTION (Dedicated Live Audio & Video Showcase - Green & Blue Theme) ── */}
       <section className="py-24 bg-gradient-to-br from-[#040a14] via-[#061224] to-[#0a1c38] text-white border-b border-white/10 relative overflow-hidden">
         {/* Glow ambient meshes */}
-        <div className="absolute top-0 right-1/4 w-[500px] h-[500px] bg-[#d4a017]/12 rounded-full blur-[140px] pointer-events-none" />
+        <div className="absolute top-0 right-1/4 w-[500px] h-[500px] bg-[#ffbe24]/12 rounded-full blur-[140px] pointer-events-none" />
         <div className="absolute bottom-0 left-1/4 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[140px] pointer-events-none" />
 
         <div className="max-w-7xl mx-auto px-5 sm:px-6 relative z-10">
@@ -326,15 +326,15 @@ export default function LandingPage() {
             
             {/* Left Content */}
             <div className="flex-1 text-center lg:text-left">
-              <div className="inline-flex items-center gap-2 bg-[#d4a017]/15 text-[#f0c040] border border-[#d4a017]/35 text-xs font-black uppercase tracking-widest px-4 py-1.5 rounded-full mb-4">
-                <Radio className="w-3.5 h-3.5 text-[#f0c040] animate-pulse" />
+              <div className="inline-flex items-center gap-2 bg-[#ffbe24]/15 text-[#ffbe24] border border-[#ffbe24]/35 text-xs font-black uppercase tracking-widest px-4 py-1.5 rounded-full mb-4">
+                <Radio className="w-3.5 h-3.5 text-[#ffbe24] animate-pulse" />
                 Live Audio &amp; Video Stages
               </div>
               <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight mb-3 leading-tight">
-<span className="text-[#f0c040]">PRO</span> TALKS
+<span className="text-[#ffbe24]">PRO</span> TALKS
               </h2>
               <p className="text-lg sm:text-xl font-bold text-slate-200 mb-3">
-                Go Live. Share Insight. <span className="text-[#f0c040]">Grow Your Voice.</span>
+                Go Live. Share Insight. <span className="text-[#ffbe24]">Grow Your Voice.</span>
               </p>
               <p className="text-base text-slate-300 leading-relaxed mb-8 max-w-xl">
                 Host live conversations, join expert discussions, and connect with your audience in real time. Drop in to listen or raise your hand to speak on stage.
@@ -348,9 +348,9 @@ export default function LandingPage() {
                   { title: "ASK QUESTIONS", desc: "Interact in real time and request to speak on stage." },
                   { title: "SCHEDULE SESSIONS", desc: "Plan upcoming talks and topics with automated calendar invites." },
                 ].map(item => (
-                  <div key={item.title} className="bg-[#08172c]/80 border border-[#d4a017]/25 hover:border-[#f0c040]/50 rounded-2xl p-4 transition-all hover:shadow-[0_0_20px_rgba(212,160,23,0.15)]">
-                    <div className="flex items-center gap-2 font-black text-xs sm:text-sm text-[#f0c040] mb-1 tracking-wide">
-                      <CheckCircle2 className="w-4 h-4 text-[#f0c040] shrink-0" />
+                  <div key={item.title} className="bg-[#08172c]/80 border border-[#ffbe24]/25 hover:border-[#ffbe24]/50 rounded-2xl p-4 transition-all hover:shadow-[0_0_20px_rgba(255, 190, 36,0.15)]">
+                    <div className="flex items-center gap-2 font-black text-xs sm:text-sm text-[#ffbe24] mb-1 tracking-wide">
+                      <CheckCircle2 className="w-4 h-4 text-[#ffbe24] shrink-0" />
                       <span>{item.title}</span>
                     </div>
                     <p className="text-xs text-slate-300 pl-6 leading-relaxed">{item.desc}</p>
@@ -362,13 +362,13 @@ export default function LandingPage() {
               <div className="flex gap-4 justify-center lg:justify-start flex-wrap">
                 <Link
                   href="/pro-talks"
-                  className="inline-flex items-center gap-2.5 bg-gradient-to-r from-[#f0c040] via-[#e5a919] to-[#d4a017] text-[#0a1628] font-black px-8 py-4 rounded-full hover:shadow-[0_0_35px_rgba(240,192,64,0.45)] hover:scale-105 transition-all text-base"
+                  className="inline-flex items-center gap-2.5 bg-gradient-to-r from-[#ffbe24] via-[#ffbe24] to-[#ffbe24] text-[#0a1628] font-black px-8 py-4 rounded-full hover:shadow-[0_0_35px_rgba(255, 190, 36,0.45)] hover:scale-105 transition-all text-base"
                 >
                   <Radio className="w-5 h-5" /> Explore Pro Talks
                 </Link>
                 <Link
                   href="/upgrade"
-                  className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/15 text-white font-bold px-7 py-4 rounded-full border border-white/20 hover:border-[#f0c040]/50 transition-all text-base"
+                  className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/15 text-white font-bold px-7 py-4 rounded-full border border-white/20 hover:border-[#ffbe24]/50 transition-all text-base"
                 >
                   Host Your Own Stage
                 </Link>
@@ -377,7 +377,7 @@ export default function LandingPage() {
 
             {/* Right Visual Poster showcasing /protalk.png */}
             <div className="flex-1 w-full max-w-lg lg:max-w-none">
-              <div className="relative rounded-3xl overflow-hidden border-2 border-[#d4a017]/40 shadow-[0_0_60px_rgba(212,160,23,0.2)] group hover:border-[#f0c040]/80 transition-all duration-500 bg-[#061224]">
+              <div className="relative rounded-3xl overflow-hidden border-2 border-[#ffbe24]/40 shadow-[0_0_60px_rgba(255, 190, 36,0.2)] group hover:border-[#ffbe24]/80 transition-all duration-500 bg-[#061224]">
                 <Image
                   src="/protalk.png"
                   alt="Pro Talks - Go Live. Share Insight. Grow Your Voice."
@@ -402,8 +402,8 @@ export default function LandingPage() {
               { label: "ENGAGE", desc: "Participate & stay active." },
               { label: "GROW", desc: "Expand your influence." },
             ].map(p => (
-              <div key={p.label} className="p-3 bg-white/5 border border-[#d4a017]/20 rounded-2xl">
-                <div className="text-xs font-black text-[#f0c040] tracking-wider mb-0.5">{p.label}</div>
+              <div key={p.label} className="p-3 bg-white/5 border border-[#ffbe24]/20 rounded-2xl">
+                <div className="text-xs font-black text-[#ffbe24] tracking-wider mb-0.5">{p.label}</div>
                 <div className="text-[11px] text-slate-300">{p.desc}</div>
               </div>
             ))}
@@ -420,12 +420,12 @@ export default function LandingPage() {
             
             {/* Left Description */}
             <div className="flex-1">
-              <p className="text-xs sm:text-sm font-black uppercase tracking-widest text-[#d4a017] dark:text-[#f0c040] mb-3">
+              <p className="text-xs sm:text-sm font-black uppercase tracking-widest text-[#ffbe24] dark:text-[#ffbe24] mb-3">
                 Marketplace
               </p>
               <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-[#0a1628] dark:text-white tracking-tight mb-5">
                 Sell Your Expertise.<br />
-                <span className="text-[#d4a017] dark:text-[#f0c040]">Buy What You Need.</span>
+                <span className="text-[#ffbe24] dark:text-[#ffbe24]">Buy What You Need.</span>
               </h2>
               <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 leading-relaxed mb-6">
                 Connect professionals offering services, training courses, and digital products with members who need them.
@@ -450,7 +450,7 @@ export default function LandingPage() {
               <div className="flex gap-3.5 flex-wrap">
                 <Link
                   href="/marketplace"
-                  className="inline-flex items-center gap-2 bg-gradient-to-r from-[#f0c040] to-[#d4a017] text-[#0a1628] font-black px-7 py-3.5 rounded-full hover:shadow-[0_0_25px_rgba(212,160,23,0.35)] transition-all text-sm"
+                  className="inline-flex items-center gap-2 bg-gradient-to-r from-[#ffbe24] to-[#ffbe24] text-[#0a1628] font-black px-7 py-3.5 rounded-full hover:shadow-[0_0_25px_rgba(255, 190, 36,0.35)] transition-all text-sm"
                 >
                   Browse Marketplace <ArrowRight className="w-4 h-4" />
                 </Link>
@@ -470,7 +470,7 @@ export default function LandingPage() {
                 return (
                   <div
                     key={item.title}
-                    className="bg-white dark:bg-[#0c182b] border border-slate-200 dark:border-slate-800 rounded-2xl p-5 hover:shadow-xl hover:border-[#d4a017] dark:hover:border-[#f0c040] transition-all flex flex-col justify-between group"
+                    className="bg-white dark:bg-[#0c182b] border border-slate-200 dark:border-slate-800 rounded-2xl p-5 hover:shadow-xl hover:border-[#ffbe24] dark:hover:border-[#ffbe24] transition-all flex flex-col justify-between group"
                   >
                     <div>
                       <div className="flex items-center justify-between mb-3">
@@ -484,11 +484,11 @@ export default function LandingPage() {
                         </div>
                       </div>
 
-                      <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-white/5 flex items-center justify-center mb-3 text-[#0a1628] dark:text-white group-hover:bg-[#f0c040]/10 group-hover:text-[#d4a017] transition-colors">
+                      <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-white/5 flex items-center justify-center mb-3 text-[#0a1628] dark:text-white group-hover:bg-[#ffbe24]/10 group-hover:text-[#ffbe24] transition-colors">
                         <IconComponent className="w-5 h-5" />
                       </div>
 
-                      <h4 className="font-bold text-sm text-[#0a1628] dark:text-white line-clamp-2 mb-1 group-hover:text-[#d4a017] dark:group-hover:text-[#f0c040] transition-colors">
+                      <h4 className="font-bold text-sm text-[#0a1628] dark:text-white line-clamp-2 mb-1 group-hover:text-[#ffbe24] dark:group-hover:text-[#ffbe24] transition-colors">
                         {item.title}
                       </h4>
                       <p className="text-xs text-slate-400 dark:text-slate-400 font-medium">By {item.seller}</p>
@@ -531,7 +531,7 @@ export default function LandingPage() {
               "Private messaging & networking",
               "Grow your professional audience",
             ].map((item) => (
-              <div key={item} className="flex items-center gap-3 bg-[#f8fafc] dark:bg-[#0c182b] rounded-2xl border border-slate-200 dark:border-slate-800 px-5 py-4 hover:border-[#d4a017] transition-all">
+              <div key={item} className="flex items-center gap-3 bg-[#f8fafc] dark:bg-[#0c182b] rounded-2xl border border-slate-200 dark:border-slate-800 px-5 py-4 hover:border-[#ffbe24] transition-all">
                 <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
                 <span className="text-base font-semibold text-slate-700 dark:text-slate-200">{item}</span>
               </div>
@@ -560,7 +560,7 @@ export default function LandingPage() {
               Choose Your Plan
             </h2>
             <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300">
-              Start free, upgrade when you&apos;re ready. All paid plans include <span className="font-bold text-[#d4a017] dark:text-[#f0c040]">2 months free</span>.
+              Start free, upgrade when you&apos;re ready. All paid plans include <span className="font-bold text-[#ffbe24] dark:text-[#ffbe24]">2 months free</span>.
             </p>
           </div>
 
@@ -570,13 +570,13 @@ export default function LandingPage() {
                 key={plan.name}
                 className={`relative bg-white dark:bg-[#0c182b] rounded-3xl flex flex-col overflow-hidden transition-all duration-300 hover:-translate-y-2 ${
                   plan.popular
-                    ? "shadow-2xl shadow-[#f0c040]/15 border-2 border-[#d4a017] dark:border-[#f0c040]"
+                    ? "shadow-2xl shadow-[#ffbe24]/15 border-2 border-[#ffbe24] dark:border-[#ffbe24]"
                     : "shadow-md border border-slate-200 dark:border-slate-800 hover:shadow-xl"
                 }`}
               >
                 {/* Gold Top Accent Bar */}
                 {plan.popular && (
-                  <div className="h-2 w-full bg-gradient-to-r from-[#f0c040] via-[#fbbf24] to-[#d4a017]" />
+                  <div className="h-2 w-full bg-gradient-to-r from-[#ffbe24] via-[#ffbe24] to-[#ffbe24]" />
                 )}
 
                 {/* Badge */}
@@ -584,7 +584,7 @@ export default function LandingPage() {
                   <div className="absolute top-4 right-4 z-10">
                     <span className={`text-[11px] font-black px-3 py-1 rounded-full uppercase tracking-wider ${
                       plan.popular
-                        ? "bg-gradient-to-r from-[#f0c040] to-[#d4a017] text-[#0a1628] shadow-sm"
+                        ? "bg-gradient-to-r from-[#ffbe24] to-[#ffbe24] text-[#0a1628] shadow-sm"
                         : "bg-[#0a1628] dark:bg-white text-white dark:text-[#0a1628]"
                     }`}>
                       {plan.badge}
@@ -605,7 +605,7 @@ export default function LandingPage() {
 
                   {/* Savings */}
                   {plan.savings ? (
-                    <p className="text-center text-xs font-bold text-[#d4a017] dark:text-[#f0c040] mb-3">{plan.savings}</p>
+                    <p className="text-center text-xs font-bold text-[#ffbe24] dark:text-[#ffbe24] mb-3">{plan.savings}</p>
                   ) : (
                     <div className="h-5 mb-1" />
                   )}
@@ -638,7 +638,7 @@ export default function LandingPage() {
                     href={plan.href}
                     className={`w-full text-center block font-black text-sm py-4 rounded-full transition-all mt-auto ${
                       plan.popular
-                        ? "bg-gradient-to-r from-[#f0c040] via-[#e5a919] to-[#d4a017] text-[#0a1628] hover:shadow-[0_0_25px_rgba(240,192,64,0.4)] hover:scale-[1.02]"
+                        ? "bg-gradient-to-r from-[#ffbe24] via-[#ffbe24] to-[#ffbe24] text-[#0a1628] hover:shadow-[0_0_25px_rgba(255, 190, 36,0.4)] hover:scale-[1.02]"
                         : "bg-[#0a1628] dark:bg-white text-white dark:text-[#0a1628] hover:bg-[#1a3a6b] dark:hover:bg-slate-100"
                     }`}
                   >
@@ -655,7 +655,7 @@ export default function LandingPage() {
 
       {/* ── HIGH CONVERTING BOTTOM CTA ── */}
       <section className="py-24 bg-gradient-to-br from-[#060e1a] via-[#0a1628] to-[#12284c] text-center text-white relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(240,192,64,0.15),transparent_70%)] pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255, 190, 36,0.15),transparent_70%)] pointer-events-none" />
         <div className="max-w-4xl mx-auto px-5 sm:px-6 relative z-10">
           <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight mb-4">
             Ready to Join TaxCompPro?
@@ -666,7 +666,7 @@ export default function LandingPage() {
           <div className="flex gap-4 justify-center flex-wrap">
             <Link
               href="/register"
-              className="inline-flex items-center gap-2.5 bg-gradient-to-r from-[#f0c040] via-[#e5a919] to-[#d4a017] text-[#0a1628] font-black text-base px-9 py-4 rounded-full hover:shadow-[0_0_35px_rgba(240,192,64,0.45)] hover:scale-105 transition-all"
+              className="inline-flex items-center gap-2.5 bg-gradient-to-r from-[#ffbe24] via-[#ffbe24] to-[#ffbe24] text-[#0a1628] font-black text-base px-9 py-4 rounded-full hover:shadow-[0_0_35px_rgba(255, 190, 36,0.45)] hover:scale-105 transition-all"
             >
               Join For Free <ArrowRight className="w-5 h-5" />
             </Link>
@@ -700,9 +700,9 @@ export default function LandingPage() {
                 <h4 className="text-white font-bold text-sm mb-4">{col.title}</h4>
                 {col.links.map(([label, href]) => (
                   href.startsWith("http") ? (
-                    <a key={label} href={href} target="_blank" rel="noopener noreferrer" className="block text-white/45 text-sm mb-2.5 hover:text-[#f0c040] transition-colors">{label}</a>
+                    <a key={label} href={href} target="_blank" rel="noopener noreferrer" className="block text-white/45 text-sm mb-2.5 hover:text-[#ffbe24] transition-colors">{label}</a>
                   ) : (
-                    <Link key={label} href={href} className="block text-white/45 text-sm mb-2.5 hover:text-[#f0c040] transition-colors">{label}</Link>
+                    <Link key={label} href={href} className="block text-white/45 text-sm mb-2.5 hover:text-[#ffbe24] transition-colors">{label}</Link>
                   )
                 ))}
               </div>

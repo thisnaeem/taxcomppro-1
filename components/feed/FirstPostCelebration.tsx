@@ -18,7 +18,7 @@ export default function FirstPostCelebration({ onClose }: { onClose: () => void 
             "--delay": `${(i % 8) * 70}ms`,
             "--drift": `${((i * 19) % 180) - 90}px`,
             "--spin": `${(i % 2 ? 1 : -1) * (360 + i * 17)}deg`,
-            background: ["#e9c44c", "#fff0ad", "#ffffff", "#8ba2cb"][i % 4],
+            background: ["#ffbe24", "#fff0ad", "#ffffff", "#8ba2cb"][i % 4],
           } as CSSProperties} />
         ))}
       </div>

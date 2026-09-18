@@ -56,7 +56,7 @@ export function StepRail({ current, total = 3 }: { current: number; total?: numb
           <span
             key={i}
             className={`h-1 flex-1 rounded-full transition-colors ${
-              i < current ? "bg-[#d4a017]" : "bg-slate-200 dark:bg-white/12"
+              i < current ? "bg-[#ffbe24]" : "bg-slate-200 dark:bg-white/12"
             }`}
           />
         ))}

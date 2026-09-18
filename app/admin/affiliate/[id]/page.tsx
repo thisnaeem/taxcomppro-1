@@ -319,7 +319,7 @@ export default function AffiliateDetailPage({
   if (loading) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center gap-3">
-        <Loader2 className="w-9 h-9 text-[#f0c040] animate-spin" />
+        <Loader2 className="w-9 h-9 text-[#ffbe24] animate-spin" />
         <p className="text-slate-400 text-sm font-semibold">Loading affiliate details…</p>
       </div>
     );
@@ -335,7 +335,7 @@ export default function AffiliateDetailPage({
         <p className="text-slate-400 text-sm mb-6">{error || "Unable to locate this affiliate account."}</p>
         <Link
           href="/admin/affiliate"
-          className="inline-flex items-center gap-2 bg-[#f0c040] hover:bg-amber-400 text-slate-950 font-black px-6 py-2.5 rounded-xl text-sm transition-all"
+          className="inline-flex items-center gap-2 bg-[#ffbe24] hover:bg-amber-400 text-slate-950 font-black px-6 py-2.5 rounded-xl text-sm transition-all"
         >
           <ArrowLeft className="w-4 h-4" /> Back to Affiliates
         </Link>
@@ -399,7 +399,7 @@ export default function AffiliateDetailPage({
               setPayoutAmount(data.pendingBalance > 0 ? data.pendingBalance.toString() : "");
               setShowPayoutModal(true);
             }}
-            className="px-4 py-2 rounded-xl bg-[#f0c040] hover:bg-amber-400 text-slate-950 font-black text-xs transition-all flex items-center gap-1.5 shadow-md shadow-amber-400/20"
+            className="px-4 py-2 rounded-xl bg-[#ffbe24] hover:bg-amber-400 text-slate-950 font-black text-xs transition-all flex items-center gap-1.5 shadow-md shadow-amber-400/20"
           >
             <DollarSign className="w-3.5 h-3.5" /> Issue Payout
           </button>
@@ -510,7 +510,7 @@ export default function AffiliateDetailPage({
               type="button"
               onClick={() => setRateMode("MASTER")}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                rateMode === "MASTER" ? "bg-[#f0c040] text-slate-950 font-black shadow-sm" : "text-slate-400 hover:text-white"
+                rateMode === "MASTER" ? "bg-[#ffbe24] text-slate-950 font-black shadow-sm" : "text-slate-400 hover:text-white"
               }`}
             >
               Master Rate %
@@ -519,7 +519,7 @@ export default function AffiliateDetailPage({
               type="button"
               onClick={() => setRateMode("TIER")}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                rateMode === "TIER" ? "bg-[#f0c040] text-slate-950 font-black shadow-sm" : "text-slate-400 hover:text-white"
+                rateMode === "TIER" ? "bg-[#ffbe24] text-slate-950 font-black shadow-sm" : "text-slate-400 hover:text-white"
               }`}
             >
               Per-Tier Override
@@ -741,7 +741,7 @@ export default function AffiliateDetailPage({
               className={`px-6 py-2.5 rounded-xl font-black text-xs transition-all flex items-center gap-2 shadow-lg ${
                 rateSaved
                   ? "bg-emerald-500 text-slate-950 shadow-emerald-500/20"
-                  : "bg-[#f0c040] hover:bg-amber-400 text-slate-950 shadow-amber-400/20"
+                  : "bg-[#ffbe24] hover:bg-amber-400 text-slate-950 shadow-amber-400/20"
               } disabled:opacity-60`}
             >
               {savingRate ? (
@@ -902,7 +902,7 @@ export default function AffiliateDetailPage({
                         type="button"
                         onClick={() => handleUpdatePayoutStatus(p.id, "PAID")}
                         disabled={processingPayoutId === p.id}
-                        className="px-3 py-1.5 rounded-lg bg-[#f0c040] text-slate-950 font-black text-xs hover:bg-amber-400 transition-all flex items-center gap-1 disabled:opacity-60"
+                        className="px-3 py-1.5 rounded-lg bg-[#ffbe24] text-slate-950 font-black text-xs hover:bg-amber-400 transition-all flex items-center gap-1 disabled:opacity-60"
                       >
                         {processingPayoutId === p.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
                         Mark as Paid
@@ -923,7 +923,7 @@ export default function AffiliateDetailPage({
                       type="button"
                       onClick={() => handleUpdatePayoutStatus(p.id, "PAID")}
                       disabled={processingPayoutId === p.id}
-                      className="px-4 py-2 rounded-xl bg-[#f0c040] text-slate-950 font-black text-xs hover:bg-amber-400 transition-all flex items-center gap-1.5 disabled:opacity-60 shadow-md shadow-amber-400/20"
+                      className="px-4 py-2 rounded-xl bg-[#ffbe24] text-slate-950 font-black text-xs hover:bg-amber-400 transition-all flex items-center gap-1.5 disabled:opacity-60 shadow-md shadow-amber-400/20"
                     >
                       {processingPayoutId === p.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
                       Mark as Paid &amp; Deduct Balance
@@ -1037,7 +1037,7 @@ export default function AffiliateDetailPage({
                   id="markPaid"
                   checked={markPaidImmediate}
                   onChange={(e) => setMarkPaidImmediate(e.target.checked)}
-                  className="w-4 h-4 rounded accent-[#f0c040]"
+                  className="w-4 h-4 rounded accent-[#ffbe24]"
                 />
                 <label htmlFor="markPaid" className="text-xs text-slate-300 font-bold cursor-pointer">
                   Mark as Paid immediately and deduct from pending balance
@@ -1055,7 +1055,7 @@ export default function AffiliateDetailPage({
                 <button
                   type="submit"
                   disabled={submittingPayout}
-                  className="px-6 py-2.5 rounded-xl bg-[#f0c040] hover:bg-amber-400 text-slate-950 font-black text-xs transition-all flex items-center gap-2 shadow-lg shadow-amber-400/20 disabled:opacity-60"
+                  className="px-6 py-2.5 rounded-xl bg-[#ffbe24] hover:bg-amber-400 text-slate-950 font-black text-xs transition-all flex items-center gap-2 shadow-lg shadow-amber-400/20 disabled:opacity-60"
                 >
                   {submittingPayout ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
                   {submittingPayout ? "Processing…" : "Submit Payout"}

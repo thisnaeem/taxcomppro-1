@@ -46,7 +46,7 @@ export default function MyCoursesPage() {
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50">
-      <Loader2 className="w-8 h-8 text-[#d4a017] animate-spin" />
+      <Loader2 className="w-8 h-8 text-[#ffbe24] animate-spin" />
     </div>
   );
 
@@ -57,7 +57,7 @@ export default function MyCoursesPage() {
         <div className="flex items-center justify-between mb-10">
           <div>
             <h1 className="text-3xl font-black text-[#0a1628] flex items-center gap-3">
-              <GraduationCap className="w-8 h-8 text-[#d4a017]" />
+              <GraduationCap className="w-8 h-8 text-[#ffbe24]" />
               My Courses
             </h1>
             <p className="text-slate-500 mt-1">{enrollments.length} course{enrollments.length !== 1 ? "s" : ""} enrolled</p>
@@ -74,7 +74,7 @@ export default function MyCoursesPage() {
             <p className="font-bold text-slate-500 text-lg">No courses yet</p>
             <p className="text-slate-400 text-sm mt-1 mb-6">Start learning from expert-led tax & finance courses</p>
             <Link href="/courses"
-              className="inline-flex items-center gap-2 bg-gradient-to-r from-[#f0c040] to-[#d4a017] text-[#0a1628] font-black px-6 py-3 rounded-xl hover:shadow-lg transition-all">
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-[#ffbe24] to-[#ffbe24] text-[#0a1628] font-black px-6 py-3 rounded-xl hover:shadow-lg transition-all">
               <BookOpen className="w-4 h-4" /> Explore Courses
             </Link>
           </div>
@@ -84,7 +84,7 @@ export default function MyCoursesPage() {
             {inProgress.length > 0 && (
               <section className="mb-10">
                 <h2 className="text-lg font-black text-[#0a1628] mb-4 flex items-center gap-2">
-                  <PlayCircle className="w-5 h-5 text-[#d4a017]" /> In Progress
+                  <PlayCircle className="w-5 h-5 text-[#ffbe24]" /> In Progress
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                   {inProgress.map(e => (
@@ -139,7 +139,7 @@ function CourseProgressCard({ enrollment: e }: { enrollment: EnrolledCourse }) {
       </div>
 
       <div className="p-4">
-        <p className="text-[10px] font-semibold text-[#d4a017] uppercase tracking-wider mb-1">{c.category}</p>
+        <p className="text-[10px] font-semibold text-[#ffbe24] uppercase tracking-wider mb-1">{c.category}</p>
         <h3 className="font-bold text-[#0a1628] text-sm leading-snug mb-3 line-clamp-2">{c.title}</h3>
 
         {/* Progress bar */}
@@ -148,7 +148,7 @@ function CourseProgressCard({ enrollment: e }: { enrollment: EnrolledCourse }) {
           <span className="font-bold">{e.progressPercent}%</span>
         </div>
         <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden mb-4">
-          <div className={`h-full rounded-full transition-all ${done ? "bg-emerald-500" : "bg-gradient-to-r from-[#f0c040] to-[#d4a017]"}`}
+          <div className={`h-full rounded-full transition-all ${done ? "bg-emerald-500" : "bg-gradient-to-r from-[#ffbe24] to-[#ffbe24]"}`}
             style={{ width: `${e.progressPercent}%` }} />
         </div>
 
@@ -156,7 +156,7 @@ function CourseProgressCard({ enrollment: e }: { enrollment: EnrolledCourse }) {
           className={`flex items-center justify-center gap-2 w-full text-sm font-bold py-2.5 rounded-xl transition-all ${
             done
               ? "bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
-              : "bg-gradient-to-r from-[#f0c040] to-[#d4a017] text-[#0a1628] hover:shadow-md"
+              : "bg-gradient-to-r from-[#ffbe24] to-[#ffbe24] text-[#0a1628] hover:shadow-md"
           }`}>
           {done
             ? <><CheckCircle2 className="w-4 h-4" /> Review Course</>

@@ -222,7 +222,7 @@ export default function AdminApprovalsPage() {
           onClick={() => setActive(o.key)}
           className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border transition-all ${
             active === o.key
-              ? "border-[#f0c040] bg-[#f0c040] text-[#0a1628] font-bold shadow-md shadow-amber-400/20"
+              ? "border-[#ffbe24] bg-[#ffbe24] text-[#0a1628] font-bold shadow-md shadow-amber-400/20"
               : `border-white/10 bg-slate-800/80 text-slate-300 hover:border-white/20`
           }`}
         >
@@ -252,7 +252,7 @@ export default function AdminApprovalsPage() {
           onClick={() => setActiveTab("pros")}
           className={`flex items-center gap-2 px-4 sm:px-5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap shrink-0 ${
             activeTab === "pros"
-              ? "bg-[#f0c040] text-[#0a1628] shadow-md shadow-amber-400/20"
+              ? "bg-[#ffbe24] text-[#0a1628] shadow-md shadow-amber-400/20"
               : "text-slate-400 hover:text-white"
           }`}
         >
@@ -267,7 +267,7 @@ export default function AdminApprovalsPage() {
           onClick={() => setActiveTab("blasts")}
           className={`flex items-center gap-2 px-4 sm:px-5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap shrink-0 ${
             activeTab === "blasts"
-              ? "bg-[#f0c040] text-[#0a1628] shadow-md shadow-amber-400/20"
+              ? "bg-[#ffbe24] text-[#0a1628] shadow-md shadow-amber-400/20"
               : "text-slate-400 hover:text-white"
           }`}
         >
@@ -282,7 +282,7 @@ export default function AdminApprovalsPage() {
           onClick={() => setActiveTab("proads")}
           className={`flex items-center gap-2 px-4 sm:px-5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap shrink-0 ${
             activeTab === "proads"
-              ? "bg-[#f0c040] text-[#0a1628] shadow-md shadow-amber-400/20"
+              ? "bg-[#ffbe24] text-[#0a1628] shadow-md shadow-amber-400/20"
               : "text-slate-400 hover:text-white"
           }`}
         >
@@ -297,7 +297,7 @@ export default function AdminApprovalsPage() {
           onClick={() => setActiveTab("featured")}
           className={`flex items-center gap-2 px-4 sm:px-5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap shrink-0 ${
             activeTab === "featured"
-              ? "bg-[#f0c040] text-[#0a1628] shadow-md shadow-amber-400/20"
+              ? "bg-[#ffbe24] text-[#0a1628] shadow-md shadow-amber-400/20"
               : "text-slate-400 hover:text-white"
           }`}
         >

@@ -251,7 +251,7 @@ function ProMarketingContent() {
       <div className="min-h-screen bg-[#f4f6fb] flex items-center justify-center p-6">
         <div className="max-w-md w-full bg-white rounded-3xl border border-slate-200 shadow-xl p-10 text-center">
           <div className="w-16 h-16 rounded-2xl bg-[#0a1628] flex items-center justify-center mx-auto mb-5">
-            <Lock className="w-8 h-8 text-[#f0c040]" />
+            <Lock className="w-8 h-8 text-[#ffbe24]" />
           </div>
           <h1 className="text-2xl font-black text-[#0a1628] mb-2">Marketplace Plus Required</h1>
           <p className="text-slate-500 text-sm mb-8">Pro Marketing message blasts are exclusive to Marketplace Plus members. Upgrade to send targeted sponsored messages to thousands of platform members.</p>
@@ -263,7 +263,7 @@ function ProMarketingContent() {
               </div>
             ))}
           </div>
-          <Link href="/upgrade" className="block w-full text-center bg-[#0a1628] text-[#f0c040] font-black py-3.5 rounded-2xl hover:bg-[#1a3a6b] transition-all">
+          <Link href="/upgrade" className="block w-full text-center bg-[#0a1628] text-[#ffbe24] font-black py-3.5 rounded-2xl hover:bg-[#1a3a6b] transition-all">
             Upgrade to Marketplace Plus
           </Link>
         </div>
@@ -283,8 +283,8 @@ function ProMarketingContent() {
       <div className="bg-[#0a1628] text-white px-6 py-12">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-xl bg-[#f0c040]/20 flex items-center justify-center"><Megaphone className="w-5 h-5 text-[#f0c040]" /></div>
-            <span className="text-[#f0c040] text-sm font-bold uppercase tracking-widest">Pro Marketing</span>
+            <div className="w-10 h-10 rounded-xl bg-[#ffbe24]/20 flex items-center justify-center"><Megaphone className="w-5 h-5 text-[#ffbe24]" /></div>
+            <span className="text-[#ffbe24] text-sm font-bold uppercase tracking-widest">Pro Marketing</span>
           </div>
           <h1 className="text-4xl font-black mb-2">Pro Marketing</h1>
           <p className="text-white/60 text-base max-w-xl">Grow your reach with message blasts and display advertising. Marketplace Plus exclusive.</p>
@@ -300,7 +300,7 @@ function ProMarketingContent() {
               return (
                 <button key={t.key} onClick={() => setMainTab(t.key)}
                   className={`flex flex-col items-start gap-1 px-5 py-4 rounded-2xl font-bold text-base transition-all ${
-                    active ? "bg-[#f0c040] text-[#0a1628]" : "bg-white/10 text-white hover:bg-white/20"
+                    active ? "bg-[#ffbe24] text-[#0a1628]" : "bg-white/10 text-white hover:bg-white/20"
                   }`}>
                   <Icon className="w-5 h-5 mb-0.5" />
                   <span className="font-black text-base">{t.label}</span>
@@ -318,14 +318,14 @@ function ProMarketingContent() {
         {/* Quota pill — only in blast tab */}
         {quota && (
           <div className="flex items-center gap-3 bg-[#0a1628] text-white rounded-2xl px-5 py-3.5">
-            <BarChart3 className="w-5 h-5 text-[#f0c040] shrink-0" />
+            <BarChart3 className="w-5 h-5 text-[#ffbe24] shrink-0" />
             <div>
               <span className="text-sm font-bold">{quota.remaining} of {quota.limit} blasts remaining this month</span>
               {quota.remaining === 0 && <p className="text-xs text-white/50 mt-0.5">You've used all your blasts for this month.</p>}
             </div>
             <div className="ml-auto flex gap-1">
               {Array.from({ length: quota.limit }).map((_, i) => (
-                <div key={i} className={`w-2.5 h-2.5 rounded-full ${i < quota.used ? "bg-[#f0c040]" : "bg-white/20"}`} />
+                <div key={i} className={`w-2.5 h-2.5 rounded-full ${i < quota.used ? "bg-[#ffbe24]" : "bg-white/20"}`} />
               ))}
             </div>
           </div>
@@ -411,7 +411,7 @@ function ProMarketingContent() {
 
             {audience && audience.count > 0 && (
               <button onClick={() => setStep(2)}
-                className="w-full bg-[#f0c040] text-[#0a1628] font-black py-3.5 rounded-2xl hover:bg-[#d4a017] transition-all">
+                className="w-full bg-[#ffbe24] text-[#0a1628] font-black py-3.5 rounded-2xl hover:bg-[#ffbe24] transition-all">
                 Continue to Message →
               </button>
             )}
@@ -457,7 +457,7 @@ function ProMarketingContent() {
             <div className="flex gap-3">
               <button onClick={() => setStep(1)} className="px-6 py-3 rounded-xl border border-slate-200 text-slate-600 font-semibold text-sm hover:bg-slate-50">← Back</button>
               <button onClick={() => setStep(3)} disabled={!subject.trim() || !content.trim()}
-                className="flex-1 bg-[#f0c040] text-[#0a1628] font-black py-3 rounded-2xl hover:bg-[#d4a017] disabled:opacity-40 transition-all">
+                className="flex-1 bg-[#ffbe24] text-[#0a1628] font-black py-3 rounded-2xl hover:bg-[#ffbe24] disabled:opacity-40 transition-all">
                 Review & Checkout →
               </button>
             </div>
@@ -562,7 +562,7 @@ function ProMarketingContent() {
                       <button key={p.key} onClick={() => setAdPlacement(p.key as "CENTER_COLUMN"|"LEFT_COLUMN")}
                         className={`text-left p-4 rounded-2xl border-2 transition-all ${active ? "border-[#0a1628] bg-[#0a1628]/5" : "border-slate-200 hover:border-slate-300"}`}>
                         <div className={`w-8 h-8 rounded-xl flex items-center justify-center mb-2.5 ${active ? "bg-[#0a1628]" : "bg-slate-100"}`}>
-                          <Icon className={`w-4 h-4 ${active ? "text-[#f0c040]" : "text-slate-500"}`} />
+                          <Icon className={`w-4 h-4 ${active ? "text-[#ffbe24]" : "text-slate-500"}`} />
                         </div>
                         <p className={`font-black text-sm ${active ? "text-[#0a1628]" : "text-slate-700"}`}>{p.label}</p>
                         <p className="text-slate-400 text-[11px] mt-0.5">{p.desc}</p>
@@ -660,8 +660,8 @@ function ProMarketingContent() {
                         <div className="h-1.5 bg-slate-100 rounded animate-pulse w-2/3" />
                       </div>
                     </div>
-                    <div className="rounded-xl overflow-hidden border-2 border-[#f0c040] shadow relative">
-                      <div className="absolute top-1.5 left-1.5 z-10 flex items-center gap-1 bg-[#f0c040] text-[#0a1628] text-[8px] font-black px-1.5 py-0.5 rounded-full"><MonitorPlay className="w-2 h-2" />SPONSORED</div>
+                    <div className="rounded-xl overflow-hidden border-2 border-[#ffbe24] shadow relative">
+                      <div className="absolute top-1.5 left-1.5 z-10 flex items-center gap-1 bg-[#ffbe24] text-[#0a1628] text-[8px] font-black px-1.5 py-0.5 rounded-full"><MonitorPlay className="w-2 h-2" />SPONSORED</div>
                       {adImageUrl ? (
                         <img src={adImageUrl} alt="Preview" className="w-full aspect-[16/9] object-cover" onError={e => { (e.target as HTMLImageElement).style.display="none"; }} />
                       ) : (
@@ -690,8 +690,8 @@ function ProMarketingContent() {
                         {[...Array(6)].map((_, i) => <div key={i} className="h-6 bg-slate-200 rounded-lg animate-pulse" />)}
                       </div>
                       <div className="flex-1">
-                        <div className="rounded-xl overflow-hidden border-2 border-[#f0c040] shadow relative">
-                          <div className="absolute top-1 left-1 z-10 flex items-center gap-0.5 bg-[#f0c040] text-[#0a1628] text-[8px] font-black px-1 py-0.5 rounded-full"><Tv className="w-2 h-2" />AD</div>
+                        <div className="rounded-xl overflow-hidden border-2 border-[#ffbe24] shadow relative">
+                          <div className="absolute top-1 left-1 z-10 flex items-center gap-0.5 bg-[#ffbe24] text-[#0a1628] text-[8px] font-black px-1 py-0.5 rounded-full"><Tv className="w-2 h-2" />AD</div>
                           {adImageUrl ? (
                             <img src={adImageUrl} alt="Preview" className="w-full aspect-[19/8] object-cover" onError={e => { (e.target as HTMLImageElement).style.display="none"; }} />
                           ) : (
@@ -764,7 +764,7 @@ function ProMarketingContent() {
           )}
 
           {/* Info banner */}
-          <div className="bg-gradient-to-r from-[#f0c040]/20 to-amber-50 border border-amber-200 rounded-2xl p-5 flex items-start gap-4">
+          <div className="bg-gradient-to-r from-[#ffbe24]/20 to-amber-50 border border-amber-200 rounded-2xl p-5 flex items-start gap-4">
             <div className="w-10 h-10 bg-amber-400 rounded-xl flex items-center justify-center shrink-0">
               <Star className="w-5 h-5 text-white" />
             </div>

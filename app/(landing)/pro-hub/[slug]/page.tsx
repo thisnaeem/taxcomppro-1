@@ -325,7 +325,7 @@ export default function ForumDetailPage({ params }: { params: Promise<{ slug: st
               </span>
             )}
             {forum?.badge && (
-              <span className="text-[10px] font-black bg-[#d4a017] text-[#0a1628] px-2 py-0.5 rounded-full">{forum.badge}</span>
+              <span className="text-[10px] font-black bg-[#ffbe24] text-[#0a1628] px-2 py-0.5 rounded-full">{forum.badge}</span>
             )}
           </div>
           {forum?.description && <p className="text-slate-300 text-base mt-2 max-w-2xl line-clamp-2">{forum.description}</p>}

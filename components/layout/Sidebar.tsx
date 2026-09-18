@@ -190,7 +190,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
                               : "gap-3 px-3 py-2.5 text-sm"
                           } ${
                             isActive
-                              ? "bg-[#f0c040] !text-black shadow-lg shadow-amber-400/20 font-bold"
+                              ? "bg-[#ffbe24] !text-black shadow-lg shadow-amber-400/20 font-bold"
                               : "text-white/60 hover:text-white hover:bg-white/10"
                           }`}
                         >
@@ -277,7 +277,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
                       isCollapsed ? "justify-center px-0 py-2.5" : "gap-3 px-3 py-2.5 text-sm"
                     } ${
                       isActive
-                        ? "bg-[#f0c040] !text-black font-bold shadow-lg shadow-amber-400/20"
+                        ? "bg-[#ffbe24] !text-black font-bold shadow-lg shadow-amber-400/20"
                         : "text-white/60 hover:text-white hover:bg-white/10"
                     }`}
                   >

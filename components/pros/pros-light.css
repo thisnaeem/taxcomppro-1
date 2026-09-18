@@ -4,7 +4,7 @@ html:not(.dark) .fp-page {
   --fp-line: #e2e8f0;
   --fp-text: #0a1628;
   --fp-muted: #475569;
-  --fp-accent: #f0c040;
+  --fp-accent: #ffbe24;
   color-scheme: light;
 }
 html:not(.dark)
@@ -41,7 +41,7 @@ html:not(.dark)
   color: #0a1628;
 }
 html:not(.dark) .fp-hero h1 span {
-  color: #a07810;
+  color: #ffbe24;
 }
 html:not(.dark) .fp-intro-shell {
   background: #f1f5f9;
@@ -73,12 +73,12 @@ html:not(.dark) .fp-filters button {
 }
 html:not(.dark) .fp-filters button[aria-pressed="true"] {
   color: #0a1628;
-  background: #f0c040;
-  border-color: #d4a017;
+  background: #ffbe24;
+  border-color: #ffbe24;
 }
 html:not(.dark) .fp-filters button:hover {
-  color: #a07810;
-  border-color: #d4a017;
+  color: #ffbe24;
+  border-color: #ffbe24;
 }
 html:not(.dark) .fp-grid-switcher {
   background: #f1f5f9;
@@ -93,14 +93,14 @@ html:not(.dark) .fp-grid-switcher button:hover {
   color: #0a1628;
 }
 html:not(.dark) .fp-reset {
-  color: #a07810;
+  color: #ffbe24;
 }
 html:not(.dark) .fp-pro-card {
   background: #f1f5f9;
   border-color: #e2e8f0;
 }
 html:not(.dark) .fp-pro-card:hover {
-  border-color: #d4a017;
+  border-color: #ffbe24;
 }
 html:not(.dark) .fp-pro-core {
   background: #fff;
@@ -123,19 +123,19 @@ html:not(.dark) .fp-pro-mission > p {
   color: #475569;
 }
 html:not(.dark) .fp-pro-credentials > span {
-  color: #a07810;
+  color: #ffbe24;
   background: #fef3c7;
   border-color: #e2e8f0;
 }
 html:not(.dark) .fp-pro-card:hover .fp-pro-name h3 {
-  color: #a07810;
+  color: #ffbe24;
 }
 html:not(.dark) .fp-pro-name > svg {
-  color: #a07810;
+  color: #ffbe24;
 }
 html:not(.dark) .fp-pro-cert {
   background: #fef3c7;
-  color: #a07810;
+  color: #ffbe24;
   border-color: #e2e8f0;
 }
 html:not(.dark) .fp-pro-tags > span {
@@ -144,7 +144,7 @@ html:not(.dark) .fp-pro-tags > span {
   border-color: #e2e8f0;
 }
 html:not(.dark) .fp-pro-action > span {
-  color: #a07810;
+  color: #ffbe24;
   background: #fef3c7;
   border-color: #e2e8f0;
 }
@@ -154,7 +154,7 @@ html:not(.dark) .fp-empty {
 }
 html:not(.dark) .fp-empty > svg,
 html:not(.dark) .fp-cta-icon {
-  color: #a07810;
+  color: #ffbe24;
 }
 html:not(.dark) .fp-cta {
   background: linear-gradient(115deg, #f8fafc, #f1f5f9);

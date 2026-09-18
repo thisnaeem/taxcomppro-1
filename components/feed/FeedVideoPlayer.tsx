@@ -229,7 +229,7 @@ export default function FeedVideoPlayer({ src, poster, className = "" }: Props) 
       {/* Buffering Spinner */}
       {isBuffering && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/30 pointer-events-none z-10">
-          <Loader2 className="w-10 h-10 text-[#f0c040] animate-spin" />
+          <Loader2 className="w-10 h-10 text-[#ffbe24] animate-spin" />
         </div>
       )}
 
@@ -243,7 +243,7 @@ export default function FeedVideoPlayer({ src, poster, className = "" }: Props) 
           <button
             type="button"
             onClick={togglePlay}
-            className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-[#0a1628]/80 backdrop-blur-md border border-[#f0c040]/40 text-[#f0c040] shadow-2xl flex items-center justify-center pointer-events-auto hover:scale-110 active:scale-95 hover:bg-[#0a1628] hover:border-[#f0c040] transition-all"
+            className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-[#0a1628]/80 backdrop-blur-md border border-[#ffbe24]/40 text-[#ffbe24] shadow-2xl flex items-center justify-center pointer-events-auto hover:scale-110 active:scale-95 hover:bg-[#0a1628] hover:border-[#ffbe24] transition-all"
             aria-label={isPlaying ? "Pause video" : "Play video"}
           >
             {isPlaying ? (
@@ -267,7 +267,7 @@ export default function FeedVideoPlayer({ src, poster, className = "" }: Props) 
           {/* Custom Track Background */}
           <div className="w-full h-1.5 bg-white/25 rounded-full overflow-hidden relative cursor-pointer group-hover/scrubber:h-2 transition-all">
             <div
-              className="h-full bg-gradient-to-r from-[#f0c040] to-[#d4a017] rounded-full"
+              className="h-full bg-gradient-to-r from-[#ffbe24] to-[#ffbe24] rounded-full"
               style={{ width: `${progressPercent}%` }}
             />
           </div>
@@ -291,7 +291,7 @@ export default function FeedVideoPlayer({ src, poster, className = "" }: Props) 
             <button
               type="button"
               onClick={togglePlay}
-              className="p-1 rounded-lg hover:bg-white/15 transition-colors text-white hover:text-[#f0c040]"
+              className="p-1 rounded-lg hover:bg-white/15 transition-colors text-white hover:text-[#ffbe24]"
               aria-label={isPlaying ? "Pause" : "Play"}
             >
               {isPlaying ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current" />}
@@ -307,7 +307,7 @@ export default function FeedVideoPlayer({ src, poster, className = "" }: Props) 
             <button
               type="button"
               onClick={toggleMute}
-              className="p-1.5 rounded-lg hover:bg-white/15 transition-colors text-white hover:text-[#f0c040]"
+              className="p-1.5 rounded-lg hover:bg-white/15 transition-colors text-white hover:text-[#ffbe24]"
               aria-label={isMuted ? "Unmute" : "Mute"}
             >
               {isMuted ? <VolumeX className="w-4 h-4 text-rose-400" /> : <Volume2 className="w-4 h-4" />}
@@ -316,7 +316,7 @@ export default function FeedVideoPlayer({ src, poster, className = "" }: Props) 
             <button
               type="button"
               onClick={toggleFullscreen}
-              className="p-1.5 rounded-lg hover:bg-white/15 transition-colors text-white hover:text-[#f0c040]"
+              className="p-1.5 rounded-lg hover:bg-white/15 transition-colors text-white hover:text-[#ffbe24]"
               aria-label={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
             >
               {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}

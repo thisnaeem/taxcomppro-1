@@ -5,7 +5,7 @@
   --sn-muted: #64748b;
   --sn-line: #e2e8f0;
   --sn-hover: #f1f5f9;
-  --sn-accent: #f0c040;
+  --sn-accent: #ffbe24;
   --sn-panel: #fff;
   --sn-ease: cubic-bezier(0.32, 0.72, 0, 1);
   font-family: var(--font-urbanist), sans-serif;
@@ -56,7 +56,7 @@
 }
 .site-navbar :focus-visible,
 .site-nav-modal :focus-visible {
-  outline: 2px solid #d4a017;
+  outline: 2px solid #ffbe24;
   outline-offset: 4px;
 }
 .site-navbar-inner {
@@ -117,12 +117,12 @@
 }
 .site-navbar .site-nav-link[aria-current="page"],
 .site-navbar .site-nav-link.is-current {
-  background: #f0c04020;
-  color: #a07810;
+  background: #ffbe2420;
+  color: #ffbe24;
 }
 .dark .site-navbar .site-nav-link.is-current,
 .dark .site-navbar .site-nav-link[aria-current="page"] {
-  color: #f0c040;
+  color: #ffbe24;
 }
 .site-disclosure {
   position: relative;
@@ -175,8 +175,8 @@
   width: 35px;
   height: 35px;
   border-radius: 11px;
-  background: #f0c04012;
-  color: #a07810;
+  background: #ffbe2412;
+  color: #ffbe24;
 }
 .site-dropdown-link > span:nth-child(2) {
   flex: 1;
@@ -304,7 +304,7 @@
   height: 14px;
   padding: 0 3px;
   color: #0a1628;
-  background: #f0c040;
+  background: #ffbe24;
   font-size: 8px;
   font-weight: 700;
 }
@@ -335,7 +335,7 @@
   height: 30px;
   border-radius: 9px;
   background: #f1f5f9;
-  color: #a07810;
+  color: #ffbe24;
   font-weight: 650;
   overflow: hidden;
 }
@@ -377,8 +377,8 @@
   margin-top: 9px;
   padding: 3px 7px;
   border-radius: 20px;
-  color: #a07810;
-  background: #f0c04017;
+  color: #ffbe24;
+  background: #ffbe2417;
 }
 .site-account-link,
 .site-signout {
@@ -431,12 +431,12 @@
   justify-content: center;
   gap: 12px;
   padding: 11px 17px;
-  background: #f0c040;
+  background: #ffbe24;
   border-radius: 999px;
   color: #0a1628;
 }
 .site-auth-links .site-join:hover {
-  background: #f7d56a;
+  background: #ffcb4d;
   transform: translateY(-1px);
 }
 .site-mobile-toggle {
@@ -509,7 +509,7 @@
 }
 .site-search-form > div:focus-within,
 .site-mobile-search:focus-within {
-  outline: 1px solid #d4a017;
+  outline: 1px solid #ffbe24;
 }
 .site-search-form > div button,
 .site-mobile-search > button {
@@ -518,7 +518,7 @@
   width: 31px;
   height: 31px;
   border-radius: 50%;
-  background: #f0c040;
+  background: #ffbe24;
   color: #0a1628;
   flex-shrink: 0;
 }
@@ -532,7 +532,7 @@
   color: var(--sn-muted);
 }
 .site-search-form p a {
-  color: #a07810;
+  color: #ffbe24;
   text-decoration: underline;
   text-underline-offset: 3px;
 }
@@ -781,12 +781,12 @@
 .site-mega-menu .site-dropdown-link > svg { margin-top:10px; width:12px; }
 .site-mega-feature { display:flex; flex-direction:column; align-items:flex-start; padding:24px; border-radius:15px; border:1px solid color-mix(in srgb,var(--sn-accent) 25%,var(--sn-line)); background:color-mix(in srgb,var(--sn-accent) 8%,var(--sn-panel)); }
 .site-mega-eyebrow { font-size:10px; line-height:1.6; font-weight:750; text-transform:uppercase; letter-spacing:.1em; color:var(--sn-muted); margin-bottom:20px; }
-.site-mega-feature > svg { color:#a07810; margin-bottom:16px; }
-.dark .site-mega-feature > svg,.dark .site-mega-menu .site-menu-icon { color:#f0c040; }
+.site-mega-feature > svg { color:#ffbe24; margin-bottom:16px; }
+.dark .site-mega-feature > svg,.dark .site-mega-menu .site-menu-icon { color:#ffbe24; }
 .site-navbar .site-mega-feature h2 { font-size:23px; line-height:1.2; letter-spacing:-.025em; font-weight:750; color:var(--sn-text); margin:0 0 12px; }
 .site-mega-feature p { font-size:13px; line-height:1.65; color:var(--sn-muted); margin:0 0 22px; }
-.site-navbar .site-mega-cta { display:flex; width:100%; justify-content:space-between; align-items:center; gap:8px; padding:12px 14px; margin-top:auto; background:#e9c44c; color:#101828 !important; border-radius:999px; font-size:var(--sn-nav-size); font-weight:650; }
-.site-navbar .site-mega-cta:hover { background:#f3d566; }
+.site-navbar .site-mega-cta { display:flex; width:100%; justify-content:space-between; align-items:center; gap:8px; padding:12px 14px; margin-top:auto; background:#ffbe24; color:#101828 !important; border-radius:999px; font-size:var(--sn-nav-size); font-weight:650; }
+.site-navbar .site-mega-cta:hover { background:#ffcb4d; }
 .site-navbar .site-mega-secondary { display:flex; align-items:center; gap:8px; font-size:var(--sn-nav-size); line-height:1.4; color:var(--sn-text); margin-top:17px; }
 .site-mega-secondary:hover { text-decoration:underline; text-underline-offset:4px; }
 @keyframes sn-mega-reveal { from { opacity:0; } to { opacity:1; } }

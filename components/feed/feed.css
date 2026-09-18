@@ -1,5 +1,5 @@
-.feed-page { --feed-bg:#f1f5f9; --feed-panel:#fff; --feed-inner:#f8fafc; --feed-text:#0a1628; --feed-muted:#64748b; --feed-line:#e2e8f0; --feed-gold:#96700e; --feed-placeholder:#e2e8f0; --feed-shimmer:rgba(255,255,255,.65); min-height:100vh; background:var(--feed-bg); color:var(--feed-text); padding:28px 0 56px; font-family:var(--font-urbanist),sans-serif; }
-.dark .feed-page { --feed-bg:#0c1527; --feed-panel:#172135; --feed-inner:#1e2e45; --feed-text:#e2e8f0; --feed-muted:#94a3b8; --feed-line:#243550; --feed-gold:#f0c040; --feed-placeholder:#23324a; --feed-shimmer:rgba(148,163,184,.12); }
+.feed-page { --feed-bg:#f1f5f9; --feed-panel:#fff; --feed-inner:#f8fafc; --feed-text:#0a1628; --feed-muted:#64748b; --feed-line:#e2e8f0; --feed-gold:#ffbe24; --feed-placeholder:#e2e8f0; --feed-shimmer:rgba(255,255,255,.65); min-height:100vh; background:var(--feed-bg); color:var(--feed-text); padding:28px 0 56px; font-family:var(--font-urbanist),sans-serif; }
+.dark .feed-page { --feed-bg:#0c1527; --feed-panel:#172135; --feed-inner:#1e2e45; --feed-text:#e2e8f0; --feed-muted:#94a3b8; --feed-line:#243550; --feed-gold:#ffbe24; --feed-placeholder:#23324a; --feed-shimmer:rgba(148,163,184,.12); }
 .feed-page *, .feed-page *::before, .feed-page *::after { box-sizing:border-box; }
 .feed-container { max-width:1480px; margin:auto; padding:0 32px; }
 .feed-layout { display:grid; grid-template-columns:270px minmax(0,1fr) 290px; gap:24px; align-items:start; }
@@ -36,7 +36,7 @@
 .feed-empty > svg { color:var(--feed-gold); }
 .feed-empty h2,.feed-empty h3 { color:var(--feed-text); font-size:23px; font-weight:750; margin:0; }
 .feed-empty p { color:var(--feed-muted); font-size:15px; line-height:1.7; margin:0; max-width:380px; }
-.feed-empty > a,.feed-empty > button { display:inline-flex; align-items:center; justify-content:center; background:#f0c040; color:#0a1628; border:0; border-radius:999px; padding:12px 20px; font-size:15px; font-weight:700; cursor:pointer; }
+.feed-empty > a,.feed-empty > button { display:inline-flex; align-items:center; justify-content:center; background:#ffbe24; color:#0a1628; border:0; border-radius:999px; padding:12px 20px; font-size:15px; font-weight:700; cursor:pointer; }
 .feed-skeleton-card { padding:22px; border:1px solid var(--feed-line); border-radius:22px; background:var(--feed-panel); overflow:hidden; }
 .feed-skeleton-stack { display:flex; flex-direction:column; gap:18px; }
 .feed-skeleton-row { display:flex; align-items:center; gap:12px; }
@@ -104,7 +104,7 @@
 .feed-share-link svg { flex-shrink:0; color:var(--feed-gold); }
 .feed-share-link input { min-width:0; width:100%; background:transparent; border:0; color:var(--feed-text); font-size:14px; }
 .feed-share-buttons { display:flex; flex-wrap:wrap; gap:10px; margin-top:20px; }
-.feed-share-buttons button { display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:12px 17px; border:0; border-radius:999px; color:#0a1628; background:#f0c040; font-size:14px; font-weight:700; cursor:pointer; }
+.feed-share-buttons button { display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:12px 17px; border:0; border-radius:999px; color:#0a1628; background:#ffbe24; font-size:14px; font-weight:700; cursor:pointer; }
 @media(max-width:540px) { .feed-social-bar { padding:8px 10px; gap:4px; } .feed-social-actions { gap:7px; } .feed-social-actions button { gap:5px; font-size:13px; } .feed-social-actions button > svg { width:19px; height:19px; } .feed-reaction-summary > span { width:23px; height:23px; font-size:16px; } .feed-reaction-options { left:-4px; padding:5px; gap:0; } .feed-social-actions .feed-reaction-options button { width:38px; } }
 @media(prefers-reduced-motion:reduce) { .feed-reaction-options button > span { transition:none; } }
 
@@ -139,7 +139,7 @@
 .dark .feed-page .feed-navigation a:hover,
 .dark .feed-page .feed-navigation a:hover svg,
 .dark .feed-page .feed-social-actions button:hover,
-.dark .feed-page .feed-social-actions button.is-reacted { color:#f0c040 !important; }
+.dark .feed-page .feed-social-actions button.is-reacted { color:#ffbe24 !important; }
 .dark .feed-page .feed-composer textarea::placeholder,
 .dark .feed-page .feed-composer input::placeholder { color:#b6c2d2; opacity:1; }
 .dark .feed-page .feed-post-time:hover { color:#fff; text-decoration:underline; }
@@ -177,8 +177,8 @@
 .feed-page .feed-navigation a[aria-current="page"] { background:color-mix(in srgb,var(--feed-gold) 13%,transparent); color:var(--feed-gold); }
 .feed-page .feed-navigation a:hover { background:var(--feed-inner); }
 .feed-page .feed-profile-button { margin-top:20px; }
-.feed-page .feed-sidebar-button,.dark .feed-page .feed-sidebar-button { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:42px; width:100%; padding:10px 14px; border:1px solid transparent; border-radius:999px; background:#e9c44c !important; background-image:none !important; color:#101828 !important; font-size:13px; line-height:1.4; font-weight:750; text-decoration:none; box-shadow:none; transition:background-color 150ms ease; }
-.feed-page .feed-sidebar-button:hover,.dark .feed-page .feed-sidebar-button:hover { background:#f3d566 !important; }
+.feed-page .feed-sidebar-button,.dark .feed-page .feed-sidebar-button { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:42px; width:100%; padding:10px 14px; border:1px solid transparent; border-radius:999px; background:#ffbe24 !important; background-image:none !important; color:#101828 !important; font-size:13px; line-height:1.4; font-weight:750; text-decoration:none; box-shadow:none; transition:background-color 150ms ease; }
+.feed-page .feed-sidebar-button:hover,.dark .feed-page .feed-sidebar-button:hover { background:#ffcb4d !important; }
 .feed-page .feed-sidebar-button svg,.dark .feed-page .feed-sidebar-button svg { color:#101828 !important; }
 .feed-page .feed-profile-button,.dark .feed-page .feed-profile-button { background:var(--feed-inner) !important; border-color:var(--feed-line); color:var(--feed-text) !important; }
 .feed-page .feed-profile-button:hover,.dark .feed-page .feed-profile-button:hover { border-color:var(--feed-gold); background:var(--feed-inner) !important; }

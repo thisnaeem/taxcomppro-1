@@ -331,7 +331,7 @@ export default function AdminAtlasSettingsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black text-white flex items-center gap-2.5">
-            <AiMagicIcon className="w-7 h-7 text-[#f0c040]" />
+            <AiMagicIcon className="w-7 h-7 text-[#ffbe24]" />
             Atlas Support Concierge Admin
           </h1>
           <p className="text-slate-400 text-sm mt-0.5">
@@ -414,7 +414,7 @@ export default function AdminAtlasSettingsPage() {
                 resetModal();
                 setShowAddModal(true);
               }}
-              className="w-full sm:w-auto bg-[#f0c040] hover:bg-amber-400 text-slate-950 font-black text-xs px-4 py-2.5 rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md"
+              className="w-full sm:w-auto bg-[#ffbe24] hover:bg-amber-400 text-slate-950 font-black text-xs px-4 py-2.5 rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md"
             >
               <Plus className="w-4 h-4" /> Add Approved Q&A
             </button>
@@ -551,7 +551,7 @@ export default function AdminAtlasSettingsPage() {
                             setAnsweringQuestion(q);
                             setApproveAnswerText(q.suggestedAnswer || "");
                           }}
-                          className="bg-[#f0c040] hover:bg-amber-400 text-slate-950 font-bold text-xs px-3.5 py-1.5 rounded-xl shadow transition-all"
+                          className="bg-[#ffbe24] hover:bg-amber-400 text-slate-950 font-bold text-xs px-3.5 py-1.5 rounded-xl shadow transition-all"
                         >
                           Approve & Answer
                         </button>
@@ -643,7 +643,7 @@ export default function AdminAtlasSettingsPage() {
                 step={128}
                 value={settings.maxTokens}
                 onChange={(e) => setSettings((s) => (s ? { ...s, maxTokens: parseInt(e.target.value) } : s))}
-                className="w-full accent-[#f0c040]"
+                className="w-full accent-[#ffbe24]"
               />
             </div>
           </div>
@@ -688,7 +688,7 @@ export default function AdminAtlasSettingsPage() {
             <button
               onClick={handleSaveSettings}
               disabled={savingSettings}
-              className="flex items-center gap-2 bg-[#f0c040] hover:bg-amber-400 text-slate-950 font-black text-sm px-6 py-3 rounded-xl shadow-lg shadow-amber-400/20 transition-all disabled:opacity-50"
+              className="flex items-center gap-2 bg-[#ffbe24] hover:bg-amber-400 text-slate-950 font-black text-sm px-6 py-3 rounded-xl shadow-lg shadow-amber-400/20 transition-all disabled:opacity-50"
             >
               {savingSettings ? <Loading02Icon className="w-4 h-4 animate-spin" /> : <FloppyDiskIcon className="w-4 h-4" />}
               Save Settings
@@ -775,7 +775,7 @@ export default function AdminAtlasSettingsPage() {
                 <button
                   type="submit"
                   disabled={savingItem}
-                  className="bg-[#f0c040] hover:bg-amber-400 text-slate-950 font-black text-xs px-5 py-2.5 rounded-xl shadow transition-all disabled:opacity-50"
+                  className="bg-[#ffbe24] hover:bg-amber-400 text-slate-950 font-black text-xs px-5 py-2.5 rounded-xl shadow transition-all disabled:opacity-50"
                 >
                   {savingItem ? "Saving..." : "Save to Knowledge Base"}
                 </button>
@@ -828,7 +828,7 @@ export default function AdminAtlasSettingsPage() {
                 <button
                   type="submit"
                   disabled={submittingApproval}
-                  className="bg-[#f0c040] hover:bg-amber-400 text-slate-950 font-black text-xs px-5 py-2.5 rounded-xl shadow transition-all disabled:opacity-50"
+                  className="bg-[#ffbe24] hover:bg-amber-400 text-slate-950 font-black text-xs px-5 py-2.5 rounded-xl shadow transition-all disabled:opacity-50"
                 >
                   {submittingApproval ? "Saving..." : "Approve & Add to Atlas"}
                 </button>

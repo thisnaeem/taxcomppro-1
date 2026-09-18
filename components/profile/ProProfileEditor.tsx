@@ -38,6 +38,7 @@ import {
   Copy01Icon as Copy,
   LinkSquare02Icon as ExternalLink
 } from "hugeicons-react";
+import NetworksViewAllMenu from "@/components/profile/NetworksViewAllMenu";
 import { PROFESSIONAL_TITLES } from "@/lib/professionalTitles";
 import EditProfileModal, { type ProfileFormData } from "@/components/profile/EditProfileModal";
 import { VoiceMemoPlayer, VoiceMemoEditor } from "@/components/profile/VoiceMemo";
@@ -817,9 +818,7 @@ export default function ProProfileEditor() {
                       <Crown className="w-4 h-4 text-amber-500" />
                       MY PRO NETWORKS
                     </h3>
-                    <Link href="/pro-networks?filter=mine" className="text-xs font-bold profile-accent hover:underline">
-                      View All
-                    </Link>
+                    <NetworksViewAllMenu />
                   </div>
 
                   {proNetworks.length > 0 ? (
@@ -979,7 +978,7 @@ export default function ProProfileEditor() {
                       <div
                         className="w-20 h-20 rounded-full border-[3px] p-1.5 flex items-center justify-center shadow-md group-hover:scale-105 group-hover:shadow-lg transition-all relative bg-white dark:bg-[#0a1628]"
                         style={{
-                          borderColor: badge.borderColor || "#d4a017",
+                          borderColor: badge.borderColor || "#ffbe24",
                         }}
                       >
                         {(badge.customImage || badge.logoImage || badge.ownerImage || profile.image) ? (
@@ -995,7 +994,7 @@ export default function ProProfileEditor() {
                           >
                             <span
                               className="font-black text-[11px] leading-tight tracking-wider"
-                              style={{ color: badge.textColor || "#f0c040" }}
+                              style={{ color: badge.textColor || "#ffbe24" }}
                             >
                               {badge.initials || badge.networkName.slice(0, 4).toUpperCase()}
                             </span>
@@ -1503,7 +1502,7 @@ export default function ProProfileEditor() {
                 </div>
                 <Link
                   href="/pro-networks/create"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#f0c040] to-[#d4a017] text-[#0a1628] font-black text-xs shadow-md hover:shadow-lg transition-all"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#ffbe24] to-[#ffbe24] text-[#0a1628] font-black text-xs shadow-md hover:shadow-lg transition-all"
                 >
                   <Sparkles className="w-3.5 h-3.5" />
                   <span>Launch Pro Network</span>

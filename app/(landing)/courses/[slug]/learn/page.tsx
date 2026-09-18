@@ -144,7 +144,7 @@ export default function LearnPage() {
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-[#0a1628]">
-      <Loader2 className="w-8 h-8 text-[#f0c040] animate-spin" />
+      <Loader2 className="w-8 h-8 text-[#ffbe24] animate-spin" />
     </div>
   );
   if (!course) return null;
@@ -173,7 +173,7 @@ export default function LearnPage() {
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div className="flex items-center gap-2">
-            <GraduationCap className="w-4 h-4 text-[#f0c040]" />
+            <GraduationCap className="w-4 h-4 text-[#ffbe24]" />
             <span className="font-bold text-sm truncate max-w-xs">{course.title}</span>
           </div>
         </div>
@@ -182,7 +182,7 @@ export default function LearnPage() {
             <span className="text-xs text-white/40 hidden sm:block">Sequential mode on</span>
           )}
           <div className="w-28 h-1.5 bg-white/10 rounded-full overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-[#f0c040] to-[#d4a017] rounded-full transition-all" style={{ width: `${progress}%` }} />
+            <div className="h-full bg-gradient-to-r from-[#ffbe24] to-[#ffbe24] rounded-full transition-all" style={{ width: `${progress}%` }} />
           </div>
           <span className="text-xs text-white/60 font-medium">{progress}%</span>
         </div>
@@ -212,15 +212,15 @@ export default function LearnPage() {
                     <button key={lesson.id} onClick={() => selectLesson(lesson, allLessons)}
                       disabled={!unlocked}
                       className={`w-full flex items-center gap-3 pl-8 pr-4 py-3 text-left transition-colors disabled:cursor-not-allowed ${
-                        active ? "bg-[#f0c040]/15 border-l-2 border-[#f0c040]" : unlocked ? "hover:bg-white/5" : "opacity-40"
+                        active ? "bg-[#ffbe24]/15 border-l-2 border-[#ffbe24]" : unlocked ? "hover:bg-white/5" : "opacity-40"
                       }`}>
                       {done
                         ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                         : unlocked
-                          ? <LIcon className={`w-3.5 h-3.5 shrink-0 ${active ? "text-[#f0c040]" : "text-white/40"}`} />
+                          ? <LIcon className={`w-3.5 h-3.5 shrink-0 ${active ? "text-[#ffbe24]" : "text-white/40"}`} />
                           : <Lock className="w-3.5 h-3.5 text-white/30 shrink-0" />
                       }
-                      <span className={`text-xs flex-1 leading-snug ${active ? "text-[#f0c040] font-semibold" : done ? "text-white/40" : "text-white/70"}`}>
+                      <span className={`text-xs flex-1 leading-snug ${active ? "text-[#ffbe24] font-semibold" : done ? "text-white/40" : "text-white/70"}`}>
                         {lesson.title}
                       </span>
                     </button>
@@ -268,7 +268,7 @@ export default function LearnPage() {
                       step={1}
                       value={fontSize}
                       onChange={e => setFontSize(Number(e.target.value))}
-                      className="flex-1 h-1.5 accent-[#f0c040] cursor-pointer"
+                      className="flex-1 h-1.5 accent-[#ffbe24] cursor-pointer"
                     />
                     <button
                       type="button"
@@ -299,8 +299,8 @@ export default function LearnPage() {
                           prose-p:mb-3 prose-p:text-white/80
                           prose-ul:list-disc prose-ul:pl-5 prose-li:mb-1
                           prose-ol:list-decimal prose-ol:pl-5
-                          prose-blockquote:border-l-4 prose-blockquote:border-[#d4a017] prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-white/50
-                          prose-a:text-[#f0c040] prose-a:underline
+                          prose-blockquote:border-l-4 prose-blockquote:border-[#ffbe24] prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-white/50
+                          prose-a:text-[#ffbe24] prose-a:underline
                           prose-img:rounded-xl prose-img:max-w-full prose-img:my-4
                           prose-hr:border-white/10 prose-hr:my-6
                           prose-strong:text-white prose-em:text-white/90"
@@ -318,7 +318,7 @@ export default function LearnPage() {
                 <div className="max-w-2xl mx-auto p-10">
                   {activeLesson.quiz && activeLesson.quiz.questions.length > 0 ? (
                     <>
-                      <div className="flex items-center gap-2 mb-4 text-[#f0c040] text-sm font-bold">
+                      <div className="flex items-center gap-2 mb-4 text-[#ffbe24] text-sm font-bold">
                         <HelpCircle className="w-4 h-4" /> Quiz · Pass mark: {activeLesson.quiz.passMark}%
                       </div>
                       <h2 className="text-2xl font-black text-white mb-6">{activeLesson.quiz.title}</h2>
@@ -358,7 +358,7 @@ export default function LearnPage() {
                                   <button key={oi} onClick={() => setQuizAnswers(prev => ({ ...prev, [qi]: oi }))}
                                     className={`w-full text-left text-sm px-4 py-3 rounded-xl border transition-all font-medium ${
                                       quizAnswers[qi] === oi
-                                        ? "bg-[#f0c040]/20 border-[#f0c040] text-[#f0c040]"
+                                        ? "bg-[#ffbe24]/20 border-[#ffbe24] text-[#ffbe24]"
                                         : "border-white/10 text-white/70 hover:bg-white/5 hover:border-white/20"
                                     }`}>{opt}</button>
                                 ))}
@@ -366,7 +366,7 @@ export default function LearnPage() {
                             </div>
                           ))}
                           <button onClick={submitQuiz} disabled={quizSubmitting || Object.keys(quizAnswers).length < activeLesson.quiz.questions.length}
-                            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#f0c040] to-[#d4a017] text-[#0a1628] font-black py-4 rounded-xl hover:shadow-lg transition-all disabled:opacity-50">
+                            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#ffbe24] to-[#ffbe24] text-[#0a1628] font-black py-4 rounded-xl hover:shadow-lg transition-all disabled:opacity-50">
                             {quizSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <HelpCircle className="w-4 h-4" />}
                             Submit Quiz
                           </button>
@@ -405,7 +405,7 @@ export default function LearnPage() {
                         </span>
                       ) : (
                         <button onClick={markComplete} disabled={completing}
-                          className="flex items-center gap-2 text-sm font-bold bg-gradient-to-r from-[#f0c040] to-[#d4a017] text-[#0a1628] px-5 py-2 rounded-xl hover:shadow-lg transition-all disabled:opacity-60">
+                          className="flex items-center gap-2 text-sm font-bold bg-gradient-to-r from-[#ffbe24] to-[#ffbe24] text-[#0a1628] px-5 py-2 rounded-xl hover:shadow-lg transition-all disabled:opacity-60">
                           {completing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
                           Mark Complete
                         </button>
@@ -429,13 +429,13 @@ export default function LearnPage() {
                 </div>
 
                 {progress === 100 && (
-                  <div className="mt-6 bg-gradient-to-r from-[#f0c040]/20 to-[#d4a017]/10 border border-[#f0c040]/30 rounded-2xl p-6 text-center">
-                    <Trophy className="w-10 h-10 text-[#f0c040] mx-auto mb-2" />
+                  <div className="mt-6 bg-gradient-to-r from-[#ffbe24]/20 to-[#ffbe24]/10 border border-[#ffbe24]/30 rounded-2xl p-6 text-center">
+                    <Trophy className="w-10 h-10 text-[#ffbe24] mx-auto mb-2" />
                     <p className="font-black text-lg text-white">Course Complete! 🎉</p>
                     <p className="text-white/50 text-sm mt-1 mb-4">Congratulations! You've earned your certificate.</p>
                     <div className="flex items-center justify-center gap-3">
                       <button onClick={() => setShowCert(true)}
-                        className="flex items-center gap-2 bg-gradient-to-r from-[#f0c040] to-[#d4a017] text-[#0a1628] font-black px-5 py-2.5 rounded-xl hover:shadow-lg transition-all">
+                        className="flex items-center gap-2 bg-gradient-to-r from-[#ffbe24] to-[#ffbe24] text-[#0a1628] font-black px-5 py-2.5 rounded-xl hover:shadow-lg transition-all">
                         <Award className="w-4 h-4" /> View Certificate
                       </button>
                       <Link href="/my-courses" className="text-sm font-bold text-white/60 hover:text-white transition-colors">

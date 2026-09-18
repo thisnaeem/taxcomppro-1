@@ -120,7 +120,7 @@ export default function OtpInput({
                 invalid
                   ? "border-red-400 bg-red-50 text-red-700 focus:border-red-500 focus:ring-4 focus:ring-red-500/15 dark:bg-red-950/30 dark:text-red-300"
                   : char
-                    ? "border-[#0a1628] bg-white text-[#0a1628] focus:ring-4 focus:ring-[#d4a017]/25 dark:border-amber-400 dark:bg-[#0c1a2e] dark:text-white"
+                    ? "border-[#0a1628] bg-white text-[#0a1628] focus:ring-4 focus:ring-[#ffbe24]/25 dark:border-amber-400 dark:bg-[#0c1a2e] dark:text-white"
                     : "border-slate-200 bg-white text-[#0a1628] focus:border-[#0a1628] focus:ring-4 focus:ring-[#0a1628]/10 dark:border-white/15 dark:bg-[#0c1a2e] dark:text-white dark:focus:border-amber-400"
               }`}
           />

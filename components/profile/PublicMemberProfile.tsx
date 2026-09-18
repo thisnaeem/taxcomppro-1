@@ -655,7 +655,7 @@ export default function PublicMemberProfile({memberId: id}: {memberId:string}) {
               <div className="profile-panel rounded-3xl p-6 sm:p-7 shadow-xs space-y-4">
                 <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                   <h3 className="text-base font-bold text-[#0a1628] dark:text-white flex items-center gap-2">
-                    <span className="w-1.5 h-4 bg-[#e8c449] rounded-full" />
+                    <span className="w-1.5 h-4 bg-[#ffbe24] rounded-full" />
                     About {profile.name.split(" ")[0]}
                   </h3>
                 </div>
@@ -832,7 +832,7 @@ export default function PublicMemberProfile({memberId: id}: {memberId:string}) {
               {profile.specialties?.length > 0 && (
                 <div className="profile-panel rounded-3xl p-5 shadow-xs space-y-3">
                   <h3 className="text-base font-bold text-[#0a1628] dark:text-white flex items-center gap-2">
-                    <span className="w-1.5 h-4 bg-[#e8c449] rounded-full" />
+                    <span className="w-1.5 h-4 bg-[#ffbe24] rounded-full" />
                     Specialties
                   </h3>
                   <div className="flex flex-wrap gap-2 pt-1">
@@ -1087,7 +1087,7 @@ export default function PublicMemberProfile({memberId: id}: {memberId:string}) {
             {profile.listings && profile.listings.length > 0 && (
               <div className="space-y-4">
                 <h3 className="text-sm font-black text-[#0a1628] dark:text-white uppercase tracking-wider flex items-center gap-2">
-                  <span className="w-1.5 h-4 bg-[#e8c449] rounded-full" />
+                  <span className="w-1.5 h-4 bg-[#ffbe24] rounded-full" />
                   Marketplace Products &amp; Toolkits
                 </h3>
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1123,7 +1123,7 @@ export default function PublicMemberProfile({memberId: id}: {memberId:string}) {
                           </p>
                         </div>
                         <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                          <span className="text-sm font-black text-[#d4a017]">
+                          <span className="text-sm font-black text-[#ffbe24]">
                             {l.price != null ? `$${l.price}` : "Free"}
                           </span>
                           <span className="text-xs font-bold text-slate-400 group-hover:text-[#0a1628] dark:group-hover:text-white flex items-center gap-0.5">
@@ -1181,7 +1181,7 @@ export default function PublicMemberProfile({memberId: id}: {memberId:string}) {
                         {c.title}
                       </h4>
                       <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                        <span className="text-sm font-black text-[#d4a017]">
+                        <span className="text-sm font-black text-[#ffbe24]">
                           {c.isFree ? "Free" : `$${c.price}`}
                         </span>
                         <span className="text-xs font-bold text-slate-400 group-hover:text-[#0a1628] dark:group-hover:text-white flex items-center gap-0.5">

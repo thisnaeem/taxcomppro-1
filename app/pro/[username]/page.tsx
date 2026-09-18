@@ -58,7 +58,7 @@ export default function ProProfileGatePage() {
         </p>
         <div className="space-y-2">
           <Link href={`/register?next=/pro/${username}`}
-            className="block w-full bg-gradient-to-r from-[#f0c040] to-[#d4a017] text-[#0a1628] font-bold text-sm py-3 rounded-full hover:shadow-lg transition-all">
+            className="block w-full bg-gradient-to-r from-[#ffbe24] to-[#ffbe24] text-[#0a1628] font-bold text-sm py-3 rounded-full hover:shadow-lg transition-all">
             Create Free Profile
           </Link>
           <Link href={`/login?next=/pro/${username}`}

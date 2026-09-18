@@ -58,7 +58,7 @@ export default function MarketplacePurchasesPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <Loader2 className="w-8 h-8 text-[#d4a017] animate-spin" />
+        <Loader2 className="w-8 h-8 text-[#ffbe24] animate-spin" />
       </div>
     );
   }
@@ -70,7 +70,7 @@ export default function MarketplacePurchasesPage() {
         <div className="flex items-center justify-between mb-10">
           <div>
             <h1 className="text-3xl font-black text-[#0a1628] flex items-center gap-3">
-              <ShoppingBag className="w-8 h-8 text-[#d4a017]" />
+              <ShoppingBag className="w-8 h-8 text-[#ffbe24]" />
               Marketplace Purchases
             </h1>
             <p className="text-slate-500 mt-1">
@@ -94,7 +94,7 @@ export default function MarketplacePurchasesPage() {
             </p>
             <Link
               href="/marketplace"
-              className="inline-flex items-center gap-2 bg-gradient-to-r from-[#f0c040] to-[#d4a017] text-[#0a1628] font-black px-6 py-3 rounded-xl hover:shadow-lg transition-all"
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-[#ffbe24] to-[#ffbe24] text-[#0a1628] font-black px-6 py-3 rounded-xl hover:shadow-lg transition-all"
             >
               <Package className="w-4 h-4" /> Explore Marketplace
             </Link>

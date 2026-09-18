@@ -107,7 +107,7 @@ export default function AdminMediaGalleryPage() {
             <button
               onClick={() => setGrid("compact")}
               className={`p-2 transition-all ${
-                grid === "compact" ? "bg-[#f0c040] text-slate-950" : "text-slate-400 hover:text-white"
+                grid === "compact" ? "bg-[#ffbe24] text-slate-950" : "text-slate-400 hover:text-white"
               }`}
             >
               <Grid3x3 className="w-4 h-4" />
@@ -115,7 +115,7 @@ export default function AdminMediaGalleryPage() {
             <button
               onClick={() => setGrid("large")}
               className={`p-2 transition-all ${
-                grid === "large" ? "bg-[#f0c040] text-slate-950" : "text-slate-400 hover:text-white"
+                grid === "large" ? "bg-[#ffbe24] text-slate-950" : "text-slate-400 hover:text-white"
               }`}
             >
               <LayoutGrid className="w-4 h-4" />
@@ -134,7 +134,7 @@ export default function AdminMediaGalleryPage() {
               onClick={() => handleTypeChange(t)}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${
                 type === t
-                  ? "bg-[#f0c040] text-[#0a1628] shadow-sm font-black"
+                  ? "bg-[#ffbe24] text-[#0a1628] shadow-sm font-black"
                   : "text-slate-400 hover:text-white"
               }`}
             >

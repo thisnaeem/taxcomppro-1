@@ -321,7 +321,7 @@ export default function CoverPhotoModal({
             onClick={() => fileInputRef.current?.click()}
             className={`border-2 border-dashed rounded-xl p-5 text-center cursor-pointer transition-all ${
               isDragging
-                ? "border-[#f0c040] bg-[#f0c040]/10 scale-[1.01]"
+                ? "border-[#ffbe24] bg-[#ffbe24]/10 scale-[1.01]"
                 : "border-slate-300 dark:border-slate-700 hover:border-[#1a3a6b] dark:hover:border-slate-500 bg-slate-50/50 dark:bg-slate-800/30"
             }`}
           >

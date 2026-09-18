@@ -21,7 +21,7 @@ export default function UpgradeModal({ onClose, feature = "This feature" }: Prop
         {/* Header */}
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#f0c040] to-[#d4a017] flex items-center justify-center shadow-md">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#ffbe24] to-[#ffbe24] flex items-center justify-center shadow-md">
               <Crown className="w-5 h-5 text-[#0a1628]" />
             </div>
             <div>
@@ -46,7 +46,7 @@ export default function UpgradeModal({ onClose, feature = "This feature" }: Prop
         <Link
           href="/upgrade"
           onClick={onClose}
-          className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#f0c040] to-[#d4a017] text-[#0a1628] font-black py-3.5 rounded-xl hover:shadow-lg hover:shadow-amber-200/50 transition-all text-sm"
+          className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#ffbe24] to-[#ffbe24] text-[#0a1628] font-black py-3.5 rounded-xl hover:shadow-lg hover:shadow-amber-200/50 transition-all text-sm"
         >
           Upgrade Now <ArrowRight className="w-4 h-4" />
         </Link>

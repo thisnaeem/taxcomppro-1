@@ -187,7 +187,7 @@ export default function AdminPage() {
         </div>
         <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
           <Link href="/marketplace/create"
-            className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-[#f0c040] text-[#0a1628] font-bold text-sm px-4 py-2.5 rounded-xl hover:bg-[#e5b52e] active:scale-[0.98] transition-all whitespace-nowrap">
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-[#ffbe24] text-[#0a1628] font-bold text-sm px-4 py-2.5 rounded-xl hover:bg-[#ffcb4d] active:scale-[0.98] transition-all whitespace-nowrap">
             <Plus className="w-4 h-4" /> Create Listing
           </Link>
           <Link href="/admin/payments"
@@ -218,7 +218,7 @@ export default function AdminPage() {
                 <p className={`${MUTED} text-xs mt-0.5`}>Listings waiting for review</p>
               </div>
               <Link href="/admin/approvals"
-                className="flex items-center gap-1 text-xs font-bold text-[#b8860b] hover:underline whitespace-nowrap">
+                className="flex items-center gap-1 text-xs font-bold text-[#ffbe24] hover:underline whitespace-nowrap">
                 View all <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
@@ -282,7 +282,7 @@ export default function AdminPage() {
                 <p className={`${MUTED} text-xs mt-0.5`}>Latest members joining the platform</p>
               </div>
               <Link href="/admin/users"
-                className="flex items-center gap-1 text-xs font-bold text-[#b8860b] hover:underline whitespace-nowrap">
+                className="flex items-center gap-1 text-xs font-bold text-[#ffbe24] hover:underline whitespace-nowrap">
                 Manage all <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
@@ -388,7 +388,7 @@ export default function AdminPage() {
             <p className={`${PANEL_LABEL} mb-3`}>Quick Actions</p>
             <div className="flex flex-col gap-2">
               <Link href="/marketplace/create"
-                className="flex items-center gap-2 bg-[#f0c040] text-[#0a1628] font-bold text-sm px-4 py-2.5 rounded-xl hover:bg-[#e5b52e] active:scale-[0.98] transition-all">
+                className="flex items-center gap-2 bg-[#ffbe24] text-[#0a1628] font-bold text-sm px-4 py-2.5 rounded-xl hover:bg-[#ffcb4d] active:scale-[0.98] transition-all">
                 <Plus className="w-4 h-4" /> Create Featured Listing
               </Link>
               <Link href="/admin/content-calendar"

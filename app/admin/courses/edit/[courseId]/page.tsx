@@ -145,7 +145,7 @@ export default function EditCoursePage() {
 
   const handlePublishToggle = () => setStatus(s => s === "PUBLISHED" ? "DRAFT" : "PUBLISHED");
 
-  if (loading) return <div className="flex justify-center py-24"><Loader2 className="w-8 h-8 text-[#d4a017] animate-spin"/></div>;
+  if (loading) return <div className="flex justify-center py-24"><Loader2 className="w-8 h-8 text-[#ffbe24] animate-spin"/></div>;
   if (!course) return null;
 
   return (
@@ -169,7 +169,7 @@ export default function EditCoursePage() {
             {status==="PUBLISHED" ? <><EyeOff className="w-4 h-4"/> Unpublish</> : <><Eye className="w-4 h-4"/> Publish</>}
           </button>
           <button onClick={handleSave} disabled={saving}
-            className="flex items-center gap-1.5 text-sm font-bold bg-gradient-to-r from-[#f0c040] to-[#d4a017] text-[#0a1628] px-5 py-2.5 rounded-xl hover:shadow-lg disabled:opacity-50 transition-all">
+            className="flex items-center gap-1.5 text-sm font-bold bg-gradient-to-r from-[#ffbe24] to-[#ffbe24] text-[#0a1628] px-5 py-2.5 rounded-xl hover:shadow-lg disabled:opacity-50 transition-all">
             {saving ? <Loader2 className="w-4 h-4 animate-spin"/> : saved ? <CheckCircle2 className="w-4 h-4"/> : <Save className="w-4 h-4"/>}
             {saved ? "Saved!" : saving ? "Saving…" : "Save Changes"}
           </button>
@@ -355,7 +355,7 @@ export default function EditCoursePage() {
                     );
                   })}
                   <button onClick={()=>addLesson(sec.id)}
-                    className="w-full flex items-center justify-center gap-2 text-sm font-bold text-[#d4a017] border-2 border-dashed border-[#d4a017]/30 py-2.5 rounded-xl hover:bg-[#f0c040]/5 transition-all">
+                    className="w-full flex items-center justify-center gap-2 text-sm font-bold text-[#ffbe24] border-2 border-dashed border-[#ffbe24]/30 py-2.5 rounded-xl hover:bg-[#ffbe24]/5 transition-all">
                     <Plus className="w-4 h-4"/> Add Lesson
                   </button>
                 </div>
@@ -378,7 +378,7 @@ export default function EditCoursePage() {
           Delete Course Permanently
         </button>
         <button onClick={handleSave} disabled={saving}
-          className="flex items-center gap-2 text-sm font-bold bg-gradient-to-r from-[#f0c040] to-[#d4a017] text-[#0a1628] px-6 py-3 rounded-xl hover:shadow-lg disabled:opacity-50 transition-all">
+          className="flex items-center gap-2 text-sm font-bold bg-gradient-to-r from-[#ffbe24] to-[#ffbe24] text-[#0a1628] px-6 py-3 rounded-xl hover:shadow-lg disabled:opacity-50 transition-all">
           {saving ? <Loader2 className="w-4 h-4 animate-spin"/> : <GraduationCap className="w-4 h-4"/>}
           {saving ? "Saving…" : "Save All Changes"}
         </button>

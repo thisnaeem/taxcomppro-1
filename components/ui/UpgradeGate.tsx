@@ -14,7 +14,7 @@ export default function UpgradeGate({ feature, description }: Props) {
       <div className="max-w-md w-full text-center">
 
         {/* Crown icon */}
-        <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-[#f0c040] to-[#d4a017] flex items-center justify-center mx-auto mb-6 shadow-xl shadow-amber-200/60">
+        <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-[#ffbe24] to-[#ffbe24] flex items-center justify-center mx-auto mb-6 shadow-xl shadow-amber-200/60">
           <Crown className="w-10 h-10 text-[#0a1628]" />
         </div>
 
@@ -32,7 +32,7 @@ export default function UpgradeGate({ feature, description }: Props) {
 
         {/* Pricing card */}
         <div className="bg-gradient-to-br from-[#0a1628] to-[#1a3a6b] rounded-2xl p-6 mb-6 text-white text-left">
-          <div className="text-[11px] font-black uppercase tracking-widest text-[#f0c040] mb-3">
+          <div className="text-[11px] font-black uppercase tracking-widest text-[#ffbe24] mb-3">
             VIP Membership
           </div>
           <div className="flex items-baseline gap-1 mb-1">
@@ -50,7 +50,7 @@ export default function UpgradeGate({ feature, description }: Props) {
               "Communities Full Interaction",
             ].map((f) => (
               <li key={f} className="flex items-center gap-2.5 text-sm text-white/80">
-                <CheckCircle2 className="w-4 h-4 text-[#f0c040] shrink-0" />
+                <CheckCircle2 className="w-4 h-4 text-[#ffbe24] shrink-0" />
                 {f}
               </li>
             ))}
@@ -59,7 +59,7 @@ export default function UpgradeGate({ feature, description }: Props) {
 
         <Link
           href="/upgrade"
-          className="inline-flex items-center gap-2 bg-gradient-to-r from-[#f0c040] to-[#d4a017] text-[#0a1628] font-black px-8 py-4 rounded-full hover:shadow-[0_0_30px_rgba(212,160,23,0.45)] hover:-translate-y-0.5 transition-all text-base"
+          className="inline-flex items-center gap-2 bg-gradient-to-r from-[#ffbe24] to-[#ffbe24] text-[#0a1628] font-black px-8 py-4 rounded-full hover:shadow-[0_0_30px_rgba(255, 190, 36,0.45)] hover:-translate-y-0.5 transition-all text-base"
         >
           Upgrade to VIP <ArrowRight className="w-5 h-5" />
         </Link>

@@ -75,7 +75,7 @@ function MsgBubble({
         <div className="flex items-center gap-2 mt-1 pl-1">
           <button
             onClick={onOpenTicket}
-            className="bg-[#f0c040] hover:bg-amber-400 text-slate-950 font-black text-[11px] px-3 py-1.5 rounded-xl shadow-sm transition-all flex items-center gap-1 active:scale-95"
+            className="bg-[#ffbe24] hover:bg-amber-400 text-slate-950 font-black text-[11px] px-3 py-1.5 rounded-xl shadow-sm transition-all flex items-center gap-1 active:scale-95"
           >
             <LifeBuoy className="w-3.5 h-3.5" /> YES — SUBMIT TICKET
           </button>
@@ -527,7 +527,7 @@ export default function AtlasWidget() {
         @keyframes atlasTyping { 0%,80%,100%{transform:scale(0.7);opacity:0.4} 40%{transform:scale(1);opacity:1} }
         @keyframes atlasPop { from{opacity:0;transform:translateY(16px) scale(0.96)} to{opacity:1;transform:translateY(0) scale(1)} }
         .atlas-panel { animation: atlasPop 0.22s cubic-bezier(0.34,1.56,0.64,1) both; }
-        @keyframes atlasPulse { 0%,100%{box-shadow:0 0 0 0 rgba(212,160,23,0.5)} 50%{box-shadow:0 0 0 8px rgba(212,160,23,0)} }
+        @keyframes atlasPulse { 0%,100%{box-shadow:0 0 0 0 rgba(255, 190, 36,0.5)} 50%{box-shadow:0 0 0 8px rgba(255, 190, 36,0)} }
         .atlas-unread { animation: atlasPulse 1.8s ease-in-out infinite; }
       `}</style>
 
@@ -561,7 +561,7 @@ export default function AtlasWidget() {
             src="/animation.webp"
             alt="Atlas AI Assistant"
             draggable={false}
-            className="w-full h-full object-contain pointer-events-none drop-shadow-[0_12px_24px_rgba(0,0,0,0.4)] group-hover:drop-shadow-[0_18px_36px_rgba(240,192,64,0.45)] transition-all select-none"
+            className="w-full h-full object-contain pointer-events-none drop-shadow-[0_12px_24px_rgba(0,0,0,0.4)] group-hover:drop-shadow-[0_18px_36px_rgba(255, 190, 36,0.45)] transition-all select-none"
           />
 
           {/* Unread badge */}

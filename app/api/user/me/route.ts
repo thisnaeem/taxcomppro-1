@@ -246,8 +246,8 @@ export async function GET(req: NextRequest) {
         text: n.badgeText || "OWNER",
         icon: n.badgeIcon || "Crown",
         bgColor: n.badgeBgColor || "#0a1628",
-        textColor: n.badgeTextColor || "#f0c040",
-        borderColor: n.badgeBorderColor || "#d4a017",
+        textColor: n.badgeTextColor || "#ffbe24",
+        borderColor: n.badgeBorderColor || "#ffbe24",
         customImage: logo,
         logoImage: logo,
       };
@@ -269,8 +269,8 @@ export async function GET(req: NextRequest) {
           text: m.network.badgeText || "MEMBER",
           icon: m.network.badgeIcon || "Star",
           bgColor: m.network.badgeBgColor || "#0a1628",
-          textColor: m.network.badgeTextColor || "#f0c040",
-          borderColor: m.network.badgeBorderColor || "#d4a017",
+          textColor: m.network.badgeTextColor || "#ffbe24",
+          borderColor: m.network.badgeBorderColor || "#ffbe24",
           customImage: logo,
           logoImage: logo,
         };

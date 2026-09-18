@@ -74,7 +74,7 @@ function LoginForm() {
           New to Tax Compliance Pro?{" "}
           <Link
             href="/register"
-            className="font-bold text-[#b8860b] underline-offset-2 hover:underline dark:text-[#f0c040]"
+            className="font-bold text-[#ffbe24] underline-offset-2 hover:underline dark:text-[#ffbe24]"
           >
             Create an account
           </Link>
@@ -139,7 +139,7 @@ function LoginForm() {
             </label>
             <Link
               href="/forgot-password"
-              className="text-xs font-semibold text-slate-600 transition-colors hover:text-[#b8860b] dark:text-slate-300 dark:hover:text-[#f0c040]"
+              className="text-xs font-semibold text-slate-600 transition-colors hover:text-[#ffbe24] dark:text-slate-300 dark:hover:text-[#ffbe24]"
             >
               Forgot password?
             </Link>
@@ -197,7 +197,7 @@ function LoginForm() {
         <button
           type="submit"
           disabled={loading || googleLoading}
-          className="mt-1 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#f0c040] to-[#d4a017] py-3.5 text-sm font-bold text-[#0a1628] transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(212,160,23,0.35)] active:translate-y-0 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:shadow-none"
+          className="mt-1 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#ffbe24] to-[#ffbe24] py-3.5 text-sm font-bold text-[#0a1628] transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(255, 190, 36,0.35)] active:translate-y-0 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:shadow-none"
         >
           {loading ? (
             <>

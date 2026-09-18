@@ -100,12 +100,12 @@ export default function MobileBottomNav() {
               key={item.label}
               href={item.href}
               className={`relative flex flex-col items-center justify-center flex-1 py-1.5 min-w-[56px] transition-all duration-200 active:scale-90 ${
-                active ? "text-[#f0c040]" : "text-slate-400 hover:text-white"
+                active ? "text-[#ffbe24]" : "text-slate-400 hover:text-white"
               }`}
             >
               {/* Active Indicator Top Bar */}
               {active && (
-                <span className="absolute -top-1 w-6 h-[2.5px] bg-gradient-to-r from-[#f0c040] to-[#d4a017] rounded-full shadow-[0_0_10px_#f0c040]" />
+                <span className="absolute -top-1 w-6 h-[2.5px] bg-gradient-to-r from-[#ffbe24] to-[#ffbe24] rounded-full shadow-[0_0_10px_#ffbe24]" />
               )}
 
               {/* Icon Container with Badge */}
@@ -115,7 +115,7 @@ export default function MobileBottomNav() {
                     src={item.avatarUrl}
                     alt=""
                     className={`w-6 h-6 rounded-full object-cover border transition-all ${
-                      active ? "border-[#f0c040] shadow-[0_0_8px_rgba(240,192,64,0.5)]" : "border-white/30"
+                      active ? "border-[#ffbe24] shadow-[0_0_8px_rgba(255, 190, 36,0.5)]" : "border-white/30"
                     }`}
                   />
                 ) : (
@@ -137,7 +137,7 @@ export default function MobileBottomNav() {
               {/* Label */}
               <span
                 className={`text-[10px] tracking-tight leading-tight transition-colors ${
-                  active ? "font-black text-[#f0c040]" : "font-semibold text-slate-400"
+                  active ? "font-black text-[#ffbe24]" : "font-semibold text-slate-400"
                 }`}
               >
                 {item.label}

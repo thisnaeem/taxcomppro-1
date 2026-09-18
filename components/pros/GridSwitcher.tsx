@@ -1,21 +1,63 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 
-export type GridViewType = "grid-3" | "grid-2" | "list";
+export type GridViewType = "grid-4" | "grid-3" | "grid-2" | "list";
+
+/** Grid layout state that remembers the viewer's last choice per page. */
+export function useGridView(storageKey: string, fallback: GridViewType, allowed: GridViewType[]) {
+  const [view, setView] = useState<GridViewType>(fallback);
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(storageKey) as GridViewType | null;
+      if (saved && allowed.includes(saved)) setView(saved);
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storageKey]);
+  const update = (next: GridViewType) => {
+    setView(next);
+    try { localStorage.setItem(storageKey, next); } catch {}
+  };
+  return [view, update] as const;
+}
 
 interface GridSwitcherProps {
   currentView: GridViewType;
   onViewChange: (view: GridViewType) => void;
+  /** Which layouts to offer, in display order. */
+  options?: GridViewType[];
+  className?: string;
 }
 
-export function GridSwitcher({ currentView, onViewChange }: GridSwitcherProps) {
+export function GridSwitcher({
+  currentView,
+  onViewChange,
+  options = ["grid-4", "grid-3", "grid-2", "list"],
+  className = "fp-grid-switcher",
+}: GridSwitcherProps) {
   const views: {
     id: GridViewType;
     label: string;
     tooltip: string;
     icon: React.ReactNode;
   }[] = [
+    {
+      id: "grid-4",
+      label: "4 Columns",
+      tooltip: "4-Column Compact Grid",
+      icon: (
+        <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+          <rect x="1.5" y="2.5" width="3.4" height="6.5" rx="1" />
+          <rect x="6" y="2.5" width="3.4" height="6.5" rx="1" />
+          <rect x="10.5" y="2.5" width="3.4" height="6.5" rx="1" />
+          <rect x="15" y="2.5" width="3.4" height="6.5" rx="1" />
+          <rect x="1.5" y="11" width="3.4" height="6.5" rx="1" />
+          <rect x="6" y="11" width="3.4" height="6.5" rx="1" />
+          <rect x="10.5" y="11" width="3.4" height="6.5" rx="1" />
+          <rect x="15" y="11" width="3.4" height="6.5" rx="1" />
+        </svg>
+      ),
+    },
     {
       id: "grid-3",
       label: "3 Columns",
@@ -77,9 +119,9 @@ export function GridSwitcher({ currentView, onViewChange }: GridSwitcherProps) {
     <div
       role="group"
       aria-label="Card grid display options"
-      className="fp-grid-switcher"
+      className={className}
     >
-      {views.map((v) => {
+      {views.filter((v) => options.includes(v.id)).map((v) => {
         const active = currentView === v.id;
         return (
           <button

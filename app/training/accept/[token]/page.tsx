@@ -112,11 +112,11 @@ export default function AcceptTrainingInvitePage() {
           </div>
 
           <button onClick={register} disabled={loading}
-            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#f0c040] to-[#d4a017] text-[#0a1628] font-bold text-sm py-3.5 rounded-full hover:shadow-lg transition-all disabled:opacity-60 mb-3">
+            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#ffbe24] to-[#ffbe24] text-[#0a1628] font-bold text-sm py-3.5 rounded-full hover:shadow-lg transition-all disabled:opacity-60 mb-3">
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Create My Training Account <ArrowRight className="w-4 h-4" /></>}
           </button>
           <p className="text-xs text-center text-slate-400">
-            Already have a TaxCompPro account with this email? <Link href={`/login?next=/training/accept/${token}`} className="text-[#d4a017] font-bold hover:underline">Log in instead</Link>
+            Already have a TaxCompPro account with this email? <Link href={`/login?next=/training/accept/${token}`} className="text-[#ffbe24] font-bold hover:underline">Log in instead</Link>
           </p>
         </div>
       </div>

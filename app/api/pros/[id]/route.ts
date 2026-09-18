@@ -141,8 +141,8 @@ export async function GET(_req: NextRequest, { params }: Params) {
       text: n.badgeText || "OWNER",
       icon: n.badgeIcon || "Crown",
       bgColor: n.badgeBgColor || "#0a1628",
-      textColor: n.badgeTextColor || "#f0c040",
-      borderColor: n.badgeBorderColor || "#d4a017",
+      textColor: n.badgeTextColor || "#ffbe24",
+      borderColor: n.badgeBorderColor || "#ffbe24",
       customImage: logo,
       logoImage: logo,
     };

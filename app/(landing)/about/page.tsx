@@ -28,9 +28,9 @@ export default function AboutPage() {
     <main className="min-h-screen bg-white">
       {/* Hero */}
       <section className="bg-[#0a1628] pt-24 pb-20 px-6 text-center">
-        <p className="text-[#d4a017] font-bold text-sm uppercase tracking-widest mb-4">About TaxCompPro</p>
+        <p className="text-[#ffbe24] font-bold text-sm uppercase tracking-widest mb-4">About TaxCompPro</p>
         <h1 className="text-4xl md:text-5xl font-black text-white mb-6 max-w-3xl mx-auto leading-tight">
-          The Professional Community for <span className="text-[#d4a017]">Tax Excellence</span>
+          The Professional Community for <span className="text-[#ffbe24]">Tax Excellence</span>
         </h1>
         <p className="text-white/60 text-lg max-w-2xl mx-auto leading-relaxed">
           TaxCompPro was founded with a single mission: to connect, educate, and empower every tax professional and taxpayer in America.
@@ -42,7 +42,7 @@ export default function AboutPage() {
         <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
           {stats.map(s => (
             <div key={s.label}>
-              <p className="text-3xl font-black text-[#d4a017]">{s.value}</p>
+              <p className="text-3xl font-black text-[#ffbe24]">{s.value}</p>
               <p className="text-white/50 text-sm mt-1">{s.label}</p>
             </div>
           ))}
@@ -77,7 +77,7 @@ export default function AboutPage() {
             {values.map(v => (
               <div key={v.title} className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
                 <div className="w-11 h-11 rounded-xl bg-[#0a1628] flex items-center justify-center mb-4">
-                  <v.icon className="w-5 h-5 text-[#d4a017]" />
+                  <v.icon className="w-5 h-5 text-[#ffbe24]" />
                 </div>
                 <h3 className="font-black text-[#0a1628] mb-2">{v.title}</h3>
                 <p className="text-slate-500 text-sm leading-relaxed">{v.desc}</p>

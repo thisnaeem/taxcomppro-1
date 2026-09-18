@@ -179,7 +179,7 @@ export default function RichTextEditor({ value, onChange, placeholder = "Write a
           [&_h1]:text-2xl [&_h1]:font-black [&_h1]:text-[#0a1628] [&_h1]:mt-4 [&_h1]:mb-2
           [&_h2]:text-xl [&_h2]:font-bold [&_h2]:text-[#0a1628] [&_h2]:mt-3 [&_h2]:mb-1.5
           [&_p]:mb-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mb-1
-          [&_blockquote]:border-l-4 [&_blockquote]:border-[#d4a017] [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-slate-500
+          [&_blockquote]:border-l-4 [&_blockquote]:border-[#ffbe24] [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-slate-500
           [&_hr]:my-4 [&_a]:text-[#1a3a6b] [&_a]:underline
           [&_img]:max-w-full [&_img]:rounded-lg [&_img]:my-2"
         style={{ minHeight }}
