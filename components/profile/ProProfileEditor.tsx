@@ -96,6 +96,7 @@ export default function ProProfileEditor() {
   });
 
   // Dynamic Networks, Badges, and Primary Network
+  const [feedPhotos, setFeedPhotos] = useState<Array<{ url: string; postId: string }>>([]);
   const [proNetworks, setProNetworks] = useState<Array<{
     id: string;
     role?: string;
@@ -253,6 +254,9 @@ export default function ProProfileEditor() {
           });
         }
 
+        if (Array.isArray(u.feedPhotos)) {
+          setFeedPhotos(u.feedPhotos);
+        }
         if (Array.isArray(u.proNetworks)) {
           setProNetworks(u.proNetworks);
         }
@@ -1011,12 +1015,18 @@ export default function ProProfileEditor() {
                 </h3>
                 <button onClick={() => setActiveTab("media")} className="text-xs font-bold profile-accent hover:underline">View All</button>
               </div>
-              {profile.mediaPhotos.length > 0 ? (
+              {profile.mediaPhotos.length + feedPhotos.length > 0 ? (
                 <div className="profile-media-strip">
-                  {profile.mediaPhotos.map((src, i) => (
+                  {profile.mediaPhotos.map((src, n) => (
                     <a key={src} href={src} target="_blank" rel="noopener noreferrer" className="profile-media-tile">
-                      <img src={src} alt={`Media ${i + 1}`} loading="lazy" />
+                      <img src={src} alt={`Media ${n + 1}`} loading="lazy" />
                     </a>
+                  ))}
+                  {feedPhotos.filter((f) => !profile.mediaPhotos.includes(f.url)).map((f) => (
+                    <Link key={`${f.postId}-${f.url}`} href={`/feed?post=${f.postId}`} className="profile-media-tile" title="Open feed post">
+                      <img src={f.url} alt="Feed post photo" loading="lazy" />
+                      <span className="profile-media-tag">Feed</span>
+                    </Link>
                   ))}
                 </div>
               ) : (
@@ -1185,6 +1195,22 @@ export default function ProProfileEditor() {
                 <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Upload photos of your office, speaking events, and certificates.</p>
               </div>
               <MediaGallery photos={profile.mediaPhotos} onChange={updateMediaPhotos} />
+              {feedPhotos.length > 0 && (
+                <div className="border-t border-slate-100 dark:border-slate-800 pt-5 space-y-3">
+                  <div>
+                    <h3 className="text-xs font-black text-[#0A1628] dark:text-white uppercase tracking-widest">From your feed</h3>
+                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Photos from your feed posts appear in your gallery automatically.</p>
+                  </div>
+                  <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3">
+                    {feedPhotos.map((f) => (
+                      <Link key={`${f.postId}-${f.url}`} href={`/feed?post=${f.postId}`} className="profile-media-tile" title="Open feed post">
+                        <img src={f.url} alt="Feed post photo" loading="lazy" />
+                        <span className="profile-media-tag">Feed</span>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

@@ -22,6 +22,7 @@ export async function GET(req: NextRequest) {
     memberNetworks,
     discussionsStarted,
     proTalksHosted,
+    feedImagePosts,
     connections,
   ] = await Promise.all([
     prisma.user.findUnique({
@@ -177,6 +178,18 @@ export async function GET(req: NextRequest) {
     prisma.proNetworkEvent.count({
       where: { hostId: session.user.id },
     }),
+    // Images the user posted to the main feed (not group posts, not still-scheduled posts)
+    prisma.post.findMany({
+      where: {
+        authorId: session.user.id,
+        communityId: null,
+        images: { isEmpty: false },
+        OR: [{ scheduledAt: null }, { scheduledAt: { lte: new Date() } }],
+      },
+      select: { id: true, images: true, createdAt: true },
+      orderBy: { createdAt: "desc" },
+      take: 30,
+    }),
     // Accepted connections in either direction (same rule as /connections)
     prisma.connection.count({
       where: {
@@ -310,6 +323,9 @@ export async function GET(req: NextRequest) {
     ...user,
     hasDueDiligenceBadge,
     proNetworks: [...formattedOwnedNetworks, ...formattedJoinedNetworks],
+    feedPhotos: feedImagePosts
+      .flatMap((post) => post.images.map((url) => ({ url, postId: post.id, createdAt: post.createdAt })))
+      .slice(0, 48),
     myBadges,
     primaryNetwork: primaryNetwork
       ? {

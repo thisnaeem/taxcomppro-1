@@ -6,101 +6,161 @@ import { Mic, Square, Play, Pause, Trash2, Upload, Loader2, Volume2 } from "luci
 const MAX_SECONDS = 4 * 60; // 4 minutes
 
 function formatTime(s: number) {
+  if (!Number.isFinite(s) || s < 0) s = 0;
   const m = Math.floor(s / 60);
   const sec = Math.floor(s % 60);
   return `${m}:${sec.toString().padStart(2, "0")}`;
 }
 
 // ── Public Player (read-only) ─────────────────────────────────────────────────
+const BAR_COUNT = 56;
+
+/** Deterministic fallback shape so the waveform never looks empty. */
+function seededBars(seed: string) {
+  let h = 2166136261;
+  for (let i = 0; i < seed.length; i++) h = Math.imul(h ^ seed.charCodeAt(i), 16777619);
+  return Array.from({ length: BAR_COUNT }, (_, i) => {
+    h = Math.imul(h ^ (h >>> 13), 1274126177);
+    const noise = ((h >>> 0) % 1000) / 1000;
+    const envelope = 0.55 + 0.45 * Math.sin((i / BAR_COUNT) * Math.PI);
+    return Math.max(0.12, envelope * (0.35 + noise * 0.65));
+  });
+}
+
+/** Decode the audio once to get real peaks and a reliable duration (webm recordings report Infinity). */
+async function analyse(url: string, signal: AbortSignal) {
+  const buf = await fetch(url, { signal }).then(r => r.arrayBuffer());
+  const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+  const ctx = new Ctx();
+  try {
+    const audio = await ctx.decodeAudioData(buf);
+    const data = audio.getChannelData(0);
+    const block = Math.floor(data.length / BAR_COUNT) || 1;
+    const peaks = Array.from({ length: BAR_COUNT }, (_, i) => {
+      let max = 0;
+      for (let j = i * block; j < (i + 1) * block && j < data.length; j += 16) max = Math.max(max, Math.abs(data[j]));
+      return max;
+    });
+    const top = Math.max(...peaks) || 1;
+    return { duration: audio.duration, bars: peaks.map(p => Math.max(0.1, p / top)) };
+  } finally {
+    void ctx.close();
+  }
+}
+
 export function VoiceMemoPlayer({ url, name }: { url: string; name?: string }) {
-  const audioRef  = useRef<HTMLAudioElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const waveRef  = useRef<HTMLDivElement>(null);
   const [playing, setPlaying]   = useState(false);
   const [current, setCurrent]   = useState(0);
   const [duration, setDuration] = useState(0);
-  const [loaded,  setLoaded]    = useState(false);
+  const [bars, setBars]         = useState<number[]>(() => seededBars(url));
 
   useEffect(() => {
     const el = audioRef.current;
     if (!el) return;
-    const onTime  = () => setCurrent(el.currentTime);
-    const onMeta  = () => { setDuration(el.duration); setLoaded(true); };
-    const onEnd   = () => setPlaying(false);
+    const useDuration = () => { if (Number.isFinite(el.duration) && el.duration > 0) setDuration(el.duration); };
+    const onTime = () => setCurrent(el.currentTime);
+    const onEnd  = () => { setPlaying(false); setCurrent(0); };
     el.addEventListener("timeupdate", onTime);
-    el.addEventListener("loadedmetadata", onMeta);
+    el.addEventListener("loadedmetadata", useDuration);
+    el.addEventListener("durationchange", useDuration);
     el.addEventListener("ended", onEnd);
-    return () => { el.removeEventListener("timeupdate", onTime); el.removeEventListener("loadedmetadata", onMeta); el.removeEventListener("ended", onEnd); };
+    return () => {
+      el.removeEventListener("timeupdate", onTime);
+      el.removeEventListener("loadedmetadata", useDuration);
+      el.removeEventListener("durationchange", useDuration);
+      el.removeEventListener("ended", onEnd);
+    };
   }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    analyse(url, controller.signal)
+      .then(r => { if (!controller.signal.aborted) { setBars(r.bars); if (r.duration > 0) setDuration(r.duration); } })
+      .catch(() => {});
+    return () => controller.abort();
+  }, [url]);
 
   const toggle = () => {
     const el = audioRef.current;
     if (!el) return;
     if (playing) { el.pause(); setPlaying(false); }
-    else         { el.play();  setPlaying(true); }
+    else { void el.play().then(() => setPlaying(true)).catch(() => setPlaying(false)); }
   };
 
-  const seek = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const seekTo = (fraction: number) => {
     const el = audioRef.current;
-    if (!el) return;
-    el.currentTime = Number(e.target.value);
+    if (!el || !duration) return;
+    el.currentTime = Math.min(Math.max(fraction, 0), 1) * duration;
     setCurrent(el.currentTime);
   };
 
-  const progress = duration > 0 ? (current / duration) * 100 : 0;
+  const onWavePointer = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.type === "pointermove" && e.buttons !== 1) return;
+    const rect = waveRef.current?.getBoundingClientRect();
+    if (rect) seekTo((e.clientX - rect.left) / rect.width);
+  };
+
+  const onWaveKey = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (!duration) return;
+    if (e.key === "ArrowRight") { e.preventDefault(); seekTo((current + 5) / duration); }
+    if (e.key === "ArrowLeft")  { e.preventDefault(); seekTo((current - 5) / duration); }
+  };
+
+  const progress = duration > 0 ? current / duration : 0;
 
   return (
-    <div className="bg-gradient-to-r from-[#0a1628]/8 to-[#1a3a6b]/8 border border-[#0a1628]/12 rounded-2xl p-4">
+    <div className="rounded-2xl border border-slate-200 dark:border-slate-700/70 bg-slate-50 dark:bg-[#0f1a2e] p-4">
       <div className="flex items-center gap-2 mb-3">
-        <Volume2 className="w-3.5 h-3.5 text-[#0a1628]/50" />
-        <p className="text-[10px] font-black uppercase tracking-widest text-[#0a1628]/50">Voice Intro</p>
-        {name && <p className="text-[10px] text-slate-400 ml-auto">{name}</p>}
+        <Volume2 className="w-3.5 h-3.5 text-amber-500" />
+        <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-300">Voice Intro</p>
+        {name && <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-300 ml-auto truncate">{name}</p>}
       </div>
 
       <audio ref={audioRef} src={url} preload="metadata" />
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-4">
         <button
           onClick={toggle}
-          disabled={!loaded}
-          className="w-10 h-10 rounded-full bg-[#0a1628] text-white flex items-center justify-center shrink-0 hover:bg-[#1a3a6b] transition-all disabled:opacity-40 shadow-md"
+          aria-label={playing ? "Pause voice intro" : "Play voice intro"}
+          className="w-12 h-12 rounded-full bg-[#ffbe24] text-[#0a1628] flex items-center justify-center shrink-0 hover:brightness-105 active:scale-95 transition-all shadow-[0_6px_20px_-6px_rgba(255,190,36,0.7)]"
         >
-          {playing ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
+          {playing ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 ml-0.5 fill-current" />}
         </button>
 
-        <div className="flex-1 space-y-1">
-          <div className="relative h-1.5 bg-slate-200 rounded-full overflow-hidden">
-            <div
-              className="absolute left-0 top-0 h-full bg-[#0a1628] rounded-full transition-all"
-              style={{ width: `${progress}%` }}
-            />
-            <input
-              type="range"
-              min={0}
-              max={duration || 100}
-              step={0.1}
-              value={current}
-              onChange={seek}
-              className="absolute inset-0 w-full opacity-0 cursor-pointer"
-            />
+        <div className="flex-1 min-w-0">
+          <div
+            ref={waveRef}
+            role="slider"
+            tabIndex={0}
+            aria-label="Seek voice intro"
+            aria-valuemin={0}
+            aria-valuemax={Math.round(duration)}
+            aria-valuenow={Math.round(current)}
+            aria-valuetext={`${formatTime(current)} of ${formatTime(duration)}`}
+            onPointerDown={onWavePointer}
+            onPointerMove={onWavePointer}
+            onKeyDown={onWaveKey}
+            className="flex items-center gap-[3px] h-12 cursor-pointer select-none touch-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-400 rounded"
+          >
+            {bars.map((h, i) => {
+              const played = (i + 0.5) / bars.length <= progress;
+              return (
+                <span
+                  key={i}
+                  className={`flex-1 min-w-[2px] rounded-full transition-colors duration-150 ${played ? "bg-[#ffbe24]" : "bg-slate-300 dark:bg-slate-600/70"}`}
+                  style={{ height: `${Math.round(h * 100)}%` }}
+                />
+              );
+            })}
           </div>
-          <div className="flex justify-between text-[10px] text-slate-400 font-medium">
+          <div className="flex justify-between mt-1.5 text-[11px] font-semibold tabular-nums text-slate-500 dark:text-slate-300">
             <span>{formatTime(current)}</span>
-            <span>{loaded ? formatTime(duration) : "--:--"}</span>
+            <span>{duration ? formatTime(duration) : "--:--"}</span>
           </div>
         </div>
       </div>
-
-      {/* Animated waveform bars while playing */}
-      {playing && (
-        <div className="flex items-end justify-center gap-0.5 mt-3 h-5">
-          {[0.4, 0.7, 1, 0.6, 0.9, 0.5, 0.8, 0.3, 0.7, 1, 0.6, 0.4].map((h, i) => (
-            <span
-              key={i}
-              className="w-1 bg-[#0a1628]/40 rounded-full animate-pulse"
-              style={{ height: `${h * 18}px`, animationDelay: `${i * 60}ms` }}
-            />
-          ))}
-        </div>
-      )}
     </div>
   );
 }

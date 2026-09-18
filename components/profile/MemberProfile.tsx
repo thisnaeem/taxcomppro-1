@@ -122,6 +122,7 @@ export default function MemberProfile() {
   const [networkCopied, setNetworkCopied] = useState(false);
 
   // Pro Networks, Badges, and Primary Network
+  const [feedPhotos, setFeedPhotos] = useState<Array<{ url: string; postId: string }>>([]);
   const [proNetworks, setProNetworks] = useState<Array<{
     id: string;
     role?: string;
@@ -239,6 +240,9 @@ export default function MemberProfile() {
           });
         }
 
+        if (Array.isArray(u.feedPhotos)) {
+          setFeedPhotos(u.feedPhotos);
+        }
         if (Array.isArray(u.proNetworks)) {
           setProNetworks(u.proNetworks);
         }
@@ -791,21 +795,27 @@ export default function MemberProfile() {
             </div>
 
             {/* MEDIA GALLERY — view only */}
-            {profile.mediaPhotos.length > 0 && (
+            {profile.mediaPhotos.length + feedPhotos.length > 0 && (
             <div className="profile-overview-media rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-5 shadow-xs space-y-4">
               <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                 <h3 className="text-xs font-black text-[#0A1628] dark:text-white uppercase tracking-widest flex items-center gap-2">
                   <ImageIcon className="w-4 h-4 text-amber-500" />
                   MEDIA GALLERY
                 </h3>
-                <span className="text-[11px] font-bold text-slate-400">{profile.mediaPhotos.length} photos</span>
+                <span className="text-[11px] font-bold text-slate-400">{profile.mediaPhotos.length + feedPhotos.length} photos</span>
               </div>
-              {profile.mediaPhotos.length > 0 ? (
+              {profile.mediaPhotos.length + feedPhotos.length > 0 ? (
                 <div className="profile-media-strip">
-                  {profile.mediaPhotos.map((src, i) => (
+                  {profile.mediaPhotos.map((src, n) => (
                     <a key={src} href={src} target="_blank" rel="noopener noreferrer" className="profile-media-tile">
-                      <img src={src} alt={`Media ${i + 1}`} loading="lazy" />
+                      <img src={src} alt={`Media ${n + 1}`} loading="lazy" />
                     </a>
+                  ))}
+                  {feedPhotos.filter((f) => !profile.mediaPhotos.includes(f.url)).map((f) => (
+                    <Link key={`${f.postId}-${f.url}`} href={`/feed?post=${f.postId}`} className="profile-media-tile" title="Open feed post">
+                      <img src={f.url} alt="Feed post photo" loading="lazy" />
+                      <span className="profile-media-tag">Feed</span>
+                    </Link>
                   ))}
                 </div>
               ) : (
