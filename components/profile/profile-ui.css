@@ -86,14 +86,7 @@
 
 /* ── Overview: two equal columns of stacked cards + full-width media strip ── */
 .profile-editor .profile-overview{display:flex;flex-direction:column;gap:16px}
-.profile-editor .profile-overview-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:stretch}
-/* Equal-height columns: the last card in each column grows to fill, so there's no gap under the shorter side */
-.profile-editor .profile-overview-col>:last-child{flex:1 1 auto;display:flex;flex-direction:column}
-.profile-editor .profile-overview-col>:last-child>:last-child{margin-top:auto}
-.profile-editor .profile-overview-col{display:flex;flex-direction:column;gap:16px;min-width:0}
-.profile-editor .profile-overview-col>*{margin:0!important}
-.profile-editor :is(.profile-overview-col,.profile-overview)>.rounded-3xl{padding:20px}
-@media(max-width:1100px){.profile-editor .profile-overview-grid{grid-template-columns:minmax(0,1fr)}}
+.profile-editor .profile-overview>.rounded-3xl{padding:20px}
 /* sections inside the About card (expertise / services / credentials) */
 .profile-about-section{border-top:1px solid var(--profile-border);padding-top:14px;margin-top:14px}
 .profile-about-section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
@@ -108,3 +101,13 @@
 .profile-overview-note p{font-size:11px;line-height:1.6;color:var(--profile-muted);padding:0 4px}
 .profile-media-tile{position:relative}
 .profile-media-tag{position:absolute;left:8px;bottom:8px;padding:3px 8px;border-radius:999px;background:#0a1628d9;color:#ffbe24;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+
+/* ── BalancedColumns (profile overview) ── */
+.balanced-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:stretch}
+.balanced-column{display:flex;flex-direction:column;gap:16px;min-width:0}
+.balanced-item>*{margin:0!important}
+.balanced-item.is-last{flex:1 1 auto;display:flex;flex-direction:column}
+.balanced-item.is-last>*{flex:1 1 auto}
+.balanced-columns.is-measuring .balanced-item.is-last,.balanced-columns.is-measuring .balanced-item.is-last>*{flex:0 0 auto}
+.profile-editor .balanced-item>.rounded-3xl{padding:20px}
+@media(max-width:1100px){.balanced-columns{display:flex;flex-direction:column}.balanced-column{display:contents}.balanced-item.is-last,.balanced-item.is-last>*{flex:none}}

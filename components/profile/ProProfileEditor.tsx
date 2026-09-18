@@ -36,6 +36,7 @@ import {
   Copy01Icon as Copy,
   LinkSquare02Icon as ExternalLink
 } from "hugeicons-react";
+import BalancedColumns, { Column } from "@/components/profile/BalancedColumns";
 import NetworkEmblem from "@/components/networks/NetworkEmblem";
 import NetworksViewAllMenu from "@/components/profile/NetworksViewAllMenu";
 import { PROFESSIONAL_TITLES } from "@/lib/professionalTitles";
@@ -343,6 +344,9 @@ export default function ProProfileEditor() {
       e.target.value = "";
     }
   };
+
+  // The My Pro Networks box lists only networks this user created (joined ones show as badges)
+  const ownedNetworks = proNetworks.filter((net) => net.role === "OWNER");
 
   // Gallery edits save immediately — there is no separate save button for photos
   const updateMediaPhotos = async (photos: string[]) => {
@@ -706,8 +710,8 @@ export default function ProProfileEditor() {
           {/* ── OVERVIEW TAB ──────────────────────────────────────────────── */}
           {activeTab === "overview" && (
           <div className="profile-overview">
-            <div className="profile-overview-grid">
-              <div className="profile-overview-col">
+            <BalancedColumns>
+              <Column>
                 <div className="profile-overview-about rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
                   <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                     <h3 className="text-xs font-black text-[#0A1628] dark:text-white uppercase tracking-widest flex items-center gap-2">
@@ -815,8 +819,8 @@ export default function ProProfileEditor() {
                     VIEW MY PRO CONNECT CARD
                   </button>
                 </div>
-              </div>
-              <div className="profile-overview-col">
+              </Column>
+              <Column>
                 <div className="rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
                   <h3 className="text-xs font-black text-[#0A1628] dark:text-white uppercase tracking-widest flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
                     <Crown className="w-4 h-4 text-amber-500" />
@@ -918,9 +922,9 @@ export default function ProProfileEditor() {
                     <NetworksViewAllMenu />
                   </div>
 
-                  {proNetworks.length > 0 ? (
+                  {ownedNetworks.length > 0 ? (
                     <div className="space-y-3">
-                      {proNetworks.map((net) => (
+                      {ownedNetworks.map((net) => (
                         <div
                           key={net.id}
                           className="p-3.5 rounded-xl border border-slate-200/90 dark:border-slate-700/80 bg-slate-50/70 dark:bg-slate-800/60 hover:bg-white dark:hover:bg-slate-800 transition-all flex items-center justify-between gap-3"
@@ -970,7 +974,7 @@ export default function ProProfileEditor() {
                     </div>
                   ) : (
                     <div className="text-center py-4 space-y-2">
-                      <p className="text-xs text-slate-400">You haven&apos;t created or joined any Pro Networks yet.</p>
+                      <p className="text-xs text-slate-400">You haven&apos;t created any Pro Networks yet.</p>
                     </div>
                   )}
 
@@ -1003,8 +1007,8 @@ export default function ProProfileEditor() {
                     </button>
                   )}
                 </div>
-              </div>
-            </div>
+              </Column>
+            </BalancedColumns>
 
             {/* MEDIA GALLERY — view only; uploads live in the Media Gallery tab */}
             <div className="profile-overview-media rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-5 shadow-xs space-y-4">
