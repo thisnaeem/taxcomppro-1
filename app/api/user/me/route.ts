@@ -22,6 +22,7 @@ export async function GET(req: NextRequest) {
     memberNetworks,
     discussionsStarted,
     proTalksHosted,
+    connections,
   ] = await Promise.all([
     prisma.user.findUnique({
       where: { id: session.user.id },
@@ -176,6 +177,13 @@ export async function GET(req: NextRequest) {
     prisma.proNetworkEvent.count({
       where: { hostId: session.user.id },
     }),
+    // Accepted connections in either direction (same rule as /connections)
+    prisma.connection.count({
+      where: {
+        status: "ACCEPTED",
+        OR: [{ requesterId: session.user.id }, { receiverId: session.user.id }],
+      },
+    }),
   ]);
 
   if (!user) return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -226,6 +234,27 @@ export async function GET(req: NextRequest) {
       role: "OWNER",
       ownerName: n.owner?.name || user.name || "Owner",
       ownerImage: n.owner?.image || user.image || null,
+    };
+  });
+
+  // Networks the user belongs to but doesn't own
+  const joinedMemberships = memberNetworks.filter((m) => m.network.ownerId !== session.user.id);
+  const proNetworksJoined = joinedMemberships.length;
+  const formattedJoinedNetworks = joinedMemberships.map((m) => {
+    const n = m.network;
+    return {
+      id: n.id,
+      name: n.name,
+      slug: n.slug,
+      tagline: n.tagline,
+      description: n.description,
+      monthlyPrice: n.monthlyPrice,
+      memberCount: Math.max(n._count.members, n.memberCount || 0),
+      logoImage: n.logoImage || n.badgeCustomImage || n.owner?.image || null,
+      coverImage: n.coverImage,
+      role: m.role || "MEMBER",
+      ownerName: n.owner?.name || "Network Owner",
+      ownerImage: n.owner?.image || null,
     };
   });
 
@@ -280,7 +309,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     ...user,
     hasDueDiligenceBadge,
-    proNetworks: formattedOwnedNetworks,
+    proNetworks: [...formattedOwnedNetworks, ...formattedJoinedNetworks],
     myBadges,
     primaryNetwork: primaryNetwork
       ? {
@@ -304,9 +333,11 @@ export async function GET(req: NextRequest) {
       avgRating,
       reviewsCount: totalReviews,
       // Dynamic Pro Network Stats
+      connections,
       followers,
       proNetworkMembers,
       proNetworksOwned,
+      proNetworksJoined,
       discussionsStarted,
       proTalksHosted,
       primaryNetworkSlug: primaryNetwork?.slug ?? null,

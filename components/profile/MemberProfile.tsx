@@ -109,8 +109,10 @@ export default function MemberProfile() {
 
   const [proStats, setProStats] = useState({
     followers: 0,
+    connections: 0,
     proNetworkMembers: 0,
     proNetworksOwned: 0,
+    proNetworksJoined: 0,
     discussionsStarted: 0,
     proTalksHosted: 0,
     primaryNetworkSlug: null as string | null,
@@ -122,6 +124,7 @@ export default function MemberProfile() {
   // Pro Networks, Badges, and Primary Network
   const [proNetworks, setProNetworks] = useState<Array<{
     id: string;
+    role?: string;
     name: string;
     slug: string;
     tagline?: string | null;
@@ -225,8 +228,10 @@ export default function MemberProfile() {
         if (u.stats) {
           setProStats({
             followers: u.stats.followers ?? 0,
+            connections: u.stats.connections ?? 0,
             proNetworkMembers: u.stats.proNetworkMembers ?? 0,
             proNetworksOwned: u.stats.proNetworksOwned ?? 0,
+            proNetworksJoined: u.stats.proNetworksJoined ?? 0,
             discussionsStarted: u.stats.discussionsStarted ?? 0,
             proTalksHosted: u.stats.proTalksHosted ?? 0,
             primaryNetworkSlug: u.stats.primaryNetworkSlug ?? null,
@@ -480,17 +485,17 @@ export default function MemberProfile() {
           {/* ── PRO NETWORK STATS BAR (100% DYNAMIC) ────────────────────────── */}
           <div className="rounded-3xl bg-white dark:bg-[#172135] border border-slate-200/90 dark:border-slate-800 p-4 sm:p-5 shadow-xs mb-6 transition-colors">
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-y sm:divide-y-0 sm:divide-x divide-slate-100 dark:divide-slate-800/80 gap-y-4">
-              {/* 1. FOLLOWERS */}
+              {/* 1. CONNECTIONS */}
               <div className="flex items-center gap-3.5 px-3 sm:first:pl-2">
                 <div className="w-11 h-11 rounded-full border border-blue-500/25 bg-blue-500/10 dark:bg-blue-500/20 text-[#1E56A0] dark:text-blue-400 flex items-center justify-center shrink-0">
                   <Users className="w-5 h-5" />
                 </div>
                 <div className="min-w-0">
                   <p className="text-xl sm:text-2xl font-black text-[#0A1628] dark:text-white leading-tight tracking-tight">
-                    {proStats.followers.toLocaleString()}
+                    {proStats.connections.toLocaleString()}
                   </p>
                   <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mt-0.5">
-                    FOLLOWERS
+                    CONNECTIONS
                   </p>
                 </div>
               </div>
@@ -517,10 +522,10 @@ export default function MemberProfile() {
                 </div>
                 <div className="min-w-0">
                   <p className="text-xl sm:text-2xl font-black text-[#0A1628] dark:text-white leading-tight tracking-tight">
-                    {proStats.proNetworksOwned.toLocaleString()}
+                    {(proStats.proNetworksOwned + proStats.proNetworksJoined).toLocaleString()}
                   </p>
                   <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mt-0.5">
-                    PRO NETWORKS OWNED
+                    PRO NETWORKS
                   </p>
                 </div>
               </div>
@@ -655,9 +660,15 @@ export default function MemberProfile() {
                                 <h4 className="text-xs font-black text-[#0A1628] dark:text-white truncate">
                                   {net.name}
                                 </h4>
-                                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-black bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 shrink-0">
-                                  👑 Owner
-                                </span>
+                                {net.role === "OWNER" ? (
+                                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-black bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 shrink-0">
+                                    👑 Owner
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-black bg-blue-500/15 text-[#1E56A0] dark:text-blue-300 border border-blue-500/30 shrink-0">
+                                    Member
+                                  </span>
+                                )}
                               </div>
                               <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5">
                                 {net.tagline || net.description || "Advanced strategies, resources, and training for tax professionals."}
@@ -674,14 +685,14 @@ export default function MemberProfile() {
                             href={`/pro-networks/${net.slug}`}
                             className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:border-[#1E56A0] hover:text-[#1E56A0] text-xs font-bold transition-all shrink-0 uppercase tracking-wider"
                           >
-                            MANAGE
+                            {net.role === "OWNER" ? "MANAGE" : "VIEW"}
                           </Link>
                         </div>
                       ))}
                     </div>
                   ) : (
                     <div className="text-center py-4 space-y-2">
-                      <p className="text-xs text-slate-400">You haven&apos;t created any Pro Networks yet.</p>
+                      <p className="text-xs text-slate-400">You haven&apos;t created or joined any Pro Networks yet.</p>
                     </div>
                   )}
 
