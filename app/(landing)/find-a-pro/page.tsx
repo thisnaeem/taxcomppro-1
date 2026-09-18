@@ -149,7 +149,7 @@ export default function FindAProPage() {
       <div className="fp-container">
         <div className="fp-page-top">
           <span className="fp-eyebrow">THE PROFESSIONAL DIRECTORY</span>
-          <Link href="/apply-professional">
+          <Link href="/upgrade">
             Are you a professional?{" "}
             <span>
               Get listed <ArrowRight01Icon size={15} />
@@ -424,11 +424,11 @@ export default function FindAProPage() {
             <span className="fp-eyebrow">YOUR EXPERTISE BELONGS HERE</span>
             <h2>Be someone’s next great connection.</h2>
             <p>
-              Build your professional presence and help people discover what you
-              do best.
+              Every Marketplace plan includes a Find a Pro listing — upgrade and
+              your profile appears here automatically.
             </p>
           </div>
-          <Link className="fp-button fp-primary" href="/apply-professional">
+          <Link className="fp-button fp-primary" href="/upgrade">
             Join the directory{" "}
             <span className="fp-arrow">
               <ArrowRight01Icon size={17} />

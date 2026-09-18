@@ -20,7 +20,6 @@ const PUBLIC_PAGES = new Set([
   "/connect",
   "/verify-certificate",
   "/security",
-  "/apply-professional",
   "/find-a-pro",
   "/pro-talks",
   "/upgrade",

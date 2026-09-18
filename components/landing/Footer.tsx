@@ -13,7 +13,7 @@ const sections = [
     ["My courses", "/my-courses"], ["Pro Marketing", "/pro-marketing"], ["Ask Atlas AI", "https://alwaysaskatlas.com/"],
   ] },
   { title: "For your practice", links: [
-    ["Marketplace", "/marketplace"], ["Pricing & plans", "/upgrade"], ["Become a Pro", "/apply-professional"],
+    ["Marketplace", "/marketplace"], ["Pricing & plans", "/upgrade"], ["Get listed", "/upgrade"],
     ["Seller dashboard", "/seller-dashboard"], ["My purchases", "/marketplace-purchases"],
     ["Become an affiliate", "https://affiliate.taxcomppro.com"],
   ] },

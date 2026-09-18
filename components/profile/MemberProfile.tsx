@@ -347,7 +347,8 @@ export default function MemberProfile() {
     return <div className="min-h-[70vh] flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#1E56A0]" /></div>;
   }
 
-  const isProOrVIP = user?.role === "PROFESSIONAL" || user?.tier === "VIP";
+  // Listed on Find a Pro: professionals and anyone on a Marketplace plan
+  const isListed = user?.role === "PROFESSIONAL" || user?.tier === "MARKETPLACE" || user?.tier === "MARKETPLACE_PLUS";
 
   return (
     <div className="profile-editor max-w-[1440px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -379,13 +380,13 @@ export default function MemberProfile() {
           </div>
 
           {/* Become a Pro CTA - only if not already Pro or VIP */}
-          {!isProOrVIP && (
+          {!isListed && (
             <div className="rounded-2xl bg-gradient-to-br from-[#0A1628] to-[#1A3A6B] p-5 sm:p-6 text-white border border-slate-800 shadow-md">
               <span className="text-[11px] font-black uppercase tracking-widest text-amber-400">GROW YOUR PRACTICE</span>
-              <h4 className="text-sm font-extrabold text-white leading-snug mt-1.5 mb-2">Apply as a Verified Tax Pro</h4>
-              <p className="text-xs text-slate-300 font-medium mb-5 leading-relaxed">Get client leads, activate your NFC Connect Card, and unlock IRS defense toolkits.</p>
-              <Link href="/apply-professional" className="w-full block text-center py-3 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-[#0A1628] font-black text-xs uppercase tracking-wider transition-all active:scale-[0.98] shadow-sm">
-                APPLY NOW
+              <h4 className="text-sm font-extrabold text-white leading-snug mt-1.5 mb-2">Get Listed on Find a Pro</h4>
+              <p className="text-xs text-slate-300 font-medium mb-5 leading-relaxed">Upgrade to a Marketplace plan and your profile is added to Find a Pro automatically.</p>
+              <Link href="/upgrade" className="w-full block text-center py-3 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-[#0A1628] font-black text-xs uppercase tracking-wider transition-all active:scale-[0.98] shadow-sm">
+                UPGRADE TO GET LISTED
               </Link>
             </div>
           )}
@@ -457,9 +458,9 @@ export default function MemberProfile() {
                     <button onClick={() => setEditModalOpen(true)} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#1E56A0] hover:bg-[#16437E] text-white text-xs font-bold transition-all shadow-sm cursor-pointer">
                       <Edit3 className="w-3.5 h-3.5" /> EDIT PROFILE
                     </button>
-                    {!isProOrVIP && (
-                      <Link href="/apply-professional" className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-[#0A1628] text-xs font-black uppercase tracking-wider transition-all shadow-sm cursor-pointer">
-                        <Sparkles className="w-3.5 h-3.5" /> APPLY FOR PRO
+                    {!isListed && (
+                      <Link href="/upgrade" className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-[#0A1628] text-xs font-black uppercase tracking-wider transition-all shadow-sm cursor-pointer">
+                        <Sparkles className="w-3.5 h-3.5" /> GET LISTED
                       </Link>
                     )}
                     <button
@@ -728,13 +729,13 @@ export default function MemberProfile() {
                 </div>
 
                 {/* UPGRADE CTA - only if not already Pro/VIP */}
-                {!isProOrVIP && (
+                {!isListed && (
                   <div className="rounded-2xl bg-gradient-to-br from-[#0A1628] to-[#1A3A6B] p-6 text-white border border-slate-800 space-y-3">
                     <span className="text-[10px] font-black uppercase tracking-widest text-amber-400">GROW YOUR PRACTICE</span>
                     <h3 className="text-sm font-extrabold text-white">Are you a Tax Professional?</h3>
-                    <p className="text-xs text-slate-300 leading-relaxed">Get listed on Find a Pro, receive client leads, and activate your NFC Connect Card.</p>
-                    <Link href="/apply-professional" className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 text-[#0A1628] font-black text-xs uppercase tracking-wider transition-all active:scale-98">
-                      APPLY FOR PRO STATUS <ChevronRight className="w-4 h-4" />
+                    <p className="text-xs text-slate-300 leading-relaxed">Upgrade to a Marketplace plan and you&apos;re listed on Find a Pro automatically.</p>
+                    <Link href="/upgrade" className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 text-[#0A1628] font-black text-xs uppercase tracking-wider transition-all active:scale-98">
+                      UPGRADE TO GET LISTED <ChevronRight className="w-4 h-4" />
                     </Link>
                   </div>
                 )}
