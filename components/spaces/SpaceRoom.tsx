@@ -190,7 +190,7 @@ function SpeakerAvatar({
                     ? "border-teal-400"
                     : "border-white/20"
           } z-10 transition-all`}
-          style={{ background: "linear-gradient(135deg,#263625,#32462e)" }}
+          style={{ background: "linear-gradient(135deg,#0a1f36,#0c2340)" }}
         >
           {image ? (
             <img
@@ -210,8 +210,8 @@ function SpeakerAvatar({
         <div
           className={`absolute -bottom-0.5 -right-0.5 w-6 h-6 rounded-full flex items-center justify-center border border-white/20 z-20 shadow-md ${
             micOn
-              ? "bg-emerald-500 text-[#29381f]"
-              : "bg-[#1b261e] text-rose-400"
+              ? "bg-emerald-500 text-[#04111f]"
+              : "bg-[#071729] text-rose-400"
           }`}
         >
           {micOn ? (
@@ -241,9 +241,9 @@ function SpeakerAvatar({
         <span
           className={`inline-block px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider mt-1 ${
             roleLabel === "HOST"
-              ? "bg-lime-400 text-[#29381f]"
+              ? "bg-lime-400 text-[#04111f]"
               : roleLabel === "CO_HOST"
-                ? "bg-emerald-500 text-[#29381f]"
+                ? "bg-emerald-500 text-[#04111f]"
                 : roleLabel === "GUEST SPEAKER"
                   ? "bg-teal-500/25 text-teal-300 border border-teal-500/40"
                   : "bg-white/10 text-slate-300"
@@ -264,7 +264,7 @@ function SpeakerAvatar({
             Manage ▾
           </button>
           {menuOpen && (
-            <div className="absolute top-full mt-1 left-1/2 -translate-x-1/2 z-40 bg-[#1b261e] border border-emerald-500/30 rounded-xl p-1.5 shadow-2xl min-w-[130px] space-y-1">
+            <div className="absolute top-full mt-1 left-1/2 -translate-x-1/2 z-40 bg-[#071729] border border-emerald-500/30 rounded-xl p-1.5 shadow-2xl min-w-[130px] space-y-1">
               {onRemoteMute && micOn && (
                 <button
                   onClick={() => {
@@ -353,9 +353,9 @@ function SpeakerVideoTile({
           <span
             className={`text-[9px] font-black px-2 py-0.5 rounded tracking-wider ${
               roleLabel === "HOST"
-                ? "bg-lime-400 text-[#29381f]"
+                ? "bg-lime-400 text-[#04111f]"
                 : roleLabel === "CO_HOST"
-                  ? "bg-emerald-500 text-[#29381f]"
+                  ? "bg-emerald-500 text-[#04111f]"
                   : "bg-teal-500/40 text-teal-200"
             }`}
           >
@@ -367,8 +367,8 @@ function SpeakerVideoTile({
           <div
             className={`w-6 h-6 rounded-full flex items-center justify-center border border-white/20 ${
               micOn
-                ? "bg-emerald-500 text-[#29381f]"
-                : "bg-[#1b261e] text-rose-400"
+                ? "bg-emerald-500 text-[#04111f]"
+                : "bg-[#071729] text-rose-400"
             }`}
           >
             {micOn ? (
@@ -377,7 +377,7 @@ function SpeakerVideoTile({
               <MicOff02Icon className="w-3 h-3" />
             )}
           </div>
-          <div className="w-6 h-6 rounded-full bg-emerald-500 text-[#29381f] flex items-center justify-center border border-white/20">
+          <div className="w-6 h-6 rounded-full bg-emerald-500 text-[#04111f] flex items-center justify-center border border-white/20">
             <Video className="w-3 h-3" />
           </div>
         </div>
@@ -444,7 +444,7 @@ function ReportModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-      <div className="relative w-full max-w-md bg-[#1b261e] border border-rose-500/40 rounded-3xl p-6 shadow-2xl">
+      <div className="relative w-full max-w-md bg-[#071729] border border-rose-500/40 rounded-3xl p-6 shadow-2xl">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/60 hover:text-white"
@@ -540,8 +540,8 @@ function SessionEndModal({
 }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
-      <div className="relative w-full max-w-md bg-gradient-to-br from-[#1b261e] via-[#091b35] to-[#0e1112] border border-emerald-500/40 rounded-3xl p-7 shadow-2xl text-center">
-        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-lime-400 to-emerald-600 flex items-center justify-center mx-auto mb-4 text-[#29381f] shadow-xl shadow-emerald-500/30">
+      <div className="relative w-full max-w-md bg-gradient-to-br from-[#071729] via-[#091b35] to-[#0e1112] border border-emerald-500/40 rounded-3xl p-7 shadow-2xl text-center">
+        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-lime-400 to-emerald-600 flex items-center justify-center mx-auto mb-4 text-[#04111f] shadow-xl shadow-emerald-500/30">
           <Award className="w-8 h-8" />
         </div>
         <h2 className="text-white font-black text-xl mb-1">
@@ -580,7 +580,7 @@ function SessionEndModal({
 
         <button
           onClick={onClose}
-          className="w-full py-3.5 rounded-xl bg-gradient-to-r from-lime-400 via-emerald-500 to-teal-500 text-[#29381f] font-black text-sm hover:scale-[1.02] transition-all shadow-lg shadow-emerald-500/25"
+          className="w-full py-3.5 rounded-xl bg-gradient-to-r from-lime-400 via-emerald-500 to-teal-500 text-[#04111f] font-black text-sm hover:scale-[1.02] transition-all shadow-lg shadow-emerald-500/25"
         >
           Return to Pro Talks Hub
         </button>
@@ -1312,8 +1312,8 @@ function RoomInner({ space, isAdmin, userId, onEnd, ending }: Props) {
 
       {/* Toast Alert */}
       {toastMessage && (
-        <div className="absolute top-16 left-1/2 -translate-x-1/2 z-50 bg-gradient-to-r from-lime-400 via-emerald-500 to-teal-500 text-[#29381f] px-5 py-2 rounded-full shadow-2xl flex items-center gap-2 text-xs font-black animate-fade-in-up">
-          <Sparkles className="w-4 h-4 text-[#29381f]" />
+        <div className="absolute top-16 left-1/2 -translate-x-1/2 z-50 bg-gradient-to-r from-lime-400 via-emerald-500 to-teal-500 text-[#04111f] px-5 py-2 rounded-full shadow-2xl flex items-center gap-2 text-xs font-black animate-fade-in-up">
+          <Sparkles className="w-4 h-4 text-[#04111f]" />
           <span>{toastMessage}</span>
         </div>
       )}
@@ -1468,7 +1468,7 @@ function RoomInner({ space, isAdmin, userId, onEnd, ending }: Props) {
                   <button
                     onClick={() => promoteToSpeaker(reqId)}
                     aria-label={`Invite ${reqName} to the stage`}
-                    className="bg-emerald-500 hover:bg-emerald-400 text-[#29381f] font-black px-2 py-0.5 rounded text-[10px]"
+                    className="bg-emerald-500 hover:bg-emerald-400 text-[#04111f] font-black px-2 py-0.5 rounded text-[10px]"
                   >
                     Invite to stage
                   </button>
@@ -1611,7 +1611,7 @@ function RoomInner({ space, isAdmin, userId, onEnd, ending }: Props) {
                       key={p.identity}
                       className="flex flex-col items-center gap-1.5 group relative"
                     >
-                      <div className="w-11 h-11 rounded-full bg-[#263625] border border-white/15 flex items-center justify-center overflow-hidden">
+                      <div className="w-11 h-11 rounded-full bg-[#0a1f36] border border-white/15 flex items-center justify-center overflow-hidden">
                         {getParticipantMetadata(p.metadata).image ? (
                           <img
                             src={getParticipantMetadata(p.metadata).image!}
@@ -1732,7 +1732,7 @@ function RoomInner({ space, isAdmin, userId, onEnd, ending }: Props) {
                 aria-pressed={isMicrophoneEnabled}
                 className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs font-black transition-all ${
                   isMicrophoneEnabled
-                    ? "bg-gradient-to-r from-lime-400 via-emerald-500 to-teal-500 text-[#29381f] shadow-lg shadow-emerald-500/30"
+                    ? "bg-gradient-to-r from-lime-400 via-emerald-500 to-teal-500 text-[#04111f] shadow-lg shadow-emerald-500/30"
                     : "bg-white/10 hover:bg-white/15 text-white"
                 }`}
               >
@@ -1768,7 +1768,7 @@ function RoomInner({ space, isAdmin, userId, onEnd, ending }: Props) {
                 aria-pressed={isCameraEnabled}
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all ${
                   isCameraEnabled
-                    ? "bg-emerald-500 text-[#29381f]"
+                    ? "bg-emerald-500 text-[#04111f]"
                     : "bg-white/10 hover:bg-white/15 text-white"
                 }`}
               >
@@ -1824,7 +1824,7 @@ function RoomInner({ space, isAdmin, userId, onEnd, ending }: Props) {
             >
               <Message01Icon className="w-4 h-4" /> Discussion
               {unreadCount > 0 && (
-                <span className="w-4 h-4 rounded-full bg-lime-400 text-[#29381f] text-[10px] font-black flex items-center justify-center">
+                <span className="w-4 h-4 rounded-full bg-lime-400 text-[#04111f] text-[10px] font-black flex items-center justify-center">
                   {unreadCount}
                 </span>
               )}
@@ -1932,7 +1932,7 @@ function RoomInner({ space, isAdmin, userId, onEnd, ending }: Props) {
           <div className="flex-1 flex flex-col min-h-0">
             {/* Host Moderation Controls Banner */}
             {isAuthorizedManager && (
-              <div className="bg-[#172219] border-b border-emerald-950/60 px-4 py-2 flex items-center justify-between text-[11px]">
+              <div className="bg-[#071729] border-b border-emerald-950/60 px-4 py-2 flex items-center justify-between text-[11px]">
                 <span className="text-slate-400 font-semibold">
                   Discussion Controls
                 </span>
@@ -1970,7 +1970,7 @@ function RoomInner({ space, isAdmin, userId, onEnd, ending }: Props) {
                     <span className="font-bold text-amber-200 text-[11px] truncate">
                       {pinnedMsg.from}
                     </span>
-                    <span className="text-[9px] bg-amber-400 text-[#29381f] font-black px-1.5 py-0.2 rounded">
+                    <span className="text-[9px] bg-amber-400 text-[#04111f] font-black px-1.5 py-0.2 rounded">
                       PINNED
                     </span>
                   </div>
@@ -2037,12 +2037,12 @@ function RoomInner({ space, isAdmin, userId, onEnd, ending }: Props) {
                             )}
                           </span>
                           {m.role === "HOST" && (
-                            <span className="bg-lime-400 text-[#29381f] text-[8px] font-black px-1.5 py-0.2 rounded">
+                            <span className="bg-lime-400 text-[#04111f] text-[8px] font-black px-1.5 py-0.2 rounded">
                               HOST
                             </span>
                           )}
                           {m.role === "CO_HOST" && (
-                            <span className="bg-emerald-500 text-[#29381f] text-[8px] font-black px-1.5 py-0.2 rounded">
+                            <span className="bg-emerald-500 text-[#04111f] text-[8px] font-black px-1.5 py-0.2 rounded">
                               CO-HOST
                             </span>
                           )}
@@ -2076,7 +2076,7 @@ function RoomInner({ space, isAdmin, userId, onEnd, ending }: Props) {
                         )}
                       </div>
 
-                      <div className="bg-[#111912] border border-white/10 rounded-2xl px-3 py-2 text-xs text-slate-200 leading-relaxed break-words">
+                      <div className="bg-[#061224] border border-white/10 rounded-2xl px-3 py-2 text-xs text-slate-200 leading-relaxed break-words">
                         {m.text}
                       </div>
                     </div>
@@ -2093,7 +2093,7 @@ function RoomInner({ space, isAdmin, userId, onEnd, ending }: Props) {
                   Live discussion has been paused by the host.
                 </p>
               ) : (
-                <div className="flex items-center gap-2 bg-[#1b261e] border border-white/15 focus-within:border-emerald-400 rounded-2xl px-3 py-2 transition-all">
+                <div className="flex items-center gap-2 bg-[#071729] border border-white/15 focus-within:border-emerald-400 rounded-2xl px-3 py-2 transition-all">
                   <input
                     aria-label="Your message"
                     value={discussionInput}
@@ -2106,7 +2106,7 @@ function RoomInner({ space, isAdmin, userId, onEnd, ending }: Props) {
                     aria-label="Send message"
                     onClick={sendDiscussion}
                     disabled={!discussionInput.trim()}
-                    className="w-7 h-7 rounded-full bg-gradient-to-r from-lime-400 to-emerald-500 text-[#29381f] flex items-center justify-center disabled:opacity-30 hover:scale-105 transition-all shrink-0"
+                    className="w-7 h-7 rounded-full bg-gradient-to-r from-lime-400 to-emerald-500 text-[#04111f] flex items-center justify-center disabled:opacity-30 hover:scale-105 transition-all shrink-0"
                   >
                     <Send className="w-3.5 h-3.5" />
                   </button>
@@ -2130,7 +2130,7 @@ function RoomInner({ space, isAdmin, userId, onEnd, ending }: Props) {
 
             {/* Create Poll Drawer */}
             {showCreatePoll && (
-              <div className="bg-[#111912] border border-blue-500/30 rounded-2xl p-4 space-y-3 shadow-xl">
+              <div className="bg-[#061224] border border-blue-500/30 rounded-2xl p-4 space-y-3 shadow-xl">
                 <div className="flex items-center justify-between">
                   <h4 className="text-white font-bold text-xs">
                     New Live Poll
@@ -2186,7 +2186,7 @@ function RoomInner({ space, isAdmin, userId, onEnd, ending }: Props) {
 
             {/* Active Poll Card */}
             {activePoll ? (
-              <div className="bg-[#172219] border border-emerald-500/30 rounded-2xl p-4 shadow-xl space-y-3">
+              <div className="bg-[#071729] border border-emerald-500/30 rounded-2xl p-4 shadow-xl space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-lime-300 text-[10px] font-black uppercase">
                     {activePoll.isActive ? "🔴 Live Poll" : "Closed Poll"}
@@ -2295,7 +2295,7 @@ export default function SpaceRoom({
       {!connected ? (
         <div className="sr-connecting fixed inset-0 z-[100] flex flex-col items-center justify-center gap-4">
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-lime-400 via-emerald-500 to-teal-600 flex items-center justify-center mb-2 shadow-xl shadow-emerald-500/30">
-            <Radio01Icon className="w-7 h-7 text-[#29381f]" />
+            <Radio01Icon className="w-7 h-7 text-[#04111f]" />
           </div>
           <Loader2 className="w-6 h-6 animate-spin text-emerald-400" />
           <p className="text-slate-400 text-sm">

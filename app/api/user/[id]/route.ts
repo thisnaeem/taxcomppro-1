@@ -6,7 +6,14 @@ type Params = { params: Promise<{ id: string }> };
 export async function GET(_req: NextRequest, { params }: Params) {
   const { id } = await params;
 
-  const [user, acceptedConnectionsCount, hasTraining, hasToolkit] = await Promise.all([
+  const networkCardSelect = {
+    id: true, name: true, slug: true, tagline: true, logoImage: true, memberCount: true,
+    badgeShape: true, badgeInitials: true, badgeBgColor: true, badgeTextColor: true,
+    badgeBorderColor: true, badgeCustomImage: true,
+    _count: { select: { members: { where: { status: "ACTIVE" } } } },
+  } as const;
+
+  const [user, acceptedConnectionsCount, hasTraining, hasToolkit, ownedNetworks, memberships, discussionsStarted, proTalksHosted, feedMediaPosts] = await Promise.all([
     prisma.user.findUnique({
       where: { id },
       select: {
@@ -80,12 +87,66 @@ export async function GET(_req: NextRequest, { params }: Params) {
       where: { userId: id },
       select: { id: true },
     }),
+    // Public profile data only — no emails, phones or payment info.
+    prisma.proNetwork.findMany({ where: { ownerId: id }, select: networkCardSelect, orderBy: { createdAt: "asc" } }),
+    // Joined networks are shown only when the member chose to appear in that network's directory.
+    prisma.proNetworkMember.findMany({
+      where: { userId: id, status: "ACTIVE", showInDirectory: true, network: { ownerId: { not: id } } },
+      select: { role: true, network: { select: networkCardSelect } },
+    }),
+    prisma.proNetworkDiscussion.count({ where: { authorId: id } }),
+    prisma.proNetworkEvent.count({ where: { hostId: id } }),
+    // Photos/videos from public feed posts (no group posts, nothing still scheduled).
+    prisma.post.findMany({
+      where: {
+        authorId: id,
+        communityId: null,
+        AND: [
+          { OR: [{ images: { isEmpty: false } }, { videoUrl: { not: null } }] },
+          { OR: [{ scheduledAt: null }, { scheduledAt: { lte: new Date() } }] },
+        ],
+      },
+      select: { id: true, images: true, videoUrl: true },
+      orderBy: { createdAt: "desc" },
+      take: 30,
+    }),
   ]);
 
   if (!user) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
+  type NetworkRow = (typeof ownedNetworks)[number];
+  const toBadge = (n: NetworkRow, role: string) => ({
+    id: n.id,
+    name: n.name,
+    slug: n.slug,
+    tagline: n.tagline,
+    role,
+    memberCount: Math.max(n._count.members, n.memberCount || 0),
+    image: n.badgeCustomImage || n.logoImage || null,
+    shape: n.badgeShape,
+    initials: n.badgeInitials,
+    bgColor: n.badgeBgColor,
+    textColor: n.badgeTextColor,
+    borderColor: n.badgeBorderColor,
+  });
+
   return NextResponse.json({
     ...user,
+    networks: [
+      ...ownedNetworks.map((n) => toBadge(n, "OWNER")),
+      ...memberships.map((m) => toBadge(m.network, m.role === "OWNER" ? "MEMBER" : m.role || "MEMBER")),
+    ],
+    networkStats: {
+      proNetworks: ownedNetworks.length + memberships.length,
+      discussionsStarted,
+      proTalksHosted,
+    },
+    feedMedia: feedMediaPosts
+      .flatMap((post) => [
+        ...(post.videoUrl ? [{ url: post.videoUrl, postId: post.id, type: "video" as const }] : []),
+        ...post.images.map((url) => ({ url, postId: post.id, type: "photo" as const })),
+      ])
+      .slice(0, 48),
     connectionCount: acceptedConnectionsCount,
     hasDueDiligenceBadge: Boolean(hasTraining || hasToolkit),
   });

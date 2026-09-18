@@ -38,8 +38,8 @@ export async function POST(req: NextRequest) {
         quantity: 1,
       },
     ],
-    success_url: `${process.env.NEXT_PUBLIC_APP_URL}/pro-talks?host_paid=1&session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/pro-talks`,
+    success_url: `${process.env.NEXT_PUBLIC_APP_URL}/pro-talks/new?host_paid=1&session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/pro-talks/new`,
     metadata: { userId: user.id, type: "pro_talk_host" },
   });
 

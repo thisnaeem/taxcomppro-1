@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { notFound } from "next/navigation";
+import { notFound, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAppSelector } from "@/store/hooks";
 import {
@@ -29,9 +29,10 @@ import {
   Award01Icon as Award,
   ArrowRight01Icon as ChevronRight,
   SparklesIcon as Sparkles,
-  UserGroupIcon as Users,
-  ViewIcon as Eye
+  UserGroupIcon as Users
 } from "hugeicons-react";
+import NetworkEmblem from "@/components/networks/NetworkEmblem";
+import ProfileMediaStrip, { type FeedMedia } from "@/components/profile/ProfileMediaStrip";
 import "./profile-ui.css";
 import { VoiceMemoPlayer } from "@/components/profile/VoiceMemo";
 import DueDiligenceBadge from "@/components/badges/DueDiligenceBadge";
@@ -55,6 +56,21 @@ interface ListingItem {
   price: number | null;
   category: string;
   images: string[];
+}
+
+interface PublicNetwork {
+  id: string;
+  name: string;
+  slug: string;
+  tagline: string | null;
+  role: string;
+  memberCount: number;
+  image: string | null;
+  shape: string | null;
+  initials: string | null;
+  bgColor: string | null;
+  textColor: string | null;
+  borderColor: string | null;
 }
 
 interface ServiceItem {
@@ -114,6 +130,9 @@ interface PublicUser {
   createdAt: string;
   connectionCount: number;
   hasDueDiligenceBadge: boolean;
+  networks?: PublicNetwork[];
+  networkStats?: { proNetworks: number; discussionsStarted: number; proTalksHosted: number };
+  feedMedia?: FeedMedia[];
   instructorCourses: CourseItem[];
   listings: ListingItem[];
   proServices?: ServiceItem[];
@@ -193,6 +212,7 @@ function StarRow({ rating }: { rating: number }) {
 
 export default function PublicMemberProfile({memberId: id}: {memberId:string}) {
   const me = useAppSelector((s) => s.auth.user);
+  const router = useRouter();
 
   const [profile, setProfile] = useState<PublicUser | null>(null);
   const [loading, setLoading] = useState(true);
@@ -227,6 +247,8 @@ export default function PublicMemberProfile({memberId: id}: {memberId:string}) {
             proServices: d.proServices ?? [],
             reviewsReceived: d.reviewsReceived ?? [],
             posts: d.posts ?? [],
+            networks: d.networks ?? [],
+            feedMedia: d.feedMedia ?? [],
           });
         }
       })
@@ -334,7 +356,27 @@ export default function PublicMemberProfile({memberId: id}: {memberId:string}) {
       )}
 
       <div className="member-profile-topbar">
-        <Link href="/find-a-pro" className="profile-text-link"><ChevronLeft size={18} /> All professionals</Link>
+        <Link
+          href="/find-a-pro"
+          className="profile-text-link"
+          onClick={(e) => {
+            // Go back to wherever the visitor came from inside the site; fall back to Find a Pro
+            // for direct visits (shared links, new tabs) or modified clicks (open in new tab).
+            if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+            // Navigation API (Chromium) only lists same-origin entries, so canGoBack means "previous page was ours".
+            // Other browsers: fall back to a same-origin referrer.
+            const nav = (window as unknown as { navigation?: { canGoBack?: boolean } }).navigation;
+            const cameFromSite = typeof nav?.canGoBack === "boolean"
+              ? nav.canGoBack
+              : document.referrer.startsWith(window.location.origin) && window.history.length > 1;
+            if (cameFromSite) {
+              e.preventDefault();
+              router.back();
+            }
+          }}
+        >
+          <ChevronLeft size={18} /> Back
+        </Link>
         <button className="profile-text-link" onClick={handleCopyShare}>{copiedLink ? <Check size={18} /> : <Share2 size={18} />}{copiedLink ? "Link copied" : "Share profile"}</button>
       </div>
       <div className="member-profile-cover">
@@ -557,6 +599,12 @@ export default function PublicMemberProfile({memberId: id}: {memberId:string}) {
         <div className="member-profile-facts">
           <span><Users size={18} /><strong>{profile.connectionCount}</strong> connections</span>
           <span><MessageSquare size={18} /><strong>{totalPosts}</strong> posts</span>
+          {(profile.networkStats?.proNetworks ?? 0) > 0 && (
+            <span><Crown size={18} /><strong>{profile.networkStats?.proNetworks}</strong> pro networks</span>
+          )}
+          {(profile.networkStats?.discussionsStarted ?? 0) > 0 && (
+            <span><MessageSquare size={18} /><strong>{profile.networkStats?.discussionsStarted}</strong> discussions</span>
+          )}
           <span><Calendar size={18} /> Joined {memberSince}</span>
           <span><Crown size={18} /> {tierInfo.label}</span>
         </div>
@@ -682,6 +730,58 @@ export default function PublicMemberProfile({memberId: id}: {memberId:string}) {
                         </p>
                       </div>
                     </div>
+                  </div>
+                )}
+
+                {/* Specialties, credentials and languages live inside About — one card, not four */}
+                {profile.specialties?.length > 0 && (
+                  <div className="border-t border-slate-100 dark:border-slate-800 pt-4">
+                    <span className="block text-[11px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-3">Specialties</span>
+                    <div className="flex flex-wrap gap-2">
+                      {profile.specialties.map((sp) => (
+                        <span key={sp} className="text-xs font-semibold bg-[#1E56A0]/10 text-[#1E56A0] dark:text-blue-300 dark:bg-blue-900/30 px-3 py-1.5 rounded-xl border border-[#1E56A0]/15">{sp}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {profile.certifications?.length > 0 && (
+                  <div className="border-t border-slate-100 dark:border-slate-800 pt-4">
+                    <span className="block text-[11px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-3">Certifications &amp; Licenses</span>
+                    <div className="flex flex-wrap gap-2">
+                      {profile.certifications.map((c) => (
+                        <span key={c} className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                          <Award className="w-3.5 h-3.5" />{c}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {profile.languages?.length > 0 && (
+                  <div className="border-t border-slate-100 dark:border-slate-800 pt-4 flex flex-wrap items-center gap-2">
+                    <span className="text-[11px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400 mr-1 flex items-center gap-1.5"><Globe className="w-3.5 h-3.5" /> Languages</span>
+                    {profile.languages.map((l) => (
+                      <span key={l} className="text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-3 py-1 rounded-lg">{l}</span>
+                    ))}
+                  </div>
+                )}
+
+                {/* Services preview — full list lives in the Services tab */}
+                {profile.proServices && profile.proServices.length > 0 && (
+                  <div className="border-t border-slate-100 dark:border-slate-800 pt-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-[11px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400">Services Offered</span>
+                      <button onClick={() => setActiveTab("services")} className="text-xs font-bold profile-accent hover:underline flex items-center gap-1">
+                        View all <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    <ul className="grid sm:grid-cols-2 gap-x-4 gap-y-2">
+                      {profile.proServices.slice(0, 6).map((svc) => (
+                        <li key={svc.id} className="flex items-center justify-between gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
+                          <span className="flex items-center gap-2 min-w-0"><span className="profile-accent">✓</span><span className="truncate">{svc.title}</span></span>
+                          {svc.price && <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 shrink-0">{svc.price}</span>}
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 )}
               </div>
@@ -828,94 +928,57 @@ export default function PublicMemberProfile({memberId: id}: {memberId:string}) {
                 </div>
               )}
 
-              {/* Specialties */}
-              {profile.specialties?.length > 0 && (
-                <div className="profile-panel rounded-3xl p-5 shadow-xs space-y-3">
+              {/* Network badges */}
+              {profile.networks && profile.networks.length > 0 && (
+                <div className="profile-panel rounded-3xl p-5 shadow-xs space-y-4">
                   <h3 className="text-base font-bold text-[#0a1628] dark:text-white flex items-center gap-2">
-                    <span className="w-1.5 h-4 bg-[#ffbe24] rounded-full" />
-                    Specialties
+                    <Crown className="w-4 h-4 text-amber-500" />
+                    Badges
                   </h3>
-                  <div className="flex flex-wrap gap-2 pt-1">
-                    {profile.specialties.map((s) => (
-                      <span
-                        key={s}
-                        className="text-xs font-semibold bg-[#1E56A0]/10 text-[#1E56A0] dark:text-blue-300 dark:bg-blue-900/30 px-3 py-1.5 rounded-xl border border-[#1E56A0]/15"
-                      >
-                        {s}
-                      </span>
+                  <div className="flex flex-wrap gap-4">
+                    {profile.networks.map((n) => (
+                      <Link key={n.id} href={`/pro-networks/${n.slug}`} className="group flex flex-col items-center gap-1.5 w-[84px] text-center" title={n.name}>
+                        <NetworkEmblem
+                          name={n.name}
+                          image={n.image || profile.image}
+                          initials={n.initials}
+                          role={n.role}
+                          shape={n.shape ?? undefined}
+                          bgColor={n.bgColor ?? undefined}
+                          textColor={n.textColor ?? undefined}
+                          borderColor={n.borderColor ?? undefined}
+                          size={72}
+                        />
+                        <span className="text-[11px] font-bold text-[#0a1628] dark:text-white line-clamp-1 w-full">{n.name}</span>
+                      </Link>
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* Credentials & Certifications */}
-              {profile.certifications?.length > 0 && (
+              {/* Pro Networks this member runs */}
+              {profile.networks && profile.networks.some((n) => n.role === "OWNER") && (
                 <div className="profile-panel rounded-3xl p-5 shadow-xs space-y-3">
                   <h3 className="text-base font-bold text-[#0a1628] dark:text-white flex items-center gap-2">
-                    <span className="w-1.5 h-4 bg-amber-400 rounded-full" />
-                    Certifications &amp; Licenses
+                    <Users className="w-4 h-4 text-amber-500" />
+                    Pro Networks
                   </h3>
-                  <ul className="space-y-2 pt-1">
-                    {profile.certifications.map((c) => (
-                      <li
-                        key={c}
-                        className="flex items-center gap-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800"
-                      >
-                        <Award className="w-4 h-4 text-amber-500 shrink-0" />
-                        <span>{c}</span>
+                  <ul className="space-y-2.5">
+                    {profile.networks.filter((n) => n.role === "OWNER").map((n) => (
+                      <li key={n.id}>
+                        <Link href={`/pro-networks/${n.slug}`} className="flex items-center gap-3 p-3 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 hover:border-amber-400/60 transition-colors">
+                          <span className="w-10 h-10 rounded-xl overflow-hidden bg-white shrink-0 grid place-items-center text-[10px] font-black text-[#0a1628]">
+                            {n.image ? <img src={n.image} alt="" className="w-full h-full object-cover" /> : (n.initials || n.name.slice(0, 3)).toUpperCase()}
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block text-sm font-bold text-[#0a1628] dark:text-white truncate">{n.name}</span>
+                            <span className="block text-[11px] text-slate-500 dark:text-slate-400 truncate">{n.tagline || `${n.memberCount} member${n.memberCount === 1 ? "" : "s"}`}</span>
+                          </span>
+                          <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
+                        </Link>
                       </li>
                     ))}
                   </ul>
-                </div>
-              )}
-
-              {/* Languages */}
-              {profile.languages?.length > 0 && (
-                <div className="profile-panel rounded-3xl p-5 shadow-xs space-y-3">
-                  <h3 className="text-base font-bold text-[#0a1628] dark:text-white flex items-center gap-2">
-                    <Globe className="w-4 h-4 text-slate-500" />
-                    Languages Spoken
-                  </h3>
-                  <div className="flex flex-wrap gap-2 pt-1">
-                    {profile.languages.map((l) => (
-                      <span
-                        key={l}
-                        className="text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-3 py-1 rounded-lg"
-                      >
-                        {l}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Media & Photos Gallery */}
-              {profile.mediaPhotos?.length > 0 && (
-                <div className="profile-panel rounded-3xl p-5 shadow-xs space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-base font-bold text-[#0a1628] dark:text-white flex items-center gap-2">
-                      <Eye className="w-4 h-4 text-indigo-500" />
-                      Photos &amp; Media
-                    </h3>
-                    <span className="text-[11px] text-slate-400 font-bold">
-                      {profile.mediaPhotos.length}
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-3 gap-2 pt-1">
-                    {profile.mediaPhotos.map((p, i) => (
-                      <button
-                        key={i}
-                        onClick={() => setLightboxImg(p)}
-                        className="aspect-square rounded-xl overflow-hidden group relative bg-black/10 focus:outline-none"
-                      >
-                        <img
-                          src={p}
-                          alt={`Photo ${i + 1}`}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-200"
-                        />
-                      </button>
-                    ))}
-                  </div>
                 </div>
               )}
 
@@ -936,6 +999,13 @@ export default function PublicMemberProfile({memberId: id}: {memberId:string}) {
                 </div>
               )}
             </div>
+
+            {/* Media gallery — uploads plus public feed photos/videos, filterable */}
+            {(profile.mediaPhotos.length > 0 || (profile.feedMedia?.length ?? 0) > 0) && (
+              <div className="lg:col-span-12">
+                <ProfileMediaStrip uploads={profile.mediaPhotos} feed={profile.feedMedia ?? []} />
+              </div>
+            )}
           </div>
         )}
 

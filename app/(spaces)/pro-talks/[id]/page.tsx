@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -8,6 +8,7 @@ import { Loader2, Calendar, Clock, Users, Check, CheckCheck, Copy, Play } from "
 import { Radio01Icon } from "hugeicons-react";
 import SpaceRoom from "@/components/spaces/SpaceRoom";
 import RsvpPanel from "@/components/spaces/RsvpPanel";
+import "./talk-room.css";
 
 interface SpaceHost {
   id: string;
@@ -59,21 +60,25 @@ function useCountdown(target: string | null) {
     return () => clearInterval(id);
   }, [target]);
 
-  const h = Math.floor(left / 3_600_000);
+  const d = Math.floor(left / 86_400_000);
+  const h = Math.floor((left % 86_400_000) / 3_600_000);
   const m = Math.floor((left % 3_600_000) / 60_000);
   const s = Math.floor((left % 60_000) / 1000);
-  return { h, m, s, expired: left === 0 };
+  return { d, h, m, s, expired: left === 0 };
 }
 
-function CountdownUnit({ value, label }: { value: number; label: string }) {
+function Countdown({ target }: { target: string | null }) {
+  const { d, h, m, s, expired } = useCountdown(target);
+  if (expired) return <p className="ptr-soon">Starting any moment — the host is opening the stage.</p>;
+  const units = [...(d > 0 ? [{ v: d, l: "days" }] : []), { v: h, l: "hrs" }, { v: m, l: "min" }, { v: s, l: "sec" }];
   return (
-    <div className="flex flex-col items-center">
-      <div className="w-16 h-16 rounded-2xl bg-white/8 border border-white/15 flex items-center justify-center text-3xl font-black text-white shadow-lg">
-        {String(value).padStart(2, "0")}
-      </div>
-      <span className="text-emerald-300/60 text-xs mt-1.5 uppercase tracking-wider font-semibold">
-        {label}
-      </span>
+    <div className="ptr-countdown" role="timer" aria-label="Time until this Pro Talk starts">
+      {units.map((u, i) => (
+        <Fragment key={u.l}>
+          {i > 0 && <i aria-hidden="true">:</i>}
+          <div><strong>{String(u.v).padStart(2, "0")}</strong><small>{u.l}</small></div>
+        </Fragment>
+      ))}
     </div>
   );
 }
@@ -96,68 +101,33 @@ function GuestJoinScreen({
   const isVideo = space.mediaType === "AUDIO_VIDEO";
 
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-[#040a14] via-[#061224] to-[#0a1c38] flex items-center justify-center p-4">
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-emerald-500/10 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full bg-blue-600/10 blur-[120px] pointer-events-none" />
-
-      <div className="relative w-full max-w-sm text-center">
-        <div className="inline-flex items-center gap-2 bg-emerald-500/20 border border-emerald-400/40 text-lime-300 text-xs font-bold px-4 py-1.5 rounded-full mb-6">
-          <span className="w-1.5 h-1.5 rounded-full bg-lime-400 animate-pulse" /> Live Now
-        </div>
-
-        <div className="relative w-20 h-20 rounded-3xl overflow-hidden border-2 border-emerald-500/40 mx-auto mb-4 shadow-2xl shadow-emerald-500/30 bg-[#061224]">
-          <Image src="/protalk.png" alt="Pro Talks" fill className="object-cover" />
-        </div>
-
-        {space.category && (
-          <span className="inline-block px-3 py-0.5 rounded-lg bg-emerald-950/70 border border-emerald-500/30 text-emerald-300 text-xs font-bold mb-2">
-            {space.category}
-          </span>
-        )}
-
-        <h1 className="text-2xl font-black text-white mb-1.5 leading-tight">{space.name}</h1>
-        {space.description && (
-          <p className="text-slate-300 text-xs mb-3 leading-relaxed line-clamp-2">
-            {space.description}
-          </p>
-        )}
-        <p className="text-slate-400 text-xs mb-6">
-          Hosted by <span className="text-emerald-400 font-bold">{space.host.name}</span>
-        </p>
-
-        <div className="bg-[#061426]/95 border border-emerald-500/30 rounded-2xl p-5 text-left space-y-3.5 shadow-2xl">
-          <label className="block text-emerald-300/80 text-xs font-semibold uppercase tracking-wider">
-            Your display name
-          </label>
-          <input
-            id="guest-name-input"
-            value={name}
-            onChange={e => setName(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && handleJoin()}
-            placeholder="Enter your name to enter room…"
-            maxLength={40}
-            autoFocus
-            className="w-full bg-[#040a14] border border-emerald-500/30 rounded-xl px-4 py-3 text-white placeholder-slate-500 outline-none focus:border-emerald-400 transition-all text-sm"
-          />
-          <button
-            id="guest-join-btn"
-            onClick={handleJoin}
-            disabled={!name.trim() || joining}
-            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-gradient-to-r from-lime-400 via-emerald-500 to-teal-500 text-[#060e1a] font-black text-sm hover:scale-[1.02] transition-all shadow-xl shadow-emerald-500/25 disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            {joining ? (
-              <><Loader2 className="w-4 h-4 animate-spin text-[#060e1a]" /> Joining Room…</>
-            ) : (
-              <><Radio01Icon className="w-4 h-4" /> Join Pro Talk</>
-            )}
-          </button>
-        </div>
-
-        <p className="text-slate-500 text-[11px] mt-4">
-          Free participant access · {isVideo ? "Audio & Video live stream" : "Audio room"}
-        </p>
+    <main className="ptr-screen">
+      <Link href="/pro-talks" className="ptr-back">← Pro Talks</Link>
+      <span className="ptr-status is-live"><span className="ptr-dot" /> Live now</span>
+      <span className="ptr-mic"><Image src="/protalk.png" alt="" fill className="object-cover" sizes="88px" /></span>
+      <h1>{space.name}</h1>
+      {space.description && <p className="ptr-desc">{space.description}</p>}
+      <div className="ptr-meta">
+        <span>Hosted by <strong>{space.host.name}</strong></span>
+        {space.category && <span>{space.category}</span>}
+        <span>{isVideo ? "Audio + video" : "Audio only"}</span>
       </div>
-    </div>
+      <form className="ptr-join" onSubmit={e => { e.preventDefault(); handleJoin(); }}>
+        <label htmlFor="guest-name-input">Your display name</label>
+        <input
+          id="guest-name-input"
+          value={name}
+          onChange={e => setName(e.target.value)}
+          placeholder="How should others see you?"
+          maxLength={40}
+          autoComplete="name"
+        />
+        <button id="guest-join-btn" type="submit" disabled={!name.trim() || joining} className="ptr-btn ptr-btn--primary">
+          {joining ? <><Loader2 className="w-4 h-4 animate-spin" /> Joining…</> : <><Radio01Icon className="w-4 h-4" /> Join Pro Talk</>}
+        </button>
+      </form>
+      <p className="ptr-fine">Free to join · you&apos;ll enter muted</p>
+    </main>
   );
 }
 
@@ -175,7 +145,6 @@ function ScheduledScreen({
   onStartNow: () => void;
   starting: boolean;
 }) {
-  const { h, m, s, expired } = useCountdown(space.scheduledAt);
   const [rsvped, setRsvped] = useState(false);
   const [rsvping, setRsvping] = useState(false);
   const [rsvpCount, setRsvpCount] = useState(space._count?.rsvps ?? 0);
@@ -216,142 +185,48 @@ function ScheduledScreen({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#040a14] via-[#061224] to-[#0a1c38] flex flex-col">
-      <div className="absolute -top-20 left-1/3 w-96 h-96 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
-
-      <div className="flex-1 flex flex-col items-center justify-center px-4 py-16 gap-7 relative">
-        {/* Badges */}
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2 bg-blue-500/20 border border-blue-400/30 rounded-full px-4 py-1.5">
-            <Calendar className="w-3.5 h-3.5 text-blue-300" />
-            <span className="text-blue-200 text-xs font-bold uppercase tracking-widest">
-              Scheduled Pro Talk
-            </span>
-          </div>
-          {space.category && (
-            <span className="bg-emerald-950/70 border border-emerald-500/30 text-emerald-300 text-xs font-bold px-3 py-1.5 rounded-full">
-              {space.category}
-            </span>
-          )}
-        </div>
-
-        {/* Room icon */}
-        <div className="relative w-24 h-24 rounded-3xl overflow-hidden border-2 border-emerald-500/40 shadow-2xl shadow-emerald-500/30 bg-[#061224]">
-          <Image src="/protalk.png" alt="Pro Talks" fill className="object-cover" />
-        </div>
-
-        {/* Title */}
-        <div className="text-center max-w-lg">
-          <h1 className="text-3xl sm:text-4xl font-black text-white mb-2 leading-tight">
-            {space.name}
-          </h1>
-          {space.description && (
-            <p className="text-slate-300 text-sm leading-relaxed mb-3">{space.description}</p>
-          )}
-
-          {/* Host snippet */}
-          <div className="inline-flex items-center gap-2 text-xs text-slate-300 bg-white/5 border border-white/10 px-3.5 py-1.5 rounded-full mb-3">
-            <span>Hosted by <strong className="text-white">{space.host.name}</strong></span>
-            {space.host.headline && <span className="text-slate-400">· {space.host.headline}</span>}
-          </div>
-
-          <div className="flex items-center justify-center gap-2 text-emerald-300 text-sm">
-            <Clock className="w-4 h-4 text-lime-400" />
-            {space.scheduledAt ? formatScheduled(space.scheduledAt) : ""}
-          </div>
-        </div>
-
-        {/* Countdown */}
-        {!expired && (
-          <div className="flex items-center gap-3">
-            <CountdownUnit value={h} label="hrs" />
-            <span className="text-white/30 text-3xl font-black mb-3">:</span>
-            <CountdownUnit value={m} label="min" />
-            <span className="text-white/30 text-3xl font-black mb-3">:</span>
-            <CountdownUnit value={s} label="sec" />
-          </div>
-        )}
-        {expired && (
-          <div className="text-lime-400 font-black text-lg animate-pulse">
-            Starting any moment… Host is opening stage.
-          </div>
-        )}
-
-        {/* RSVP count */}
-        <div className="flex items-center gap-1.5 text-slate-400 text-sm">
-          <Users className="w-4 h-4 text-emerald-400" />
-          <span>{rsvpCount} {rsvpCount === 1 ? "person" : "people"} RSVP&apos;d</span>
-        </div>
-
-        {/* Actions */}
-        <div className="flex flex-wrap items-center justify-center gap-3">
-          {/* RSVP button (non-host) */}
-          {currentUserId && !isHost && (
-            <button
-              id="detail-rsvp-btn"
-              onClick={toggleRsvp}
-              disabled={rsvping}
-              className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-sm font-bold transition-all shadow-lg ${
-                rsvped
-                  ? "bg-emerald-500/30 border border-emerald-400/50 text-lime-300"
-                  : "bg-gradient-to-r from-lime-400 via-emerald-500 to-teal-500 text-[#060e1a] font-black hover:scale-105 shadow-emerald-500/25"
-              }`}
-            >
-              {rsvping ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : rsvped ? (
-                <><CheckCheck className="w-4 h-4" /> You&apos;re in! (Reminder Set)</>
-              ) : (
-                <><Check className="w-4 h-4" /> RSVP / Remind Me</>
-              )}
-            </button>
-          )}
-
-          {/* Copy invite link */}
-          {shareUrl && (
-            <button
-              onClick={copyLink}
-              className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-emerald-950/40 border border-emerald-500/30 hover:bg-emerald-900/40 text-emerald-300 hover:text-white text-sm font-semibold transition-all"
-            >
-              {copied ? <CheckCheck className="w-4 h-4 text-lime-400" /> : <Copy className="w-4 h-4" />}
-              {copied ? "Copied!" : "Copy Invite Link"}
-            </button>
-          )}
-
-          {/* Host: Start Now */}
-          {isHost && (
-            <button
-              id="host-start-now-btn"
-              onClick={onStartNow}
-              disabled={starting}
-              className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-rose-500 to-pink-600 text-white text-sm font-black hover:from-rose-400 hover:to-pink-500 transition-all shadow-lg shadow-rose-500/25 disabled:opacity-50"
-            >
-              {starting ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Play className="w-4 h-4 fill-white" />
-              )}
-              {starting ? "Starting Stage…" : "Go Live Now"}
-            </button>
-          )}
-        </div>
-
-        {/* Back link */}
-        <Link href="/pro-talks" className="text-slate-400 hover:text-white text-sm transition-colors mt-2">
-          ← Back to Pro Talks Discovery
-        </Link>
+    <main className="ptr-screen">
+      <Link href="/pro-talks" className="ptr-back">← Pro Talks</Link>
+      <span className="ptr-status is-up"><Calendar className="w-4 h-4" /> Scheduled Pro Talk</span>
+      <span className="ptr-mic"><Image src="/protalk.png" alt="" fill className="object-cover" sizes="88px" /></span>
+      <h1>{space.name}</h1>
+      {space.description && <p className="ptr-desc">{space.description}</p>}
+      <div className="ptr-meta">
+        <span>Hosted by <strong>{space.host.name}</strong></span>
+        {space.category && <span>{space.category}</span>}
+        {space.scheduledAt && <span><Clock className="w-4 h-4" /> {formatScheduled(space.scheduledAt)}</span>}
+        <span><Users className="w-4 h-4" /> {rsvpCount} {rsvpCount === 1 ? "person" : "people"} going</span>
       </div>
 
-      {/* Host RSVP panel */}
+      <Countdown target={space.scheduledAt} />
+
+      <div className="ptr-actions">
+        {isHost && (
+          <button id="host-start-now-btn" onClick={onStartNow} disabled={starting} className="ptr-btn ptr-btn--live">
+            {starting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4 fill-white" />}
+            {starting ? "Starting stage…" : "Go live now"}
+          </button>
+        )}
+        {currentUserId && !isHost && (
+          <button id="detail-rsvp-btn" onClick={toggleRsvp} disabled={rsvping} className={`ptr-btn ${rsvped ? "ptr-btn--ghost" : "ptr-btn--primary"}`}>
+            {rsvping ? <Loader2 className="w-4 h-4 animate-spin" /> : rsvped ? <><CheckCheck className="w-4 h-4" /> Reminder set</> : <><Check className="w-4 h-4" /> Remind me</>}
+          </button>
+        )}
+        {shareUrl && (
+          <button onClick={copyLink} className="ptr-btn ptr-btn--ghost">
+            {copied ? <CheckCheck className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+            {copied ? "Link copied" : "Copy invite link"}
+          </button>
+        )}
+      </div>
+
       {isHost && (
-        <div className="max-w-xl mx-auto w-full px-4 pb-12">
-          <p className="text-slate-400 text-xs font-semibold uppercase tracking-wide mb-3">
-            Host Dashboard · Confirmed RSVPs
-          </p>
+        <section className="ptr-host" aria-label="Confirmed RSVPs">
+          <p>Host · confirmed RSVPs</p>
           <RsvpPanel spaceId={space.id} />
-        </div>
+        </section>
       )}
-    </div>
+    </main>
   );
 }
 
@@ -469,15 +344,11 @@ export default function ProTalkPage() {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 z-50 bg-[#040a14] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-lime-400 via-emerald-500 to-teal-600 flex items-center justify-center shadow-xl shadow-emerald-500/30">
-            <Radio01Icon className="w-7 h-7 text-[#060e1a]" />
-          </div>
-          <Loader2 className="w-6 h-6 animate-spin text-emerald-400" />
-          <p className="text-white/60 text-sm">Connecting to Pro Talk stage…</p>
-        </div>
-      </div>
+      <main className="ptr-screen ptr-loading" role="status">
+        <span className="ptr-mic"><Image src="/protalk.png" alt="" fill className="object-cover" sizes="88px" priority /></span>
+        <Loader2 className="w-6 h-6 animate-spin text-emerald-400" />
+        <p>Connecting to the Pro Talk stage…</p>
+      </main>
     );
   }
 
@@ -500,18 +371,14 @@ export default function ProTalkPage() {
 
   if (error || !space || !token) {
     return (
-      <div className="fixed inset-0 z-50 bg-[#040a14] flex flex-col items-center justify-center gap-5 p-4 text-center">
-        <div className="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center">
-          <Radio01Icon className="w-6 h-6 text-slate-400" />
+      <main className="ptr-screen">
+        <span className="ptr-mic"><Image src="/protalk.png" alt="" fill className="object-cover" sizes="88px" /></span>
+        <h1>{space?.endedAt ? "This Pro Talk has ended" : "Pro Talk unavailable"}</h1>
+        <p className="ptr-desc">{error && error !== "Not found" ? error : "It may have ended or the link is no longer valid. Browse what's live and upcoming instead."}</p>
+        <div className="ptr-actions">
+          <Link href="/pro-talks" className="ptr-btn ptr-btn--primary">Browse Pro Talks</Link>
         </div>
-        <p className="text-white font-bold text-base">{error ?? "Pro Talk has ended or is unavailable"}</p>
-        <button
-          onClick={() => router.push("/pro-talks")}
-          className="px-6 py-2.5 rounded-full bg-gradient-to-r from-lime-400 to-emerald-500 text-[#060e1a] font-black text-sm hover:scale-105 transition-all"
-        >
-          Return to Pro Talks
-        </button>
-      </div>
+      </main>
     );
   }
 
