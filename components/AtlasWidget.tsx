@@ -1,4 +1,6 @@
 "use client";
+import Link from "next/link";
+import { SPECIALISTS } from "@/lib/specialists/catalog";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useAppSelector } from "@/store/hooks";
 import { Scale, ClipboardList, MessageSquare, LifeBuoy, ArrowLeft, CheckCircle2, Loader2, X } from "lucide-react";
@@ -22,7 +24,7 @@ const statusConfig = {
   RESOLVED: { label: "Resolved", className: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" },
 };
 
-const HINTS = ["Where are my Toolkits?", "Upgrade Membership", "Atlas Academy Courses", "About Always Ask Atlas"];
+const HINTS = ["My client has no receipts. Where do I start?", "Help me launch my tax office", "How can I automate my workflow?", "Where are my Toolkits?"];
 const DESKTOP_WIDTH = 200;
 const DESKTOP_HEIGHT = 265;
 const MOBILE_WIDTH = 124;
@@ -418,7 +420,7 @@ export default function AtlasWidget() {
     setLoading(true);
 
     try {
-      const history = msgs.map(m => ({ role: m.role, content: m.content }));
+      const history = msgs.slice(-12).map(m => ({ role: m.role, content: m.content }));
       const userContext = user ? {
         name: user.name,
         email: user.email,
@@ -431,7 +433,8 @@ export default function AtlasWidget() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: content, history, provider, userContext, pageUrl }),
       });
-      if (!res.ok || !res.body) throw new Error("Server error");
+      if (!res.ok) throw new Error(await res.text());
+      if (!res.body) throw new Error("No response received");
       const reader = res.body.getReader();
       const dec = new TextDecoder();
       while (true) {
@@ -691,10 +694,10 @@ export default function AtlasWidget() {
                   <img src="/icon.webp" alt="Atlas" className="w-full h-full object-cover" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-bold text-sm text-white leading-tight">Atlas Support</p>
+                  <p className="font-bold text-sm text-white leading-tight">Atlas & the specialists</p>
                   <div className="flex items-center gap-1.5 mt-0.5">
                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                    <p className="text-[10px] text-emerald-300 font-semibold">Website & Product Concierge</p>
+                    <p className="text-[10px] text-emerald-300 font-semibold">Tax Comp Pro AI Specialists</p>
                   </div>
                 </div>
                 {msgs.length > 0 && (
@@ -715,17 +718,17 @@ export default function AtlasWidget() {
               {/* Status bar */}
               <div className="flex items-center justify-between px-5 py-2.5 border-b border-slate-100 flex-shrink-0">
                 <span className="text-xs text-slate-400 font-semibold">
-                  {msgs.length === 0 ? "How can I help with the site today?" : `${msgs.filter(m=>m.role==="user").length} question${msgs.filter(m=>m.role==="user").length!==1?"s":""}`}
+                  {msgs.length === 0 ? "What would you like help with?" : `${msgs.filter(m=>m.role==="user").length} question${msgs.filter(m=>m.role==="user").length!==1?"s":""}`}
                 </span>
                 <span className="text-[11px] font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-600">
-                  Website Concierge
+                  Specialist routing
                 </span>
               </div>
 
               {/* Messages */}
               <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 min-h-0">
                 {msgs.length === 0 && (
-                  <div className="flex flex-col items-center justify-center h-full gap-5 text-center">
+                  <div className="flex flex-col items-center justify-center min-h-full gap-5 text-center">
                     <div className="w-16 h-16 rounded-2xl flex items-center justify-center"
                       style={{ background: "linear-gradient(135deg,#0a1628,#173473)" }}>
                       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -733,11 +736,12 @@ export default function AtlasWidget() {
                       </svg>
                     </div>
                     <div>
-                      <p className="font-black text-lg text-[#0a1628]">Ask Atlas Support</p>
+                      <p className="font-black text-lg text-[#0a1628]">Ask Atlas & the specialists</p>
                       <p className="text-sm text-slate-400 mt-1 max-w-[240px] leading-relaxed">
-                        {user ? "Your website, toolkits, and account support concierge." : "Explore Tax Compliance Pro tools, toolkits, and features."}
+                        {user ? "Atlas connects your question with the right specialist." : "Sign in to ask our seven AI specialists."}
                       </p>
                     </div>
+                    <div className="flex flex-wrap gap-2 justify-center">{SPECIALISTS.map(s=><Link key={s.id} href={`/member/ai-${s.id}`} onClick={()=>setOpen(false)} className="text-xs px-2 py-1 rounded-lg bg-slate-100 text-slate-700" title={s.title}>{s.name}</Link>)}</div>
                     <div className="flex flex-wrap gap-2 justify-center">
                       {HINTS.map(h => (
                         <button key={h} onClick={() => send(h)}
@@ -764,7 +768,7 @@ export default function AtlasWidget() {
               <div className="px-4 py-3 border-t border-slate-100 flex-shrink-0">
                 <form onSubmit={e => { e.preventDefault(); send(); }} className="flex items-center gap-2">
                   <input ref={inputRef} value={input} onChange={e => setInput(e.target.value)}
-                    placeholder="Ask about website, toolkits, courses, or your account…"
+                    placeholder="Ask an anonymized question…"
                     disabled={loading}
                     className="flex-1 bg-slate-50 border border-slate-200 rounded-full px-4 py-2.5 text-sm outline-none focus:border-[#0a1628]/30 transition-all disabled:opacity-50 font-[inherit]"
                   />
@@ -777,7 +781,7 @@ export default function AtlasWidget() {
                   </button>
                 </form>
                 <p className="text-center text-[10px] text-slate-400 mt-2">
-                  Website Support Assistant · Powered by {provider === "claude" ? "Claude" : "GPT-4o"}
+                  Tax Comp Pro AI Specialists · AI-generated guidance
                 </p>
               </div>
             </div>

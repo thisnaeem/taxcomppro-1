@@ -1,4 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import {replyInSpace} from "@/lib/specialists/service";
+import {detectSensitiveData,PRIVACY_REMINDER} from "@/lib/specialists/catalog";
+import { NextRequest, NextResponse, after } from "next/server";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
@@ -26,6 +28,7 @@ export async function POST(req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: "Title and body required" }, { status: 400 });
   }
 
+  if(detectSensitiveData(body))return NextResponse.json({error:PRIVACY_REMINDER},{status:400});
   const post = await prisma.forumPost.create({
     data: { title: title.trim(), body: body.trim(), forumId: forum.id, authorId: user.id },
     include: {
@@ -34,5 +37,6 @@ export async function POST(req: NextRequest, { params }: Params) {
     },
   });
 
+    after(() => replyInSpace("FORUM",forum.id,post.id,user.id,body,post.id).catch(() => console.error("AI reply failed; see specialist activity log.")));
   return NextResponse.json(post, { status: 201 });
 }

@@ -47,6 +47,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid receiver" }, { status: 400 });
   }
 
+  if (await prisma.aiSpecialist.findUnique({where:{userId:receiverId}})) return NextResponse.json({error:"Ask this AI specialist through their profile instead of sending a connection request."},{status:400});
+
   // Check for existing connection in either direction
   const existing = await prisma.connection.findFirst({
     where: {

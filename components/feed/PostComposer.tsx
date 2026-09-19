@@ -1,4 +1,5 @@
 "use client";
+import { PRIVACY_REMINDER, detectSensitiveData } from "@/lib/specialists/catalog";
 
 import { useState, useRef, useCallback } from "react";
 import { useAppSelector } from "@/store/hooks";
@@ -102,6 +103,7 @@ export default function PostComposer({ onPostCreated, onScheduled }: Props) {
       setScheduleError(null);
     }
 
+    if (detectSensitiveData(content)) { setScheduleError(PRIVACY_REMINDER); return; }
     setSubmitting(true);
     try {
       let imageUrls: string[] = [];
@@ -156,7 +158,8 @@ export default function PostComposer({ onPostCreated, onScheduled }: Props) {
         }
         reset();
       }
-    } catch { /* ignore */ }
+      else { const error = await res.json(); setScheduleError(error.error || "Could not publish your post."); }
+    } catch { setScheduleError("Could not publish your post. Please try again."); }
     finally { setSubmitting(false); setUploading(false); }
   };
 
@@ -193,6 +196,7 @@ export default function PostComposer({ onPostCreated, onScheduled }: Props) {
             </button>
           ) : (
             <div className="space-y-3">
+              <p className="text-xs text-slate-500 dark:text-slate-300 mb-2">{PRIVACY_REMINDER} Mention @Atlas or a specialist to invite an AI reply.</p>
               <textarea
                 ref={textRef}
                 value={content}
@@ -244,6 +248,7 @@ export default function PostComposer({ onPostCreated, onScheduled }: Props) {
                 </div>
               )}
 
+              {scheduleError && !showScheduler && <p role="alert" className="text-xs text-red-500">{scheduleError}</p>}
               {/* Schedule picker */}
               {showScheduler && (
                 <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 space-y-2">

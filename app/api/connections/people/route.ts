@@ -23,6 +23,7 @@ export async function GET(req: NextRequest) {
 
   const people = await prisma.user.findMany({
     where: {
+      aiSpecialist: null,
       id:   { notIn: Array.from(excludeIds) },
       ...(search ? { OR: [
         { name:     { contains: search, mode: "insensitive" } },

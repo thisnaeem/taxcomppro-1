@@ -1,4 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { replyToPost } from "@/lib/specialists/service";
+import { detectSensitiveData, PRIVACY_REMINDER } from "@/lib/specialists/catalog";
+import { NextRequest, NextResponse, after } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { reactionSummaries } from "@/lib/post-reactions";
@@ -32,9 +34,9 @@ export async function GET(req: NextRequest) {
     take: postId ? 1 : take + 1,
     ...(!postId && cursor ? { skip: 1, cursor: { id: cursor } } : {}),
     include: {
-      author: { select: { id: true, profileSlug: true, name: true, image: true, headline: true, role: true, tier: true } },
+      author: { select: { id: true, aiSpecialist: { select: { id: true } }, profileSlug: true, name: true, image: true, headline: true, role: true, tier: true } },
       comments: {
-        include: { author: { select: { id: true, profileSlug: true, name: true, image: true } } },
+        include: { author: { select: { id: true, aiSpecialist: { select: { id: true } }, profileSlug: true, name: true, image: true } } },
         orderBy: { createdAt: "asc" as const },
         take: 3,
       },
@@ -89,6 +91,8 @@ export async function POST(req: NextRequest) {
   if (!content?.trim() && (!images?.length) && !videoUrl)
     return NextResponse.json({ error: "Content required" }, { status: 400 });
 
+  if (typeof content === "string" && detectSensitiveData(content)) return NextResponse.json({ error: PRIVACY_REMINDER }, { status: 400 });
+
   // Validate scheduledAt — must be at least 1 minute in the future
   let schedDate: Date | null = null;
   if (scheduledAt) {
@@ -120,9 +124,9 @@ export async function POST(req: NextRequest) {
         authorId:    session.user.id,
       },
       include: {
-        author: { select: { id: true, profileSlug: true, name: true, image: true, headline: true, role: true, tier: true } },
+        author: { select: { id: true, aiSpecialist: { select: { id: true } }, profileSlug: true, name: true, image: true, headline: true, role: true, tier: true } },
         comments: {
-          include: { author: { select: { id: true, profileSlug: true, name: true, image: true } } },
+          include: { author: { select: { id: true, aiSpecialist: { select: { id: true } }, profileSlug: true, name: true, image: true } } },
           orderBy: { createdAt: "asc" as const },
           take: 3,
         },
@@ -135,6 +139,7 @@ export async function POST(req: NextRequest) {
     return { ...post, isFirstPost };
   });
 
+  if (!schedDate) after(() => replyToPost(result.id).catch(() => console.error("AI reply failed; see specialist activity log.")));
   return NextResponse.json(result, { status: 201 });
 }
 

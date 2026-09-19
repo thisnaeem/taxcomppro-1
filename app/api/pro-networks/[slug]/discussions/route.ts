@@ -1,4 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import {replyInSpace} from "@/lib/specialists/service";
+import {detectSensitiveData,PRIVACY_REMINDER} from "@/lib/specialists/catalog";
+import { NextRequest, NextResponse, after } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 
@@ -144,6 +146,7 @@ export async function POST(
       return NextResponse.json({ error: "Title and content are required" }, { status: 400 });
     }
 
+  if(detectSensitiveData(content))return NextResponse.json({error:PRIVACY_REMINDER},{status:400});
     const discussion = await prisma.proNetworkDiscussion.create({
       data: {
         networkId: network.id,
@@ -167,6 +170,7 @@ export async function POST(
       },
     });
 
+    after(() => replyInSpace("NETWORK",network.id,discussion.id,session.user.id,content,discussion.id).catch(() => console.error("AI reply failed; see specialist activity log.")));
     return NextResponse.json({ discussion });
   } catch (error) {
     console.error("Failed to create discussion:", error);

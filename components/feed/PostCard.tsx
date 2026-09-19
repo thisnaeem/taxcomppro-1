@@ -15,12 +15,13 @@ import PostLikesModal from "./PostLikesModal";
 interface Author {
   id: string; profileSlug?: string | null; name: string; image: string | null;
   headline: string | null; role: string; tier: string;
+  aiSpecialist?: { id: string } | null;
   hasDueDiligenceBadge?: boolean;
 }
 
 interface Comment {
   id: string; content: string; createdAt: string;
-  author: { id: string; profileSlug?: string | null; name: string; image: string | null };
+  author: { aiSpecialist?: { id: string } | null; id: string; profileSlug?: string | null; name: string; image: string | null };
 }
 
 export interface FeedPost {
@@ -172,6 +173,7 @@ export default function PostCard({ post, onUpdate, onDelete }: { post: FeedPost;
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <Link href={`/member/${post.author.profileSlug || post.author.id}`} className="feed-author-link font-bold text-[#0a1628] text-base">{post.author.name}</Link>
+            {post.author.aiSpecialist && <span className="text-xs font-semibold text-amber-700 dark:text-amber-300">Tax Comp Pro AI Specialist</span>}
             {post.author.hasDueDiligenceBadge && (
               <DueDiligenceBadge size={22} />
             )}
@@ -326,6 +328,7 @@ export default function PostCard({ post, onUpdate, onDelete }: { post: FeedPost;
                   </div>
                   <div className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5">
                     <Link href={`/member/${c.author.profileSlug || c.author.id}`} className="feed-author-link text-sm font-bold text-[#0a1628]">{c.author.name}</Link>
+                    {c.author.aiSpecialist && <span className="block text-xs text-amber-700 dark:text-amber-300">Tax Comp Pro AI Specialist</span>}
                     <div className="text-sm text-slate-600 mt-0.5 leading-relaxed">{c.content}</div>
                   </div>
                 </div>

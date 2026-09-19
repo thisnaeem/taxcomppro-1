@@ -1,150 +1,110 @@
 import { NextRequest } from "next/server";
-import OpenAI from "openai";
-import Anthropic from "@anthropic-ai/sdk";
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { ATLAS_SUPPORT_SYSTEM_PROMPT, ATLAS_WEBSITE_QA } from "@/lib/atlas-support-knowledge";
-
+import { answerQuestion } from "@/lib/specialists/service";
+import { z } from "zod";
+import { createHash } from "node:crypto";
+export const maxDuration = 120;
+const input = z.object({
+  message: z.string().trim().min(1).max(6000),
+  specialist: z.string().max(60).optional(),
+  history: z
+    .array(
+      z.object({
+        role: z.enum(["user", "assistant"]),
+        content: z.string().max(6000),
+      }),
+    )
+    .max(12)
+    .default([]),
+});
 export async function POST(req: NextRequest) {
-  try {
-    const { message, history = [], provider, userContext, pageUrl } = await req.json();
-
-    if (!message?.trim()) {
-      return new Response("Message is required", { status: 400 });
-    }
-
-    const settings = await prisma.atlasSettings.findFirst().catch(() => null);
-    const activeProvider = provider || settings?.defaultProvider || "openai";
-    const maxTokens = settings?.maxTokens || 1024;
-
-    // Fetch custom approved knowledge base items from DB
-    const customItems = await prisma.atlasKnowledgeItem.findMany({
-      where: { active: true },
-      select: { question: true, approvedAnswer: true, category: true },
-    }).catch(() => []);
-
-    const allKnowledge = [
-      ...ATLAS_WEBSITE_QA.map((q) => `Q: ${q.question}\nA: ${q.answer}`),
-      ...customItems.map((k) => `Q: ${k.question}\nA: ${k.approvedAnswer}`),
-    ].join("\n\n");
-
-    const userContextStr = userContext
-      ? `CURRENT USER CONTEXT:
-- Name: ${userContext.name || "Guest / Anonymous"}
-- Email: ${userContext.email || "Not signed in"}
-- Membership Tier: ${userContext.tier || "FREE"}
-- Current Page: ${pageUrl || "/"}
-- Purchased Products: ${userContext.purchases?.join(", ") || "None"}
-`
-      : `CURRENT USER CONTEXT:
-- Visitor is currently exploring the site as a guest.
-- Current Page: ${pageUrl || "/"}`;
-
-    const systemPrompt = `${ATLAS_SUPPORT_SYSTEM_PROMPT}
-
-${userContextStr}
-
-APPROVED WEBSITE SUPPORT KNOWLEDGE BASE:
-${allKnowledge}
-
-${settings?.systemPromptExtra?.trim() ? `ADDITIONAL ADMIN INSTRUCTIONS:\n${settings.systemPromptExtra.trim()}` : ""}
-`;
-
-    const encoder = new TextEncoder();
-    const stream = new ReadableStream({
-      async start(controller) {
-        try {
-          if (activeProvider === "claude") {
-            // ── Anthropic Claude ──────────────────────────────────────────
-            const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-            const msgs: Anthropic.MessageParam[] = [
-              ...history.map((m: { role: string; content: string }) => ({
-                role: (m.role === "user" ? "user" : "assistant") as "user" | "assistant",
-                content: m.content,
-              })),
-              { role: "user", content: message },
-            ];
-
-            const candidateModels = [
-              "claude-haiku-4-5-20251001",
-              "claude-sonnet-4-5-20250929",
-              "claude-3-5-haiku-20241022",
-              "claude-3-haiku-20240307",
-            ];
-
-            let claudeStream = null;
-            let lastErr: unknown = null;
-
-            for (const modelName of candidateModels) {
-              try {
-                claudeStream = await client.messages.stream({
-                  model: modelName,
-                  max_tokens: maxTokens,
-                  system: systemPrompt,
-                  messages: msgs,
-                });
-                break;
-              } catch (e: any) {
-                lastErr = e;
-                if (e?.status === 404 || e?.message?.includes("not_found")) {
-                  continue;
-                }
-                throw e;
-              }
-            }
-
-            if (!claudeStream) {
-              throw lastErr || new Error("No compatible Claude model found");
-            }
-
-            for await (const chunk of claudeStream) {
-              if (
-                chunk.type === "content_block_delta" &&
-                chunk.delta.type === "text_delta"
-              ) {
-                controller.enqueue(encoder.encode(chunk.delta.text));
-              }
-            }
-          } else {
-            // ── OpenAI GPT-4o ─────────────────────────────────────────────
-            const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-            const msgs: OpenAI.Chat.ChatCompletionMessageParam[] = [
-              { role: "system", content: systemPrompt },
-              ...history.map((m: { role: string; content: string }) => ({
-                role: (m.role === "user" ? "user" : "assistant") as "user" | "assistant",
-                content: m.content,
-              })),
-              { role: "user", content: message },
-            ];
-
-            const openaiStream = await client.chat.completions.create({
-              model: "gpt-4o",
-              messages: msgs,
-              stream: true,
-              max_tokens: maxTokens,
-            });
-
-            for await (const chunk of openaiStream) {
-              const text = chunk.choices[0]?.delta?.content ?? "";
-              if (text) controller.enqueue(encoder.encode(text));
-            }
-          }
-        } catch (err) {
-          const msg = err instanceof Error ? err.message : "AI error";
-          controller.enqueue(encoder.encode(`[ERROR]: ${msg}`));
-        } finally {
-          controller.close();
-        }
+  const session = await auth.api.getSession({ headers: req.headers });
+  if (!session)
+    return new Response("Please sign in to ask an AI specialist.", {
+      status: 401,
+    });
+  const parsed = input.safeParse(await req.json().catch(() => null));
+  if (!parsed.success)
+    return new Response(
+      "Please shorten your message or start a new conversation.",
+      { status: 400 },
+    );
+  const settings = await prisma.atlasSettings.findFirst();
+  if (
+    settings &&
+    (!settings.widgetEnabled ||
+      (!settings.allowedTiers.includes(session.user.tier || "FREE") &&
+        session.user.role !== "ADMIN"))
+  )
+    return new Response(
+      "AI access is currently unavailable for this account.",
+      { status: 403 },
+    );
+  // Use a database advisory lock to serialize per-account quota checks across instances.
+  const reservation = await prisma.$transaction(async (tx) => {
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${"ai-chat:" + session.user.id}))`;
+    const prefix = `chat:${createHash("sha256").update(session.user.id).digest("hex")}:`;
+    const count = await tx.aiActivity.count({
+      where: {
+        key: { startsWith: prefix },
+        createdAt: { gte: new Date(Date.now() - 3600000) },
       },
     });
-
-    return new Response(stream, {
+    if (count >= 30) return false;
+    if (!(await tx.aiSpecialist.findUnique({ where: { id: "atlas" } })))
+      return false;
+    const job = await tx.aiActivity.create({
+      data: {
+        specialistId: "atlas",
+        key: prefix + crypto.randomUUID(),
+        kind: "CHAT",
+        status: "RESERVED",
+        destination: "CHAT",
+      },
+    });
+    return job.id;
+  });
+  if (!reservation)
+    return new Response(
+      "The hourly AI limit has been reached, or specialists have not been initialized. Please try again later.",
+      { status: 429 },
+    );
+  try {
+    const result = await answerQuestion(
+      parsed.data.message,
+      parsed.data.specialist,
+      parsed.data.history,
+    );
+    await prisma.aiActivity.update({
+      where: { id: reservation },
+      data: {
+        status: result.provider === "privacy" ? "BLOCKED" : "COMPLETED",
+        specialistId: result.id,
+        provider: result.provider,
+      },
+    });
+    const intro =
+      result.provider === "privacy"
+        ? ""
+        : `**${result.name} · Tax Comp Pro AI Specialist**\n${!parsed.data.specialist && result.id !== "atlas" ? `Atlas routed your question to ${result.name}.\n` : ""}\n`;
+    return new Response(intro + result.text, {
       headers: {
         "Content-Type": "text/plain; charset=utf-8",
-        "Cache-Control": "no-cache",
-        "X-Accel-Buffering": "no",
+        "Cache-Control": "no-store",
+        "X-AI-Specialist": result.id,
       },
     });
   } catch {
-    return new Response("Internal server error", { status: 500 });
+    await prisma.aiActivity
+      .update({
+        where: { id: reservation },
+        data: { status: "FAILED", error: "Provider request failed" },
+      })
+      .catch(() => {});
+    return new Response(
+      "The AI specialist is temporarily unavailable. Please try again shortly.",
+      { status: 503 },
+    );
   }
 }

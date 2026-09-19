@@ -118,6 +118,7 @@ enum TrainingStatus {
 }
 
 model User {
+  aiSpecialist AiSpecialist?
   profileSlug String? @unique
   professionalTitle String?
   id               String           @id @default(cuid())
@@ -1962,3 +1963,47 @@ model EmailLog {
   @@map("email_logs")
 }
 
+
+model AiSpecialist {
+  id String @id
+  userId String @unique
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title String
+  about String @db.Text
+  expertise String[]
+  starters String[]
+  signature String
+  courseNames String[]
+  personality String @db.Text
+  boundaries String @db.Text
+  provider String @default("auto")
+  enabled Boolean @default(true)
+  autoPublish Boolean @default(false)
+  autoReply Boolean @default(false)
+  weeklyPosts Int @default(2)
+  destination String @default("FEED")
+  destinationId String?
+  knowledge Json @default("[]")
+  activities AiActivity[]
+  updatedAt DateTime @updatedAt
+  @@map("ai_specialists")
+}
+model AiActivity {
+  id String @id @default(cuid())
+  specialistId String
+  specialist AiSpecialist @relation(fields: [specialistId], references: [id], onDelete: Cascade)
+  key String @unique
+  kind String @default("POST")
+  status String @default("GENERATING")
+  destination String
+  destinationId String?
+  parentId String?
+  content String @default("") @db.Text
+  provider String?
+  error String?
+  publishedUrl String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([specialistId, createdAt])
+  @@map("ai_activities")
+}

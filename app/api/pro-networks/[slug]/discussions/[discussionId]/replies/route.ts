@@ -1,4 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
+import {hasNetworkMembership} from "@/lib/networkAccess";
+import {replyInSpace} from "@/lib/specialists/service";
+import {detectSensitiveData,PRIVACY_REMINDER} from "@/lib/specialists/catalog";
+import { NextRequest, NextResponse, after } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 
@@ -20,6 +23,12 @@ export async function GET(
       return NextResponse.json({ error: "Network not found" }, { status: 404 });
     }
 
+    const discussion=await prisma.proNetworkDiscussion.findFirst({where:{id:discussionId,networkId:network.id}});
+    if(!discussion)return NextResponse.json({error:"Discussion not found"},{status:404});
+    if(discussion.isMembersOnly && session?.user.id!==network.ownerId && session?.user.role!=="ADMIN") {
+      const membership=session?await prisma.proNetworkMember.findUnique({where:{networkId_userId:{networkId:network.id,userId:session.user.id}}}):null;
+      if(!hasNetworkMembership(membership))return NextResponse.json({error:"Members only"},{status:403});
+    }
     const replies = await prisma.proNetworkDiscussionReply.findMany({
       where: { discussionId },
       orderBy: { createdAt: "asc" },
@@ -64,6 +73,7 @@ export async function POST(
       return NextResponse.json({ error: "Network not found" }, { status: 404 });
     }
 
+    if(!await prisma.proNetworkDiscussion.findFirst({where:{id:discussionId,networkId:network.id}})) return NextResponse.json({error:"Discussion not found"},{status:404});
     // Verify member status
     const isOwner = session.user.id === network.ownerId;
     if (!isOwner) {
@@ -75,7 +85,7 @@ export async function POST(
           },
         },
       });
-      if (!member || member.status !== "ACTIVE") {
+      if (!hasNetworkMembership(member)) {
         return NextResponse.json({ error: "Must be an active member to reply" }, { status: 403 });
       }
     }
@@ -87,6 +97,7 @@ export async function POST(
       return NextResponse.json({ error: "Content is required" }, { status: 400 });
     }
 
+  if(detectSensitiveData(content))return NextResponse.json({error:PRIVACY_REMINDER},{status:400});
     const reply = await prisma.proNetworkDiscussionReply.create({
       data: {
         discussionId,
@@ -112,6 +123,7 @@ export async function POST(
       data: { replyCount: { increment: 1 } },
     });
 
+    after(() => replyInSpace("NETWORK",network.id,discussionId,session.user.id,content,reply.id).catch(() => console.error("AI reply failed; see specialist activity log.")));
     return NextResponse.json({ reply });
   } catch (error) {
     console.error("Failed to create reply:", error);

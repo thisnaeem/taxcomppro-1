@@ -6,6 +6,7 @@ import { ReduxProvider } from "@/store/provider";
 import AtlasWidgetLoader from "@/components/AtlasWidgetLoader";
 import GhlChatWidget from "@/components/GhlChatWidget";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import SitePreferences from "@/components/SitePreferences";
 
 const urbanist = Urbanist({
   subsets: ["latin"],
@@ -50,6 +51,7 @@ export default function RootLayout({
             </Suspense>
             <AtlasWidgetLoader />
             <GhlChatWidget />
+            <SitePreferences />
           </ReduxProvider>
         </ThemeProvider>
       </body>
