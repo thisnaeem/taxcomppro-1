@@ -21,7 +21,8 @@ export async function POST(req: NextRequest, { params }: Params) {
 
   const apiKey = process.env.LIVEKIT_API_KEY!;
   const apiSecret = process.env.LIVEKIT_API_SECRET!;
-  const isHost = session.user.id === space.hostId || session.user.role === "ADMIN";
+  const isHost = session.user.id === space.hostId;
+  const isAdmin = session.user.role === "ADMIN";
   const isCoHost = Array.isArray(space.coHostIds) && space.coHostIds.includes(session.user.id);
 
   const token = new AccessToken(apiKey, apiSecret, {
@@ -30,6 +31,7 @@ export async function POST(req: NextRequest, { params }: Params) {
     metadata: JSON.stringify({
       image: session.user.image ?? null,
       isHost,
+      isAdmin,
       isCoHost,
       role: isHost ? "HOST" : isCoHost ? "CO_HOST" : "ATTENDEE",
       tier: (session.user as { tier?: string }).tier ?? "FREE",
@@ -43,7 +45,7 @@ export async function POST(req: NextRequest, { params }: Params) {
     canUpdateOwnMetadata: false,
     canPublishData: true,
     canSubscribe: true,
-    roomAdmin: isHost,
+    roomAdmin: isHost || isAdmin,
   });
 
   const jwt = await token.toJwt();

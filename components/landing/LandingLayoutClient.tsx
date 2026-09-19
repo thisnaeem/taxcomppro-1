@@ -13,13 +13,15 @@ export default function LandingLayoutClient({ children }: { children: React.Reac
 
   const isGroups = pathname === "/groups" || pathname.startsWith("/groups/");
 
+  const isNetworkInterior = pathname.startsWith("/pro-networks/") && pathname !== "/pro-networks/create";
+
   const isMarketplace = pathname === "/marketplace" || pathname.startsWith("/marketplace/");
 
   return (
     <>
       <Navbar />
       <main className="flex-1 pb-16 md:pb-0">{children}</main>
-      {!isProfile && !isGroups && !isMarketplace && pathname !== "/connections" && pathname !== "/messages" && pathname !== "/seller-dashboard" && <Footer />}
+      {!isProfile && !isGroups && !isMarketplace && !isNetworkInterior && pathname !== "/connections" && pathname !== "/messages" && pathname !== "/seller-dashboard" && <Footer />}
       <MobileBottomNav />
       <ProfileCompletion />
     </>

@@ -92,7 +92,7 @@ interface DiscussionMsg {
 interface FloatingReaction {
   id: string;
   emoji: string;
-  x: number; // percentage across container
+  identity: string;
 }
 
 interface Props {
@@ -112,6 +112,7 @@ function getParticipantMetadata(metadata?: string): {
   image: string | null;
   role?: string;
   tier?: string;
+  isAdmin?: boolean;
 } {
   if (!metadata) return { image: null };
   try {
@@ -120,6 +121,7 @@ function getParticipantMetadata(metadata?: string): {
       image: data.image ?? null,
       role: data.role,
       tier: data.tier,
+      isAdmin: data.isAdmin === true,
     };
   } catch {
     return { image: null };
@@ -134,6 +136,7 @@ function SpeakerAvatar({
   isSpeaking,
   micOn,
   handUp,
+  reaction,
   canManage,
   onDemote,
   onPromoteCoHost,
@@ -146,6 +149,7 @@ function SpeakerAvatar({
   isSpeaking: boolean;
   micOn: boolean;
   handUp: boolean;
+  reaction?: FloatingReaction;
   canManage: boolean;
   onDemote?: () => void;
   onPromoteCoHost?: () => void;
@@ -205,6 +209,8 @@ function SpeakerAvatar({
             </span>
           )}
         </div>
+
+        {reaction && <span key={reaction.id} className="sr-avatar-reaction" role="img" aria-label={`${name} reacted ${reaction.emoji}`}>{reaction.emoji}</span>}
 
         {/* Mic status badge */}
         <div
@@ -313,6 +319,7 @@ function SpeakerVideoTile({
   isSpeaking,
   micOn,
   handUp,
+  reaction,
   trackRef,
   canManage,
   onDemote,
@@ -323,6 +330,7 @@ function SpeakerVideoTile({
   isSpeaking: boolean;
   micOn: boolean;
   handUp: boolean;
+  reaction?: FloatingReaction;
   trackRef: TrackReference;
   canManage: boolean;
   onDemote?: () => void;
@@ -331,6 +339,8 @@ function SpeakerVideoTile({
   return (
     <div className="sr-video-tile relative aspect-video rounded-3xl overflow-hidden bg-black group">
       <VideoTrack trackRef={trackRef} className="w-full h-full object-cover" />
+
+      {reaction && <span key={reaction.id} className="sr-avatar-reaction sr-video-reaction" role="img" aria-label={`${name} reacted ${reaction.emoji}`}>{reaction.emoji}</span>}
 
       {/* Speaking border pulse */}
       {isSpeaking && micOn && (
@@ -714,12 +724,11 @@ function RoomInner({ space, isAdmin, userId, onEnd, ending }: Props) {
 
   const isHost =
     localParticipant?.identity === space.hostId ||
-    userId === space.hostId ||
-    isAdmin;
+    userId === space.hostId;
   const isCoHost = localParticipant
     ? getParticipantMetadata(localParticipant.metadata).role === "CO_HOST"
     : false;
-  const isAuthorizedManager = isHost || isCoHost;
+  const isAuthorizedManager = isHost || isCoHost || isAdmin;
   const isApprovedSpeaker = !!localParticipant.permissions?.canPublish;
   const sharingBusy = useRef(false);
   const [sharingPending, setSharingPending] = useState(false);
@@ -880,18 +889,17 @@ function RoomInner({ space, isAdmin, userId, onEnd, ending }: Props) {
       if (now - lastReactionTimeRef.current < 350) return; // Anti-spam throttle
       lastReactionTimeRef.current = now;
 
-      const x = Math.floor(Math.random() * 80) + 10;
-      const reactionObj = { id: `${now}-${Math.random()}`, emoji, x };
+      const reactionObj = { id: `${now}-${Math.random()}`, emoji, identity: localParticipant.identity };
 
       setFloatingReactions((p) => [...p.slice(-15), reactionObj]);
-      safePublishData({ type: "reaction", emoji, x });
+      safePublishData({ type: "reaction", emoji });
 
       // Auto-purge after 2.5s
       setTimeout(() => {
         setFloatingReactions((p) => p.filter((r) => r.id !== reactionObj.id));
       }, 2500);
     },
-    [reactionsEnabled, safePublishData, showToast],
+    [reactionsEnabled, safePublishData, showToast, localParticipant],
   );
 
   // ── Live Discussion System ──────────────────────────────────────────────────
@@ -1055,7 +1063,8 @@ function RoomInner({ space, isAdmin, userId, onEnd, ending }: Props) {
         const manager =
           sender?.identity === space.hostId ||
           senderRole === "HOST" ||
-          senderRole === "CO_HOST";
+          senderRole === "CO_HOST" ||
+          getParticipantMetadata(sender?.metadata).isAdmin === true;
         if (
           [
             "room_sync",
@@ -1072,10 +1081,11 @@ function RoomInner({ space, isAdmin, userId, onEnd, ending }: Props) {
           return;
 
         if (msgType === "reaction") {
+          if (!sender || !AUDIENCE_REACTIONS.includes(raw.emoji as AudienceReaction)) return;
           const reactionObj: FloatingReaction = {
             id: `${Date.now()}-${Math.random()}`,
             emoji: raw.emoji as string,
-            x: typeof raw.x === "number" ? raw.x : 50,
+            identity: sender.identity,
           };
           setFloatingReactions((p) => [...p.slice(-15), reactionObj]);
           setTimeout(() => {
@@ -1272,23 +1282,29 @@ function RoomInner({ space, isAdmin, userId, onEnd, ending }: Props) {
   }, [discussion]);
 
   // Compute speakers vs attendees
-  const speakers = participants.filter((p) => !!p.permissions?.canPublish);
+  const speakers = participants.filter((p) => !!p.permissions?.canPublish).sort((a, b) => {
+    const rank = (p: typeof a) => p.identity === space.hostId ? 0 : getParticipantMetadata(p.metadata).role === "CO_HOST" ? 1 : 2;
+    return rank(a) - rank(b);
+  });
+  const reactionsByParticipant = new Map(floatingReactions.map(reaction => [reaction.identity, reaction]));
   const attendees = participants.filter((p) => !p.permissions?.canPublish);
 
   // Host End Room with summary modal
   const handleHostEnd = useCallback(async () => {
+    if (!isHost && !isAdmin) return;
     try {
       const res = await fetch(`/api/spaces/${space.id}`, { method: "DELETE" });
       const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Unable to end this room.");
       if (data.summary) {
         setSessionSummary(data.summary);
       } else {
         onEnd();
       }
-    } catch {
-      onEnd();
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : "Unable to end this room. Please try again.");
     }
-  }, [space.id, onEnd]);
+  }, [space.id, onEnd, isHost, isAdmin, showToast]);
 
   return (
     <div
@@ -1296,19 +1312,6 @@ function RoomInner({ space, isAdmin, userId, onEnd, ending }: Props) {
     >
       <RoomAudioRenderer />
       <StartAudio label="Enable stage audio" className="sr-enable-audio" />
-
-      {/* Floating Animated Reactions Canvas */}
-      <div className="absolute inset-0 pointer-events-none z-30 overflow-hidden">
-        {floatingReactions.map((r) => (
-          <div
-            key={r.id}
-            className="absolute bottom-16 text-3xl sm:text-4xl pointer-events-none select-none drop-shadow-md animate-float-up"
-            style={{ left: `${r.x}%` }}
-          >
-            {r.emoji}
-          </div>
-        ))}
-      </div>
 
       {/* Toast Alert */}
       {toastMessage && (
@@ -1542,6 +1545,7 @@ function RoomInner({ space, isAdmin, userId, onEnd, ending }: Props) {
                         isSpeaking={p.isSpeaking}
                         micOn={p.isMicrophoneEnabled}
                         handUp={raised.has(p.identity)}
+                        reaction={reactionsByParticipant.get(p.identity)}
                         trackRef={pCameraTrack}
                         canManage={isAuthorizedManager}
                         onDemote={() => demoteSpeaker(p.identity)}
@@ -1559,6 +1563,7 @@ function RoomInner({ space, isAdmin, userId, onEnd, ending }: Props) {
                       isSpeaking={p.isSpeaking}
                       micOn={p.isMicrophoneEnabled}
                       handUp={raised.has(p.identity)}
+                        reaction={reactionsByParticipant.get(p.identity)}
                       canManage={isAuthorizedManager}
                       onDemote={() => demoteSpeaker(p.identity)}
                       onPromoteCoHost={() => promoteToCoHost(p.identity)}
@@ -1628,6 +1633,9 @@ function RoomInner({ space, isAdmin, userId, onEnd, ending }: Props) {
                         {p.name || "Attendee"}
                       </span>
 
+                      {reactionsByParticipant.has(p.identity) && (
+                        <span key={reactionsByParticipant.get(p.identity)!.id} className="sr-avatar-reaction sr-audience-reaction" role="img" aria-label={`${p.name || "Attendee"} reacted ${reactionsByParticipant.get(p.identity)!.emoji}`}>{reactionsByParticipant.get(p.identity)!.emoji}</span>
+                      )}
                       {raised.has(p.identity) && (
                         <span
                           role="img"

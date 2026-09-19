@@ -96,6 +96,7 @@ export async function GET(
         isOwner,
         isMember,
         membershipRole,
+        canManage: isOwner || (isMember && membershipRole === "ADMIN"),
         isFollowing,
       },
     });
@@ -122,8 +123,13 @@ export async function PATCH(
       return NextResponse.json({ error: "Network not found" }, { status: 404 });
     }
 
-    if (network.ownerId !== session.user.id && session.user.role !== "ADMIN") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    if (network.ownerId !== session.user.id) {
+      const membership = await prisma.proNetworkMember.findUnique({
+        where: { networkId_userId: { networkId: network.id, userId: session.user.id } },
+      });
+      if (!hasNetworkMembership(membership) || membership?.role !== "ADMIN") {
+        return NextResponse.json({ error: "Only this network's owner or admins can manage its settings" }, { status: 403 });
+      }
     }
 
     const body = await req.json();
@@ -231,8 +237,13 @@ export async function DELETE(
       return NextResponse.json({ error: "Network not found" }, { status: 404 });
     }
 
-    if (network.ownerId !== session.user.id && session.user.role !== "ADMIN") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    if (network.ownerId !== session.user.id) {
+      const membership = await prisma.proNetworkMember.findUnique({
+        where: { networkId_userId: { networkId: network.id, userId: session.user.id } },
+      });
+      if (!hasNetworkMembership(membership) || membership?.role !== "ADMIN") {
+        return NextResponse.json({ error: "Only this network's owner or admins can manage its settings" }, { status: 403 });
+      }
     }
 
     await prisma.proNetwork.delete({ where: { slug } });

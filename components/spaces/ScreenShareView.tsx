@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal, flushSync } from "react-dom";
 import { VideoTrack, type TrackReference } from "@livekit/components-react";
 import { Maximize2, Minimize2, Monitor } from "lucide-react";
 
@@ -33,11 +34,11 @@ export default function ScreenShareView({ trackRef }: { trackRef: TrackReference
       return;
     }
     // Also enlarge in browsers/embedded views where the fullscreen API is unavailable.
-    setExpanded(true);
+    flushSync(() => setExpanded(true));
     try { await container.current?.requestFullscreen?.(); } catch { /* viewport fallback */ }
   }
 
-  return (
+  const content = (
     <div ref={container} className={`sr-screen ${expanded ? "sr-screen-fullscreen" : ""}`}>
       <header className="sr-screen-toolbar">
         <div><Monitor size={16} /><span>{trackRef.participant.name || trackRef.participant.identity} is sharing screen</span></div>
@@ -48,4 +49,5 @@ export default function ScreenShareView({ trackRef }: { trackRef: TrackReference
       <div className="sr-screen-media"><VideoTrack trackRef={trackRef} /></div>
     </div>
   );
+  return expanded ? createPortal(content, document.body) : content;
 }

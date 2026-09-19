@@ -1064,3 +1064,18 @@
 .sr-room .text-slate-500 { color: #64748b !important; }
 .sr-room .text-slate-300 { color: #cbd5e1 !important; }
 .sr-room .text-emerald-300, .sr-room .text-emerald-400 { color: #6ee7b7 !important; }
+
+/* Keep the stage above the audience at every viewport size. */
+.sr-room .sr-workspace { grid-template-columns: minmax(0, 1fr); min-height: 0; }
+.sr-room .sr-stage { min-height: 0; }
+.sr-room .sr-audience { display: block; width: 100%; }
+.sr-room .sr-audience-grid { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 28px 16px; }
+.sr-room .sr-room-note { margin-top: 24px; }
+.sr-avatar-reaction { position: absolute; left: -12px; top: -12px; z-index: 30; font-size: 32px; line-height: 1; pointer-events: none; filter: drop-shadow(0 2px 4px #0008); animation: sr-reaction-pop .25s ease-out; }
+.sr-video-reaction { top: 48px; left: 16px; font-size: 40px; }
+.sr-audience-grid > div > .sr-audience-reaction { left: calc(50% - 40px); top: -10px; max-width: none; font-size: 30px; overflow: visible; }
+.sr-screen.sr-screen-fullscreen { z-index: 10000; background: #000; color: #f1f5f9; }
+.sr-screen.sr-screen-fullscreen > .sr-screen-toolbar { flex: 0 0 52px; background: #071729; color: #f1f5f9; }
+.sr-screen.sr-screen-fullscreen > .sr-screen-media { flex: 1 1 0; height: 0; min-height: 0; }
+@keyframes sr-reaction-pop { from { opacity: 0; transform: scale(.5); } to { opacity: 1; transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { .sr-avatar-reaction { animation: none; } }

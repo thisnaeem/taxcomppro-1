@@ -101,7 +101,7 @@ export default function CreateProNetworkPage() {
   const [coverImage, setCoverImage] = useState(coverPresets[0]);
   const [customCoverUrl, setCustomCoverUrl] = useState("");
   const [logoImage, setLogoImage] = useState("");
-  const [accentColor, setAccentColor] = useState("#ffbe24");
+  const [accentColor, setAccentColor] = useState("#65a832");
 
   // Badge Config
   const [badge, setBadge] = useState<BadgeConfig>({

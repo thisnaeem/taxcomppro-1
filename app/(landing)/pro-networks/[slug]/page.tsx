@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/lib/auth-client";
 import { networkAccentInk } from "@/lib/networkBranding";
+import NetworkDetailsSettings from "@/components/networks/NetworkDetailsSettings";
 import NetworkBranding from "@/components/networks/NetworkBranding";
 import NetworkEvents from "@/components/networks/NetworkEvents";
 import ProfessionalTitleEditor from "@/components/networks/ProfessionalTitleEditor";
@@ -13,6 +14,9 @@ import NetworkBadge from "@/components/networks/NetworkBadge";
 import "@/components/networks/networks.css";
 import "@/components/networks/networks-light.css";
 import "@/components/networks/network-hub-theme.css";
+import NetworkSkeleton from "@/components/networks/NetworkSkeleton";
+import NetworkPosts from "@/components/networks/NetworkPosts";
+import "@/components/networks/network-posts.css";
 import MemberBubbleCloud from "@/components/networks/MemberBubbleCloud";
 import {
   Home01Icon as Home,
@@ -65,8 +69,7 @@ import {
 } from "hugeicons-react";
 
 const NETWORK_TABS = [
-  { id: "home", label: "Overview", icon: Home },
-  { id: "discussions", label: "Discussions", icon: MessageSquare },
+  { id: "home", label: "Posts", icon: Home },
   { id: "media", label: "Media library", icon: Images },
   { id: "resources", label: "Resources", icon: FolderDown },
   { id: "protalks", label: "Pro Talks", icon: Radio },
@@ -107,6 +110,7 @@ interface ProNetworkDetails {
   isOwner: boolean;
   isMember: boolean;
   membershipRole: string | null;
+  canManage: boolean;
   isFollowing: boolean;
   owner: {
     id: string;
@@ -160,7 +164,6 @@ export default function ProNetworkHubPage({
   const [loadError, setLoadError] = useState("");
   const [activeTab, setActiveTab] = useState<
     | "home"
-    | "discussions"
     | "media"
     | "resources"
     | "protalks"
@@ -178,6 +181,8 @@ export default function ProNetworkHubPage({
   // Dynamic Data States (100% from Database)
   const [announcements, setAnnouncements] = useState<any[]>([]);
   const [discussions, setDiscussions] = useState<any[]>([]);
+  const [postsLoading, setPostsLoading] = useState(true);
+  const [postsError, setPostsError] = useState("");
   const [mediaList, setMediaList] = useState<any[]>([]);
   const [resourcesList, setResourcesList] = useState<any[]>([]);
   const [eventsList, setEventsList] = useState<any[]>([]);
@@ -187,12 +192,6 @@ export default function ProNetworkHubPage({
   const [newChatMessage, setNewChatMessage] = useState("");
 
   // Modals
-  const [showNewDiscussionModal, setShowNewDiscussionModal] = useState(false);
-  const [newDiscussionTitle, setNewDiscussionTitle] = useState("");
-  const [newDiscussionContent, setNewDiscussionContent] = useState("");
-  const [newDiscussionCategory, setNewDiscussionCategory] = useState("General");
-  const [submittingDiscussion, setSubmittingDiscussion] = useState(false);
-
   const [showUploadMediaModal, setShowUploadMediaModal] = useState(false);
   const [mediaTitle, setMediaTitle] = useState("");
   const [mediaType, setMediaType] = useState<
@@ -223,12 +222,6 @@ export default function ProNetworkHubPage({
   const [copiedLink, setCopiedLink] = useState(false);
 
   const [selectedMediaItem, setSelectedMediaItem] = useState<any | null>(null);
-  const [selectedDiscussion, setSelectedDiscussion] = useState<any | null>(
-    null,
-  );
-  const [discussionReplies, setDiscussionReplies] = useState<any[]>([]);
-  const [newReplyContent, setNewReplyContent] = useState("");
-
   const [joining, setJoining] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -390,12 +383,23 @@ export default function ProNetworkHubPage({
     }
   };
 
-  const fetchAllTabData = async () => {
+  const fetchPosts = async () => {
+    setPostsLoading(true); setPostsError("");
     try {
-      const [annRes, discRes, mediaRes, resRes, eventRes, memRes] =
+      const res = await fetch(`/api/pro-networks/${slug}/discussions`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Could not load posts.");
+      setDiscussions(data.discussions || []);
+    } catch (error) { setPostsError(error instanceof Error ? error.message : "Could not load posts."); }
+    finally { setPostsLoading(false); }
+  };
+
+  const fetchAllTabData = async () => {
+    void fetchPosts();
+    try {
+      const [annRes, mediaRes, resRes, eventRes, memRes] =
         await Promise.all([
           fetch(`/api/pro-networks/${slug}/announcements`),
-          fetch(`/api/pro-networks/${slug}/discussions`),
           fetch(`/api/pro-networks/${slug}/media`),
           fetch(`/api/pro-networks/${slug}/resources`),
           fetch(`/api/pro-networks/${slug}/events`),
@@ -404,7 +408,6 @@ export default function ProNetworkHubPage({
 
       if (annRes.ok)
         setAnnouncements((await annRes.json()).announcements || []);
-      if (discRes.ok) setDiscussions((await discRes.json()).discussions || []);
       if (mediaRes.ok) setMediaList((await mediaRes.json()).media || []);
       if (resRes.ok) setResourcesList((await resRes.json()).resources || []);
       if (eventRes.ok) setEventsList((await eventRes.json()).events || []);
@@ -679,36 +682,6 @@ export default function ProNetworkHubPage({
     }
   };
 
-  const handleCreateDiscussion = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newDiscussionTitle.trim() || !newDiscussionContent.trim()) return;
-
-    setSubmittingDiscussion(true);
-    try {
-      const res = await fetch(`/api/pro-networks/${slug}/discussions`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: newDiscussionTitle.trim(),
-          content: newDiscussionContent.trim(),
-          category: newDiscussionCategory,
-        }),
-      });
-      if (res.ok) {
-        setShowNewDiscussionModal(false);
-        setNewDiscussionTitle("");
-        setNewDiscussionContent("");
-        const discRes = await fetch(`/api/pro-networks/${slug}/discussions`);
-        if (discRes.ok)
-          setDiscussions((await discRes.json()).discussions || []);
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setSubmittingDiscussion(false);
-    }
-  };
-
   // Cloudinary Upload for Media (Video / Photo)
   const handleUploadMedia = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -903,48 +876,6 @@ export default function ProNetworkHubPage({
     }
   };
 
-  const openDiscussionThread = async (disc: any) => {
-    setSelectedDiscussion(disc);
-    try {
-      const res = await fetch(
-        `/api/pro-networks/${slug}/discussions/${disc.id}/replies`,
-      );
-      if (res.ok) {
-        const data = await res.json();
-        setDiscussionReplies(data.replies || []);
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const handlePostReply = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newReplyContent.trim() || !selectedDiscussion) return;
-
-    try {
-      const res = await fetch(
-        `/api/pro-networks/${slug}/discussions/${selectedDiscussion.id}/replies`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ content: newReplyContent.trim() }),
-        },
-      );
-      if (res.ok) {
-        setNewReplyContent("");
-        const repliesRes = await fetch(
-          `/api/pro-networks/${slug}/discussions/${selectedDiscussion.id}/replies`,
-        );
-        if (repliesRes.ok) {
-          setDiscussionReplies((await repliesRes.json()).replies || []);
-        }
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
   const handleCopyInviteLink = () => {
     const url = typeof window !== "undefined" ? window.location.href : "";
     navigator.clipboard.writeText(url);
@@ -985,106 +916,31 @@ export default function ProNetworkHubPage({
         <Link href="/pro-networks">Back to all networks</Link>
       </div>
     );
-  if (loading || !network) {
-    return (
-      <div className="pn-page pn-hub-status">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-8 h-8 animate-spin text-amber-400" />
-          <p className="text-sm font-bold text-slate-300">
-            Entering Pro Network...
-          </p>
-        </div>
-      </div>
-    );
-  }
+  if (loading || !network) return <NetworkSkeleton />;
+  const canManage = network.canManage === true;
+  const currentTab = activeTab === "manage" && !canManage ? "home" : activeTab;
 
   return (
-    <div className="pn-page pn-hub" style={{"--pn-accent": network.accentColor || "#ffbe24", "--pn-accent-ink": networkAccentInk(network.accentColor || "#ffbe24")} as React.CSSProperties}>
-      {/* ── TOP NETWORK BRAND HEADER (Dynamic — Clean Background, No Watermark/Dummy Text) ── */}
-      <header className="pn-network-header">
-        <div className="pn-network-header-inner">
-          <Link className="pn-back" href="/pro-networks">
-            <ChevronLeft size={17} />
-            All networks
-          </Link>
-          <div className="pn-header-identity">
-            {network.logoImage ? (
-              <img src={network.logoImage} alt="" />
-            ) : (
-              <span>
-                <Users size={24} />
-              </span>
-            )}
-            <div>
-              <span className="pn-eyebrow">YOUR PROFESSIONAL CIRCLE</span>
-              <h1>{network.name}</h1>
-            </div>
-          </div>
-          <div className="pn-header-actions">
-            {!network.isMember && !network.isOwner && (
-              <button
-                className="pn-button pn-primary"
-                disabled={joining}
-                onClick={handleJoinNetwork}
-              >
-                {joining
-                  ? "Joining…"
-                  : network.monthlyPrice > 0
-                    ? "Join $" + network.monthlyPrice.toFixed(2) + "/mo"
-                    : "Join for free"}
-                <span>
-                  <ArrowRight size={16} />
-                </span>
-              </button>
-            )}
-            {network.isOwner && (
-              <button
-                className="pn-button pn-secondary"
-                onClick={openEditPricingModal}
-              >
-                <Pencil size={15} />
-                Edit pricing
-              </button>
-            )}
-            <button
-              className="pn-button pn-secondary"
-              onClick={() => setShowInviteModal(true)}
-              aria-label="Invite members"
-            >
-              <UserPlus size={16} />
-              <span className="pn-invite-label">Invite</span>
-            </button>
-            <button
-              className="pn-icon-button"
-              onClick={handleToggleFollow}
-              aria-label={
-                network.isFollowing ? "Unfollow network" : "Follow network"
-              }
-              aria-pressed={network.isFollowing}
-            >
-              <Bell size={18} />
-            </button>
-          </div>
-        </div>
-      </header>
+    <div className="pn-page pn-hub" style={{"--pn-accent": network.accentColor || "#65a832", "--pn-accent-ink": networkAccentInk(network.accentColor || "#65a832")} as React.CSSProperties}>
       {/* ── MAIN LAYOUT: Sidebar + Tabs + 100% Dynamic Content ── */}
       <div className="pn-hub-layout">
         {/* Left Internal Network Navigation Sidebar */}
         <aside className="pn-hub-sidebar">
           <div className="bg-white dark:bg-[#121e33] border border-slate-200 dark:border-white/10 rounded-3xl p-4 shadow-sm space-y-6">
+            <div className="np-sidebar-identity">
+              <h2>Pro Network</h2>
+              {network.logoImage && <img src={network.logoImage} alt="" />}
+              <strong>{network.name}</strong>
+              <span>{network._count.members} members</span>
+            </div>
             {/* YOUR NETWORK Section */}
             <div>
               <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 px-3 mb-2">
-                MY NETWORKS
+                THIS NETWORK
               </p>
               <div className="space-y-1">
                 {[
-                  { id: "home", label: "Network Home", icon: Home },
-                  {
-                    id: "discussions",
-                    label: "Discussions",
-                    icon: MessageSquare,
-                  },
+                  { id: "home", label: "Posts", icon: Home },
                   { id: "media", label: "Media Gallery", icon: Images },
                   { id: "resources", label: "Resources", icon: FolderDown },
                   { id: "protalks", label: "Pro Talks", icon: Radio },
@@ -1093,7 +949,7 @@ export default function ProNetworkHubPage({
                   { id: "chat", label: "Members Chat", icon: MessagesSquare },
                 ].map((item) => {
                   const Icon = item.icon;
-                  const isActive = activeTab === item.id;
+                  const isActive = currentTab === item.id;
                   return (
                     <button
                       key={item.id}
@@ -1120,8 +976,7 @@ export default function ProNetworkHubPage({
             </div>
 
             {/* NETWORK TOOLS (For Owner/Admin) */}
-            {(network.isOwner ||
-              (session?.user as { role?: string })?.role === "ADMIN") && (
+            {canManage && (
               <div className="pt-4 border-t border-slate-100 dark:border-white/10">
                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 px-3 mb-2">
                   NETWORK TOOLS
@@ -1131,7 +986,7 @@ export default function ProNetworkHubPage({
                     type="button"
                     onClick={() => setActiveTab("manage")}
                     className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-bold transition-all text-left ${
-                      activeTab === "manage"
+                      currentTab === "manage"
                         ? "bg-amber-400 text-[#0a1628] font-black shadow-md"
                         : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5"
                     }`}
@@ -1178,9 +1033,6 @@ export default function ProNetworkHubPage({
               </div>
             )}
 
-            <Link className="pn-button pn-secondary" href="/pro-networks?filter=mine"><Users size={18}/>My Networks</Link>
-            <Link className="pn-button pn-secondary" href="/pro-networks?filter=mine">View All Networks <ArrowRight size={16}/></Link>
-            <Link className="pn-button pn-secondary" href="/groups">Groups <ArrowRight size={16}/></Link>
             {/* Need Help Box */}
             <div className="pt-4 border-t border-slate-100 dark:border-white/10">
               <Link
@@ -1204,13 +1056,81 @@ export default function ProNetworkHubPage({
 
         {/* Center & Right Main Content Area */}
         <main className="pn-hub-main">
+          <Link className="pn-back np-inline-back" href="/pro-networks"><ChevronLeft size={17} /> All networks</Link>
+          {currentTab === "home" && (
+            <section className="np-network-hero">
+              <div className="np-network-cover">
+                {network.coverImage ? <img src={network.coverImage} alt="" /> : <Users size={64} />}
+                <span className="np-cover-label"><Lock size={14} /> Private network</span>
+              </div>
+              <div className="np-network-identity">
+                <div>
+                  <h1>{network.name}</h1>
+                  <div className="np-meta"><Users size={15} /> {network._count.members} members <span>·</span> {network._count.discussions} posts {network.isMember || network.isOwner ? <span>· You're a member</span> : null}</div>
+                  {network.tagline && <p>{network.tagline}</p>}
+                </div>
+                <div className="pn-header-actions">
+            {!network.isMember && !network.isOwner && (
+              <button
+                className="pn-button pn-primary"
+                disabled={joining}
+                onClick={handleJoinNetwork}
+              >
+                {joining
+                  ? "Joining…"
+                  : network.monthlyPrice > 0
+                    ? "Join $" + network.monthlyPrice.toFixed(2) + "/mo"
+                    : "Join for free"}
+                <span>
+                  <ArrowRight size={16} />
+                </span>
+              </button>
+            )}
+            {canManage && (
+              <button
+                className="pn-button pn-secondary"
+                onClick={openEditPricingModal}
+              >
+                <Pencil size={15} />
+                Edit pricing
+              </button>
+            )}
+            <button
+              className="pn-button pn-secondary"
+              onClick={() => setShowInviteModal(true)}
+              aria-label="Invite members"
+            >
+              <UserPlus size={16} />
+              <span className="pn-invite-label">Invite</span>
+            </button>
+            <button
+              className="pn-icon-button"
+              onClick={handleToggleFollow}
+              aria-label={
+                network.isFollowing ? "Unfollow network" : "Follow network"
+              }
+              aria-pressed={network.isFollowing}
+            >
+              <Bell size={18} />
+            </button>
+          </div>
+              </div>
+              <nav className="np-network-tabs" aria-label="Network shortcuts">
+                <button aria-current="page" onClick={() => setActiveTab("home")}><MessageSquare size={17} /> Posts</button>
+                <button onClick={() => setActiveTab("members")}><Users size={17} /> Members</button>
+                <button onClick={() => setActiveTab("events")}><Calendar size={17} /> Events</button>
+                {canManage && <button onClick={() => setActiveTab("manage")}><Settings size={17} /> Settings</button>}
+              </nav>
+            </section>
+          )}
+
           <div className="pn-hub-toolbar">
             <div>
               <span className="pn-eyebrow">{network.category}</span>
               <h2>
-                {activeTab === "manage"
+                {currentTab === "manage"
                   ? "Network settings"
-                  : NETWORK_TABS.find((item) => item.id === activeTab)?.label}
+                  : NETWORK_TABS.find((item) => item.id === currentTab)?.label}
               </h2>
             </div>
             <div className="pn-hub-search pn-search">
@@ -1235,7 +1155,7 @@ export default function ProNetworkHubPage({
             <label htmlFor="network-section">Explore your network</label>
             <select
               id="network-section"
-              value={activeTab}
+              value={currentTab}
               onChange={(event) => {
                 setActiveTab(event.target.value as typeof activeTab);
                 setSearchQuery("");
@@ -1246,7 +1166,7 @@ export default function ProNetworkHubPage({
                   {item.label}
                 </option>
               ))}
-              {network.isOwner && (
+              {canManage && (
                 <option value="manage">Manage network</option>
               )}
             </select>
@@ -1257,746 +1177,28 @@ export default function ProNetworkHubPage({
               <button onClick={() => setSearchQuery("")}>Clear search</button>
             </div>
           )}
-          {activeTab === "home" && (
-            <section className="pn-network-welcome">
-              <div className="pn-welcome-copy">
-                {network.coverImage && (
-                  <img
-                    className="pn-welcome-cover"
-                    src={network.coverImage}
-                    alt=""
-                  />
+          {currentTab === "home" && (
+            <div className="np-workspace">
+              <div>
+                {!network.isMember && !network.isOwner ? renderPaywall() : (
+                  <NetworkPosts slug={slug} posts={filteredDiscussions} user={session?.user} loading={postsLoading} loadError={postsError} onRetry={fetchPosts}
+                    canPost={network.isMember || network.isOwner} searching={Boolean(searchQuery)}
+                    onCreated={(post) => {
+                      setDiscussions(previous => [...previous, post].sort((a, b) => Number(Boolean(b.isPinned)) - Number(Boolean(a.isPinned)) || new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+                      setNetwork(previous => previous ? { ...previous, _count: { ...previous._count, discussions: previous._count.discussions + 1 } } : previous);
+                    }} />
                 )}
-                <div className="pn-welcome-shade" />
-                <div className="pn-welcome-content">
-                  <span className="pn-kicker">
-                    <i />
-                    {network.isMember || network.isOwner
-                      ? "YOUR PEOPLE. YOUR PLACE."
-                      : "A NEW CIRCLE AWAITS."}
-                  </span>
-                  <h2>
-                    {network.isMember || network.isOwner
-                      ? "Welcome to your circle."
-                      : "Find your people here."}
-                  </h2>
-                  <p>
-                    {network.tagline ||
-                      network.welcomeMessage ||
-                      network.description}
-                  </p>
-                  <div className="pn-welcome-owner">
-                    {network.owner.image && (
-                      <img src={network.owner.image} alt="" />
-                    )}
-                    <span>
-                      Hosted by <strong>{network.owner.name}</strong>
-                    </span>
-                    <span className="pn-private-tag">
-                      <Lock size={12} />
-                      Private network
-                    </span>
-                  </div>
-                </div>
               </div>
-              <div className="pn-welcome-side">
-                <span className="pn-eyebrow">BETTER, TOGETHER</span>
-                <NetworkBadge
-                  shape={network.badgeShape}
-                  initials={network.badgeInitials}
-                  text={network.badgeText}
-                  icon={network.badgeIcon}
-                  bgColor={network.badgeBgColor}
-                  textColor={network.badgeTextColor}
-                  borderColor={network.badgeBorderColor}
-                  customImage={network.badgeCustomImage}
-                  size="lg"
-                />
-                <h3>
-                  A shared place.
-                  <br />A shared purpose.
-                </h3>
-                <p>
-                  {network.isOwner
-                    ? "A community shaped by you."
-                    : network.isMember
-                      ? "You’re part of this circle."
-                      : "Find your place in this community."}
-                </p>
-              </div>
-            </section>
-          )}
-          {activeTab === "home" && (
-            <div className="pn-hub-stats">
-              <button onClick={() => setActiveTab("members")}>
-                <Users size={20} />
-                <span>
-                  <strong>{network.memberCount}</strong>Members
-                </span>
-                <ChevronRight size={16} />
-              </button>
-              <button onClick={() => setActiveTab("discussions")}>
-                <MessageSquare size={20} />
-                <span>
-                  <strong>{network._count.discussions}</strong>
-                  Discussions
-                </span>
-                <ChevronRight size={16} />
-              </button>
-              <button onClick={() => setActiveTab("resources")}>
-                <FolderDown size={20} />
-                <span>
-                  <strong>{network._count.resources}</strong>Resources
-                </span>
-                <ChevronRight size={16} />
-              </button>
-            </div>
-          )}
-          {/* ── TAB 1: HOME DASHBOARD (Dynamic from DB) ── */}
-          {activeTab === "home" && (
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-              {/* Left 2/3 Column */}
-              <div className="xl:col-span-2 space-y-6">
-                {/* Non-Member Paywall Banner */}
-                {!network.isMember && !network.isOwner && renderPaywall()}
-
-                {/* 1. ANNOUNCEMENT CARD */}
-                {announcements.length > 0 && (
-                  <div className="bg-white dark:bg-[#121e33] border border-slate-200 dark:border-white/10 rounded-3xl p-6 shadow-sm space-y-3">
-                    <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-3">
-                      <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                        <span>📢 ANNOUNCEMENT</span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setActiveTab("discussions")}
-                        className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline"
-                      >
-                        View All
-                      </button>
-                    </div>
-
-                    <div>
-                      <h3 className="text-base font-black text-slate-900 dark:text-white">
-                        {announcements[0]?.title}
-                      </h3>
-                      <p className="text-xs text-slate-600 dark:text-slate-300 mt-1.5 leading-relaxed whitespace-pre-line">
-                        {announcements[0]?.content}
-                      </p>
-                      <div className="flex items-center gap-2 mt-3 text-[11px] font-bold text-slate-400">
-                        <span>
-                          {announcements[0]?.author?.name || network.owner.name}
-                        </span>
-                        <span>•</span>
-                        <span>
-                          {new Date(
-                            announcements[0]?.createdAt,
-                          ).toLocaleDateString()}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* 2. DISCUSSIONS FEED (MEMBERS ONLY) */}
-                <div className="bg-white dark:bg-[#121e33] border border-slate-200 dark:border-white/10 rounded-3xl p-6 shadow-sm space-y-4">
-                  <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-3">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                        DISCUSSIONS FEED
-                      </span>
-                      <span className="text-[10px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full">
-                        (MEMBERS ONLY)
-                      </span>
-                    </div>
-
-                    {network.isMember && (
-                      <button
-                        type="button"
-                        onClick={() => setShowNewDiscussionModal(true)}
-                        className="bg-blue-600 hover:bg-blue-500 text-white font-black text-xs px-3.5 py-1.5 rounded-xl transition-all shadow-sm flex items-center gap-1"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                        <span>New Discussion</span>
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Discussion Items List */}
-                  {filteredDiscussions.length === 0 ? (
-                    <div className="py-8 text-center text-xs text-slate-400 space-y-2">
-                      <MessageSquare className="w-8 h-8 text-slate-400 mx-auto" />
-                      <p className="font-bold">
-                        {searchTerm
-                          ? "No matches in this section."
-                          : "No discussions started yet."}
-                      </p>
-                      {network.isMember && (
-                        <button
-                          type="button"
-                          onClick={() => setShowNewDiscussionModal(true)}
-                          className="text-blue-500 font-bold hover:underline inline-block mt-1"
-                        >
-                          + Start the first discussion
-                        </button>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {filteredDiscussions.slice(0, 5).map((disc) => (
-                        <div
-                          key={disc.id}
-                          onClick={() => openDiscussionThread(disc)}
-                          className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 transition-all cursor-pointer border border-slate-100 dark:border-transparent"
-                        >
-                          <div className="flex items-center gap-3 min-w-0">
-                            {disc.isPinned && (
-                              <span className="text-amber-500 shrink-0">
-                                ⭐
-                              </span>
-                            )}
-                            <div className="w-9 h-9 rounded-full bg-slate-300 dark:bg-slate-700 overflow-hidden shrink-0">
-                              {disc.author.image ? (
-                                <img
-                                  src={disc.author.image}
-                                  alt={disc.author.name}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center font-bold text-xs">
-                                  {disc.author.name[0]}
-                                </div>
-                              )}
-                            </div>
-                            <div className="min-w-0">
-                              <h4 className="text-xs font-black text-slate-900 dark:text-white truncate hover:text-blue-500 transition-colors">
-                                {disc.title}
-                              </h4>
-                              <p className="text-[11px] text-slate-400 font-medium truncate mt-0.5">
-                                Started by {disc.author.name} •{" "}
-                                {disc._count?.replies || 0} Replies
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-3 shrink-0 ml-2">
-                            <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full hidden sm:inline">
-                              Members Only
-                            </span>
-                            <div className="flex items-center gap-1 text-xs font-bold text-slate-400">
-                              <MessageSquare className="w-3.5 h-3.5" />
-                              <span>{disc._count?.replies || 0}</span>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {filteredDiscussions.length > 5 && (
-                    <div className="text-center pt-2">
-                      <button
-                        type="button"
-                        onClick={() => setActiveTab("discussions")}
-                        className="text-xs font-black text-blue-600 dark:text-blue-400 hover:underline"
-                      >
-                        View All Discussions
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                {/* 3. MEDIA GALLERY (MEMBERS ONLY) */}
-                <div className="bg-white dark:bg-[#121e33] border border-slate-200 dark:border-white/10 rounded-3xl p-6 shadow-sm space-y-4">
-                  <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-3">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                        MEDIA GALLERY
-                      </span>
-                      <span className="text-[10px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full">
-                        (MEMBERS ONLY)
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      {network.isOwner && (
-                        <button
-                          type="button"
-                          onClick={() => setShowUploadMediaModal(true)}
-                          className="bg-blue-600 hover:bg-blue-500 text-white font-black text-xs px-3 py-1 rounded-xl shadow-sm flex items-center gap-1"
-                        >
-                          <Plus className="w-3.5 h-3.5" />
-                          <span>Upload Video</span>
-                        </button>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => setActiveTab("media")}
-                        className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline"
-                      >
-                        View All
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Media Grid */}
-                  {filteredMedia.length === 0 ? (
-                    <div className="py-8 text-center text-xs text-slate-400 space-y-2">
-                      <Images className="w-8 h-8 text-slate-400 mx-auto" />
-                      <p className="font-bold">
-                        {searchTerm
-                          ? "No matches in this section."
-                          : "No media or recordings uploaded yet."}
-                      </p>
-                      {network.isOwner && (
-                        <button
-                          type="button"
-                          onClick={() => setShowUploadMediaModal(true)}
-                          className="text-blue-500 font-bold hover:underline inline-block mt-1"
-                        >
-                          + Upload first video or photo
-                        </button>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 overflow-x-auto">
-                      {filteredMedia.slice(0, 4).map((item) => (
-                        <div
-                          key={item.id}
-                          onClick={() => setSelectedMediaItem(item)}
-                          className="group relative rounded-2xl overflow-hidden bg-slate-900 cursor-pointer shadow-sm hover:shadow-lg transition-all"
-                        >
-                          <div className="relative h-28 bg-slate-800">
-                            {item.thumbnailUrl ||
-                            (item.type === "PHOTO" && item.url) ? (
-                              <img
-                                src={item.thumbnailUrl || item.url}
-                                alt={item.title}
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center bg-slate-800 text-slate-400">
-                                <Video className="w-8 h-8" />
-                              </div>
-                            )}
-
-                            <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                              <div className="w-8 h-8 rounded-full bg-white/30 backdrop-blur-md flex items-center justify-center text-white">
-                                <Play className="w-4 h-4 fill-white" />
-                              </div>
-                            </div>
-
-                            {item.duration && (
-                              <span className="absolute bottom-2 right-2 bg-black/70 text-white text-[9px] font-black px-1.5 py-0.5 rounded">
-                                {item.duration}
-                              </span>
-                            )}
-                          </div>
-                          <div className="p-2.5 bg-slate-900 text-white">
-                            <h5 className="text-[11px] font-bold truncate">
-                              {item.title}
-                            </h5>
-                            <p className="text-[9px] text-slate-400">
-                              {new Date(item.createdAt).toLocaleDateString()}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Right 1/3 Column */}
-              <div className="space-y-6">
-                {/* 1. UPCOMING PRO TALKS ((MEMBERS ONLY)) */}
-                <div className="bg-white dark:bg-[#121e33] border border-slate-200 dark:border-white/10 rounded-3xl p-6 shadow-sm space-y-4">
-                  <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-3">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                        UPCOMING PRO TALKS
-                      </span>
-                      <span className="text-[9px] font-bold text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded-full">
-                        (MEMBERS ONLY)
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      {network.isOwner && (
-                        <button
-                          type="button"
-                          onClick={() => setActiveTab("events")}
-                          className="bg-rose-600 hover:bg-rose-500 text-white font-black text-xs px-2.5 py-1 rounded-xl shadow-sm flex items-center gap-1"
-                        >
-                          <Radio className="w-3 h-3" />
-                          <span>Host Talk</span>
-                        </button>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => setActiveTab("protalks")}
-                        className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline"
-                      >
-                        View All
-                      </button>
-                    </div>
-                  </div>
-
-                  {filteredEvents.length === 0 ? (
-                    <div className="py-8 text-center text-xs text-slate-400 space-y-2">
-                      <Radio className="w-8 h-8 text-slate-400 mx-auto" />
-                      <p className="font-bold">
-                        No upcoming Pro Talks scheduled.
-                      </p>
-                      {network.isOwner && (
-                        <button
-                          type="button"
-                          onClick={() => setActiveTab("events")}
-                          className="text-rose-500 font-bold hover:underline inline-block mt-1"
-                        >
-                          + Host or schedule a live Pro Talk
-                        </button>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {filteredEvents.slice(0, 3).map((ev) => (
-                        <div
-                          key={ev.id}
-                          className="p-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 space-y-3"
-                        >
-                          <div className="flex items-center justify-between">
-                            {ev.isLive ? (
-                              <span className="inline-flex items-center gap-1.5 bg-rose-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse">
-                                <span className="w-1.5 h-1.5 rounded-full bg-white" />
-                                LIVE NOW
-                              </span>
-                            ) : (
-                              <span className="text-[10px] font-bold text-blue-500 uppercase">
-                                Scheduled Pro Talk
-                              </span>
-                            )}
-                            <span className="text-[11px] font-bold text-slate-400">
-                              {new Date(ev.scheduledAt).toLocaleDateString()}
-                            </span>
-                          </div>
-
-                          <div className="flex items-start justify-between gap-3">
-                            <div>
-                              <h4 className="text-xs font-black text-slate-900 dark:text-white leading-snug">
-                                {ev.title}
-                              </h4>
-                              {ev.description && (
-                                <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-1">
-                                  {ev.description}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-
-                          <div className="flex items-center justify-between pt-1">
-                            {ev.isLive ? (
-                              <Link
-                                href="#network-events" onClick={(e) => {e.preventDefault();setActiveTab("events");}}
-                                className="px-4 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-black shadow-md flex items-center gap-1.5"
-                              >
-                                <Radio className="w-3.5 h-3.5" /> Join Live
-                              </Link>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={() => handleToggleEventRsvp(ev.id)}
-                                className={`px-3 py-1 rounded-xl text-xs font-bold transition-all ${
-                                  ev.isRegistered
-                                    ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
-                                    : "bg-blue-600 hover:bg-blue-500 text-white shadow-sm"
-                                }`}
-                              >
-                                {ev.isRegistered ? "✓ Registered" : "Register"}
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* 2. RECENT RESOURCES ((MEMBERS ONLY)) */}
-                <div className="bg-white dark:bg-[#121e33] border border-slate-200 dark:border-white/10 rounded-3xl p-6 shadow-sm space-y-4">
-                  <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-3">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                        RECENT RESOURCES
-                      </span>
-                      <span className="text-[9px] font-bold text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded-full">
-                        (MEMBERS ONLY)
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      {network.isOwner && (
-                        <button
-                          type="button"
-                          onClick={() => setShowUploadResourceModal(true)}
-                          className="bg-blue-600 hover:bg-blue-500 text-white font-black text-xs px-2.5 py-1 rounded-xl shadow-sm flex items-center gap-1"
-                        >
-                          <Plus className="w-3 h-3" />
-                          <span>Upload</span>
-                        </button>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => setActiveTab("resources")}
-                        className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline"
-                      >
-                        View All
-                      </button>
-                    </div>
-                  </div>
-
-                  {filteredResources.length === 0 ? (
-                    <div className="py-8 text-center text-xs text-slate-400 space-y-2">
-                      <FolderDown className="w-8 h-8 text-slate-400 mx-auto" />
-                      <p className="font-bold">
-                        {searchTerm
-                          ? "No matches in this section."
-                          : "No resources uploaded yet."}
-                      </p>
-                      {network.isOwner && (
-                        <button
-                          type="button"
-                          onClick={() => setShowUploadResourceModal(true)}
-                          className="text-blue-500 font-bold hover:underline inline-block mt-1"
-                        >
-                          + Upload first template or guide
-                        </button>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="space-y-2.5">
-                      {filteredResources.slice(0, 4).map((res) => (
-                        <a
-                          key={res.id}
-                          href={network.isMember ? res.fileUrl : undefined}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 transition-all group cursor-pointer"
-                        >
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            <span className="w-7 h-7 rounded-xl flex items-center justify-center text-[10px] font-black bg-blue-600/10 text-blue-600">
-                              {res.fileType || "PDF"}
-                            </span>
-                            <div className="min-w-0">
-                              <h5 className="text-xs font-bold text-slate-900 dark:text-white truncate group-hover:text-blue-500 transition-colors">
-                                {res.title}
-                              </h5>
-                              <span className="text-[10px] text-slate-400">
-                                {res.fileType}{" "}
-                                {res.fileSize ? `• ${res.fileSize}` : ""}
-                              </span>
-                            </div>
-                          </div>
-                          <Download className="w-4 h-4 text-slate-400 group-hover:text-blue-500 shrink-0 ml-2" />
-                        </a>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* 3. NETWORK MEMBERS (MEMBERS ONLY) */}
-                <div className="bg-white dark:bg-[#121e33] border border-slate-200 dark:border-white/10 rounded-3xl p-6 shadow-sm space-y-4">
-                  <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-3">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                        NETWORK MEMBERS ({network.memberCount.toLocaleString()})
-                      </span>
-                      <span className="text-[9px] font-bold text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded-full">
-                        (MEMBERS ONLY)
-                      </span>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => setActiveTab("members")}
-                      className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline"
-                    >
-                      View All
-                    </button>
-                  </div>
-
-                  <div className="space-y-3">
-                    {filteredMembers.slice(0, 5).map((m) => (
-                      <div
-                        key={m.id}
-                        className="flex items-center justify-between"
-                      >
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <div className="w-8 h-8 rounded-full overflow-hidden bg-slate-200 shrink-0">
-                            {m.user.image ? (
-                              <img
-                                src={m.user.image}
-                                alt={m.user.name}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center font-bold text-xs bg-slate-300">
-                                {m.user.name[0]}
-                              </div>
-                            )}
-                          </div>
-                          <div className="min-w-0">
-                            <h5 className="text-xs font-black text-slate-900 dark:text-white truncate">
-                              {m.user.name}
-                            </h5>
-                            <p className="text-[10px] text-slate-400 truncate">
-                              {m.user.location ||
-                                m.user.professionalTitle || m.user.headline ||
-                                "Tax Professional"}
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          <span className="text-[9px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full">
-                            Active
-                          </span>
-                          <Link
-                            href="/messages"
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-blue-500 hover:bg-slate-100 dark:hover:bg-white/5"
-                          >
-                            <MessageCircle className="w-3.5 h-3.5" />
-                          </Link>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {filteredMembers.length > 5 && (
-                    <div className="text-center pt-2">
-                      <button
-                        type="button"
-                        onClick={() => setActiveTab("members")}
-                        className="text-xs font-black text-blue-600 dark:text-blue-400 hover:underline"
-                      >
-                        See All Members
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
+              <aside className="np-details">
+                <section className="np-card np-info"><h3>About this network</h3><p>{network.description}</p><div className="np-info-line"><Lock size={17} /> Private member conversations</div><button className="np-info-line" onClick={() => setActiveTab("members")}><Users size={17} /> {network._count.members} members <ChevronRight size={15} /></button></section>
+                {announcements.length > 0 && <section className="np-card np-info"><h3><Bell size={18} /> Network announcement</h3><strong>{announcements[0].title}</strong><p className="np-announcement">{announcements[0].content}</p></section>}
+                <section className="np-card np-info"><h3><Calendar size={18} /> Events & Pro Talks</h3><p>Make time to connect, learn, and share with your network.</p><button className="pn-button pn-secondary" onClick={() => setActiveTab("events")}>Open calendar <ArrowRight size={16} /></button></section>
+                <section className="np-card np-info"><h3><FolderDown size={18} /> Resource library</h3><p>{network._count.resources} resources shared with this network.</p><button className="np-text-button" onClick={() => setActiveTab("resources")}>Browse resources <ChevronRight size={16} /></button></section>
+              </aside>
             </div>
           )}
 
-          {/* ── TAB 2: DISCUSSIONS FULL TAB ── */}
-          {activeTab === "discussions" &&
-            (!network.isMember && !network.isOwner ? (
-              renderPaywall(
-                "Private Discussions Board",
-                "Ask questions, share audit findings, and collaborate with network peers.",
-              )
-            ) : (
-              <div className="pn-tab-surface bg-white dark:bg-[#121e33] border border-slate-200 dark:border-white/10 rounded-3xl p-6 shadow-sm space-y-6">
-                <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-4">
-                  <div>
-                    <h3 className="text-lg font-black text-slate-900 dark:text-white">
-                      Private Discussions Board
-                    </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                      Ask questions, share audit findings, and collaborate with
-                      network peers.
-                    </p>
-                  </div>
-
-                  {network.isMember && (
-                    <button
-                      type="button"
-                      onClick={() => setShowNewDiscussionModal(true)}
-                      className="bg-blue-600 hover:bg-blue-500 text-white font-black text-xs px-4 py-2.5 rounded-full shadow-md flex items-center gap-1.5"
-                    >
-                      <Plus className="w-4 h-4" />
-                      <span>Start Discussion</span>
-                    </button>
-                  )}
-                </div>
-
-                {filteredDiscussions.length === 0 ? (
-                  <div className="text-center py-16 text-xs text-slate-400 space-y-3">
-                    <MessageSquare className="w-10 h-10 text-slate-400 mx-auto" />
-                    <p className="font-bold text-sm">
-                      {searchTerm
-                        ? "No matches in this section."
-                        : "No discussions in this network yet."}
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => setShowNewDiscussionModal(true)}
-                      className="px-5 py-2.5 rounded-full bg-blue-600 text-white font-bold text-xs"
-                    >
-                      Create First Discussion
-                    </button>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {filteredDiscussions.map((disc) => (
-                      <div
-                        key={disc.id}
-                        onClick={() => openDiscussionThread(disc)}
-                        className="p-5 rounded-2xl bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 transition-all cursor-pointer border border-slate-200 dark:border-white/5 space-y-3"
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-slate-300 dark:bg-slate-700 overflow-hidden shrink-0">
-                              {disc.author.image ? (
-                                <img
-                                  src={disc.author.image}
-                                  alt={disc.author.name}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center font-bold text-xs">
-                                  {disc.author.name[0]}
-                                </div>
-                              )}
-                            </div>
-                            <div>
-                              <h4 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
-                                {disc.isPinned && (
-                                  <span className="text-amber-500">⭐</span>
-                                )}
-                                <span>{disc.title}</span>
-                              </h4>
-                              <p className="text-xs text-slate-400">
-                                {disc.author.name} •{" "}
-                                {disc.author.headline || "Tax Professional"}
-                              </p>
-                            </div>
-                          </div>
-
-                          <span className="text-xs font-black text-slate-400 bg-slate-200 dark:bg-white/10 px-2.5 py-1 rounded-xl">
-                            {disc.category}
-                          </span>
-                        </div>
-
-                        <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed">
-                          {disc.content}
-                        </p>
-
-                        <div className="flex items-center justify-between text-xs text-slate-400 pt-2 border-t border-slate-200/60 dark:border-white/5">
-                          <span>{disc._count?.replies || 0} Replies</span>
-                          <span className="text-blue-500 font-bold">
-                            Join Conversation →
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
-
-          {/* ── TAB 3: MEDIA GALLERY FULL TAB ── */}
-          {activeTab === "media" &&
+          {currentTab === "media" &&
             (!network.isMember && !network.isOwner ? (
               renderPaywall(
                 "Media & Video Recordings",
@@ -2015,7 +1217,7 @@ export default function ProNetworkHubPage({
                     </p>
                   </div>
 
-                  {network.isOwner && (
+                  {canManage && (
                     <button
                       type="button"
                       onClick={() => setShowUploadMediaModal(true)}
@@ -2035,7 +1237,7 @@ export default function ProNetworkHubPage({
                         ? "No matches in this section."
                         : "No media files uploaded yet."}
                     </p>
-                    {network.isOwner && (
+                    {canManage && (
                       <button
                         type="button"
                         onClick={() => setShowUploadMediaModal(true)}
@@ -2095,7 +1297,7 @@ export default function ProNetworkHubPage({
             ))}
 
           {/* ── TAB 4: RESOURCES FULL TAB ── */}
-          {activeTab === "resources" &&
+          {currentTab === "resources" &&
             (!network.isMember && !network.isOwner ? (
               renderPaywall(
                 "Exclusive Resource Vault",
@@ -2114,7 +1316,7 @@ export default function ProNetworkHubPage({
                     </p>
                   </div>
 
-                  {network.isOwner && (
+                  {canManage && (
                     <button
                       type="button"
                       onClick={() => setShowUploadResourceModal(true)}
@@ -2134,7 +1336,7 @@ export default function ProNetworkHubPage({
                         ? "No matches in this section."
                         : "No resources in the vault yet."}
                     </p>
-                    {network.isOwner && (
+                    {canManage && (
                       <button
                         type="button"
                         onClick={() => setShowUploadResourceModal(true)}
@@ -2183,12 +1385,12 @@ export default function ProNetworkHubPage({
               </div>
             ))}
 
-          {(activeTab === "events" || activeTab === "protalks") &&
+          {(currentTab === "events" || currentTab === "protalks") &&
             (!network.isMember && !network.isOwner ? renderPaywall("Network events", "Join to attend live events and workshops.") :
-              <NetworkEvents slug={slug} isOwner={network.isOwner || (session?.user as {role?: string})?.role === "ADMIN"} onEventsChange={setEventsList} />)}
+              <NetworkEvents slug={slug} isOwner={canManage} onEventsChange={setEventsList} />)}
 
           {/* ── TAB 6: MEMBERS CHAT ── */}
-          {activeTab === "chat" &&
+          {currentTab === "chat" &&
             (!network.isMember && !network.isOwner ? (
               renderPaywall(
                 "Members Live Chat",
@@ -2296,7 +1498,7 @@ export default function ProNetworkHubPage({
             ))}
 
           {/* ── TAB 7: MEMBERS DIRECTORY ── */}
-          {activeTab === "members" &&
+          {currentTab === "members" &&
             (!network.isMember && !network.isOwner ? (
               renderPaywall(
                 "Members Directory",
@@ -2422,7 +1624,7 @@ export default function ProNetworkHubPage({
             ))}
 
           {/* ── TAB 8: OWNER MANAGEMENT DASHBOARD ── */}
-          {activeTab === "manage" && network.isOwner && (
+          {currentTab === "manage" && canManage && (
             <div className="bg-white dark:bg-[#121e33] border border-slate-200 dark:border-white/10 rounded-3xl p-6 shadow-sm space-y-6">
               <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-4">
                 <div>
@@ -2512,7 +1714,8 @@ export default function ProNetworkHubPage({
                 </div>
               )}
 
-              <NetworkBranding slug={slug} initial={{accentColor:network.accentColor || "#ffbe24", logoImage:network.logoImage, coverImage:network.coverImage}} onSaved={branding => setNetwork(previous => previous ? {...previous,...branding} : previous)} />
+              <NetworkDetailsSettings slug={slug} initial={{name:network.name,tagline:network.tagline,description:network.description,rules:network.rules,welcomeMessage:network.welcomeMessage}} onSaved={details => setNetwork(previous => previous ? {...previous,...details} : previous)} />
+              <NetworkBranding slug={slug} initial={{accentColor:network.accentColor || "#65a832", logoImage:network.logoImage, coverImage:network.coverImage}} onSaved={branding => setNetwork(previous => previous ? {...previous,...branding} : previous)} />
               <section className="pn-settings-card"><h3>Bots &amp; integrations</h3><p>Network-specific bots are not available yet. You can open Atlas AI from the site navigation for personal assistance.</p></section>
               {/* ── Network Pricing & Subscription Model Settings ── */}
               <div className="bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-6 space-y-4">
@@ -2816,104 +2019,6 @@ export default function ProNetworkHubPage({
           </div>
         </main>
       </div>
-
-      {/* ── FLOATING ACTION BUTTON (+ New Post) ── */}
-      {network.isMember &&
-        (activeTab === "home" || activeTab === "discussions") && (
-          <button
-            type="button"
-            onClick={() => setShowNewDiscussionModal(true)}
-            className="fixed bottom-8 right-8 z-40 bg-blue-600 hover:bg-blue-500 text-white font-black text-xs px-5 py-3.5 rounded-full shadow-2xl hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            <span>New Post</span>
-          </button>
-        )}
-
-      {/* ── MODAL: Start New Discussion ── */}
-      {showNewDiscussionModal && (
-        <div className="pn-modal fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className="bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-3">
-              <h3 className="text-base font-black text-slate-900 dark:text-white">
-                New Discussion Thread
-              </h3>
-              <button
-                type="button"
-                onClick={() => setShowNewDiscussionModal(false)}
-                className="p-1 text-slate-400 hover:text-slate-600"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleCreateDiscussion} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Topic Title
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Schedule C inventory valuation questions..."
-                  value={newDiscussionTitle}
-                  onChange={(e) => setNewDiscussionTitle(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Category
-                </label>
-                <select
-                  value={newDiscussionCategory}
-                  onChange={(e) => setNewDiscussionCategory(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold"
-                >
-                  <option value="General">General</option>
-                  <option value="Tax Season">Tax Season</option>
-                  <option value="Due Diligence">Due Diligence</option>
-                  <option value="Marketing">Marketing</option>
-                  <option value="Software">Software</option>
-                  <option value="Owner Q&A">Questions for Host</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Discussion Content
-                </label>
-                <textarea
-                  rows={4}
-                  placeholder="Write your question, scenario, or advice..."
-                  value={newDiscussionContent}
-                  onChange={(e) => setNewDiscussionContent(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-medium"
-                  required
-                />
-              </div>
-
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowNewDiscussionModal(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={submittingDiscussion}
-                  className="px-5 py-2 rounded-xl bg-blue-600 text-white text-xs font-black hover:bg-blue-500 disabled:opacity-50"
-                >
-                  {submittingDiscussion ? "Posting..." : "Post Discussion"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* ── MODAL: Upload Media (Cloudinary) ── */}
       {showUploadMediaModal && (
@@ -3362,94 +2467,6 @@ export default function ProNetworkHubPage({
                 Close Viewer
               </button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── MODAL: Discussion Thread Reader & Replies ── */}
-      {selectedDiscussion && (
-        <div className="pn-modal fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className="bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-2xl w-full shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-3">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-black uppercase text-blue-500">
-                  {selectedDiscussion.category}
-                </span>
-                <span className="text-xs font-bold text-slate-400">
-                  • Discussion
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSelectedDiscussion(null)}
-                className="p-1 text-slate-400 hover:text-slate-600"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="space-y-2">
-              <h3 className="text-lg font-black text-slate-900 dark:text-white">
-                {selectedDiscussion.title}
-              </h3>
-              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
-                {selectedDiscussion.content}
-              </p>
-            </div>
-
-            {/* Replies List */}
-            <div className="flex-1 overflow-y-auto border-t border-b border-slate-100 dark:border-white/10 py-4 space-y-3">
-              <h4 className="text-xs font-black uppercase tracking-wider text-slate-400">
-                Replies ({discussionReplies.length})
-              </h4>
-              {discussionReplies.length === 0 ? (
-                <p className="text-xs text-slate-400 italic">
-                  No replies yet. Be the first to share your thoughts.
-                </p>
-              ) : (
-                discussionReplies.map((reply) => (
-                  <div
-                    key={reply.id}
-                    className="p-3.5 rounded-2xl bg-slate-50 dark:bg-white/5 space-y-1"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-black text-slate-900 dark:text-white">
-                        {reply.author.name}
-                      </span>
-                      <span className="text-[10px] text-slate-400">
-                        {new Date(reply.createdAt).toLocaleDateString()}
-                      </span>
-                    </div>
-                    <p className="text-xs text-slate-700 dark:text-slate-300">
-                      {reply.content}
-                    </p>
-                  </div>
-                ))
-              )}
-            </div>
-
-            {/* Reply Input */}
-            {network.isMember ? (
-              <form onSubmit={handlePostReply} className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Write a reply..."
-                  value={newReplyContent}
-                  onChange={(e) => setNewReplyContent(e.target.value)}
-                  className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs"
-                />
-                <button
-                  type="submit"
-                  className="px-5 py-2.5 rounded-xl bg-blue-600 text-white font-black text-xs hover:bg-blue-500 shrink-0"
-                >
-                  Reply
-                </button>
-              </form>
-            ) : (
-              <div className="text-center py-2 text-xs font-bold text-slate-400">
-                Join this network to participate in discussions.
-              </div>
-            )}
           </div>
         </div>
       )}

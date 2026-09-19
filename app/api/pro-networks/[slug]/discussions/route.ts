@@ -66,6 +66,7 @@ export async function GET(
           select: {
             id: true,
             name: true,
+            profileSlug: true,
             image: true,
             role: true,
             headline: true,
@@ -86,6 +87,8 @@ export async function GET(
         return {
           ...d,
           content: d.content.slice(0, 80) + "...",
+          images: [],
+          videoUrl: null,
           isLocked: true,
         };
       }
@@ -140,9 +143,11 @@ export async function POST(
     }
 
     const body = await req.json();
-    const { title, content, category, isPinned, isMembersOnly } = body;
+    const { title, content, category, isPinned, isMembersOnly, images = [], videoUrl = null } = body;
+    const validMedia = (value: unknown) => { try { const url = new URL(String(value)); return url.protocol === "https:" && url.hostname === "res.cloudinary.com"; } catch { return false; } };
+    if (!Array.isArray(images) || images.length > 4 || images.some(image => typeof image !== "string" || !validMedia(image)) || (videoUrl !== null && (typeof videoUrl !== "string" || !validMedia(videoUrl)))) return NextResponse.json({ error: "Choose up to four uploaded photos and a valid video." }, { status: 400 });
 
-    if (!title || !title.trim() || !content || !content.trim()) {
+    if (typeof title !== "string" || !title.trim() || typeof content !== "string" || (!content.trim() && images.length === 0 && !videoUrl) || content.length > 10000) {
       return NextResponse.json({ error: "Title and content are required" }, { status: 400 });
     }
 
@@ -153,6 +158,8 @@ export async function POST(
         authorId: session.user.id,
         title: title.trim(),
         content: content.trim(),
+        images,
+        videoUrl,
         category: category || "General",
         isPinned: isOwner ? (isPinned ?? false) : false,
         isMembersOnly: isMembersOnly ?? true,
@@ -162,6 +169,7 @@ export async function POST(
           select: {
             id: true,
             name: true,
+            profileSlug: true,
             image: true,
             role: true,
             headline: true,

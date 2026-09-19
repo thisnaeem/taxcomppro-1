@@ -1684,7 +1684,7 @@ model NfcCard {
 
 // ── Pro Networks (Private Subscription Communities) ─────────────────────────
 model ProNetwork {
-  accentColor String @default("#e8c449")
+  accentColor String @default("#65a832")
   id                  String   @id @default(cuid())
   name                String
   slug                String   @unique
@@ -1801,6 +1801,8 @@ model ProNetworkAnnouncement {
 }
 
 model ProNetworkDiscussion {
+  images        String[]                     @default([])
+  videoUrl      String?
   id            String                       @id @default(cuid())
   networkId     String
   authorId      String

@@ -37,6 +37,7 @@ export async function GET(
           select: {
             id: true,
             name: true,
+            profileSlug: true,
             image: true,
             role: true,
             headline: true,
@@ -109,6 +110,7 @@ export async function POST(
           select: {
             id: true,
             name: true,
+            profileSlug: true,
             image: true,
             role: true,
             headline: true,
