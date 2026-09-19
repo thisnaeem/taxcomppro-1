@@ -1,9 +1,11 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { ThumbsUpIcon, Comment01Icon, Share01Icon, Cancel01Icon, Copy01Icon, ArrowDown01Icon, Link01Icon } from "hugeicons-react";
+import { ThumbsUpIcon, Comment01Icon, Share01Icon, Cancel01Icon, Copy01Icon, ArrowDown01Icon, Link01Icon, RepeatIcon } from "hugeicons-react";
+import Link from "next/link";
 import { REACTIONS, isReaction, type ReactionType, type ReactionCounts } from "@/lib/reactions";
 
-export default function PostActions({ postId, content, initialReaction, initialCounts, initialCount, commentCount, canReact, onRequireUpgrade, onComments, onShowReactions, onCountChange, privateGroup = false }: {
+export default function PostActions({ postId, content, initialReaction, initialCounts, initialCount, commentCount, canReact, onRequireUpgrade, onComments, onShowReactions, onCountChange, privateGroup = false, repostSourceId, viewerRepostId, repostCount = 0, canRepost = false, signedIn = false, onRepost }: {
+  repostSourceId?: string; viewerRepostId?: string | null; repostCount?: number; canRepost?: boolean; signedIn?: boolean; onRepost?: () => void;
   postId: string; content: string; initialReaction?: string | null; initialCounts?: ReactionCounts; initialCount: number; commentCount: number;
   canReact: boolean; onRequireUpgrade: () => void; onComments: () => void; onShowReactions: () => void; onCountChange: (count: number) => void; privateGroup?: boolean;
 }) {
@@ -13,6 +15,29 @@ export default function PostActions({ postId, content, initialReaction, initialC
   const [error, setError] = useState("");
   const [shareOpen, setShareOpen] = useState(false);
   const [shareStatus, setShareStatus] = useState("");
+  const [myRepostId, setMyRepostId] = useState(viewerRepostId || null);
+  const [reposts, setReposts] = useState(repostCount);
+  const [reposting, setReposting] = useState(false);
+  const repostPending = useRef(false);
+  const [repostText, setRepostText] = useState("");
+  async function repost() {
+    if (repostPending.current || !signedIn) return;
+    repostPending.current = true; setReposting(true); setShareStatus("");
+    try {
+      const response = await fetch(`/api/feed/${repostSourceId || postId}/repost`, {
+        method: myRepostId ? "DELETE" : "POST", headers: { "Content-Type": "application/json" },
+        ...(myRepostId ? {} : { body: JSON.stringify({ content: repostText }) }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw Error(data.error || "Couldn’t repost. Please try again.");
+      setReposts(n => Math.max(0, n + (myRepostId ? -1 : 1)));
+      setShareStatus(myRepostId ? "Your repost was removed." : "Reposted to your feed.");
+      setMyRepostId(myRepostId ? null : data.id);
+      setRepostText("");
+      onRepost?.();
+    } catch (e) { setShareStatus(e instanceof Error ? e.message : "Couldn’t repost. Please try again."); }
+    finally { repostPending.current = false; setReposting(false); }
+  }
   const [shareUrl, setShareUrl] = useState("");
   const [nativeShare, setNativeShare] = useState(false);
   const [peopleOpen, setPeopleOpen] = useState(false);
@@ -91,7 +116,7 @@ export default function PostActions({ postId, content, initialReaction, initialC
   };
 
   return <>
-    {(total > 0 || commentCount > 0) && <div className="feed-reaction-stats">
+    {(total > 0 || commentCount > 0 || reposts > 0) && <div className="feed-reaction-stats">
       {total > 0 && <div className="feed-people-hover" onMouseEnter={showPeople} onMouseLeave={() => setPeopleOpen(false)} onFocus={showPeople} onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setPeopleOpen(false); }} onKeyDown={event => { if (event.key === "Escape") setPeopleOpen(false); }}>
         <button type="button" className="feed-reaction-summary" onClick={onShowReactions} aria-describedby={peopleOpen ? `reaction-people-${postId}` : undefined} aria-label={`${total} reactions. View who reacted.`}>
           {top.slice(0,3).map(item => <span key={item.type} aria-hidden="true">{item.emoji}</span>)}<strong>{total}</strong>
@@ -102,6 +127,7 @@ export default function PostActions({ postId, content, initialReaction, initialC
         </div>}
       </div>}
       {commentCount > 0 && <button type="button" className="feed-comment-total" onClick={onComments}>{commentCount} comment{commentCount === 1 ? "" : "s"}</button>}
+      {reposts > 0 && <span className="feed-comment-total">{reposts} repost{reposts === 1 ? "" : "s"}</span>}
     </div>}
     <div className="feed-social-bar">
       <div className="feed-social-actions">
@@ -120,6 +146,14 @@ export default function PostActions({ postId, content, initialReaction, initialC
     {shareOpen && <dialog ref={dialog} className="feed-share-dialog" onCancel={() => setShareOpen(false)} onClick={event => { if (event.target === event.currentTarget) setShareOpen(false); }}>
       <div className="feed-share-content"><header><h2>Share this post</h2><button type="button" aria-label="Close sharing" onClick={() => setShareOpen(false)}><Cancel01Icon size={22} /></button></header>
       <p>{privateGroup ? "This post is in a private group. Only group members can open it." : "Send this conversation to someone who would find it useful."}</p>
+      {(canRepost || myRepostId) && <section className="feed-repost-compose" aria-label="Repost to your feed">
+        <h3><RepeatIcon size={19} aria-hidden />Repost to your feed</h3>
+        {signedIn ? <>
+          {!myRepostId && <><label htmlFor={`repost-caption-${postId}`}>Add your thoughts (optional)</label><textarea id={`repost-caption-${postId}`} maxLength={3000} rows={3} value={repostText} onChange={e => setRepostText(e.target.value)} placeholder="What would you like to add?" /></>}
+          <button type="button" disabled={reposting} onClick={repost}>{reposting ? "Saving…" : myRepostId ? "Remove my repost" : "Repost now"}</button>
+          {myRepostId && <Link href={`/feed?post=${myRepostId}`} onClick={() => setShareOpen(false)}>View your repost</Link>}
+        </> : <Link href={`/login?redirect=${encodeURIComponent(`/feed?post=${postId}`)}`}>Sign in to repost</Link>}
+      </section>}
       <label htmlFor={`share-link-${postId}`}>Post link</label><div className="feed-share-link"><Link01Icon size={18} /><input ref={linkInput} id={`share-link-${postId}`} readOnly value={shareUrl} onFocus={event => event.target.select()} /></div>
       <div className="feed-share-buttons"><button type="button" onClick={copyLink}><Copy01Icon size={18} />Copy link</button>{nativeShare && <button type="button" onClick={share}><Share01Icon size={18} />More ways to share</button>}</div>
       <p role="status">{shareStatus}</p></div>

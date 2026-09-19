@@ -24,6 +24,7 @@ export async function GET(req: NextRequest) {
     proTalksHosted,
     feedImagePosts,
     connections,
+    followers,
   ] = await Promise.all([
     prisma.user.findUnique({
       where: { id: session.user.id },
@@ -199,6 +200,7 @@ export async function GET(req: NextRequest) {
         OR: [{ requesterId: session.user.id }, { receiverId: session.user.id }],
       },
     }),
+    prisma.userFollow.count({ where: { followingId: session.user.id } }),
   ]);
 
   if (!user) return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -214,10 +216,6 @@ export async function GET(req: NextRequest) {
   const proNetworksOwned = ownedNetworks.length;
   const proNetworkMembers = ownedNetworks.reduce(
     (sum, net) => sum + Math.max(net._count.members, net.memberCount || 0),
-    0
-  );
-  const followers = ownedNetworks.reduce(
-    (sum, net) => sum + Math.max(net._count.followers, net.followerCount || 0),
     0
   );
   const primaryNetwork = ownedNetworks[0] || null;

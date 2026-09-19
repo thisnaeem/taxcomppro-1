@@ -7,7 +7,7 @@ type Params = { params: Promise<{ id: string }> };
 export async function GET(_req: NextRequest, { params }: Params) {
   const { id } = await params;
 
-  const [pro, ownedNetworks, discussionsStarted, proTalksHosted] = await Promise.all([
+  const [pro, ownedNetworks, discussionsStarted, proTalksHosted, followers] = await Promise.all([
     prisma.user.findFirst({
       where: { id, OR: [{ role: "ADMIN" }, ...(directoryUserWhere.OR ?? [])] },
       select: {
@@ -83,6 +83,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
     prisma.proNetworkEvent.count({
       where: { hostId: id },
     }),
+    prisma.userFollow.count({ where: { followingId: id } }),
   ]);
 
   if (!pro) return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -90,10 +91,6 @@ export async function GET(_req: NextRequest, { params }: Params) {
   const proNetworksOwned = ownedNetworks.length;
   const proNetworkMembers = ownedNetworks.reduce(
     (sum, net) => sum + Math.max(net._count.members, net.memberCount || 0),
-    0
-  );
-  const followers = ownedNetworks.reduce(
-    (sum, net) => sum + Math.max(net._count.followers, net.followerCount || 0),
     0
   );
   const primaryNetwork = ownedNetworks[0] || null;

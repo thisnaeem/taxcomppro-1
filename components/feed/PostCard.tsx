@@ -6,7 +6,7 @@ import PostActions from "./PostActions";
 import type { ReactionCounts } from "@/lib/reactions";
 import { useAppSelector } from "@/store/hooks";
 import { Loading03Icon as Loader2, MoreHorizontalIcon as MoreHorizontal, Edit01Icon as Pencil, Delete02Icon as Trash2, Tick02Icon as Check, Cancel01Icon as X, ArrowLeft01Icon as ChevronLeft, ArrowRight01Icon as ChevronRight } from "hugeicons-react";
-import { SentIcon, UserGroupIcon, GlobeIcon, LockIcon } from "hugeicons-react";
+import { SentIcon, UserGroupIcon, GlobeIcon, LockIcon, RepeatIcon } from "hugeicons-react";
 import DueDiligenceBadge from "@/components/badges/DueDiligenceBadge";
 import UpgradeModal from "@/components/ui/UpgradeModal";
 import FeedVideoPlayer from "./FeedVideoPlayer";
@@ -25,6 +25,15 @@ interface Comment {
 }
 
 export interface FeedPost {
+  isRepost?: boolean;
+  originalPostId?: string | null;
+  viewerRepostId?: string | null;
+  repostCount?: number;
+  canRepost?: boolean;
+  originalPost?: { id: string; content: string; images: string[]; videoUrl: string | null; createdAt: string;
+    author: { id: string; profileSlug?: string | null; name: string; image: string | null; aiSpecialist?: { id: string } | null };
+    community?: { name: string; slug: string; isPublic: boolean } | null;
+  } | null;
   isFirstPost?: boolean;
   id: string; content: string; images: string[];
   videoUrl: string | null;
@@ -51,7 +60,7 @@ const tierBadge: Record<string, string> = {
   MARKETPLACE_PLUS: "bg-emerald-100 text-emerald-700",
 };
 
-export default function PostCard({ post, onUpdate, onDelete }: { post: FeedPost; onUpdate: (updated: FeedPost) => void; onDelete?: (id: string) => void }) {
+export default function PostCard({ post, onUpdate, onDelete, onRepost }: { post: FeedPost; onUpdate: (updated: FeedPost) => void; onDelete?: (id: string) => void; onRepost?: () => void }) {
   const user = useAppSelector(s => s.auth.user);
   const isFree = (user?.tier === "FREE" || !user?.tier) && user?.role !== "ADMIN" && user?.role !== "PROFESSIONAL";
   const [showUpgrade, setShowUpgrade] = useState(false);
@@ -162,6 +171,7 @@ export default function PostCard({ post, onUpdate, onDelete }: { post: FeedPost;
     <>
       {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} feature="Liking & commenting" />}
       <div className="feed-surface feed-post-card overflow-hidden">
+      {post.isRepost && <div className="feed-repost-label"><RepeatIcon size={16} aria-hidden />{post.author.name} reposted</div>}
       {post.community && <Link href={`/groups/${post.community.slug}`} className="feed-post-group"><UserGroupIcon size={17} /><span>{post.community.name}</span>{post.community.isPublic ? <GlobeIcon size={14} /> : <LockIcon size={14} />}</Link>}
       {/* Header */}
       <div className="flex items-start gap-3 p-5 pb-3">
@@ -243,6 +253,18 @@ export default function PostCard({ post, onUpdate, onDelete }: { post: FeedPost;
         )}
       </div>
 
+      {post.isRepost && <div className="feed-original-post">
+        {post.originalPost ? <>
+          <Link className="feed-original-author" href={`/member/${post.originalPost.author.profileSlug || post.originalPost.author.id}`}>
+            {post.originalPost.author.image ? <img src={post.originalPost.author.image} alt="" loading="lazy" /> : <span className="feed-original-initial">{post.originalPost.author.name[0]}</span>}
+            <span><strong>{post.originalPost.author.name}</strong>{post.originalPost.author.aiSpecialist && <small>Tax Comp Pro AI Specialist</small>}<small>{timeAgo(post.originalPost.createdAt)}{post.originalPost.community ? ` · ${post.originalPost.community.name}` : " · Public post"}</small></span>
+          </Link>
+          <p className="whitespace-pre-wrap break-words">{post.originalPost.content.length > 500 ? `${post.originalPost.content.slice(0,500)}…` : post.originalPost.content}</p>
+          {post.originalPost.images.length > 0 && <Link href={`/feed?post=${post.originalPost.id}`} className="feed-original-images">{post.originalPost.images.slice(0,2).map((src,i) => <img key={i} src={src} alt={`Original post image ${i+1}`} loading="lazy" />)}</Link>}
+          {post.originalPost.videoUrl && <FeedVideoPlayer src={post.originalPost.videoUrl} />}
+          <Link className="feed-original-link" href={`/feed?post=${post.originalPost.id}`}>View original post</Link>
+        </> : <p>The original post is no longer available or is now private.</p>}
+      </div>}
       {/* Images */}
       {post.images && post.images.length > 0 && (
         <div className="feed-post-media">
@@ -310,7 +332,7 @@ export default function PostCard({ post, onUpdate, onDelete }: { post: FeedPost;
         </div>
       )}
 
-      <PostActions postId={post.id} content={post.content} initialReaction={post.likes[0]?.reaction ?? (post.likes.length ? "LIKE" : null)} initialCounts={post.reactionCounts} initialCount={post._count.likes} commentCount={commentCount} canReact={!!user && (!isFree || !!post.community)} onRequireUpgrade={() => setShowUpgrade(true)} onComments={handleToggleComments} onShowReactions={() => setShowLikesModal(true)} onCountChange={setLikeCount} privateGroup={post.community?.isPublic === false} />
+      <PostActions repostSourceId={post.originalPostId || post.id} viewerRepostId={post.viewerRepostId} repostCount={post.repostCount || 0} canRepost={post.canRepost ?? (!post.isRepost && post.community?.isPublic !== false)} signedIn={!!user} onRepost={onRepost} postId={post.id} content={post.content} initialReaction={post.likes[0]?.reaction ?? (post.likes.length ? "LIKE" : null)} initialCounts={post.reactionCounts} initialCount={post._count.likes} commentCount={commentCount} canReact={!!user && (!isFree || !!post.community)} onRequireUpgrade={() => setShowUpgrade(true)} onComments={handleToggleComments} onShowReactions={() => setShowLikesModal(true)} onCountChange={setLikeCount} privateGroup={post.community?.isPublic === false} />
 
       {/* Comments section */}
       {showComments && (

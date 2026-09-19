@@ -4,6 +4,7 @@ import { NextRequest, NextResponse, after } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { reactionSummaries } from "@/lib/post-reactions";
+import { canRepost, feedAuthorFilter, originalPostSelect } from "@/lib/feed-social";
 
 // Auto-publish any due scheduled posts (runs on every GET — cheap, indexed query)
 async function publishDuePosts() {
@@ -23,9 +24,12 @@ export async function GET(req: NextRequest) {
   const cursor = searchParams.get("cursor");
   const take = 10;
   const postId = searchParams.get("post");
+  const filter = searchParams.get("filter") || "all";
+  if (!["all", "connections", "following"].includes(filter)) return NextResponse.json({ error: "Invalid feed filter" }, { status: 400 });
+  if (!postId && filter !== "all" && !session) return NextResponse.json({ error: "Sign in to see this feed." }, { status: 401 });
 
   const results = await prisma.post.findMany({
-    where: { scheduledAt: null, ...(postId ? { id: postId } : {}), OR: [
+    where: { scheduledAt: null, ...(postId ? { id: postId } : session ? feedAuthorFilter(filter, session.user.id) : {}), OR: [
       { communityId: null },
       ...(session ? [{ community: { members: { some: { userId: session.user.id } } } }] : []),
       ...(postId ? [{ community: { isPublic: true } }] : []),
@@ -34,6 +38,7 @@ export async function GET(req: NextRequest) {
     take: postId ? 1 : take + 1,
     ...(!postId && cursor ? { skip: 1, cursor: { id: cursor } } : {}),
     include: {
+      originalPost: { select: originalPostSelect },
       author: { select: { id: true, aiSpecialist: { select: { id: true } }, profileSlug: true, name: true, image: true, headline: true, role: true, tier: true } },
       comments: {
         include: { author: { select: { id: true, aiSpecialist: { select: { id: true } }, profileSlug: true, name: true, image: true } } },
@@ -41,7 +46,7 @@ export async function GET(req: NextRequest) {
         take: 3,
       },
       community: { select: { name: true, slug: true, isPublic: true } },
-      _count: { select: { likes: true, comments: true } },
+      _count: { select: { likes: true, comments: true, reposts: true } },
       likes: session
         ? { where: { userId: session.user.id }, select: { id: true, reaction: true } }
         : { where: { userId: "__none__" }, select: { id: true, reaction: true } },
@@ -71,8 +76,17 @@ export async function GET(req: NextRequest) {
   ]);
 
   const summaries = await reactionSummaries(posts.map(post => post.id));
+  const ownReposts = session ? await prisma.post.findMany({
+    where: { authorId: session.user.id, isRepost: true, originalPostId: { in: posts.map(p => p.originalPostId || p.id) } },
+    select: { id: true, originalPostId: true },
+  }) : [];
+  const repostByOriginal = new Map(ownReposts.map(p => [p.originalPostId, p.id]));
   const postsWithBadge = posts.map(p => ({
     ...p,
+    originalPost: canRepost(p.originalPost) ? p.originalPost : null,
+    canRepost: p.isRepost ? canRepost(p.originalPost) : canRepost(p),
+    viewerRepostId: repostByOriginal.get(p.originalPostId || p.id) || null,
+    repostCount: p.isRepost ? (canRepost(p.originalPost) ? p.originalPost?._count.reposts ?? 0 : 0) : p._count.reposts,
     reactionCounts: summaries[p.id] ?? {},
     author: { ...p.author, hasDueDiligenceBadge: badgeUserIds.has(p.author.id) },
   }));

@@ -20,6 +20,8 @@ function FeedContent() {
   const searchParams = useSearchParams();
   const dispatch = useAppDispatch();
   const sharedPost = searchParams.get("post");
+  const requestedFilter = searchParams.get("filter");
+  const feedFilter = requestedFilter === "connections" || requestedFilter === "following" ? requestedFilter : "all";
   const isWelcome = searchParams.get("welcome") === "1" || searchParams.get("registered") === "1" || searchParams.get("upgraded") === "1";
   const [celebrateFirstPost, setCelebrateFirstPost] = useState(false);
   const closeCelebration = useCallback(() => setCelebrateFirstPost(false), []);
@@ -90,9 +92,12 @@ function FeedContent() {
   const loaderRef    = useRef<HTMLDivElement>(null);
   const pollingRef   = useRef<NodeJS.Timeout | null>(null);
   const latestIdRef  = useRef<string | null>(null);
+  const currentRequest = useRef<AbortController | null>(null);
 
   const fetchFeed = useCallback(async (cursor?: string, signal?: AbortSignal) => {
-    const url = sharedPost ? `/api/feed?post=${encodeURIComponent(sharedPost)}` : cursor ? `/api/feed?cursor=${encodeURIComponent(cursor)}` : "/api/feed";
+    const params = new URLSearchParams(sharedPost ? { post: sharedPost } : { filter: feedFilter });
+    if (cursor && !sharedPost) params.set("cursor", cursor);
+    const url = `/api/feed?${params}`;
     const res = await fetch(url, { signal });
     if (!res.ok) throw new Error("Feed unavailable");
     const data = await res.json() as { posts?: FeedPost[]; nextCursor?: string | null };
@@ -100,13 +105,18 @@ function FeedContent() {
       posts: Array.isArray(data.posts) ? data.posts : [],
       nextCursor: data.nextCursor ?? null,
     };
-  }, [sharedPost]);
+  }, [sharedPost, feedFilter]);
 
   // Initial load
   useEffect(() => {
     window.scrollTo(0, 0);
     let active = true;
-    fetchFeed()
+    moreRequest.current?.abort(); moreRequest.current = null;
+    currentRequest.current?.abort();
+    const controller = new AbortController();
+    currentRequest.current = controller;
+    latestIdRef.current = null;
+    fetchFeed(undefined, controller.signal)
       .then(({ posts: p, nextCursor: nc }) => {
         if (!active) return;
         setFeedError("");
@@ -120,21 +130,25 @@ function FeedContent() {
     fetch("/api/pro-ads/active?placement=CENTER_COLUMN")
       .then(r => r.json()).then(d => setCenterAds(Array.isArray(d) ? d : []))
       .catch(() => {});
-    return () => { active = false; };
+    return () => { active = false; controller.abort(); };
   }, [fetchFeed]);
 
   // Poll every 30s for new posts
   useEffect(() => {
+    let active = true;
     pollingRef.current = setInterval(async () => {
       try {
         const { posts: fresh } = await fetchFeed();
-        if (fresh[0] && fresh[0].id !== latestIdRef.current) setHasNew(true);
+        if (active && fresh[0] && fresh[0].id !== latestIdRef.current) setHasNew(true);
       } catch { /* ignore */ }
     }, 30_000);
-    return () => { if (pollingRef.current) clearInterval(pollingRef.current); };
+    return () => { active = false; if (pollingRef.current) clearInterval(pollingRef.current); };
   }, [fetchFeed]);
 
   const refreshFeed = async () => {
+    currentRequest.current?.abort();
+    const controller = new AbortController();
+    currentRequest.current = controller;
     moreRequest.current?.abort();
     moreRequest.current = null;
     setLoadingMore(false);
@@ -143,12 +157,13 @@ function FeedContent() {
     setLoading(true);
     setFeedError("");
     try {
-      const { posts: p, nextCursor: nc } = await fetchFeed();
+      const { posts: p, nextCursor: nc } = await fetchFeed(undefined, controller.signal);
+      if (controller.signal.aborted) return;
       setPosts(p);
       setNextCursor(nc);
       if (p[0]) latestIdRef.current = p[0].id;
-    } catch { setFeedError("We couldn’t load your feed. Please try again."); }
-    finally { setLoading(false); }
+    } catch { if (!controller.signal.aborted) setFeedError("We couldn’t load your feed. Please try again."); }
+    finally { if (!controller.signal.aborted) setLoading(false); }
   };
 
   const loadMore = useCallback(async () => {
@@ -175,7 +190,7 @@ function FeedContent() {
     }
   }, [fetchFeed, nextCursor, loading, sharedPost]);
 
-  useEffect(() => () => { moreRequest.current?.abort(); }, []);
+  useEffect(() => () => { moreRequest.current?.abort(); currentRequest.current?.abort(); }, []);
 
   useEffect(() => {
     if (!loaderRef.current || !nextCursor || loading || loadingMore || moreError || typeof IntersectionObserver === "undefined") return;
@@ -187,8 +202,10 @@ function FeedContent() {
   }, [loadMore, nextCursor, loading, loadingMore, moreError]);
 
   const handlePostCreated = (post: FeedPost) => {
-    setPosts(prev => [post, ...prev]);
-    latestIdRef.current = post.id;
+    if (!sharedPost && feedFilter === "all") {
+      setPosts(prev => [post, ...prev]);
+      latestIdRef.current = post.id;
+    }
     if (post.isFirstPost) setCelebrateFirstPost(true);
   };
 
@@ -232,6 +249,10 @@ function FeedContent() {
             {!user && loading && <ComposerSkeleton />}
             {/* Post Composer starts showing immediately at top for logged-in users */}
             {user && <PostComposer onPostCreated={handlePostCreated} onScheduled={() => setScheduleRefreshKey(k => k + 1)} />}
+            {!sharedPost && <nav className="feed-filter-tabs" aria-label="Filter feed posts">
+              {([["all", "All posts"], ["connections", "Connections"], ["following", "Following"]] as const).map(([value,label]) =>
+                <Link key={value} href={value === "all" ? "/feed" : `/feed?filter=${value}`} aria-current={feedFilter === value ? "page" : undefined}>{label}</Link>)}
+            </nav>}
 
             {/* Scheduled posts snippet — only for logged-in users */}
             {user && !loading && <ScheduledPostsPanel refreshKey={scheduleRefreshKey} />}
@@ -252,14 +273,15 @@ function FeedContent() {
                 <PostSkeleton />
               </div>
             ) : feedError ? (
-              <div className="feed-empty" role="alert"><NoteEditIcon size={30} /><h2>Your feed will be right back.</h2><p>{feedError}</p><button onClick={refreshFeed}>Try again</button></div>
+              <div className="feed-empty" role="alert"><NoteEditIcon size={30} /><h2>{!user && feedFilter !== "all" ? "Sign in to personalize your feed" : "Your feed will be right back."}</h2><p>{!user && feedFilter !== "all" ? "See posts from your connections and people you follow." : feedError}</p>{!user && feedFilter !== "all" ? <Link href={`/login?redirect=${encodeURIComponent(`/feed?filter=${feedFilter}`)}`}>Sign in</Link> : <button onClick={refreshFeed}>Try again</button>}</div>
             ) : posts.length === 0 ? (
               <div className="feed-empty">
                 <div className="w-16 h-16 rounded-2xl bg-amber-50 dark:bg-amber-400/10 border border-amber-200/80 dark:border-amber-400/20 flex items-center justify-center mb-4 text-[#ffbe24] dark:text-[#ffbe24] shadow-sm">
                   <NoteEditIcon className="w-8 h-8" />
                 </div>
-                <h3 className="font-black text-[#0a1628] dark:text-white text-xl mb-2">{sharedPost ? "This post isn’t available" : "Start a conversation"}</h3>
-                <p className="text-slate-400 dark:text-slate-500 text-sm max-w-sm">{sharedPost ? "The post may have been removed, or you may need to sign in and join its group to view it." : "Share an insight, ask a question, or find a group of professionals who share your interests."}</p>
+                <h3 className="font-black text-[#0a1628] dark:text-white text-xl mb-2">{sharedPost ? "This post isn’t available" : feedFilter === "all" ? "Start a conversation" : feedFilter === "connections" ? "No connection posts yet" : "No posts from people you follow yet"}</h3>
+                <p className="text-slate-400 dark:text-slate-500 text-sm max-w-sm">{sharedPost ? "The post may have been removed, or you may need to sign in and join its group to view it." : feedFilter === "all" ? "Share an insight, ask a question, or find a group of professionals who share your interests." : "Discover professionals and follow or connect with them to see their posts here."}</p>
+                {!sharedPost && feedFilter !== "all" && <Link href="/find-a-pro">Find people to follow</Link>}
               </div>
             ) : (
               <>
@@ -298,7 +320,7 @@ function FeedContent() {
                           </a>
                         </div>
                       )}
-                      <PostCard post={post} onUpdate={handlePostUpdate} onDelete={handlePostDelete} />
+                      <PostCard post={post} onUpdate={handlePostUpdate} onDelete={handlePostDelete} onRepost={() => setHasNew(true)} />
                     </Fragment>
                   );
                 })}
@@ -321,7 +343,7 @@ function FeedContent() {
 
 function FeedRoute() {
   const params = useSearchParams();
-  return <FeedContent key={params.get("post") ?? "all"} />;
+  return <FeedContent key={`${params.get("post") ?? "feed"}:${params.get("filter") ?? "all"}`} />;
 }
 
 export default function FeedPage() {

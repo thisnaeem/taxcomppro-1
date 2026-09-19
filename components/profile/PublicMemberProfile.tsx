@@ -1,4 +1,5 @@
 "use client";
+import FollowButton from "./FollowButton";
 
 import { useEffect, useState } from "react";
 import { notFound, useRouter } from "next/navigation";
@@ -542,7 +543,8 @@ export default function PublicMemberProfile({memberId: id, specialist}: {memberI
             </div>
 
             {/* Right: Action Buttons */}
-            <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 w-full lg:w-auto shrink-0 pt-2 lg:pt-0">
+            <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto shrink-0 pt-2 lg:pt-0">
+              <FollowButton key={profile.id} memberId={profile.id} />
               {specialist ? <a href="#ask-specialist" className="profile-primary px-5 py-3 rounded-xl font-bold text-sm">Ask this AI specialist</a> : me && me.id !== profile.id ? (
                 <>
                   <Link

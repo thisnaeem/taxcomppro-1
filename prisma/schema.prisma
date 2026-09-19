@@ -163,6 +163,8 @@ model User {
   notifications       Notification[]
   sentConnections     Connection[]         @relation("Requester")
   receivedConnections Connection[]         @relation("Receiver")
+  followers           UserFollow[]         @relation("UserFollowers")
+  following           UserFollow[]         @relation("UserFollowing")
   sentMessages        Message[]            @relation("SentMessages")
   receivedMessages    Message[]            @relation("ReceivedMessages")
   instructorCourses   Course[]             @relation("InstructorCourses")
@@ -401,6 +403,8 @@ model Post {
   likeCount   Int       @default(0)
   commentCount Int      @default(0)
   scheduledAt DateTime?
+  isRepost    Boolean   @default(false)
+  originalPostId String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
@@ -408,8 +412,24 @@ model Post {
   community Community? @relation(fields: [communityId], references: [id], onDelete: Cascade)
   comments  Comment[]
   likes     PostLike[]
+  originalPost Post? @relation("PostReposts", fields: [originalPostId], references: [id], onDelete: SetNull)
+  reposts Post[] @relation("PostReposts")
 
+  @@unique([authorId, originalPostId])
+  @@index([originalPostId])
   @@map("posts")
+}
+
+model UserFollow {
+  followerId String
+  followingId String
+  createdAt DateTime @default(now())
+  follower User @relation("UserFollowing", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@id([followerId, followingId])
+  @@index([followingId])
+  @@map("user_follows")
 }
 
 model Comment {
