@@ -53,6 +53,18 @@ export async function GET(req: NextRequest) {
       where,
       orderBy: [{ memberCount: "desc" }, { createdAt: "desc" }],
       include: {
+        members: {
+          where: {
+            showInDirectory: true,
+            OR: [
+              { status: "ACTIVE", OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }] },
+              { status: "CANCELED", expiresAt: { gt: new Date() } },
+            ],
+          },
+          orderBy: [{ joinedAt: "asc" }, { id: "asc" }],
+          take: 4,
+          select: { user: { select: { id: true, name: true, image: true } } },
+        },
         owner: {
           select: {
             id: true,
@@ -101,8 +113,9 @@ export async function GET(req: NextRequest) {
       userFollows = new Set(follows.map((f) => f.networkId));
     }
 
-    const formattedNetworks = networks.map((net) => ({
+    const formattedNetworks = networks.map(({ members, ...net }) => ({
       ...net,
+      memberPreviews: members.map(({ user }) => user),
       isOwner: session?.user?.id === net.ownerId,
       isMember: userMemberships.has(net.id) || session?.user?.id === net.ownerId,
       isFollowing: userFollows.has(net.id),

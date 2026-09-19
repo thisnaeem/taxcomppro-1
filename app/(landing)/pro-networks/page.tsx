@@ -36,6 +36,7 @@ interface ProNetworkItem {
   logoImage: string | null;
   monthlyPrice: number;
   memberCount: number;
+  memberPreviews?: { id: string; name: string | null; image: string | null }[];
   followerCount: number;
   memberBenefits: string[];
   badgeShape: string;
@@ -445,10 +446,23 @@ function ProNetworksDirectory() {
                         ))}
                       </div>
                       <footer>
-                        <span>
-                          <Users size={16} />
+                        <span className="pn-card-members">
+                          {!!net.memberPreviews?.length && (
+                            <span className="pn-member-avatars">
+                              {net.memberPreviews.map((member) => (
+                                <span className="pn-member-avatar" key={member.id} title={member.name || "Member"}>
+                                  <span aria-hidden="true">{(member.name || "Member").trim().split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase()}</span>
+                                  {member.image && (
+                                    <Image src={member.image} alt={member.name || "Member"} fill sizes="32px" unoptimized onError={(event) => { event.currentTarget.style.display = "none"; }} />
+                                  )}
+                                </span>
+                              ))}
+                            </span>
+                          )}
+                          <span>
                           {net.memberCount.toLocaleString()}{" "}
                           {net.memberCount === 1 ? "member" : "members"}
+                          </span>
                         </span>
                         <Link href={"/pro-networks/" + net.slug}>
                           {net.isMember || net.isOwner

@@ -193,6 +193,27 @@ html .pn-page.pn-directory {
   .pn-network-owner { margin-bottom: 0; }
   .pn-benefits > span { border-radius: 999px; white-space: normal; overflow-wrap: anywhere; }
   .pn-network-body footer { margin-top: auto; }
+  .pn-network-body footer > .pn-card-members { gap: 10px; }
+  .pn-card-members > span:last-child { white-space: nowrap; }
+  .pn-member-avatars { display: flex; align-items: center; padding-left: 0; }
+  .pn-member-avatar {
+    position: relative;
+    display: grid;
+    place-items: center;
+    flex: 0 0 32px;
+    width: 32px;
+    height: 32px;
+    overflow: hidden;
+    border: 2px solid var(--pn-panel);
+    border-radius: 50%;
+    background: var(--pn-inner);
+    color: var(--pn-text);
+    font-size: 10px;
+    font-weight: 700;
+    box-shadow: 0 0 0 1px var(--pn-line);
+  }
+  .pn-member-avatar + .pn-member-avatar { margin-left: -9px; }
+  .pn-member-avatar img { object-fit: cover; }
 }
 
 html.dark .pn-page.pn-directory {
