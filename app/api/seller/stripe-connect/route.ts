@@ -122,31 +122,56 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Create a new Express account if none exists
+    // Create a new connected account if none exists (using Accounts v2 controller)
     if (!accountId) {
       let account: Stripe.Account;
       try {
-        // Express accounts for destination charge payouts require the transfers capability
+        // Accounts v2: Marketplace model with Express dashboard, application fee/loss liability, and destination transfers
         account = await stripe.accounts.create({
-          type: "express",
+          controller: {
+            fees: { payer: "application" },
+            losses: { payments: "application" },
+            stripe_dashboard: { type: "express" },
+            requirement_collection: "stripe",
+          },
           email: user.email ?? undefined,
+          business_profile: {
+            name: user.name ?? undefined,
+          },
           capabilities: {
             transfers: { requested: true },
           },
-          business_profile: {
-            name: user.name ?? undefined,
-          },
         });
-      } catch (capErr: any) {
-        console.warn("Stripe account creation with explicit capabilities failed, retrying without:", capErr?.message);
-        // Fallback without explicit capabilities if restricted by country / settings
-        account = await stripe.accounts.create({
-          type: "express",
-          email: user.email ?? undefined,
-          business_profile: {
-            name: user.name ?? undefined,
-          },
-        });
+      } catch (v2Err: any) {
+        console.warn("Accounts v2 create attempt 1 failed, trying fallback without capabilities:", v2Err?.message);
+        try {
+          // Fallback A: controller without explicit capabilities
+          account = await stripe.accounts.create({
+            controller: {
+              fees: { payer: "application" },
+              losses: { payments: "application" },
+              stripe_dashboard: { type: "express" },
+              requirement_collection: "stripe",
+            },
+            email: user.email ?? undefined,
+            business_profile: {
+              name: user.name ?? undefined,
+            },
+          });
+        } catch (v2Err2: any) {
+          console.warn("Accounts v2 create attempt 2 failed, trying managed risk fallback:", v2Err2?.message);
+          // Fallback B: If platform requires Managed Risk (losses: stripe)
+          account = await stripe.accounts.create({
+            controller: {
+              losses: { payments: "stripe" },
+              stripe_dashboard: { type: "full" },
+            },
+            email: user.email ?? undefined,
+            business_profile: {
+              name: user.name ?? undefined,
+            },
+          });
+        }
       }
 
       accountId = account.id;
