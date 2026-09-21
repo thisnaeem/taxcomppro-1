@@ -4,123 +4,200 @@ import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import Stripe from "stripe";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2026-04-22.dahlia" });
-const ALLOWED_TIERS = ["MARKETPLACE", "MARKETPLACE_PLUS"];
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+function getStripe(): Stripe {
+  const secretKey = process.env.STRIPE_SECRET_KEY;
+  if (!secretKey) {
+    throw new Error("STRIPE_SECRET_KEY is not configured on the server.");
+  }
+  return new Stripe(secretKey);
+}
+
+function getBaseUrl(req: NextRequest): string {
+  const originHeader = req.headers.get("origin");
+  if (originHeader) return originHeader.replace(/\/$/, "");
+
+  const forwardedHost = req.headers.get("x-forwarded-host");
+  if (forwardedHost) {
+    const proto = req.headers.get("x-forwarded-proto") || "https";
+    return `${proto}://${forwardedHost}`.replace(/\/$/, "");
+  }
+
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    return process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "");
+  }
+
+  return "https://taxcomppro.com";
+}
 
 // GET — return connection status + account details
 export async function GET() {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { stripeAccountId: true, stripeOnboarded: true, tier: true, role: true },
-  });
-  if (!user) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { stripeAccountId: true, stripeOnboarded: true, tier: true, role: true },
+    });
+    if (!user) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  let accountDetails = null;
-  if (user.stripeAccountId) {
-    try {
-      const acct = await stripe.accounts.retrieve(user.stripeAccountId);
-      const onboarded = !!(acct.charges_enabled && acct.details_submitted);
+    let accountDetails = null;
+    if (user.stripeAccountId) {
+      try {
+        const stripe = getStripe();
+        const acct = await stripe.accounts.retrieve(user.stripeAccountId);
+        const onboarded = !!(acct.charges_enabled && acct.details_submitted);
 
-      // Sync onboarding status to DB if it changed
-      if (onboarded !== user.stripeOnboarded) {
+        // Sync onboarding status to DB if it changed
+        if (onboarded !== user.stripeOnboarded) {
+          await prisma.user.update({
+            where: { id: session.user.id },
+            data: { stripeOnboarded: onboarded },
+          });
+        }
+
+        accountDetails = {
+          id: acct.id,
+          email: acct.email,
+          country: acct.country,
+          chargesEnabled: acct.charges_enabled,
+          payoutsEnabled: acct.payouts_enabled,
+          onboarded,
+        };
+      } catch (err: any) {
+        console.warn("Account could not be retrieved from Stripe, clearing DB reference:", err?.message);
+        // Account may have been deleted on Stripe side or invalid in this mode; clear DB
         await prisma.user.update({
           where: { id: session.user.id },
-          data: { stripeOnboarded: onboarded },
+          data: { stripeAccountId: null, stripeOnboarded: false },
         });
       }
-
-      accountDetails = {
-        id: acct.id,
-        email: acct.email,
-        country: acct.country,
-        chargesEnabled: acct.charges_enabled,
-        payoutsEnabled: acct.payouts_enabled,
-        onboarded,
-      };
-    } catch {
-      // Account may have been deleted on Stripe side; clear DB
-      await prisma.user.update({
-        where: { id: session.user.id },
-        data: { stripeAccountId: null, stripeOnboarded: false },
-      });
     }
-  }
 
-  return NextResponse.json({
-    connected: !!user.stripeAccountId,
-    onboarded: user.stripeOnboarded,
-    accountId: user.stripeAccountId,
-    accountDetails,
-  });
+    return NextResponse.json({
+      connected: !!user.stripeAccountId,
+      onboarded: user.stripeOnboarded,
+      accountId: user.stripeAccountId,
+      accountDetails,
+    });
+  } catch (err: any) {
+    console.error("GET /api/seller/stripe-connect error:", err);
+    return NextResponse.json({ error: err?.message || "Internal server error" }, { status: 500 });
+  }
 }
 
 // POST — create Express account + return onboarding link
 export async function POST(req: NextRequest) {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  let body: { returnUrl?: string } = {};
   try {
-    body = await req.json();
-  } catch {
-    // empty body is acceptable
-  }
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { stripeAccountId: true, stripeOnboarded: true, tier: true, role: true, email: true, name: true },
-  });
-  if (!user) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    let body: { returnUrl?: string } = {};
+    try {
+      body = await req.json();
+    } catch {
+      // empty body is acceptable
+    }
 
-  let accountId = user.stripeAccountId;
-
-  // Create a new Express account if none exists
-  if (!accountId) {
-    const account = await stripe.accounts.create({
-      type: "express",
-      email: user.email ?? undefined,
-      capabilities: {
-        card_payments: { requested: true },
-        transfers: { requested: true },
-      },
-      business_profile: {
-        name: user.name ?? undefined,
-      },
-    });
-    accountId = account.id;
-    await prisma.user.update({
+    const user = await prisma.user.findUnique({
       where: { id: session.user.id },
-      data: { stripeAccountId: accountId },
+      select: { stripeAccountId: true, stripeOnboarded: true, tier: true, role: true, email: true, name: true },
     });
+    if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
+
+    const stripe = getStripe();
+    let accountId = user.stripeAccountId;
+
+    // Verify existing account if stored
+    if (accountId) {
+      try {
+        await stripe.accounts.retrieve(accountId);
+      } catch (checkErr: any) {
+        console.warn("Existing Stripe account is invalid or missing in Stripe, resetting:", checkErr?.message);
+        accountId = null;
+        await prisma.user.update({
+          where: { id: session.user.id },
+          data: { stripeAccountId: null, stripeOnboarded: false },
+        });
+      }
+    }
+
+    // Create a new Express account if none exists
+    if (!accountId) {
+      let account: Stripe.Account;
+      try {
+        // Express accounts for destination charge payouts require the transfers capability
+        account = await stripe.accounts.create({
+          type: "express",
+          email: user.email ?? undefined,
+          capabilities: {
+            transfers: { requested: true },
+          },
+          business_profile: {
+            name: user.name ?? undefined,
+          },
+        });
+      } catch (capErr: any) {
+        console.warn("Stripe account creation with explicit capabilities failed, retrying without:", capErr?.message);
+        // Fallback without explicit capabilities if restricted by country / settings
+        account = await stripe.accounts.create({
+          type: "express",
+          email: user.email ?? undefined,
+          business_profile: {
+            name: user.name ?? undefined,
+          },
+        });
+      }
+
+      accountId = account.id;
+      await prisma.user.update({
+        where: { id: session.user.id },
+        data: { stripeAccountId: accountId },
+      });
+    }
+
+    const baseUrl = getBaseUrl(req);
+    const targetReturnPath = body.returnUrl || "/seller-dashboard";
+    const separator = targetReturnPath.includes("?") ? "&" : "?";
+
+    const refreshUrl = `${baseUrl}${targetReturnPath}${separator}stripe=refresh`;
+    const returnUrl = `${baseUrl}${targetReturnPath}${separator}stripe=success`;
+
+    // Generate a fresh Account Link for onboarding
+    const accountLink = await stripe.accountLinks.create({
+      account: accountId,
+      refresh_url: refreshUrl,
+      return_url: returnUrl,
+      type: "account_onboarding",
+    });
+
+    return NextResponse.json({ url: accountLink.url });
+  } catch (error: any) {
+    console.error("POST /api/seller/stripe-connect error:", error);
+    return NextResponse.json(
+      { error: error?.message || "Failed to start Stripe onboarding." },
+      { status: 500 }
+    );
   }
-
-  const targetReturnPath = body.returnUrl || "/seller-dashboard";
-  const separator = targetReturnPath.includes("?") ? "&" : "?";
-
-  // Generate a fresh Account Link for onboarding
-  const accountLink = await stripe.accountLinks.create({
-    account: accountId,
-    refresh_url: `${APP_URL}${targetReturnPath}${separator}stripe=refresh`,
-    return_url:  `${APP_URL}${targetReturnPath}${separator}stripe=success`,
-    type: "account_onboarding",
-  });
-
-  return NextResponse.json({ url: accountLink.url });
 }
 
 // DELETE — disconnect Stripe account
 export async function DELETE() {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  await prisma.user.update({
-    where: { id: session.user.id },
-    data: { stripeAccountId: null, stripeOnboarded: false },
-  });
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: { stripeAccountId: null, stripeOnboarded: false },
+    });
 
-  return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    console.error("DELETE /api/seller/stripe-connect error:", error);
+    return NextResponse.json(
+      { error: error?.message || "Failed to disconnect Stripe account." },
+      { status: 500 }
+    );
+  }
 }

@@ -97,16 +97,29 @@ function StatusBadge({ status }: { status: string }) {
 function StripeCard({ status, onDisconnect }: { status: StripeStatus | null; onDisconnect: () => void }) {
   const [connecting,    setConnecting]    = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
+  const [connectError,  setConnectError]  = useState<string | null>(null);
 
   const handleConnect = async () => {
     setConnecting(true);
+    setConnectError(null);
     try {
-      const res = await fetch("/api/seller/stripe-connect", { method: "POST" });
-      const data = await res.json();
-      if (data.url) window.location.href = data.url;
-      else alert("Failed to start Stripe onboarding. Check your STRIPE_SECRET_KEY.");
-    } catch {
-      alert("Network error. Please try again.");
+      const res = await fetch("/api/seller/stripe-connect", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = await res.json().catch(() => null);
+      if (res.ok && data?.url) {
+        window.location.href = data.url;
+      } else {
+        const errorMsg =
+          data?.error ||
+          (res.status === 401
+            ? "Your session expired. Please sign in again."
+            : "Failed to start Stripe onboarding. Please check your Stripe settings.");
+        setConnectError(errorMsg);
+      }
+    } catch (err: any) {
+      setConnectError(err?.message || "Network error. Please check your connection and try again.");
     } finally {
       setConnecting(false);
     }
@@ -115,17 +128,38 @@ function StripeCard({ status, onDisconnect }: { status: StripeStatus | null; onD
   const handleDisconnect = async () => {
     if (!confirm("Disconnect your Stripe account? You won't receive direct payments.")) return;
     setDisconnecting(true);
-    await fetch("/api/seller/stripe-connect", { method: "DELETE" });
-    onDisconnect();
-    setDisconnecting(false);
+    setConnectError(null);
+    try {
+      const res = await fetch("/api/seller/stripe-connect", { method: "DELETE" });
+      const data = await res.json().catch(() => null);
+      if (res.ok) {
+        onDisconnect();
+      } else {
+        setConnectError(data?.error || "Failed to disconnect Stripe account.");
+      }
+    } catch (err: any) {
+      setConnectError(err?.message || "Network error. Please try again.");
+    } finally {
+      setDisconnecting(false);
+    }
   };
 
   const handleResumeOnboarding = async () => {
     setConnecting(true);
+    setConnectError(null);
     try {
-      const res = await fetch("/api/seller/stripe-connect", { method: "POST" });
-      const data = await res.json();
-      if (data.url) window.location.href = data.url;
+      const res = await fetch("/api/seller/stripe-connect", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = await res.json().catch(() => null);
+      if (res.ok && data?.url) {
+        window.location.href = data.url;
+      } else {
+        setConnectError(data?.error || "Failed to resume Stripe onboarding. Please try again.");
+      }
+    } catch (err: any) {
+      setConnectError(err?.message || "Network error. Please try again.");
     } finally {
       setConnecting(false);
     }
@@ -158,6 +192,22 @@ function StripeCard({ status, onDisconnect }: { status: StripeStatus | null; onD
       </div>
 
       <div className="p-5 space-y-4">
+        {connectError && (
+          <div className="bg-red-500/10 border border-red-500/25 text-red-500 text-xs px-4 py-3 rounded-xl flex items-start justify-between gap-3">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-500" />
+              <span className="leading-relaxed font-medium">{connectError}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setConnectError(null)}
+              className="text-red-400 hover:text-red-300 font-bold text-xs"
+              aria-label="Dismiss error"
+            >
+              ✕
+            </button>
+          </div>
+        )}
         {status.connected && status.accountDetails && (
           <div className="sd-stats grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
@@ -319,9 +369,15 @@ function SellerDashboardInner() {
   }, []);
 
   const loadStripe = useCallback(() => {
-    fetch("/api/seller/stripe-connect").then(r => r.json()).then(d => {
-      if (!d.error) setStripeStatus(d);
-    }).finally(() => setStripeLoading(false));
+    fetch("/api/seller/stripe-connect")
+      .then(r => r.json().catch(() => null))
+      .then(d => {
+        if (d && !d.error) setStripeStatus(d);
+      })
+      .catch(err => {
+        console.warn("Failed to load Stripe status:", err);
+      })
+      .finally(() => setStripeLoading(false));
   }, []);
 
   useEffect(() => {

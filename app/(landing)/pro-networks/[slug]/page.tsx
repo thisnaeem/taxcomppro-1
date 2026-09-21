@@ -304,14 +304,14 @@ export default function ProNetworkHubPage({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ returnUrl: `/pro-networks/${slug}?tab=manage` }),
       });
-      const data = await res.json();
-      if (data.url) {
+      const data = await res.json().catch(() => null);
+      if (res.ok && data?.url) {
         window.location.href = data.url;
       } else {
-        alert("Failed to start Stripe onboarding.");
+        alert(data?.error || "Failed to start Stripe onboarding. Please check your Stripe settings.");
       }
-    } catch {
-      alert("Network error. Please try again.");
+    } catch (err: any) {
+      alert(err?.message || "Network error. Please try again.");
     } finally {
       setConnectingStripe(false);
     }
