@@ -52,6 +52,17 @@ export async function POST(req: NextRequest) {
   const isFree = body.isFree ?? (Number(body.price) <= 0);
   const price = isFree ? 0 : (Number(body.price) || 0);
 
+  // Paid courses require Stripe Connect onboarding to receive payouts
+  if (price > 0 && !isAdmin && (!creator.stripeAccountId || !creator.stripeOnboarded)) {
+    return NextResponse.json(
+      {
+        error: "Stripe payout setup required. Please connect your Stripe account in the Seller Dashboard before creating paid courses.",
+        code: "STRIPE_SETUP_REQUIRED",
+      },
+      { status: 403 }
+    );
+  }
+
   const course = await prisma.course.create({
     data: {
       title:            body.title.trim(),

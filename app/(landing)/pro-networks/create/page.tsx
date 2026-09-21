@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useSession } from "@/lib/auth-client";
@@ -26,6 +26,7 @@ import {
   Loader2,
   Plus,
   Trash2,
+  AlertCircle,
 } from "lucide-react";
 
 const creationSteps = [
@@ -91,6 +92,59 @@ export default function CreateProNetworkPage() {
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
+  // Stripe Setup & Onboarding State
+  const [stripeStatus, setStripeStatus] = useState<{ connected: boolean; onboarded: boolean } | null>(null);
+  const [checkingStripe, setCheckingStripe] = useState(false);
+  const [connectingStripe, setConnectingStripe] = useState(false);
+  const [stripeError, setStripeError] = useState("");
+  const [stripeJustConnected, setStripeJustConnected] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.location.search.includes("stripe=success")) {
+      setStripeJustConnected(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (session?.user) {
+      setCheckingStripe(true);
+      fetch("/api/seller/stripe-connect")
+        .then((r) => r.json())
+        .then((data) => {
+          if (data && typeof data.onboarded === "boolean") {
+            setStripeStatus({ connected: !!data.connected, onboarded: !!data.onboarded });
+          }
+        })
+        .catch((err) => console.warn("Failed to check Stripe status:", err))
+        .finally(() => setCheckingStripe(false));
+    }
+  }, [session?.user]);
+
+  const isAdmin = (session?.user as any)?.role === "ADMIN";
+  const isStripeReady = isAdmin || !!(stripeStatus?.connected && stripeStatus?.onboarded);
+
+  const handleConnectStripe = async () => {
+    setConnectingStripe(true);
+    setStripeError("");
+    try {
+      const res = await fetch("/api/seller/stripe-connect", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ returnUrl: "/pro-networks/create" }),
+      });
+      const data = await res.json().catch(() => null);
+      if (res.ok && data?.url) {
+        window.location.href = data.url;
+      } else {
+        setStripeError(data?.error || "Failed to start Stripe onboarding. Please try again.");
+      }
+    } catch (err: any) {
+      setStripeError(err?.message || "Network error. Please try again.");
+    } finally {
+      setConnectingStripe(false);
+    }
+  };
+
   // Form State
   const [name, setName] = useState("");
   const [tagline, setTagline] = useState("");
@@ -146,6 +200,12 @@ export default function CreateProNetworkPage() {
   const handlePublish = async () => {
     if (!name.trim()) {
       setErrorMsg("Please provide a name for your Pro Network.");
+      setStep(1);
+      return;
+    }
+
+    if (pricingType === "paid" && !isStripeReady) {
+      setErrorMsg("Stripe setup required to sell memberships. Please connect your Stripe payout account, or select Free Pro Network to publish.");
       setStep(1);
       return;
     }
@@ -335,6 +395,22 @@ export default function CreateProNetworkPage() {
               <i key={i} data-complete={i + 1 <= step} />
             ))}
           </div>
+          {stripeJustConnected && (
+            <div className="mb-6 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-bold flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                <span>Stripe account connected successfully! You are now set up to charge for memberships.</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setStripeJustConnected(false)}
+                className="text-slate-400 hover:text-white px-1"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+
           {errorMsg && (
             <div className="mb-6 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs font-bold flex items-center gap-2">
               <span>⚠️ {errorMsg}</span>
@@ -524,23 +600,60 @@ export default function CreateProNetworkPage() {
                         </span>
                       </div>
 
-                      <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-xs space-y-1">
-                        <div className="flex items-center gap-2 font-bold">
-                          <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                          <span>
-                            0% TCP Platform Fee • Direct Stripe Host Payouts
-                          </span>
+                      {!isStripeReady ? (
+                        <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-slate-900 dark:text-white space-y-3">
+                          <div className="flex items-start gap-3">
+                            <div className="w-8 h-8 rounded-xl bg-amber-400/20 text-amber-500 flex items-center justify-center shrink-0 mt-0.5">
+                              <DollarSign className="w-4 h-4" />
+                            </div>
+                            <div className="space-y-1">
+                              <p className="text-xs font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider">
+                                Stripe Setup Required To Sell Memberships
+                              </p>
+                              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                                To charge members a recurring monthly fee, you must connect your Stripe account so member subscription dues transfer straight to your bank account with 0% platform fee.
+                              </p>
+                            </div>
+                          </div>
+                          {stripeError && (
+                            <p className="text-xs font-semibold text-rose-500 bg-rose-500/10 p-2.5 rounded-xl">{stripeError}</p>
+                          )}
+                          <div className="flex items-center gap-3 pt-1">
+                            <button
+                              type="button"
+                              disabled={connectingStripe}
+                              onClick={handleConnectStripe}
+                              className="px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-[#0a1628] font-black text-xs inline-flex items-center gap-2 transition-all shadow-md active:scale-95 disabled:opacity-60 cursor-pointer"
+                            >
+                              {connectingStripe ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+                              <span>Connect Stripe Account</span>
+                            </button>
+                            <Link
+                              href="/seller-dashboard"
+                              target="_blank"
+                              className="text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-amber-500 underline underline-offset-4"
+                            >
+                              Open Seller Dashboard ↗
+                            </Link>
+                          </div>
                         </div>
-                        <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
-                          You keep{" "}
-                          <strong>
-                            100% of recurring member subscriptions
-                          </strong>
-                          . Connect your Stripe account in your network
-                          dashboard after creation, and all member payments will
-                          transfer directly to your bank account.
-                        </p>
-                      </div>
+                      ) : (
+                        <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-xs space-y-1">
+                          <div className="flex items-center gap-2 font-bold">
+                            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                            <span>
+                              Stripe Payouts Connected • 0% TCP Platform Fee
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Your Stripe Connect account is active. You keep{" "}
+                            <strong>
+                              100% of recurring member subscriptions
+                            </strong>
+                            , deposited directly to your bank account via Stripe.
+                          </p>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-xs space-y-1.5">
@@ -1004,6 +1117,10 @@ export default function CreateProNetworkPage() {
                   onClick={() => {
                     if (step === 1 && !name.trim()) {
                       setErrorMsg("Please enter a network name to proceed.");
+                      return;
+                    }
+                    if (step === 1 && pricingType === "paid" && !isStripeReady) {
+                      setErrorMsg("Stripe setup required to sell memberships. Please connect your Stripe payout account, or select Free Pro Network to proceed.");
                       return;
                     }
                     setErrorMsg("");

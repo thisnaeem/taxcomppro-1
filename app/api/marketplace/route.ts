@@ -48,6 +48,19 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json();
 
+  // Paid listings require Stripe Connect onboarding to receive payouts
+  const priceNum = body.price !== undefined && body.price !== null ? Number(body.price) : 0;
+  const isPaid = !isNaN(priceNum) && priceNum > 0;
+  if (isPaid && !isAdmin && (!user?.stripeAccountId || !user?.stripeOnboarded)) {
+    return NextResponse.json(
+      {
+        error: "Stripe payout setup required. Please connect your Stripe account in the Seller Dashboard before creating paid listings.",
+        code: "STRIPE_SETUP_REQUIRED",
+      },
+      { status: 403 }
+    );
+  }
+
   // Generate URL-safe slug from title
   const baseSlug = (body.title as string)
     .toLowerCase()

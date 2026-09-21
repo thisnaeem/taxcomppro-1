@@ -511,11 +511,13 @@ function MarketplaceContent() {
             >
               <c.icon size={21} />
               <span>{c.label}</span>
-              {!data.loading && !data.error && (
+              {data.loading ? (
+                <span className="mk-badge-skeleton" aria-hidden="true" />
+              ) : !data.error ? (
                 <small>
                   {data.listings.filter((l) => c.value === "ALL" || l.category === c.value).length}
                 </small>
-              )}
+              ) : null}
             </button>
           ))}
         </nav>
@@ -571,7 +573,13 @@ function MarketplaceContent() {
           >
             <ShoppingBag01Icon size={21} />
             <span>Your purchases</span>
-            {purchasesLoaded && purchases.length > 0 && <small>{purchases.length}</small>}
+            {authed && (
+              purchasesLoading || !purchasesLoaded ? (
+                <span className="mk-badge-skeleton" aria-hidden="true" />
+              ) : (
+                <small>{purchases.length}</small>
+              )
+            )}
           </button>
 
           {canSell && (
@@ -583,7 +591,11 @@ function MarketplaceContent() {
               >
                 <Briefcase01Icon size={21} />
                 <span>Your listings</span>
-                {myListingsLoaded && myListings.length > 0 && <small>{myListings.length}</small>}
+                {myListingsLoading || !myListingsLoaded ? (
+                  <span className="mk-badge-skeleton" aria-hidden="true" />
+                ) : (
+                  <small>{myListings.length}</small>
+                )}
               </button>
               <Link href="/seller-dashboard">
                 <Rocket01Icon size={21} />

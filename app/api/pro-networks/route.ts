@@ -198,6 +198,23 @@ export async function POST(req: NextRequest) {
       price = isNaN(parsed) ? 0 : Math.max(0, parsed);
     }
 
+    // Paid Pro Networks require Stripe Connect onboarding to receive member subscription payouts
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { id: true, role: true, stripeAccountId: true, stripeOnboarded: true },
+    });
+    const isAdmin = user?.role === "ADMIN";
+
+    if (price > 0 && !isAdmin && (!user?.stripeAccountId || !user?.stripeOnboarded)) {
+      return NextResponse.json(
+        {
+          error: "Stripe payout setup required. Please connect your Stripe account in the Seller Dashboard before creating a paid Pro Network.",
+          code: "STRIPE_SETUP_REQUIRED",
+        },
+        { status: 403 }
+      );
+    }
+
     // Create the Pro Network and automatically add owner as first member
     const network = await prisma.proNetwork.create({
       data: {

@@ -105,4 +105,6 @@
 .mk-view-pill{padding:8px 16px;border-radius:20px;font-size:13px;font-weight:700;border:1px solid var(--mk-line);background:var(--mk-panel);color:var(--mk-muted);transition:all .18s;white-space:nowrap}
 .mk-view-pill.active{background:color-mix(in srgb,var(--mk-gold) 14%,transparent);color:var(--mk-gold);border-color:var(--mk-gold)}
 .mk-view-pill:hover:not(.active){background:var(--mk-inner);color:var(--mk-text)}
+.mk-badge-skeleton{margin-left:auto;width:18px;height:16px;border-radius:5px;background:var(--mk-inner);position:relative;overflow:hidden;display:inline-block;flex-shrink:0}
+.mk-badge-skeleton::after{content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--mk-muted) 25%,transparent),transparent);animation:mk-shimmer 1.5s infinite}
 
