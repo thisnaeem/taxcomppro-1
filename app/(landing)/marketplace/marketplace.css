@@ -86,3 +86,23 @@
 @media(max-width:1050px){.mk-grid:is(.grid-4,.grid-3){grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:800px){.mk-grid-switcher{display:none}}
 @media(max-width:460px){.mk-grid:is(.grid-4,.grid-3,.grid-2){grid-template-columns:minmax(0,1fr)}}
+
+/* Purchases & Listings view enhancements */
+.mk-purchased{position:absolute;top:12px;right:12px;padding:6px 10px;border-radius:8px;font-size:11px;font-weight:700;display:flex;align-items:center;gap:5px;background:#10b981;color:#fff}
+.mk-status-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:750;padding:4px 9px;border-radius:8px;text-transform:capitalize}
+.mk-status-badge.approved{background:#10b9811f;color:#10b981;border:1px solid #10b98140}
+.mk-status-badge.pending{background:#f59e0b1f;color:#f59e0b;border:1px solid #f59e0b40}
+.mk-status-badge.rejected{background:#ef44441f;color:#ef4444;border:1px solid #ef444440}
+.mk-card-actions{display:flex;align-items:center;gap:8px;margin-top:auto;padding-top:14px;border-top:1px solid var(--mk-line)}
+.mk-card-action-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 14px;border-radius:9px;font-size:13px;font-weight:700;transition:all .18s;flex:1}
+.mk-card-action-btn.primary{background:var(--mk-gold);color:#101827!important}
+.mk-card-action-btn.primary:hover{background:#ffcb4d}
+.mk-card-action-btn.secondary{background:var(--mk-inner);color:var(--mk-text);border:1px solid var(--mk-line)}
+.mk-card-action-btn.secondary:hover{border-color:var(--mk-gold)}
+.mk-card-action-btn.danger{background:#ef444414;color:#ef4444;border:1px solid #ef444426}
+.mk-card-action-btn.danger:hover{background:#ef444424}
+.mk-view-nav{display:flex;gap:6px;align-items:center;margin-bottom:20px;overflow-x:auto}
+.mk-view-pill{padding:8px 16px;border-radius:20px;font-size:13px;font-weight:700;border:1px solid var(--mk-line);background:var(--mk-panel);color:var(--mk-muted);transition:all .18s;white-space:nowrap}
+.mk-view-pill.active{background:color-mix(in srgb,var(--mk-gold) 14%,transparent);color:var(--mk-gold);border-color:var(--mk-gold)}
+.mk-view-pill:hover:not(.active){background:var(--mk-inner);color:var(--mk-text)}
+
