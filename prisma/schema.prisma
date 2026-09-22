@@ -69,6 +69,14 @@ enum PayoutStatus {
   PAID
 }
 
+enum CampaignStatus {
+  DRAFT
+  SENDING
+  SENT
+  FAILED
+  CANCELLED
+}
+
 enum BlastStatus {
   PENDING_PAYMENT
   PENDING_APPROVAL
@@ -208,6 +216,7 @@ model User {
   networkEventRsvps    ProNetworkEventRsvp[]
   networkChatMessages  ProNetworkChatMessage[]
   networkQuestions     ProNetworkQuestion[]
+  newsletterCampaigns  NewsletterCampaign[]
 
   @@map("users")
 }
@@ -2029,3 +2038,42 @@ model AiActivity {
   @@index([specialistId, createdAt])
   @@map("ai_activities")
 }
+
+model NewsletterCampaign {
+  id              String          @id @default(cuid())
+  title           String
+  subject         String
+  preheader       String?
+  heading         String
+  bodyHtml        String          @db.Text
+  buttonLabel     String?
+  buttonUrl       String?
+  footerNote      String?
+  targetAudience  String          @default("ALL")
+  customEmails    String[]        @default([])
+  status          CampaignStatus  @default(DRAFT)
+  totalRecipients Int             @default(0)
+  sentCount       Int             @default(0)
+  failedCount     Int             @default(0)
+  sentAt          DateTime?
+  errorMessage    String?         @db.Text
+  createdById     String?
+  createdBy       User?           @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+  @@map("newsletter_campaigns")
+}
+
+model NewsletterUnsubscribe {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  reason    String?
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@map("newsletter_unsubscribes")
+}
+

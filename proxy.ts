@@ -23,6 +23,7 @@ const PUBLIC_PAGES = new Set([
   "/find-a-pro",
   "/pro-talks",
   "/upgrade",
+  "/unsubscribe",
 ]);
 
 // Prefix-based public paths (any sub-path is also public)

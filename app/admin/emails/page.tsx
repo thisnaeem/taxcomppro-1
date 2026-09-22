@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
+import NewsletterStudio from "./newsletter-studio";
 import {
   Mail,
   Send,
@@ -77,7 +78,7 @@ interface Stats {
 
 export default function AdminEmailsPage() {
   // Navigation & Tabs
-  const [activeTab, setActiveTab] = useState<"TEMPLATES" | "LOGS">("TEMPLATES");
+  const [activeTab, setActiveTab] = useState<"TEMPLATES" | "NEWSLETTER" | "LOGS">("NEWSLETTER");
 
   // Data state
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
@@ -486,11 +487,19 @@ export default function AdminEmailsPage() {
         <div className="flex items-center gap-3 shrink-0">
           <button
             type="button"
+            onClick={() => setActiveTab("NEWSLETTER")}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 hover:from-amber-300 hover:to-amber-400 shadow-lg shadow-amber-400/20 transition-all cursor-pointer"
+          >
+            <Sparkles className="w-4 h-4" />
+            Compose Newsletter
+          </button>
+          <button
+            type="button"
             onClick={() => {
               setTestTemplateKey(templates[0]?.key || "");
               setShowTestModal(true);
             }}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold bg-amber-400 text-slate-950 hover:bg-amber-300 shadow-lg shadow-amber-400/20 transition-all cursor-pointer"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold bg-white/10 text-white hover:bg-white/20 transition-all cursor-pointer border border-white/10"
           >
             <Send className="w-4 h-4" />
             Send Test Email
@@ -591,6 +600,18 @@ export default function AdminEmailsPage() {
       <div className="flex items-center gap-2 border-b border-slate-200 dark:border-white/10 pb-1">
         <button
           type="button"
+          onClick={() => setActiveTab("NEWSLETTER")}
+          className={`flex items-center gap-2 px-5 py-3 font-bold text-sm rounded-t-xl transition-all border-b-2 cursor-pointer ${
+            activeTab === "NEWSLETTER"
+              ? "border-amber-400 text-amber-600 dark:text-amber-400 bg-amber-400/10"
+              : "border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+          }`}
+        >
+          <Sparkles className="w-4 h-4" />
+          Newsletter &amp; Marketing
+        </button>
+        <button
+          type="button"
           onClick={() => setActiveTab("TEMPLATES")}
           className={`flex items-center gap-2 px-5 py-3 font-bold text-sm rounded-t-xl transition-all border-b-2 cursor-pointer ${
             activeTab === "TEMPLATES"
@@ -616,6 +637,19 @@ export default function AdminEmailsPage() {
       </div>
 
       {/* ========================================================================= */}
+      {/* TAB 0: NEWSLETTER & MARKETING */}
+      {/* ========================================================================= */}
+      {activeTab === "NEWSLETTER" && (
+        <NewsletterStudio
+          showToast={showToast}
+          onRefreshEmailStats={() => {
+            fetchTemplates();
+            fetchLogs(1);
+          }}
+        />
+      )}
+
+      {/* ========================================================================= */}
       {/* TAB 1: EMAIL TEMPLATES (DYNAMIC CUSTOMIZER) */}
       {/* ========================================================================= */}
       {activeTab === "TEMPLATES" && (
@@ -627,6 +661,7 @@ export default function AdminEmailsPage() {
               { id: "AUTH", label: "Security & Verification (PIN/OTP)", icon: Key },
               { id: "SUPPORT", label: "Support & Concierge", icon: LifeBuoy },
               { id: "BILLING", label: "Memberships & Upgrades", icon: CreditCard },
+              { id: "SYSTEM", label: "Platform & Notifications", icon: Mail },
             ].map((cat) => (
               <button
                 key={cat.id}
