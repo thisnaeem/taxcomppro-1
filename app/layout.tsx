@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Urbanist } from "next/font/google";
+import Script from "next/script";
 import { Suspense } from "react";
 import "./globals.css";
 import { ReduxProvider } from "@/store/provider";
@@ -55,6 +56,9 @@ export default function RootLayout({
           </ReduxProvider>
         </ThemeProvider>
       </body>
+      <Script id="dub-analytics" strategy="afterInteractive">
+        {`!(function(c,n){c[n]=c[n]||function(){(c[n].q=c[n].q||[]).push(arguments)};["trackClick","trackLead","trackSale"].forEach(function(t){c[n][t]=function(){var a=[].slice.call(arguments);a.unshift(t);c[n].apply(null,a)}});var s=document.createElement("script");s.defer=1;s.src="https://www.dubcdn.com/analytics/script.conversion-tracking.js";s.setAttribute("data-publishable-key","dub_pk_rNs7JBAEnzbsnCcp7Z4JV1LY");document.head.appendChild(s)})(window,"dubAnalytics");`}
+      </Script>
     </html>
   );
 }
