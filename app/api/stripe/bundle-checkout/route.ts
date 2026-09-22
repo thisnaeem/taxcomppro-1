@@ -3,6 +3,7 @@ import Stripe from "stripe";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getBundle } from "@/lib/toolkits";
+import { getDubCheckoutFields, syncDubStripeCustomer } from "@/lib/dub-attribution";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
@@ -17,10 +18,16 @@ export async function POST(req: NextRequest) {
   const user = await prisma.user.findUnique({ where: { id: session.user.id } });
   if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
-  let customerId = user.stripeCustomerId;
-  if (!customerId) {
-    const customer = await stripe.customers.create({ email: user.email, name: user.name ?? "" });
-    customerId = customer.id;
+  const dub = getDubCheckoutFields(req, user.id);
+  const customerId = await syncDubStripeCustomer({
+    stripe,
+    customerId: user.stripeCustomerId,
+    email: user.email,
+    name: user.name,
+    userId: user.id,
+    clickId: dub.clickId,
+  });
+  if (!user.stripeCustomerId) {
     await prisma.user.update({ where: { id: user.id }, data: { stripeCustomerId: customerId } });
   }
 
@@ -28,6 +35,7 @@ export async function POST(req: NextRequest) {
     customer: customerId,
     mode: "payment",
     payment_method_types: ["card"],
+    ...(dub.clientReferenceId ? { client_reference_id: dub.clientReferenceId } : {}),
     line_items: [{
       price_data: {
         currency: "usd",
@@ -43,6 +51,7 @@ export async function POST(req: NextRequest) {
     cancel_url:  `${process.env.NEXT_PUBLIC_APP_URL}/toolkits`,
     metadata: {
       userId:           user.id,
+      ...dub.metadata,
       bundleId,
       membershipTier:   bundle.membershipTier,
       membershipMonths: String(bundle.membershipMonths),
