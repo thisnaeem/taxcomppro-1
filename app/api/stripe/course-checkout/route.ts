@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getDubCheckoutFields, syncDubStripeCustomer } from "@/lib/dub-attribution";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
@@ -90,23 +91,37 @@ export async function POST(req: NextRequest) {
   const user = await prisma.user.findUnique({ where: { id: session.user.id } });
   if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
-  // Create / retrieve Stripe customer
-  let customerId = user.stripeCustomerId;
-  if (!customerId) {
-    const customer = await stripe.customers.create({ email: user.email, name: user.name ?? "" });
-    customerId = customer.id;
-    await prisma.user.update({ where: { id: user.id }, data: { stripeCustomerId: customerId } });
-  }
-
   const instructor = await prisma.user.findUnique({
     where: { id: course.instructorId },
     select: { stripeAccountId: true, stripeOnboarded: true, role: true },
   });
+  const isTaxCompProCourse = instructor?.role === "ADMIN";
+  const dub = isTaxCompProCourse ? getDubCheckoutFields(req, user.id) : null;
+
+  // Create / retrieve Stripe customer
+  let customerId = user.stripeCustomerId;
+  if (dub) {
+    customerId = await syncDubStripeCustomer({
+      stripe,
+      customerId,
+      email: user.email,
+      name: user.name,
+      userId: user.id,
+      clickId: dub.clickId,
+    });
+  } else if (!customerId) {
+    const customer = await stripe.customers.create({ email: user.email, name: user.name ?? "" });
+    customerId = customer.id;
+  }
+  if (!user.stripeCustomerId) {
+    await prisma.user.update({ where: { id: user.id }, data: { stripeCustomerId: customerId } });
+  }
 
   const sessionParams: Stripe.Checkout.SessionCreateParams = {
     customer: customerId,
     mode: "payment",
     payment_method_types: ["card"],
+    ...(dub?.clientReferenceId ? { client_reference_id: dub.clientReferenceId } : {}),
     line_items: [
       {
         price_data: {
@@ -126,6 +141,7 @@ export async function POST(req: NextRequest) {
     metadata: {
       type: "course",
       userId: user.id,
+      ...(dub?.metadata ?? {}),
       courseId: course.id,
       slug,
       couponCode: appliedCoupon?.code || "",
