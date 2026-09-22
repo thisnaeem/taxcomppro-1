@@ -59,6 +59,12 @@ export default function RootLayout({
       <Script id="dub-analytics" strategy="afterInteractive">
         {`!(function(c,n){c[n]=c[n]||function(){(c[n].q=c[n].q||[]).push(arguments)};["trackClick","trackLead","trackSale"].forEach(function(t){c[n][t]=function(){var a=[].slice.call(arguments);a.unshift(t);c[n].apply(null,a)}});var s=document.createElement("script");s.defer=1;s.src="https://www.dubcdn.com/analytics/script.conversion-tracking.js";s.setAttribute("data-publishable-key","dub_pk_rNs7JBAEnzbsnCcp7Z4JV1LY");document.head.appendChild(s)})(window,"dubAnalytics");`}
       </Script>
+      <Script
+        id="dub-referral-tracking"
+        src="https://www.dubcdn.com/analytics/script.js"
+        data-domains='{"refer":"taxcomppro.com"}'
+        strategy="afterInteractive"
+      />
     </html>
   );
 }
