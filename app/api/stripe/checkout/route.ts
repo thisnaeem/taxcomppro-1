@@ -3,6 +3,7 @@ import Stripe from "stripe";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sendMembershipUpgradedEmail } from "@/lib/email";
+import { getDubCheckoutFields, syncDubStripeCustomer } from "@/lib/dub-attribution";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
@@ -101,11 +102,18 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Create or retrieve Stripe customer
-  let customerId = user.stripeCustomerId;
-  if (!customerId) {
-    const customer = await stripe.customers.create({ email: user.email, name: user.name });
-    customerId = customer.id;
+  const dub = getDubCheckoutFields(req, user.id);
+
+  // Create or retrieve Stripe customer and preserve Dub attribution for renewals.
+  const customerId = await syncDubStripeCustomer({
+    stripe,
+    customerId: user.stripeCustomerId,
+    email: user.email,
+    name: user.name,
+    userId: user.id,
+    clickId: dub.clickId,
+  });
+  if (!user.stripeCustomerId) {
     await prisma.user.update({ where: { id: user.id }, data: { stripeCustomerId: customerId } });
   }
 
@@ -122,12 +130,14 @@ export async function POST(req: NextRequest) {
     mode: "subscription",
     allow_promotion_codes: true,
     payment_method_types: ["card"],
+    ...(dub.clientReferenceId ? { client_reference_id: dub.clientReferenceId } : {}),
     line_items: [{ price: priceId, quantity: 1 }],
     success_url: successUrl,
     cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/register?step=membership&canceled=1`,
     metadata: {
       userId: user.id,
       tier,
+      ...dub.metadata,
       couponCode: appliedCoupon?.code || "",
       ...(refCode ? { referralCode: refCode } : {}),
     },
