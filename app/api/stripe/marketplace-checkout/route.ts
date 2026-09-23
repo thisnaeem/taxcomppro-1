@@ -114,48 +114,106 @@ export async function POST(req: NextRequest) {
 
   const seller = await prisma.user.findUnique({
     where: { id: listing.userId },
-    select: { stripeAccountId: true, stripeOnboarded: true, role: true },
+    select: { id: true, stripeAccountId: true, stripeOnboarded: true, role: true, email: true, name: true },
   });
 
-  const sessionParams: Stripe.Checkout.SessionCreateParams = {
-    customer: customerId,
-    mode: "payment",
-    payment_method_types: ["card"],
-    line_items: [
-      {
-        price_data: {
-          currency: "usd",
-          unit_amount: Math.round(finalPrice * 100),
-          product_data: {
-            name: listing.title + (appliedCoupon ? ` (${appliedCoupon.code} Applied)` : ""),
-            description: `Marketplace purchase from ${listing.user.name}`,
-            images: listing.images[0] ? [listing.images[0]] : [],
-          },
-        },
-        quantity: 1,
-      },
-    ],
-    success_url: `${appUrl}/${slugOrId}?success=true&session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${appUrl}/${slugOrId}`,
-    metadata: {
-      userId: user.id,
-      listingId: listing.id,
-      type: "marketplace",
-      couponCode: appliedCoupon?.code || "",
-      refCode: refCode || "",
-    },
-  };
-
-  // If seller has connected their Stripe account, route the payout directly to them
-  if (seller?.stripeAccountId && seller.stripeOnboarded && seller.role !== "ADMIN") {
-    sessionParams.payment_intent_data = {
-      transfer_data: {
-        destination: seller.stripeAccountId,
-      },
-    };
+  // Verify seller has connected their Stripe account
+  if (!seller?.stripeAccountId) {
+    return NextResponse.json(
+      { error: "This seller has not yet connected their Stripe payout account to receive payments. Purchases are paused until setup is complete." },
+      { status: 400 }
+    );
   }
 
-  const checkoutSession = await stripe.checkout.sessions.create(sessionParams);
+  // Verify charges_enabled with Stripe if not yet flagged in DB
+  let isChargesEnabled = seller.stripeOnboarded;
+  if (!isChargesEnabled && seller.stripeAccountId) {
+    try {
+      const acct = await stripe.accounts.retrieve(seller.stripeAccountId);
+      if (acct.charges_enabled) {
+        isChargesEnabled = true;
+        await prisma.user.update({
+          where: { id: seller.id },
+          data: { stripeOnboarded: true },
+        }).catch(() => {});
+      }
+    } catch (err: any) {
+      console.warn("[Marketplace Checkout] Failed to check seller account status:", err?.message);
+    }
+  }
+
+  if (!isChargesEnabled) {
+    return NextResponse.json(
+      { error: "This seller's Stripe payout account is still completing onboarding. Please try again shortly." },
+      { status: 400 }
+    );
+  }
+
+  const lineItems: NonNullable<Stripe.Checkout.SessionCreateParams["line_items"]> = [
+    {
+      price_data: {
+        currency: "usd",
+        unit_amount: Math.round(finalPrice * 100),
+        product_data: {
+          name: listing.title + (appliedCoupon ? ` (${appliedCoupon.code} Applied)` : ""),
+          description: `Marketplace purchase from ${listing.user.name}`,
+          images: listing.images[0] ? [listing.images[0]] : [],
+        },
+      },
+      quantity: 1,
+    },
+  ];
+
+  const sessionMetadata: Record<string, string> = {
+    userId: user.id,
+    listingId: listing.id,
+    type: "marketplace",
+    couponCode: appliedCoupon?.code || "",
+    refCode: refCode || "",
+    sellerId: seller.id,
+    sellerStripeAccountId: seller.stripeAccountId,
+  };
+
+  let checkoutSession: Stripe.Checkout.Session;
+
+  try {
+    // ── Approach 1: Direct Charge (Whole payment goes directly to seller's Stripe, $0 platform fee) ──
+    checkoutSession = await stripe.checkout.sessions.create(
+      {
+        mode: "payment",
+        payment_method_types: ["card"],
+        customer_email: user.email ?? undefined,
+        line_items: lineItems,
+        success_url: `${appUrl}/${slugOrId}?success=true&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${appUrl}/${slugOrId}`,
+        metadata: sessionMetadata,
+        // No application_fee_amount: 100% of money belongs to seller
+      },
+      { stripeAccount: seller.stripeAccountId }
+    );
+  } catch (directErr: any) {
+    console.warn(
+      "[Marketplace Checkout] Direct charge on connected account failed, using 100% destination transfer fallback:",
+      directErr?.message
+    );
+
+    // ── Approach 2: Destination Charge Fallback (100% transferred to seller, $0 platform fee) ──
+    checkoutSession = await stripe.checkout.sessions.create({
+      customer: customerId,
+      mode: "payment",
+      payment_method_types: ["card"],
+      line_items: lineItems,
+      success_url: `${appUrl}/${slugOrId}?success=true&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${appUrl}/${slugOrId}`,
+      metadata: sessionMetadata,
+      payment_intent_data: {
+        transfer_data: {
+          destination: seller.stripeAccountId,
+        },
+        // No application_fee_amount: 100% transferred to seller's Stripe balance
+      },
+    });
+  }
 
   return NextResponse.json({ url: checkoutSession.url });
 }

@@ -100,49 +100,109 @@ export async function POST(req: NextRequest) {
 
   const instructor = await prisma.user.findUnique({
     where: { id: course.instructorId },
-    select: { stripeAccountId: true, stripeOnboarded: true, role: true },
+    select: { id: true, stripeAccountId: true, stripeOnboarded: true, role: true },
   });
 
-  const sessionParams: Stripe.Checkout.SessionCreateParams = {
-    customer: customerId,
-    mode: "payment",
-    payment_method_types: ["card"],
-    line_items: [
-      {
-        price_data: {
-          currency: "usd",
-          unit_amount: Math.round(finalPrice * 100),
-          product_data: {
-            name: course.title + (appliedCoupon ? ` (${appliedCoupon.code} Applied)` : ""),
-            description: `Full access to "${course.title}"`,
-            images: course.thumbnail ? [course.thumbnail] : [],
-          },
-        },
-        quantity: 1,
-      },
-    ],
-    success_url: `${process.env.NEXT_PUBLIC_APP_URL}/courses/${slug}?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/courses/${slug}`,
-    metadata: {
-      type: "course",
-      userId: user.id,
-      courseId: course.id,
-      slug,
-      couponCode: appliedCoupon?.code || "",
-      refCode: refCode || "",
-    },
-  };
-
-  // If creator connected their Stripe account, route payments directly to them
-  if (instructor?.stripeAccountId && instructor.stripeOnboarded && instructor.role !== "ADMIN") {
-    sessionParams.payment_intent_data = {
-      transfer_data: {
-        destination: instructor.stripeAccountId,
-      },
-    };
+  // Verify instructor has connected their Stripe account
+  if (!instructor?.stripeAccountId) {
+    return NextResponse.json(
+      { error: "The course instructor has not yet connected their Stripe payout account to receive payments. Purchases are paused until setup is complete." },
+      { status: 400 }
+    );
   }
 
-  const checkoutSession = await stripe.checkout.sessions.create(sessionParams);
+  // Verify charges_enabled with Stripe if not yet flagged in DB
+  let isChargesEnabled = instructor.stripeOnboarded;
+  if (!isChargesEnabled && instructor.stripeAccountId) {
+    try {
+      const acct = await stripe.accounts.retrieve(instructor.stripeAccountId);
+      if (acct.charges_enabled) {
+        isChargesEnabled = true;
+        await prisma.user.update({
+          where: { id: instructor.id },
+          data: { stripeOnboarded: true },
+        }).catch(() => {});
+      }
+    } catch (err: any) {
+      console.warn("[Course Checkout] Failed to check instructor account status:", err?.message);
+    }
+  }
+
+  if (!isChargesEnabled) {
+    return NextResponse.json(
+      { error: "The course instructor's Stripe payout account is still completing onboarding. Please try again shortly." },
+      { status: 400 }
+    );
+  }
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+
+  const lineItems: NonNullable<Stripe.Checkout.SessionCreateParams["line_items"]> = [
+    {
+      price_data: {
+        currency: "usd",
+        unit_amount: Math.round(finalPrice * 100),
+        product_data: {
+          name: course.title + (appliedCoupon ? ` (${appliedCoupon.code} Applied)` : ""),
+          description: `Full access to "${course.title}"`,
+          images: course.thumbnail ? [course.thumbnail] : [],
+        },
+      },
+      quantity: 1,
+    },
+  ];
+
+  const sessionMetadata: Record<string, string> = {
+    type: "course",
+    userId: user.id,
+    courseId: course.id,
+    slug,
+    couponCode: appliedCoupon?.code || "",
+    refCode: refCode || "",
+    instructorId: instructor.id,
+    instructorStripeAccountId: instructor.stripeAccountId,
+  };
+
+  let checkoutSession: Stripe.Checkout.Session;
+
+  try {
+    // ── Approach 1: Direct Charge (Whole payment goes directly to instructor's Stripe, $0 platform fee) ──
+    checkoutSession = await stripe.checkout.sessions.create(
+      {
+        mode: "payment",
+        payment_method_types: ["card"],
+        customer_email: user.email ?? undefined,
+        line_items: lineItems,
+        success_url: `${appUrl}/courses/${slug}?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${appUrl}/courses/${slug}`,
+        metadata: sessionMetadata,
+        // No application_fee_amount: 100% belongs to instructor
+      },
+      { stripeAccount: instructor.stripeAccountId }
+    );
+  } catch (directErr: any) {
+    console.warn(
+      "[Course Checkout] Direct charge on connected account failed, using 100% destination transfer fallback:",
+      directErr?.message
+    );
+
+    // ── Approach 2: Destination Charge Fallback (100% transferred to instructor, $0 platform fee) ──
+    checkoutSession = await stripe.checkout.sessions.create({
+      customer: customerId,
+      mode: "payment",
+      payment_method_types: ["card"],
+      line_items: lineItems,
+      success_url: `${appUrl}/courses/${slug}?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${appUrl}/courses/${slug}`,
+      metadata: sessionMetadata,
+      payment_intent_data: {
+        transfer_data: {
+          destination: instructor.stripeAccountId,
+        },
+        // No application_fee_amount: 100% transferred to instructor's Stripe balance
+      },
+    });
+  }
 
   return NextResponse.json({ url: checkoutSession.url });
 }

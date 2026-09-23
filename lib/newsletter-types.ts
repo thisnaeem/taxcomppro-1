@@ -213,34 +213,35 @@ export const NEWSLETTER_PRESETS: NewsletterPreset[] = [
 ];
 
 /**
- * Converts rich HTML email markup into clean, readable plain text paragraphs & bullet points.
+ * Converts rich HTML email markup into clean, human-readable plain text paragraphs & bullet points.
  */
 export function htmlToPlainText(html: string): string {
   if (!html) return "";
   let text = html;
 
-  // Handle table highlight panels
-  text = text.replace(/<table[^>]*>[\s\S]*?<\/table>/gi, (match) => {
-    const clean = match.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
-    return `\n\n[HIGHLIGHT: ${clean}]\n\n`;
-  });
+  // Process headers into bold markdown blocks
+  text = text.replace(/<h[1-6][^>]*>([\s\S]*?)<\/h[1-6]>/gi, "\n\n**$1**\n\n");
 
-  // Handle list items
-  text = text.replace(/<li[^>]*>(.*?)<\/li>/gi, "• $1\n");
+  // Process bold & emphasis
+  text = text.replace(/<strong[^>]*>([\s\S]*?)<\/strong>/gi, "**$1**");
+  text = text.replace(/<b[^>]*>([\s\S]*?)<\/b>/gi, "**$1**");
+  text = text.replace(/<em[^>]*>([\s\S]*?)<\/em>/gi, "*$1*");
+  text = text.replace(/<i[^>]*>([\s\S]*?)<\/i>/gi, "*$1*");
+
+  // Process list items into dash bullets
+  text = text.replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, "- $1\n");
   text = text.replace(/<\/?(ul|ol)[^>]*>/gi, "\n");
 
-  // Handle bold and emphasis in plain text
-  text = text.replace(/<strong>(.*?)<\/strong>/gi, "**$1**");
-  text = text.replace(/<b>(.*?)<\/b>/gi, "**$1**");
-  text = text.replace(/<em>(.*?)<\/em>/gi, "*$1*");
-  text = text.replace(/<i>(.*?)<\/i>/gi, "*$1*");
-
-  // Handle line breaks & paragraphs
+  // Process line breaks and paragraphs
   text = text.replace(/<br\s*\/?>/gi, "\n");
   text = text.replace(/<\/p>/gi, "\n\n");
-  text = text.replace(/<\/h[1-6]>/gi, "\n\n");
 
-  // Strip remaining tags
+  // Process table rows and cells as spacing
+  text = text.replace(/<\/tr>/gi, "\n");
+  text = text.replace(/<\/td>/gi, "\n");
+  text = text.replace(/<\/div>/gi, "\n");
+
+  // Strip remaining HTML tags
   text = text.replace(/<[^>]+>/g, "");
 
   // Unescape HTML entities
@@ -255,7 +256,11 @@ export function htmlToPlainText(html: string): string {
     .replace(/&sect;/g, "§")
     .replace(/&nbsp;/g, " ");
 
-  return text.replace(/\n{3,}/g, "\n\n").trim();
+  // Normalize line spacing
+  const lines = text.split("\n").map((l) => l.trim());
+  let cleaned = lines.join("\n");
+  cleaned = cleaned.replace(/\n{3,}/g, "\n\n");
+  return cleaned.trim();
 }
 
 /**
@@ -264,37 +269,53 @@ export function htmlToPlainText(html: string): string {
 export function plainTextToHtml(plain: string): string {
   if (!plain) return "";
   const paragraphs = plain.split(/\n\s*\n/);
-  const htmlParts = paragraphs.map((block) => {
-    const trimmed = block.trim();
-    if (!trimmed) return "";
+  const htmlParts: string[] = [];
+  let currentBullets: string[] = [];
 
-    // Highlight block: [HIGHLIGHT: ...] or [NOTICE: ...]
-    if ((trimmed.startsWith("[HIGHLIGHT:") || trimmed.startsWith("[NOTICE:")) && trimmed.endsWith("]")) {
-      const content = trimmed.replace(/^\[(HIGHLIGHT|NOTICE):\s*/, "").slice(0, -1).trim();
-      return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f8fafc;border-left:4px solid #ffbe24;border-radius:8px;padding:16px;margin:0 0 20px;"><tr><td><p style="margin:0;font-size:14px;line-height:1.6;color:#475569;">${content}</p></td></tr></table>`;
+  const flushBullets = () => {
+    if (currentBullets.length > 0) {
+      const items = currentBullets.map((itemText) => {
+        const formatted = itemText.replace(/\*\*(.*?)\*\*/g, '<strong style="color:#0f172a;">$1</strong>');
+        return `<li style="margin-bottom:8px;">${formatted}</li>`;
+      });
+      htmlParts.push(
+        `<ul style="margin:0 0 20px;padding-left:22px;font-size:14px;line-height:1.8;color:#475569;">${items.join("")}</ul>`
+      );
+      currentBullets = [];
     }
+  };
 
-    const lines = trimmed.split("\n");
-    const isBulletList = lines.every(
-      (l) => l.trim().startsWith("- ") || l.trim().startsWith("• ") || l.trim().startsWith("* ")
+  for (const block of paragraphs) {
+    const trimmed = block.trim();
+    if (!trimmed) continue;
+
+    // Check if entire block is bullet lines
+    const lines = trimmed.split("\n").map((l) => l.trim()).filter(Boolean);
+    const isAllBullets = lines.every(
+      (l) => l.startsWith("- ") || l.startsWith("• ") || l.startsWith("* ")
     );
 
-    if (isBulletList) {
-      const items = lines.map((l) => {
-        const itemText = l.trim().replace(/^[-•*]\s*/, "");
-        const formatted = itemText.replace(/\*\*(.*?)\*\*/g, '<strong style="color:#0f172a;">$1</strong>');
-        return `<li style="margin-bottom:6px;">${formatted}</li>`;
+    if (isAllBullets) {
+      lines.forEach((l) => {
+        currentBullets.push(l.replace(/^[-•*]\s*/, ""));
       });
-      return `<ul style="margin:0 0 20px;padding-left:22px;font-size:14px;line-height:1.8;color:#475569;">${items.join("")}</ul>`;
+      continue;
     }
+
+    // Flush any pending bullet list before starting a regular paragraph
+    flushBullets();
 
     const formattedLines = lines.map((l) =>
       l.replace(/\*\*(.*?)\*\*/g, '<strong style="color:#0f172a;">$1</strong>')
-    ).join("<br/>");
+    );
 
-    return `<p style="font-size:15px;line-height:1.7;color:#475569;margin:0 0 18px;">${formattedLines}</p>`;
-  });
+    htmlParts.push(
+      `<p style="font-size:15px;line-height:1.7;color:#475569;margin:0 0 18px;">${formattedLines.join("<br/>")}</p>`
+    );
+  }
 
-  return htmlParts.filter(Boolean).join("\n");
+  flushBullets();
+  return htmlParts.join("\n");
 }
+
 

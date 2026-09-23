@@ -111,7 +111,15 @@ export async function POST(req: NextRequest) {
     // Verify existing account if stored
     if (accountId) {
       try {
-        await stripe.accounts.retrieve(accountId);
+        const existingAcct = await stripe.accounts.retrieve(accountId);
+        if (!existingAcct.capabilities?.card_payments || existingAcct.capabilities.card_payments === "inactive") {
+          await stripe.accounts.update(accountId, {
+            capabilities: {
+              transfers: { requested: true },
+              card_payments: { requested: true },
+            },
+          }).catch((err) => console.warn("Could not request card_payments capability:", err?.message));
+        }
       } catch (checkErr: any) {
         console.warn("Existing Stripe account is invalid or missing in Stripe, resetting:", checkErr?.message);
         accountId = null;
@@ -140,6 +148,7 @@ export async function POST(req: NextRequest) {
           },
           capabilities: {
             transfers: { requested: true },
+            card_payments: { requested: true },
           },
         });
       } catch (v2Err: any) {

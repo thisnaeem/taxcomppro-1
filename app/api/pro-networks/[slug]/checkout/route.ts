@@ -148,26 +148,59 @@ export async function POST(
           cancel_url: `${appUrl}/pro-networks/${slug}`,
         };
 
-        // If the host has connected their Stripe account, route payouts directly to them
-        if (network.owner?.stripeAccountId && network.owner.stripeOnboarded && network.owner.role !== "ADMIN") {
-          sessionParams.subscription_data = {
-            transfer_data: {
-              destination: network.owner.stripeAccountId,
-            },
-            metadata: {
-              type: "pro_network_sub",
-              networkId: network.id,
-              networkSlug: network.slug,
-              userId,
-              ownerId: network.ownerId,
-            },
-          };
+        // Verify charges_enabled with Stripe if not yet flagged in DB
+        let isChargesEnabled = network.owner?.stripeOnboarded;
+        if (!isChargesEnabled && network.owner?.stripeAccountId) {
+          try {
+            const acct = await stripe.accounts.retrieve(network.owner.stripeAccountId);
+            if (acct.charges_enabled) {
+              isChargesEnabled = true;
+              await prisma.user.update({
+                where: { id: network.ownerId },
+                data: { stripeOnboarded: true },
+              }).catch(() => {});
+            }
+          } catch (err: any) {
+            console.warn("[Pro Network Checkout] Failed to check owner account status:", err?.message);
+          }
         }
+
+        if (!network.owner?.stripeAccountId) {
+          return NextResponse.json(
+            { error: "This Pro Network host has not yet connected their Stripe payout account to receive membership payments. Subscriptions are paused until setup is complete." },
+            { status: 400 }
+          );
+        }
+
+        if (!isChargesEnabled) {
+          return NextResponse.json(
+            { error: "This Pro Network host's Stripe payout account is still completing onboarding. Please try again shortly." },
+            { status: 400 }
+          );
+        }
+
+        // Route payouts 100% directly to host's Stripe account (0% platform fee)
+        sessionParams.subscription_data = {
+          transfer_data: {
+            destination: network.owner.stripeAccountId,
+          },
+          metadata: {
+            type: "pro_network_sub",
+            networkId: network.id,
+            networkSlug: network.slug,
+            userId,
+            ownerId: network.ownerId,
+          },
+        };
 
         const stripeSession = await stripe.checkout.sessions.create(sessionParams);
         return NextResponse.json({ url: stripeSession.url });
-      } catch (stripeError) {
-        console.warn("Stripe checkout creation failed, falling back to direct enrollment for demo/dev:", stripeError);
+      } catch (stripeError: any) {
+        console.error("Stripe subscription checkout creation failed:", stripeError);
+        return NextResponse.json(
+          { error: stripeError?.message || "Failed to start checkout session." },
+          { status: 500 }
+        );
       }
     }
 
