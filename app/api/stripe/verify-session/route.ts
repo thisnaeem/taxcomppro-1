@@ -1,3 +1,4 @@
+import { grantAcademyMembershipBonus, reconcileAcademyMembershipBonus } from "@/lib/academy-membership-bonus";
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { auth } from "@/lib/auth";
@@ -38,8 +39,10 @@ export async function POST(req: NextRequest) {
   if (userId !== session.user.id)
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  if (stripeSession.payment_status !== "paid" && stripeSession.status !== "complete")
+  if (stripeSession.payment_status === "unpaid")
     return NextResponse.json({ error: "Payment not completed" }, { status: 400 });
+
+  const membershipBonus = await grantAcademyMembershipBonus(stripeSession, userId);
 
   let resolvedTier: SubscriptionTier | null = null;
 
@@ -85,91 +88,13 @@ export async function POST(req: NextRequest) {
 
   // Toolkit / bundle one-time purchase — apply upgrade ourselves (idempotent fallback for webhook)
   if (type === "toolkit" || type === "bundle") {
-    const { toolkitId, membershipMonths, bundleId } = stripeSession.metadata ?? {};
-    const mTier  = "VIP" as SubscriptionTier; // All toolkits grant VIP
-    const months = Number(membershipMonths ?? 2);
-    const tkId   = type === "toolkit" ? toolkitId : `bundle:${bundleId ?? "unknown"}`;
-    const customerId = stripeSession.customer as string;
-
-    if (tkId) {
-      const existing = await prisma.toolkitPurchase.findFirst({
-        where: { stripeSessionId: stripeSession.id },
-      });
-
-      if (!existing) {
-        await prisma.toolkitPurchase.create({
-          data: {
-            userId,
-            toolkitId:         tkId,
-            stripeSessionId:   stripeSession.id,
-            membershipGranted: true,
-            membershipTier:    mTier,
-            membershipMonths:  months,
-          },
-        });
-
-        // Only grant membership if this toolkit includes it (months > 0)
-        if (months > 0) {
-          // Apply tier upgrade (never downgrade)
-          const currentUser = await prisma.user.findUnique({ where: { id: userId }, select: { tier: true } });
-          const tierOrder: SubscriptionTier[] = ["FREE", "VIP", "MARKETPLACE", "MARKETPLACE_PLUS"];
-          if (tierOrder.indexOf(mTier) > tierOrder.indexOf(currentUser?.tier ?? "FREE")) {
-            await prisma.user.update({ where: { id: userId }, data: { tier: mTier } });
-          }
-
-          // ── Set up auto-billing VIP subscription with 60-day trial ──────────
-          if (process.env.STRIPE_VIP_PRICE_ID && customerId) {
-            try {
-              let paymentMethodId: string | null = null;
-              if (stripeSession.payment_intent) {
-                const pi = await stripe.paymentIntents.retrieve(stripeSession.payment_intent as string);
-                paymentMethodId = pi.payment_method as string | null;
-              }
-              if (paymentMethodId) {
-                await stripe.customers.update(customerId, {
-                  invoice_settings: { default_payment_method: paymentMethodId },
-                });
-              }
-              const existingSub = await prisma.subscription.findUnique({ where: { userId } });
-              if (!existingSub || existingSub.status === "canceled") {
-                const vipSub = await stripe.subscriptions.create({
-                  customer:          customerId,
-                  items:             [{ price: process.env.STRIPE_VIP_PRICE_ID }],
-                  trial_period_days: 60,
-                  metadata:          { userId, source: "toolkit_purchase" },
-                });
-                await prisma.subscription.upsert({
-                  where:  { userId },
-                  create: { userId, plan: "VIP", stripeCustomerId: customerId, stripeSubscriptionId: vipSub.id, status: "trialing" },
-                  update: { plan: "VIP", stripeSubscriptionId: vipSub.id, status: "trialing" },
-                });
-              }
-            } catch (e) {
-              console.error("verify-session: Failed to create VIP trial subscription:", e);
-            }
-          }
-
-          await prisma.notification.create({
-            data: {
-              userId, type: "SYSTEM",
-              title:   "🎉 Toolkit Purchase Complete!",
-              message: `Your download is ready! You've received ${months} months of FREE VIP membership. After your trial, membership continues at $39.99/month — cancel anytime.`,
-            },
-          }).catch(() => {});
-        } else {
-          // No membership — simple digital download notification
-          await prisma.notification.create({
-            data: {
-              userId, type: "SYSTEM",
-              title:   "🎉 Purchase Complete!",
-              message: "Your digital download is ready.",
-            },
-          }).catch(() => {});
-        }
-      }
-    }
-
-    resolvedTier = (await prisma.user.findUnique({ where: { id: userId }, select: { tier: true } }))?.tier ?? "FREE";
+    const { toolkitId, bundleId } = stripeSession.metadata ?? {};
+    const tkId = type === "toolkit" ? toolkitId : `bundle:${bundleId ?? "unknown"}`;
+    if(tkId) await prisma.toolkitPurchase.upsert({
+      where: { stripeSessionId: stripeSession.id },
+      create: {userId, toolkitId:tkId, stripeSessionId:stripeSession.id, membershipGranted:membershipBonus?.sessionId === stripeSession.id,membershipTier:"MARKETPLACE_PLUS",membershipMonths:membershipBonus?.sessionId === stripeSession.id ? 2 : 0},
+      update: {},
+    });
 
     // ── ERO Training Center: auto-grant a 5-seat, 12-month staff training license ──
     // Idempotent (upsert on eroId+toolkitId) so it's safe to run here even if the
@@ -217,6 +142,8 @@ export async function POST(req: NextRequest) {
       enrolledCourseSlug = slug ?? null;
     }
   }
+
+  await reconcileAcademyMembershipBonus(userId);
 
   // Return the fresh tier so the client can update Redux
   const freshUser = await prisma.user.findUnique({

@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
         unit_amount: Math.round(bundle.price * 100),
         product_data: {
           name: bundle.name,
-          description: `${bundle.tagline} — ${bundle.membershipMonths} months ${bundle.membershipTier} membership included`,
+          description: `${bundle.tagline} — One-time 2-month Marketplace Plus bonus. No automatic renewal.`,
         },
       },
       quantity: 1,
@@ -53,8 +53,8 @@ export async function POST(req: NextRequest) {
       userId:           user.id,
       ...dub.metadata,
       bundleId,
-      membershipTier:   bundle.membershipTier,
-      membershipMonths: String(bundle.membershipMonths),
+      membershipTier:   "MARKETPLACE_PLUS",
+      membershipMonths: "2",
       type:             "bundle",
     },
   });

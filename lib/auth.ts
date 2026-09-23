@@ -1,3 +1,5 @@
+import { customSession } from "better-auth/plugins";
+import { reconcileAcademyMembershipBonus } from "@/lib/academy-membership-bonus";
 import { authOrigins, safeAuthReturn, sharedCookieOptions } from "@/lib/auth-navigation";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
@@ -8,6 +10,11 @@ import { sendPasswordResetEmail } from "@/lib/email";
 const appUrl = process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
 export const auth = betterAuth({
+  plugins: [customSession(async ({user,session}) => {
+    await reconcileAcademyMembershipBonus(user.id);
+    const fresh = await prisma.user.findUniqueOrThrow({where:{id:user.id},select:{tier:true,role:true,bio:true,headline:true,professionalTitle:true,phone:true}});
+    return {user:{...user,...fresh},session};
+  })],
   database: prismaAdapter(prisma, { provider: "postgresql" }),
   databaseHooks: { user: { create: { after: async user => { await ensureProfileSlug(user.id, user.name); } } } },
   emailAndPassword: {

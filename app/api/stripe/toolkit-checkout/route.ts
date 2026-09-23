@@ -63,35 +63,13 @@ export async function POST(req: NextRequest) {
       data: {
         userId: session.user.id,
         toolkitId,
-        membershipGranted: toolkit.membershipMonths > 0,
-        membershipTier: toolkit.membershipMonths > 0 ? "VIP" : undefined,
-        membershipMonths: toolkit.membershipMonths,
+        membershipGranted: false,
+        membershipTier: "MARKETPLACE_PLUS",
+        membershipMonths: 0,
         stripeSessionId: `free_claim_${Date.now()}`,
       },
     });
 
-    if (toolkit.membershipMonths > 0) {
-      const periodEnd = new Date();
-      periodEnd.setMonth(periodEnd.getMonth() + toolkit.membershipMonths);
-      await prisma.user.update({
-        where: { id: session.user.id },
-        data: { tier: "VIP" },
-      });
-      await prisma.subscription.upsert({
-        where: { userId: session.user.id },
-        create: {
-          userId: session.user.id,
-          plan: "VIP",
-          status: "active",
-          currentPeriodEnd: periodEnd,
-        },
-        update: {
-          plan: "VIP",
-          status: "active",
-          currentPeriodEnd: periodEnd,
-        },
-      });
-    }
 
     return NextResponse.json({ url: "/toolkits/success?free=1" });
   }
@@ -117,20 +95,13 @@ export async function POST(req: NextRequest) {
     allow_promotion_codes: true,
     payment_method_types: ["card"],
     ...(dub.clientReferenceId ? { client_reference_id: dub.clientReferenceId } : {}),
-    // Save card for future VIP trial billing only if this toolkit includes membership
-    ...(toolkit.membershipMonths > 0 ? {
-      payment_intent_data: {
-        setup_future_usage: "off_session" as const,
-        metadata: { userId: user.id, source: "toolkit_purchase" },
-      },
-    } : {}),
     line_items: [{
       price_data: {
         currency: "usd",
         unit_amount: Math.round(finalPrice * 100),
         product_data: {
           name: toolkit.name + (appliedCoupon ? ` (${appliedCoupon.code} Applied)` : ""),
-          description: `Includes ${toolkit.membershipMonths} months FREE VIP membership, then $39.99/month`,
+          description: "Includes a one-time 2-month Marketplace Plus membership bonus. No automatic renewal.",
           images: [],
         },
       },
@@ -142,8 +113,8 @@ export async function POST(req: NextRequest) {
       userId:           user.id,
       ...dub.metadata,
       toolkitId,
-      membershipTier:   toolkit.membershipMonths > 0 ? "VIP" : "",
-      membershipMonths: String(toolkit.membershipMonths),
+      membershipTier:   "MARKETPLACE_PLUS",
+      membershipMonths: "2",
       type:             "toolkit",
       couponCode:       appliedCoupon?.code || "",
     },

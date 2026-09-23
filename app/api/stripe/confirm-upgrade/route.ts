@@ -1,3 +1,4 @@
+import { reconcileAcademyMembershipBonus } from "@/lib/academy-membership-bonus";
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { auth } from "@/lib/auth";
@@ -61,6 +62,10 @@ export async function POST(req: NextRequest) {
       },
     });
   }
+
+  await reconcileAcademyMembershipBonus(userId);
+  const effective = await prisma.user.findUniqueOrThrow({where:{id:userId},select:{tier:true}});
+  updated.tier = effective.tier;
 
   // ── Credit affiliate referral ───────────────────────────────
   const referralCode = checkoutSession.metadata?.referralCode;
