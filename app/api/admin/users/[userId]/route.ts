@@ -83,6 +83,9 @@ export async function GET(
         },
         orderBy: { createdAt: "desc" },
       },
+      trainingLicenses: {
+        orderBy: { createdAt: "desc" },
+      },
       sessions: {
         orderBy: { expiresAt: "desc" },
         take: 5,

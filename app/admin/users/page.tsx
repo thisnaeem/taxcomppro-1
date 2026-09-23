@@ -40,6 +40,8 @@ import {
   ChevronsLeft,
   ChevronsRight,
   RotateCcw,
+  Package,
+  Zap,
 } from "lucide-react";
 import { AdminMemberProfileDrawer } from "@/components/profile/AdminMemberProfileDrawer";
 
@@ -58,6 +60,34 @@ interface UserSubscription {
   currentPeriodEnd: string | null;
 }
 
+export interface UserToolkitPurchase {
+  id: string;
+  toolkitId: string;
+  createdAt: string;
+  membershipTier?: string;
+  membershipMonths?: number;
+  stripeSessionId?: string;
+}
+
+export interface UserEnrollment {
+  id: string;
+  courseId: string;
+  completedAt?: string | null;
+  createdAt: string;
+  course?: {
+    id: string;
+    title: string;
+    slug: string;
+  };
+}
+
+export interface UserTrainingLicense {
+  id: string;
+  toolkitId: string;
+  totalSeats: number;
+  expiresAt: string;
+}
+
 interface User {
   id: string;
   name: string;
@@ -69,9 +99,12 @@ interface User {
   createdAt: string;
   digitalCard?: DigitalCardInfo | null;
   subscription?: UserSubscription | null;
+  toolkitPurchases?: UserToolkitPurchase[];
+  enrollments?: UserEnrollment[];
+  trainingLicenses?: UserTrainingLicense[];
 }
 
-type SortField = "user" | "email" | "card" | "role" | "tier" | "joined";
+type SortField = "user" | "email" | "card" | "role" | "tier" | "access" | "joined";
 type SortDirection = "asc" | "desc";
 
 interface SortConfig {
@@ -79,11 +112,37 @@ interface SortConfig {
   direction: SortDirection;
 }
 
-type PresetTab = "ALL" | "CONNECT_CARD" | "MEMBER" | "PROFESSIONAL" | "ADMIN" | "PAID_TIERS";
+type PresetTab = "ALL" | "CONNECT_CARD" | "MEMBER" | "PROFESSIONAL" | "ADMIN" | "PAID_TIERS" | "BUNDLES_ACTIVE";
 type CardFilter = "ALL" | "ACTIVE" | "PENDING" | "NONE";
+type AccessFilter = "ALL" | "HAS_ANY" | "ULTIMATE_BUNDLE_PLUS" | "ULTIMATE_BUNDLE" | "HAS_TOOLKIT" | "HAS_COURSE" | "NO_PRODUCTS";
 type SubStatusFilter = "ALL" | "ACTIVE" | "EXPIRING_SOON" | "EXPIRED" | "FREE";
 type JoinedFilter = "ALL" | "TODAY" | "7_DAYS" | "30_DAYS" | "90_DAYS" | "OLDER_90";
 type AvatarFilter = "ALL" | "WITH_AVATAR" | "NO_AVATAR";
+
+export function getUserProductSummary(u: User) {
+  const tks = u.toolkitPurchases || [];
+  const enrs = u.enrollments || [];
+  const hasBundlePlus = tks.some(
+    (t) => t.toolkitId === "bundle:ultimate-bundle-plus" || t.toolkitId === "ultimate-bundle-plus"
+  );
+  const hasBundle = tks.some(
+    (t) => t.toolkitId === "bundle:ultimate-bundle" || t.toolkitId === "ultimate-bundle"
+  );
+
+  const standardToolkits = tks.filter(
+    (t) => !t.toolkitId.startsWith("bundle:") && t.toolkitId !== "admin_free_months"
+  );
+  const toolkitsCount = hasBundlePlus || hasBundle ? 6 : standardToolkits.length;
+  const coursesCount = hasBundlePlus ? 6 : enrs.length;
+
+  return {
+    hasBundlePlus,
+    hasBundle,
+    toolkitsCount,
+    coursesCount,
+    totalCount: toolkitsCount + coursesCount,
+  };
+}
 
 const roleConfig: Record<Role, { label: string; className: string; icon: React.ElementType }> = {
   MEMBER:       { label: "Member",       className: "bg-slate-800/60 text-slate-400 border border-slate-700/30",    icon: Shield },
@@ -118,6 +177,7 @@ function UserEditDropdown({
   onSelectRole,
   onSelectTier,
   onRequestViewProfile,
+  onRequestManageAccess,
   onRequestAddMembership,
   onRequestResetPassword,
   onRequestDelete,
@@ -131,6 +191,7 @@ function UserEditDropdown({
   onSelectRole: (role: Role) => void;
   onSelectTier: (tier: Tier) => void;
   onRequestViewProfile: () => void;
+  onRequestManageAccess: () => void;
   onRequestAddMembership: () => void;
   onRequestResetPassword: () => void;
   onRequestDelete: () => void;
@@ -215,6 +276,20 @@ function UserEditDropdown({
         >
           <UserIcon className="w-3.5 h-3.5 text-amber-400" />
           <span>View Member Profile</span>
+        </button>
+      </div>
+
+      {/* Manage Access & Entitlements */}
+      <div>
+        <button
+          onClick={() => {
+            onClose();
+            onRequestManageAccess();
+          }}
+          className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-bold text-emerald-400 hover:bg-emerald-500/10 border-0 bg-transparent text-left cursor-pointer transition-all"
+        >
+          <KeyRound className="w-3.5 h-3.5 text-emerald-400" />
+          <span>Manage Access &amp; Toolkits</span>
         </button>
       </div>
 
@@ -411,6 +486,7 @@ export default function AdminUsersPage() {
   const [roleFilter, setRoleFilter] = useState<Role | "ALL">("ALL");
   const [tierFilter, setTierFilter] = useState<Tier | "ALL">("ALL");
   const [cardFilter, setCardFilter] = useState<CardFilter>("ALL");
+  const [accessFilter, setAccessFilter] = useState<AccessFilter>("ALL");
   const [subStatusFilter, setSubStatusFilter] = useState<SubStatusFilter>("ALL");
   const [joinedFilter, setJoinedFilter] = useState<JoinedFilter>("ALL");
   const [userAvatarFilter, setUserAvatarFilter] = useState<AvatarFilter>("ALL");
@@ -429,11 +505,25 @@ export default function AdminUsersPage() {
 
   // Popovers & Drawers
   const [activeColFilter, setActiveColFilter] = useState<{
-    col: "user" | "card" | "role" | "tier" | "joined";
+    col: "user" | "card" | "role" | "tier" | "access" | "joined";
     rect: DOMRect;
   } | null>(null);
   const [openDropdown, setOpenDropdown] = useState<{ id: string; rect: DOMRect; btnEl: HTMLButtonElement } | null>(null);
   const [selectedProfileUserId, setSelectedProfileUserId] = useState<string | null>(null);
+  const [selectedDrawerTab, setSelectedDrawerTab] = useState<
+    "overview" | "access" | "membership" | "affiliate" | "payments" | "courses" | "card"
+  >("overview");
+
+  // Bulk Grant Modal state
+  const [bulkGrantModalOpen, setBulkGrantModalOpen] = useState(false);
+  const [bulkItemType, setBulkItemType] = useState<"bundle" | "toolkit" | "course">("bundle");
+  const [bulkItemId, setBulkItemId] = useState<string>("ultimate-bundle-plus");
+  const [bulkBonusMonths, setBulkBonusMonths] = useState<number>(2);
+  const [bulkStaffSeats, setBulkStaffSeats] = useState<number>(10);
+  const [bulkNotify, setBulkNotify] = useState<boolean>(true);
+  const [bulkActionBusy, setBulkActionBusy] = useState<boolean>(false);
+  const [bulkSuccessMsg, setBulkSuccessMsg] = useState<string | null>(null);
+  const [bulkErrorMsg, setBulkErrorMsg] = useState<string | null>(null);
 
   // Membership Gifting modal state
   const [userToAddMembership, setUserToAddMembership] = useState<User | null>(null);
@@ -480,15 +570,70 @@ export default function AdminUsersPage() {
     roleFilter,
     tierFilter,
     cardFilter,
+    accessFilter,
     subStatusFilter,
     joinedFilter,
     userAvatarFilter,
     pageSize,
   ]);
 
+  const handleOpenAccessDrawer = (userId: string) => {
+    setSelectedProfileUserId(userId);
+    setSelectedDrawerTab("access");
+  };
+
+  const handleOpenOverviewDrawer = (userId: string) => {
+    setSelectedProfileUserId(userId);
+    setSelectedDrawerTab("overview");
+  };
+
+  // Bulk Grant Handler
+  const handleExecuteBulkGrant = async () => {
+    if (selectedUserIds.size === 0) return;
+    setBulkActionBusy(true);
+    setBulkErrorMsg(null);
+    setBulkSuccessMsg(null);
+
+    try {
+      const res = await fetch("/api/admin/users/bulk-access", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userIds: Array.from(selectedUserIds),
+          action: "GRANT",
+          itemType: bulkItemType,
+          itemId: bulkItemId,
+          grantMembershipBonus: true,
+          membershipMonths: bulkBonusMonths,
+          membershipTier: "MARKETPLACE_PLUS",
+          staffSeats: bulkStaffSeats,
+          notifyUsers: bulkNotify,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to grant bulk access");
+
+      setBulkSuccessMsg(
+        `Successfully granted access to ${data.results?.successful?.length || selectedUserIds.size} user(s)!`
+      );
+      fetchUsers();
+      setTimeout(() => {
+        setBulkGrantModalOpen(false);
+        setSelectedUserIds(new Set());
+      }, 1500);
+    } catch (err: any) {
+      setBulkErrorMsg(err.message || "Bulk grant failed.");
+    } finally {
+      setBulkActionBusy(false);
+    }
+  };
+
   // Multi-field search and filter logic
   const filteredUsers = useMemo(() => {
     return users.filter((u) => {
+      const prodSummary = getUserProductSummary(u);
+
       // 1. Preset tabs
       if (presetTab === "CONNECT_CARD") {
         if (!u.digitalCard?.isPurchased && !u.digitalCard?.isActivated) return false;
@@ -500,9 +645,26 @@ export default function AdminUsersPage() {
         return false;
       } else if (presetTab === "PAID_TIERS" && u.tier === "FREE") {
         return false;
+      } else if (presetTab === "BUNDLES_ACTIVE") {
+        if (!prodSummary.hasBundle && !prodSummary.hasBundlePlus) return false;
       }
 
-      // 2. Global text search
+      // 2. Access Filter
+      if (accessFilter === "HAS_ANY") {
+        if (prodSummary.totalCount === 0) return false;
+      } else if (accessFilter === "ULTIMATE_BUNDLE_PLUS") {
+        if (!prodSummary.hasBundlePlus) return false;
+      } else if (accessFilter === "ULTIMATE_BUNDLE") {
+        if (!prodSummary.hasBundle && !prodSummary.hasBundlePlus) return false;
+      } else if (accessFilter === "HAS_TOOLKIT") {
+        if (prodSummary.toolkitsCount === 0) return false;
+      } else if (accessFilter === "HAS_COURSE") {
+        if (prodSummary.coursesCount === 0) return false;
+      } else if (accessFilter === "NO_PRODUCTS") {
+        if (prodSummary.totalCount > 0) return false;
+      }
+
+      // 3. Global text search
       if (search.trim()) {
         const q = search.toLowerCase().trim();
         const matchesName = u.name?.toLowerCase().includes(q);
@@ -512,13 +674,13 @@ export default function AdminUsersPage() {
         if (!matchesName && !matchesEmail && !matchesPhone && !matchesCardHandle) return false;
       }
 
-      // 3. Role filter
+      // 4. Role filter
       if (roleFilter !== "ALL" && u.role !== roleFilter) return false;
 
-      // 4. Tier filter
+      // 5. Tier filter
       if (tierFilter !== "ALL" && u.tier !== tierFilter) return false;
 
-      // 5. Connect Card filter
+      // 6. Connect Card filter
       if (cardFilter === "ACTIVE") {
         if (!u.digitalCard?.isActivated || !u.digitalCard?.username) return false;
       } else if (cardFilter === "PENDING") {
@@ -527,7 +689,7 @@ export default function AdminUsersPage() {
         if (u.digitalCard?.isPurchased || u.digitalCard?.isActivated) return false;
       }
 
-      // 6. Subscription status filter
+      // 7. Subscription status filter
       const now = new Date();
       const hasFutureEnd = u.subscription?.currentPeriodEnd
         ? new Date(u.subscription.currentPeriodEnd) > now
@@ -549,11 +711,11 @@ export default function AdminUsersPage() {
         if (u.tier !== "FREE" || hasFutureEnd) return false;
       }
 
-      // 7. Avatar filter
+      // 8. Avatar filter
       if (userAvatarFilter === "WITH_AVATAR" && !u.image) return false;
       if (userAvatarFilter === "NO_AVATAR" && u.image) return false;
 
-      // 8. Joined Date filter
+      // 9. Joined Date filter
       if (joinedFilter !== "ALL") {
         const createdTime = new Date(u.createdAt).getTime();
         const diffMs = Date.now() - createdTime;
@@ -573,7 +735,10 @@ export default function AdminUsersPage() {
     presetTab,
     roleFilter,
     tierFilter,
+    roleFilter,
+    tierFilter,
     cardFilter,
+    accessFilter,
     subStatusFilter,
     userAvatarFilter,
     joinedFilter,
@@ -607,6 +772,9 @@ export default function AdminUsersPage() {
           const rank: Record<Tier, number> = { MARKETPLACE_PLUS: 4, MARKETPLACE: 3, VIP: 2, FREE: 1 };
           return mult * ((rank[a.tier] || 0) - (rank[b.tier] || 0));
         }
+        case "access": {
+          return mult * (getUserProductSummary(a).totalCount - getUserProductSummary(b).totalCount);
+        }
         case "joined": {
           const dateA = new Date(a.createdAt).getTime();
           const dateB = new Date(b.createdAt).getTime();
@@ -635,6 +803,14 @@ export default function AdminUsersPage() {
   const proCount = useMemo(() => users.filter((u) => u.role === "PROFESSIONAL").length, [users]);
   const adminCount = useMemo(() => users.filter((u) => u.role === "ADMIN").length, [users]);
   const paidCount = useMemo(() => users.filter((u) => u.tier !== "FREE").length, [users]);
+  const bundleActiveCount = useMemo(
+    () =>
+      users.filter((u) => {
+        const s = getUserProductSummary(u);
+        return s.hasBundle || s.hasBundlePlus;
+      }).length,
+    [users]
+  );
 
   // Header click sorting handler
   const handleSort = (field: SortField) => {
@@ -647,13 +823,16 @@ export default function AdminUsersPage() {
       }
     } else {
       // Natural initial sort
-      const defaultDesc = ["joined", "role", "tier", "card"].includes(field);
+      const defaultDesc = ["joined", "role", "tier", "card", "access"].includes(field);
       setSortConfig({ field, direction: defaultDesc ? "desc" : "asc" });
     }
   };
 
   // Open Column Filter Popover
-  const toggleColumnFilter = (col: "user" | "card" | "role" | "tier" | "joined", btn: HTMLElement) => {
+  const toggleColumnFilter = (
+    col: "user" | "card" | "role" | "tier" | "access" | "joined",
+    btn: HTMLElement
+  ) => {
     if (activeColFilter?.col === col) {
       setActiveColFilter(null);
     } else {
@@ -722,7 +901,9 @@ export default function AdminUsersPage() {
       const subPlan = u.subscription?.plan || u.tier;
       const subStatus = u.subscription?.status || (u.tier !== "FREE" ? "active" : "none");
       const subEnd = u.subscription?.currentPeriodEnd
-        ? new Date(u.subscription.currentPeriodEnd).toISOString()
+        ? new Date(u.subscription.currentPeriodEnd) > new Date()
+          ? new Date(u.subscription.currentPeriodEnd).toISOString()
+          : ""
         : "";
       const joined = new Date(u.createdAt).toISOString();
 
@@ -762,6 +943,7 @@ export default function AdminUsersPage() {
     setRoleFilter("ALL");
     setTierFilter("ALL");
     setCardFilter("ALL");
+    setAccessFilter("ALL");
     setSubStatusFilter("ALL");
     setJoinedFilter("ALL");
     setUserAvatarFilter("ALL");
@@ -777,6 +959,7 @@ export default function AdminUsersPage() {
     if (roleFilter !== "ALL") count++;
     if (tierFilter !== "ALL") count++;
     if (cardFilter !== "ALL") count++;
+    if (accessFilter !== "ALL") count++;
     if (subStatusFilter !== "ALL") count++;
     if (joinedFilter !== "ALL") count++;
     if (userAvatarFilter !== "ALL") count++;
@@ -787,6 +970,7 @@ export default function AdminUsersPage() {
     roleFilter,
     tierFilter,
     cardFilter,
+    accessFilter,
     subStatusFilter,
     joinedFilter,
     userAvatarFilter,
@@ -1059,6 +1243,7 @@ export default function AdminUsersPage() {
           <div className="flex gap-1.5 flex-wrap items-center">
             {[
               { id: "ALL", label: "All Users", count: users.length },
+              { id: "BUNDLES_ACTIVE", label: "👑 Bundles & Toolkits", count: bundleActiveCount },
               { id: "CONNECT_CARD", label: "💳 Connect Cards", count: connectCardCount },
               { id: "MEMBER", label: "Members", count: memberCount },
               { id: "PROFESSIONAL", label: "Professionals", count: proCount },
@@ -1067,6 +1252,7 @@ export default function AdminUsersPage() {
             ].map((tab) => {
               const active = presetTab === tab.id;
               const isCard = tab.id === "CONNECT_CARD";
+              const isBundle = tab.id === "BUNDLES_ACTIVE";
               return (
                 <button
                   key={tab.id}
@@ -1081,7 +1267,9 @@ export default function AdminUsersPage() {
                   }}
                   className={`text-xs font-semibold px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer ${
                     active
-                      ? isCard
+                      ? isBundle
+                        ? "bg-gradient-to-r from-amber-500 to-amber-400 text-slate-950 shadow-lg shadow-amber-500/20 font-black"
+                        : isCard
                         ? "bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20 font-black"
                         : "bg-amber-500 text-[#0a1628] shadow-lg shadow-amber-500/10 font-bold"
                       : "bg-slate-100 dark:bg-slate-800/90 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700/80 border border-slate-200 dark:border-slate-700/40"
@@ -1106,6 +1294,21 @@ export default function AdminUsersPage() {
           <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mr-1">
             Filter:
           </span>
+
+          {/* Access / Product Filter */}
+          <select
+            value={accessFilter}
+            onChange={(e) => setAccessFilter(e.target.value as AccessFilter)}
+            className="bg-slate-50 dark:bg-[#060f1e] text-xs font-medium text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 outline-none focus:border-amber-500/50 cursor-pointer"
+          >
+            <option value="ALL">All Product Access</option>
+            <option value="HAS_ANY">Has Any Product / Bundle</option>
+            <option value="ULTIMATE_BUNDLE_PLUS">👑 Ultimate Bundle PLUS ($2,400)</option>
+            <option value="ULTIMATE_BUNDLE">🏆 Ultimate Bundle ($1,200)</option>
+            <option value="HAS_TOOLKIT">📦 Has Toolkits</option>
+            <option value="HAS_COURSE">🎓 Has Masterclasses</option>
+            <option value="NO_PRODUCTS">No Products Owned</option>
+          </select>
 
           {/* Role Filter */}
           <select
@@ -1216,6 +1419,15 @@ export default function AdminUsersPage() {
               </span>
             )}
 
+            {accessFilter !== "ALL" && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-800 text-amber-400 border border-amber-500/30">
+                Access: {accessFilter}
+                <button onClick={() => setAccessFilter("ALL")} className="text-slate-400 hover:text-white cursor-pointer">
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+
             {roleFilter !== "ALL" && (
               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-800 text-blue-400 border border-blue-500/30">
                 Role: {roleFilter}
@@ -1286,13 +1498,24 @@ export default function AdminUsersPage() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => {
+                setBulkGrantModalOpen(true);
+                setBulkSuccessMsg(null);
+                setBulkErrorMsg(null);
+              }}
+              className="px-3.5 py-1.5 text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow-lg shadow-emerald-500/20"
+            >
+              <Zap className="w-3.5 h-3.5 text-slate-950" />
+              <span>Grant Product Access ({selectedUserIds.size})</span>
+            </button>
+            <button
+              onClick={() => {
                 const selectedUsers = users.filter((u) => selectedUserIds.has(u.id));
                 exportUsersToCSV(selectedUsers);
               }}
               className="px-3 py-1.5 text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow"
             >
               <Download className="w-3.5 h-3.5" />
-              <span>Export Selected CSV</span>
+              <span>Export CSV</span>
             </button>
             <button
               onClick={() => setSelectedUserIds(new Set())}
@@ -1502,6 +1725,43 @@ export default function AdminUsersPage() {
                     </div>
                   </th>
 
+                  {/* ACCESS & TOOLKITS Column Header */}
+                  <th className="text-left px-5 py-3.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <button
+                        onClick={() => handleSort("access")}
+                        className="flex items-center gap-1.5 font-bold uppercase tracking-wider text-xs hover:text-white transition-colors group cursor-pointer text-left"
+                      >
+                        <span className={sortConfig?.field === "access" ? "text-amber-400 font-extrabold" : ""}>
+                          Access &amp; Toolkits
+                        </span>
+                        {sortConfig?.field === "access" ? (
+                          sortConfig.direction === "asc" ? (
+                            <ArrowUp className="w-3.5 h-3.5 text-amber-400" />
+                          ) : (
+                            <ArrowDown className="w-3.5 h-3.5 text-amber-400" />
+                          )
+                        ) : (
+                          <ArrowUpDown className="w-3 h-3 text-slate-600 opacity-40 group-hover:opacity-100 transition-opacity" />
+                        )}
+                      </button>
+                      <button
+                        onClick={(e) => toggleColumnFilter("access", e.currentTarget)}
+                        className={`p-1 rounded-md transition-all cursor-pointer relative ${
+                          accessFilter !== "ALL"
+                            ? "text-amber-400 bg-amber-500/15 border border-amber-500/30"
+                            : "text-slate-500 hover:text-slate-300 hover:bg-slate-800"
+                        }`}
+                        title="Filter Product Access"
+                      >
+                        <Filter className="w-3 h-3" />
+                        {accessFilter !== "ALL" && (
+                          <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-amber-400 ring-2 ring-slate-900" />
+                        )}
+                      </button>
+                    </div>
+                  </th>
+
                   {/* JOINED Column Header */}
                   <th className="text-left px-5 py-3.5">
                     <div className="flex items-center justify-between gap-2">
@@ -1674,6 +1934,99 @@ export default function AdminUsersPage() {
                         </div>
                       </td>
 
+                      {/* ACCESS & TOOLKITS Cell */}
+                      <td className={cellPadding}>
+                        {(() => {
+                          const summary = getUserProductSummary(u);
+                          if (summary.hasBundlePlus) {
+                            return (
+                              <div className="flex flex-col items-start gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenAccessDrawer(u.id)}
+                                  className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full bg-gradient-to-r from-amber-500/20 via-purple-500/20 to-amber-500/20 text-amber-300 border border-amber-500/40 hover:border-amber-400 transition-all cursor-pointer shadow-sm group/btn"
+                                  title="Click to manage user's product access"
+                                >
+                                  <Crown className="w-3 h-3 text-amber-400 animate-pulse" />
+                                  <span>Ultimate PLUS</span>
+                                  <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-amber-500/20 font-mono text-amber-200">
+                                    All Access
+                                  </span>
+                                </button>
+                                <span className="text-[10px] text-slate-400 pl-1">
+                                  6 Toolkits • 6 Courses • 10 Seats
+                                </span>
+                              </div>
+                            );
+                          }
+
+                          if (summary.hasBundle) {
+                            return (
+                              <div className="flex flex-col items-start gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenAccessDrawer(u.id)}
+                                  className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30 hover:border-amber-400 transition-all cursor-pointer shadow-sm"
+                                  title="Click to manage user's product access"
+                                >
+                                  <Sparkles className="w-3 h-3 text-amber-400" />
+                                  <span>Ultimate Bundle</span>
+                                  <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-amber-500/20 font-mono text-amber-300">
+                                    6 TKs
+                                  </span>
+                                </button>
+                                {summary.coursesCount > 0 && (
+                                  <span className="text-[10px] text-slate-400 pl-1">
+                                    + {summary.coursesCount} Course{summary.coursesCount > 1 ? "s" : ""}
+                                  </span>
+                                )}
+                              </div>
+                            );
+                          }
+
+                          if (summary.toolkitsCount > 0 || summary.coursesCount > 0) {
+                            return (
+                              <div className="flex flex-wrap items-center gap-1.5">
+                                {summary.toolkitsCount > 0 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleOpenAccessDrawer(u.id)}
+                                    className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-lg bg-indigo-500/10 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/20 transition-colors cursor-pointer"
+                                    title="View & manage toolkits"
+                                  >
+                                    <Package className="w-3 h-3 text-indigo-400" />
+                                    <span>{summary.toolkitsCount} TK{summary.toolkitsCount > 1 ? "s" : ""}</span>
+                                  </button>
+                                )}
+                                {summary.coursesCount > 0 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleOpenAccessDrawer(u.id)}
+                                    className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-lg bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/20 transition-colors cursor-pointer"
+                                    title="View & manage courses"
+                                  >
+                                    <Briefcase className="w-3 h-3 text-emerald-400" />
+                                    <span>{summary.coursesCount} Course{summary.coursesCount > 1 ? "s" : ""}</span>
+                                  </button>
+                                )}
+                              </div>
+                            );
+                          }
+
+                          return (
+                            <button
+                              type="button"
+                              onClick={() => handleOpenAccessDrawer(u.id)}
+                              className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-amber-400 py-0.5 px-1.5 rounded hover:bg-slate-800/60 transition-colors cursor-pointer"
+                              title="Click to grant toolkits, courses, or bundles"
+                            >
+                              <KeyRound className="w-3 h-3 text-slate-600 hover:text-amber-400" />
+                              <span>Grant Access</span>
+                            </button>
+                          );
+                        })()}
+                      </td>
+
                       {/* JOINED Cell */}
                       <td className={`${cellPadding} text-xs text-slate-400`}>
                         <span title={new Date(u.createdAt).toLocaleString()}>
@@ -1703,7 +2056,7 @@ export default function AdminUsersPage() {
                 {/* Empty State */}
                 {paginatedUsers.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="text-center py-20 px-4">
+                    <td colSpan={8} className="text-center py-20 px-4">
                       <div className="max-w-md mx-auto flex flex-col items-center gap-3">
                         <div className="w-12 h-12 rounded-2xl bg-slate-800/80 border border-slate-700/50 flex items-center justify-center text-slate-500">
                           <Filter className="w-6 h-6 text-slate-400" />
@@ -2011,6 +2364,47 @@ export default function AdminUsersPage() {
             </ColumnFilterPopover>
           )}
 
+          {/* ACCESS Column Filter */}
+          {activeColFilter.col === "access" && (
+            <ColumnFilterPopover
+              title="Filter by Product Access"
+              anchor={activeColFilter.rect}
+              onClose={() => setActiveColFilter(null)}
+              onClear={() => setAccessFilter("ALL")}
+            >
+              <div className="space-y-1.5">
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                  Product / Bundle Access
+                </p>
+                {[
+                  { id: "ALL", label: "All Users" },
+                  { id: "HAS_ANY", label: "Has Any Product / Bundle" },
+                  { id: "ULTIMATE_BUNDLE_PLUS", label: "👑 Ultimate Bundle PLUS" },
+                  { id: "ULTIMATE_BUNDLE", label: "🏆 Ultimate Bundle ($1,200)" },
+                  { id: "HAS_TOOLKIT", label: "📦 Has Toolkits" },
+                  { id: "HAS_COURSE", label: "🎓 Has Masterclasses" },
+                  { id: "NO_PRODUCTS", label: "No Products Owned" },
+                ].map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                      setAccessFilter(item.id as AccessFilter);
+                      setActiveColFilter(null);
+                    }}
+                    className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium text-left transition-colors cursor-pointer ${
+                      accessFilter === item.id
+                        ? "bg-amber-500/15 text-amber-300 font-bold"
+                        : "hover:bg-slate-800 text-slate-300"
+                    }`}
+                  >
+                    <span>{item.label}</span>
+                    {accessFilter === item.id && <Check className="w-3.5 h-3.5 text-amber-400" />}
+                  </button>
+                ))}
+              </div>
+            </ColumnFilterPopover>
+          )}
+
           {/* JOINED Column Filter */}
           {activeColFilter.col === "joined" && (
             <ColumnFilterPopover
@@ -2066,7 +2460,11 @@ export default function AdminUsersPage() {
           onSelectTier={(tier) => updateUser(openDropdown.id, { tier })}
           onRequestViewProfile={() => {
             const targetId = openDropdown.id;
-            setSelectedProfileUserId(targetId);
+            handleOpenOverviewDrawer(targetId);
+          }}
+          onRequestManageAccess={() => {
+            const targetId = openDropdown.id;
+            handleOpenAccessDrawer(targetId);
           }}
           onRequestAddMembership={() => {
             const target = users.find((u) => u.id === openDropdown.id);
@@ -2081,6 +2479,251 @@ export default function AdminUsersPage() {
             if (target) setUserToDelete(target);
           }}
         />
+      )}
+
+      {/* Bulk Grant Product Access Modal */}
+      {bulkGrantModalOpen && (
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="relative w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl text-slate-100 max-h-[90vh] overflow-y-auto">
+            {/* Header Icon */}
+            <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center mb-4">
+              <Zap className="w-6 h-6" />
+            </div>
+
+            <h3 className="text-xl font-bold text-white mb-1">Bulk Grant Product Access</h3>
+            <p className="text-xs text-slate-400 leading-relaxed mb-4">
+              Grant instant access to toolkits, masterclasses, or flagship bundles for{" "}
+              <strong className="text-amber-400">{selectedUserIds.size}</strong> selected user
+              {selectedUserIds.size > 1 ? "s" : ""}.
+            </p>
+
+            {bulkSuccessMsg ? (
+              <div className="space-y-4">
+                <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-2xl p-4 text-xs space-y-2">
+                  <div className="flex items-center gap-2 font-bold text-sm">
+                    <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <span>Access Granted!</span>
+                  </div>
+                  <p className="text-slate-200">{bulkSuccessMsg}</p>
+                </div>
+
+                <div className="flex justify-end pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setBulkGrantModalOpen(false);
+                      setSelectedUserIds(new Set());
+                    }}
+                    className="px-6 py-2.5 rounded-xl text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 transition-all cursor-pointer shadow-lg shadow-emerald-500/20"
+                  >
+                    Done
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {bulkErrorMsg && (
+                  <div className="bg-red-500/10 border border-red-500/30 text-red-400 rounded-xl p-3 text-xs flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 shrink-0" />
+                    <span>{bulkErrorMsg}</span>
+                  </div>
+                )}
+
+                {/* Step 1: Choose Type */}
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                    1. Select Product Category
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { type: "bundle" as const, label: "👑 Flagship Bundle", defaultId: "ultimate-bundle-plus" },
+                      { type: "toolkit" as const, label: "📦 Canonical Toolkit", defaultId: "30-day-tax-office" },
+                      { type: "course" as const, label: "🎓 Masterclass Course", defaultId: "30-day-tax-office-launch" },
+                    ].map((cat) => (
+                      <button
+                        key={cat.type}
+                        type="button"
+                        onClick={() => {
+                          setBulkItemType(cat.type);
+                          setBulkItemId(cat.defaultId);
+                          if (cat.type === "bundle") {
+                            setBulkBonusMonths(cat.defaultId === "ultimate-bundle-plus" ? 2 : 1);
+                            setBulkStaffSeats(cat.defaultId === "ultimate-bundle-plus" ? 10 : 5);
+                          } else if (cat.type === "toolkit") {
+                            setBulkBonusMonths(0);
+                            setBulkStaffSeats(5);
+                          } else {
+                            setBulkBonusMonths(0);
+                            setBulkStaffSeats(0);
+                          }
+                        }}
+                        className={`py-2.5 px-3 rounded-xl text-xs font-bold transition-all border text-center cursor-pointer ${
+                          bulkItemType === cat.type
+                            ? "bg-amber-500 text-slate-950 border-amber-400 shadow-md shadow-amber-500/20"
+                            : "bg-[#060f1e] text-slate-400 border-slate-800 hover:border-slate-700 hover:text-slate-200"
+                        }`}
+                      >
+                        {cat.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Step 2: Choose Specific Item */}
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                    2. Select Item
+                  </label>
+                  {bulkItemType === "bundle" && (
+                    <div className="space-y-2">
+                      {[
+                        {
+                          id: "ultimate-bundle-plus",
+                          title: "👑 Ultimate Bundle PLUS ($2,400)",
+                          desc: "Unlocks all 6 toolkits + 6 courses + 10 staff training seats + 2 months Marketplace Plus",
+                          months: 2,
+                          seats: 10,
+                        },
+                        {
+                          id: "ultimate-bundle",
+                          title: "🏆 Ultimate Bundle ($1,200)",
+                          desc: "Unlocks all 6 toolkits + 5 staff training seats + 1 month VIP",
+                          months: 1,
+                          seats: 5,
+                        },
+                      ].map((bundle) => (
+                        <div
+                          key={bundle.id}
+                          onClick={() => {
+                            setBulkItemId(bundle.id);
+                            setBulkBonusMonths(bundle.months);
+                            setBulkStaffSeats(bundle.seats);
+                          }}
+                          className={`p-3 rounded-xl border cursor-pointer transition-all ${
+                            bulkItemId === bundle.id
+                              ? "bg-amber-500/10 border-amber-500/50 text-amber-300"
+                              : "bg-[#060f1e] border-slate-800 text-slate-300 hover:border-slate-700"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold">{bundle.title}</span>
+                            {bulkItemId === bundle.id && (
+                              <Check className="w-3.5 h-3.5 text-amber-400" />
+                            )}
+                          </div>
+                          <p className="text-[11px] text-slate-400 mt-1">{bundle.desc}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {bulkItemType === "toolkit" && (
+                    <select
+                      value={bulkItemId}
+                      onChange={(e) => setBulkItemId(e.target.value)}
+                      className="w-full bg-[#060f1e] text-slate-100 text-xs px-3.5 py-2.5 border border-slate-800 rounded-xl outline-none focus:border-amber-500"
+                    >
+                      <option value="30-day-tax-office">30-Day Tax Office Launch ($497)</option>
+                      <option value="due-diligence-course">Staff Audit-Ready Due Diligence ($497)</option>
+                      <option value="irs-fine-defense">IRS Fine Defense &amp; Penalty Abatement ($497)</option>
+                      <option value="schedule-c-reconstruction">Schedule C Income Reconstruction ($497)</option>
+                      <option value="audit-playbook">IRS Audit &amp; Examination Playbook ($497)</option>
+                      <option value="credits-filing-status">Tax Credits &amp; Filing Status Deep Dive ($497)</option>
+                    </select>
+                  )}
+
+                  {bulkItemType === "course" && (
+                    <select
+                      value={bulkItemId}
+                      onChange={(e) => setBulkItemId(e.target.value)}
+                      className="w-full bg-[#060f1e] text-slate-100 text-xs px-3.5 py-2.5 border border-slate-800 rounded-xl outline-none focus:border-amber-500"
+                    >
+                      <option value="30-day-tax-office-launch">30-Day Tax Office Launch Masterclass</option>
+                      <option value="irs-fine-defense-masterclass">IRS Fine Defense Masterclass</option>
+                      <option value="schedule-c-reconstruction-course">Schedule C Reconstruction Masterclass</option>
+                      <option value="irs-audit-playbook-course">IRS Audit Playbook Masterclass</option>
+                      <option value="credits-filing-status-course">Tax Credits &amp; Filing Status Masterclass</option>
+                      <option value="staff-audit-ready-due-diligence">Staff Audit-Ready Due Diligence Masterclass</option>
+                    </select>
+                  )}
+                </div>
+
+                {/* Step 3: Optional Entitlement Configurations */}
+                <div className="grid grid-cols-2 gap-3 pt-1">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                      Staff Training Seats
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      max={100}
+                      value={bulkStaffSeats}
+                      onChange={(e) => setBulkStaffSeats(Math.max(0, parseInt(e.target.value, 10) || 0))}
+                      className="w-full bg-[#060f1e] text-slate-100 text-xs px-3 py-2 border border-slate-800 rounded-xl outline-none focus:border-amber-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                      Bonus Membership (Mos)
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      max={24}
+                      value={bulkBonusMonths}
+                      onChange={(e) => setBulkBonusMonths(Math.max(0, parseInt(e.target.value, 10) || 0))}
+                      className="w-full bg-[#060f1e] text-slate-100 text-xs px-3 py-2 border border-slate-800 rounded-xl outline-none focus:border-amber-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Notify users toggle */}
+                <div className="flex items-center gap-2 pt-2">
+                  <input
+                    type="checkbox"
+                    id="bulkNotifyCheck"
+                    checked={bulkNotify}
+                    onChange={(e) => setBulkNotify(e.target.checked)}
+                    className="rounded border-slate-700 bg-slate-800 text-amber-500 cursor-pointer"
+                  />
+                  <label htmlFor="bulkNotifyCheck" className="text-xs text-slate-300 cursor-pointer select-none">
+                    Send in-app notification to users informing them of unlocked access
+                  </label>
+                </div>
+
+                {/* Footer Buttons */}
+                <div className="flex gap-3 justify-end pt-3 border-t border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => setBulkGrantModalOpen(false)}
+                    disabled={bulkActionBusy}
+                    className="px-4 py-2.5 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 transition-colors cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleExecuteBulkGrant}
+                    disabled={bulkActionBusy || selectedUserIds.size === 0}
+                    className="px-5 py-2.5 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 transition-all shadow-lg shadow-amber-500/20 flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
+                  >
+                    {bulkActionBusy ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Zap className="w-3.5 h-3.5" />
+                    )}
+                    <span>
+                      {bulkActionBusy
+                        ? "Granting Access..."
+                        : `Grant Access to ${selectedUserIds.size} User(s)`}
+                    </span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       )}
 
       {/* Gift Free Membership Modal */}
@@ -2459,14 +3102,21 @@ export default function AdminUsersPage() {
       {selectedProfileUserId && (
         <AdminMemberProfileDrawer
           userId={selectedProfileUserId}
-          onClose={() => setSelectedProfileUserId(null)}
+          initialTab={selectedDrawerTab}
+          onClose={() => {
+            setSelectedProfileUserId(null);
+            setSelectedDrawerTab("overview");
+          }}
+          onAccessUpdated={fetchUsers}
           onGiftMembership={(target) => {
             if (target) handleOpenGiftModal(target);
           }}
           onResetPassword={(target) => {
             if (target) handleOpenResetModal(target);
           }}
-          onUpdateRoleTier={() => {}}
+          onUpdateRoleTier={() => {
+            fetchUsers();
+          }}
           onDeleteUser={(target) => {
             if (target) {
               setUserToDelete(target);

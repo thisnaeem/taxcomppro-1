@@ -48,6 +48,37 @@ export async function GET(req: NextRequest) {
           username: true,
         },
       },
+      toolkitPurchases: {
+        select: {
+          id: true,
+          toolkitId: true,
+          createdAt: true,
+          membershipMonths: true,
+          membershipTier: true,
+          stripeSessionId: true,
+        },
+        orderBy: { createdAt: "desc" },
+      },
+      enrollments: {
+        select: {
+          id: true,
+          courseId: true,
+          completedAt: true,
+          createdAt: true,
+          course: {
+            select: { id: true, title: true, slug: true },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      },
+      trainingLicenses: {
+        select: {
+          id: true,
+          toolkitId: true,
+          totalSeats: true,
+          expiresAt: true,
+        },
+      },
     },
     orderBy: { createdAt: "desc" },
     take: limit,
