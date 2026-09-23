@@ -1501,7 +1501,7 @@ export default function CreateListingPage() {
                               <span>Stripe Setup Required to Sell Paid Courses</span>
                             </div>
                             <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
-                              To charge students for this course, you must connect your Stripe payout account, or choose &quot;Free&quot;.
+                              To charge students for this course, connect your Stripe payout account. Stripe deducts its processing fees from that account; the platform takes 0%, or choose &quot;Free&quot;.
                             </p>
                             {stripeError && <p className="text-rose-500 text-[11px]">{stripeError}</p>}
                             <div className="flex items-center gap-2 pt-1">
@@ -2013,7 +2013,7 @@ export default function CreateListingPage() {
                           <span>Stripe Setup Required to Sell</span>
                         </div>
                         <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
-                          To sell listings for money, you must connect your Stripe account so buyers can pay you directly.
+                          To sell listings for money, connect your Stripe account so buyers pay you directly. Stripe deducts its processing fees from that account; the platform takes 0%.
                         </p>
                         {stripeError && <p className="text-rose-500 text-[11px]">{stripeError}</p>}
                         <div className="flex items-center gap-2 pt-1">

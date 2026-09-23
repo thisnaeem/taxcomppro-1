@@ -179,21 +179,13 @@ export async function POST(
           );
         }
 
-        // Route payouts 100% directly to host's Stripe account (0% platform fee)
-        sessionParams.subscription_data = {
-          transfer_data: {
-            destination: network.owner.stripeAccountId,
-          },
-          metadata: {
-            type: "pro_network_sub",
-            networkId: network.id,
-            networkSlug: network.slug,
-            userId,
-            ownerId: network.ownerId,
-          },
-        };
-
-        const stripeSession = await stripe.checkout.sessions.create(sessionParams);
+        // Create the subscription in the host's connected account. The host is
+        // the merchant of record and pays Stripe's processing fees directly;
+        // the platform never receives or transfers the membership payment.
+        const stripeSession = await stripe.checkout.sessions.create(
+          sessionParams,
+          { stripeAccount: network.owner.stripeAccountId }
+        );
         return NextResponse.json({ url: stripeSession.url });
       } catch (stripeError: any) {
         console.error("Stripe subscription checkout creation failed:", stripeError);

@@ -1771,7 +1771,7 @@ export default function ProNetworkHubPage({
                     <p className="text-[11px] text-slate-500 dark:text-slate-400">
                       {network.monthlyPrice <= 0
                         ? "Members can join immediately with zero payment or credit card entry."
-                        : "Subscribers pay via Stripe. 100% of dues route directly to your connected bank account."}
+                        : "Subscribers pay via Stripe. Dues are charged directly to your connected account; Stripe deducts its processing fees and the platform takes 0%."}
                     </p>
                   </div>
 
@@ -1832,7 +1832,7 @@ export default function ProNetworkHubPage({
                         )}
                       </div>
                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                        Receive 100% of member subscription payments directly
+                        Receive member subscription payments directly; Stripe processing fees are deducted from your account
                         into your bank account (0% TCP platform cut).
                       </p>
                     </div>

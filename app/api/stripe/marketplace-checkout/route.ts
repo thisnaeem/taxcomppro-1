@@ -102,13 +102,6 @@ export async function POST(req: NextRequest) {
   const user = await prisma.user.findUnique({ where: { id: session.user.id } });
   if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
-  let customerId = user.stripeCustomerId;
-  if (!customerId) {
-    const customer = await stripe.customers.create({ email: user.email, name: user.name ?? "" });
-    customerId = customer.id;
-    await prisma.user.update({ where: { id: user.id }, data: { stripeCustomerId: customerId } });
-  }
-
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
   const slugOrId = listing.slug || listing.id;
 
@@ -174,11 +167,12 @@ export async function POST(req: NextRequest) {
     sellerStripeAccountId: seller.stripeAccountId,
   };
 
-  let checkoutSession: Stripe.Checkout.Session;
-
   try {
-    // ── Approach 1: Direct Charge (Whole payment goes directly to seller's Stripe, $0 platform fee) ──
-    checkoutSession = await stripe.checkout.sessions.create(
+    // Create the Checkout Session in the seller's connected account. This makes
+    // the seller the merchant of record and charges Stripe's processing fee to
+    // the seller's Stripe balance. The platform does not collect or transfer
+    // the payment and does not take an application fee.
+    const checkoutSession = await stripe.checkout.sessions.create(
       {
         mode: "payment",
         payment_method_types: ["card"],
@@ -191,29 +185,16 @@ export async function POST(req: NextRequest) {
       },
       { stripeAccount: seller.stripeAccountId }
     );
+
+    return NextResponse.json({ url: checkoutSession.url });
   } catch (directErr: any) {
     console.warn(
-      "[Marketplace Checkout] Direct charge on connected account failed, using 100% destination transfer fallback:",
+      "[Marketplace Checkout] Direct charge on connected account failed:",
       directErr?.message
     );
-
-    // ── Approach 2: Destination Charge Fallback (100% transferred to seller, $0 platform fee) ──
-    checkoutSession = await stripe.checkout.sessions.create({
-      customer: customerId,
-      mode: "payment",
-      payment_method_types: ["card"],
-      line_items: lineItems,
-      success_url: `${appUrl}/${slugOrId}?success=true&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${appUrl}/${slugOrId}`,
-      metadata: sessionMetadata,
-      payment_intent_data: {
-        transfer_data: {
-          destination: seller.stripeAccountId,
-        },
-        // No application_fee_amount: 100% transferred to seller's Stripe balance
-      },
-    });
+    return NextResponse.json(
+      { error: "The seller's Stripe account could not start a direct checkout. Please try again after the seller completes Stripe setup." },
+      { status: 502 }
+    );
   }
-
-  return NextResponse.json({ url: checkoutSession.url });
 }

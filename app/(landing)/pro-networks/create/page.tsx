@@ -611,7 +611,7 @@ export default function CreateProNetworkPage() {
                                 Stripe Setup Required To Sell Memberships
                               </p>
                               <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                                To charge members a recurring monthly fee, you must connect your Stripe account so member subscription dues transfer straight to your bank account with 0% platform fee.
+                              To charge members a recurring monthly fee, connect your Stripe account. Subscription dues are charged directly on your account; Stripe deducts its processing fees and the platform takes 0%.
                               </p>
                             </div>
                           </div>
@@ -646,7 +646,7 @@ export default function CreateProNetworkPage() {
                             </span>
                           </div>
                           <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
-                            Your Stripe Connect account is active. You keep{" "}
+                            Your Stripe Connect account is active. Subscription dues are charged directly to your account; Stripe deducts its processing fees and the platform takes 0%. You keep{" "}
                             <strong>
                               100% of recurring member subscriptions
                             </strong>
