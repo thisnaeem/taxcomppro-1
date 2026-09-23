@@ -1,5 +1,6 @@
 .pn-page.pn-create {
-  background: #0e1112 !important;
+  background: #0a1220 !important;
+  color: #f8fafc;
 }
 .pn-create-layout {
   display: grid;
@@ -12,7 +13,7 @@
 }
 .pn-create-guide {
   position: sticky;
-  top: 30px;
+  top: 100px;
   min-width: 0;
 }
 .pn-create-guide h1 {
@@ -21,15 +22,16 @@
   line-height: 1.03;
   letter-spacing: -2px;
   margin: 23px 0;
+  color: #f8fafc;
 }
 .pn-create-guide h1 em {
   font-style: normal;
-  color: #d2f58a;
+  color: #ffbe24;
 }
 .pn-create-guide > p {
   font-size: 13px;
   line-height: 1.8;
-  color: #98ad86;
+  color: #94a3b8;
   max-width: 260px;
 }
 .pn-create-guide nav {
@@ -47,7 +49,7 @@
   border: 1px solid transparent;
   border-radius: 14px;
   background: transparent;
-  color: #adc29b;
+  color: #94a3b8;
   width: 100%;
 }
 .pn-create-guide nav button:disabled {
@@ -59,58 +61,62 @@
   height: 33px;
   display: grid;
   place-items: center;
-  border: 1px solid #c4dbb225;
+  border: 1px solid #243550;
   border-radius: 11px;
-  color: #a8c18f;
+  color: #94a3b8;
   font-size: 11px;
 }
 .pn-create-guide nav strong {
   display: block;
   font-size: 13px;
   font-weight: 550;
+  color: #f8fafc;
 }
 .pn-create-guide nav small {
   font-size: 10px;
-  color: #839a72;
+  color: #64748b;
   margin-top: 4px;
   display: block;
 }
 .pn-create-guide nav button[aria-current="step"] {
-  background: #d2f58a0b;
-  border-color: #d2f58a27;
+  background: rgba(255, 190, 36, 0.08);
+  border-color: rgba(255, 190, 36, 0.25);
+  color: #f8fafc;
 }
 .pn-create-guide nav button[aria-current="step"] > span {
-  background: #d2f58a;
-  border-color: #d2f58a;
-  color: #314223;
+  background: #ffbe24;
+  border-color: #ffbe24;
+  color: #0a1628;
+  font-weight: 700;
 }
 .pn-create-preview {
   padding: 23px;
-  border: 1px solid #d2e8c322;
+  border: 1px solid #243550;
   border-radius: 22px;
-  background: #18221a;
+  background: #172135;
 }
 .pn-create-preview > .pn-eyebrow {
   font-size: 7px;
   margin-bottom: 21px;
+  color: #94a3b8;
 }
 .pn-create-preview h3 {
   font-size: 22px;
   font-weight: 500;
   line-height: 1.25;
-  color: #d8e8c9;
+  color: #f8fafc;
   margin-top: 20px;
   overflow-wrap: anywhere;
 }
 .pn-create-preview p {
   font-size: 11px;
-  color: #8fa67d;
+  color: #94a3b8;
   line-height: 1.6;
   margin-top: 9px;
   overflow-wrap: anywhere;
 }
 .pn-create-preview footer {
-  border-top: 1px solid #d2e8c31a;
+  border-top: 1px solid #243550;
   padding-top: 18px;
   margin-top: 20px;
   display: flex;
@@ -118,10 +124,10 @@
   justify-content: space-between;
   gap: 10px;
   font-size: 10px;
-  color: #93ae7f;
+  color: #94a3b8;
 }
 .pn-create-preview footer strong {
-  color: #c8e2ad;
+  color: #f8fafc;
   font-weight: 600;
 }
 .pn-create-main {
@@ -135,7 +141,7 @@
 }
 .pn-create-step-heading > span:last-child {
   font-size: 10px;
-  color: #8da27b;
+  color: #94a3b8;
 }
 .pn-create-progress {
   display: flex;
@@ -146,32 +152,35 @@
   flex: 1;
   height: 3px;
   border-radius: 5px;
-  background: #d2e8c316;
+  background: #243550;
 }
 .pn-create-progress i[data-complete="true"] {
-  background: #d2f58a;
+  background: #ffbe24;
 }
 .pn-create-form {
-  border: 1px solid #d2e8c324;
+  border: 1px solid #243550;
   border-radius: 26px;
   padding: 36px;
-  background: #17201a;
-  box-shadow: inset 0 1px #d2e8c307;
+  background: #172135;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
 }
 .pn-create-form h2 {
   font-size: 28px;
   font-weight: 500 !important;
   letter-spacing: -0.8px;
   line-height: 1.2;
+  color: #f8fafc;
 }
 .pn-create-form h2 + p {
   margin-top: 11px;
   line-height: 1.8;
+  color: #94a3b8;
 }
 .pn-create-form label {
   font-size: 12px;
   font-weight: 500 !important;
   margin-bottom: 9px;
+  color: #cbd5e1;
 }
 .pn-create-form .space-y-6 > :not(:last-child) {
   margin-bottom: 27px;
@@ -184,6 +193,9 @@
   font-size: 13px;
   font-weight: 400 !important;
   border-radius: 12px;
+  background: #0f172a !important;
+  border: 1px solid #243550 !important;
+  color: #f8fafc !important;
 }
 .pn-create-form .border-2 {
   border-width: 1px;
@@ -194,11 +206,11 @@
   padding-right: 88px !important;
 }
 .pn-create-form .border-amber-400 {
-  border-color: #d2f58a !important;
-  background: #d2f58a0b !important;
+  border-color: #ffbe24 !important;
+  background: rgba(255, 190, 36, 0.08) !important;
 }
 .pn-create-form .ring-amber-400\/20 {
-  --tw-ring-color: #d2f58a20;
+  --tw-ring-color: rgba(255, 190, 36, 0.2);
 }
 .pn-create-form .text-xs {
   line-height: 1.8;
@@ -211,7 +223,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  border-top: 1px solid #d2e8c31a;
+  border-top: 1px solid #243550;
   padding-top: 24px;
 }
 .pn-create-navigation button {
@@ -223,36 +235,38 @@
   box-shadow: none !important;
 }
 .pn-create-navigation button:last-child {
-  background: #d2f58a !important;
-  color: #2f4122 !important;
+  background: #ffbe24 !important;
+  color: #0a1628 !important;
+  font-weight: 700;
 }
 .pn-create-navigation button:last-child > svg:last-child {
   padding: 5px;
   width: 28px;
   height: 28px;
-  background: #2942150a;
+  background: rgba(10, 22, 40, 0.1);
   border-radius: 50%;
 }
 .pn-create-review {
   padding: 22px;
-  border: 1px solid #d2f58a25;
+  border: 1px solid rgba(255, 190, 36, 0.25);
   border-radius: 17px;
-  background: #d2f58a06;
+  background: rgba(255, 190, 36, 0.05);
 }
 .pn-create-review h3 {
   font-size: 22px;
   margin: 14px 0;
   font-weight: 500;
   overflow-wrap: anywhere;
+  color: #f8fafc;
 }
 .pn-create-review p {
   font-size: 13px;
-  color: #b8cf9f;
+  color: #94a3b8;
 }
 .pn-create-review > span:last-child {
   display: block;
   font-size: 11px;
-  color: #8da477;
+  color: #64748b;
   margin-top: 10px;
 }
 @media (max-width: 1000px) {

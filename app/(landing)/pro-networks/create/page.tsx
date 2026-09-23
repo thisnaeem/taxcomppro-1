@@ -295,19 +295,19 @@ export default function CreateProNetworkPage() {
 
   return (
     <div className="pn-page pn-hub pn-create">
-      {/* Top Header */}
-      <header className="bg-white dark:bg-[#172135] border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      {/* Top Sub-Header */}
+      <header className="bg-white dark:bg-[#0c1527] border-b border-slate-200 dark:border-[#243550] relative z-10 shadow-sm">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <Link
             href="/pro-networks"
-            className="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+            className="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-4 h-4 text-[#ffbe24]" />
             <span>Back to Pro Networks</span>
           </Link>
 
           <div className="flex items-center gap-2">
-            <span className="text-xs font-black text-amber-500">
+            <span className="text-xs font-black text-[#ffbe24] tracking-wide">
               Step {step} of 5
             </span>
           </div>
