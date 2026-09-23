@@ -16,13 +16,56 @@ async function requireAdmin(req: NextRequest) {
   return session;
 }
 
+const COURSE_ALIAS_MAP: Record<string, string[]> = {
+  "30-day-launch": ["30-day-launch", "30-day-tax-office-launch", "30-day-tax-office", "30daylaunch", "cmooyt4qz000004l2hgvycccx"],
+  "30-day-tax-office-launch": ["30-day-launch", "30-day-tax-office-launch", "30-day-tax-office", "30daylaunch", "cmooyt4qz000004l2hgvycccx"],
+  "irs-fine-defense": ["irs-fine-defense", "irs-fine-defense-masterclass", "irsfinedefense", "cmop0lsdi000304jyzlcpvi78"],
+  "irs-fine-defense-masterclass": ["irs-fine-defense", "irs-fine-defense-masterclass", "irsfinedefense", "cmop0lsdi000304jyzlcpvi78"],
+  "schedule-c-reconstruction": ["schedule-c-reconstruction", "schedule-c-reconstruction-course", "schedule-c", "schedulecrecon", "mastering-schedule-c-reconstruction", "cmop0nigi000004kzll8bo7dj"],
+  "schedule-c-reconstruction-course": ["schedule-c-reconstruction", "schedule-c-reconstruction-course", "schedule-c", "schedulecrecon", "mastering-schedule-c-reconstruction", "cmop0nigi000004kzll8bo7dj"],
+  "irs-audit-playbook": ["irs-audit-playbook", "irs-audit-playbook-course", "audit-playbook", "auditplaybook", "audit-ready-playbook", "cmop0j4m9000004jyr7orpyav"],
+  "irs-audit-playbook-course": ["irs-audit-playbook", "irs-audit-playbook-course", "audit-playbook", "auditplaybook", "audit-ready-playbook", "cmop0j4m9000004jyr7orpyav"],
+  "credits-filing-status": ["credits-filing-status", "credits-filing-status-course", "credits", "credits-filing-status-explained"],
+  "credits-filing-status-course": ["credits-filing-status", "credits-filing-status-course", "credits", "credits-filing-status-explained"],
+  "due-diligence": ["due-diligence", "due-diligence-course", "staff-audit-ready", "staff-audit-ready-due-diligence"],
+  "staff-audit-ready-due-diligence": ["due-diligence", "due-diligence-course", "staff-audit-ready", "staff-audit-ready-due-diligence"],
+};
+
+const TOOLKIT_ALIAS_MAP: Record<string, string[]> = {
+  "30-day-tax-office": ["30-day-tax-office", "30-day-tax-office-launch", "30-day-launch", "30daylaunch"],
+  "due-diligence-course": ["due-diligence-course", "due-diligence", "staff-audit-ready", "staff-audit-ready-due-diligence"],
+  "irs-fine-defense": ["irs-fine-defense", "irsfinedefense", "irs-fine-defense-masterclass"],
+  "schedule-c-reconstruction": ["schedule-c-reconstruction", "schedule-c", "schedulecrecon"],
+  "audit-playbook": ["audit-playbook", "irs-audit-playbook", "auditplaybook", "audit-ready-playbook"],
+  "credits-filing-status": ["credits-filing-status", "credits", "credits-filing-status-explained"],
+};
+
 async function ensureDbCourse(slugOrId: string, adminId: string) {
+  const canonical = COURSES.find((c) => c.id === slugOrId || c.slug === slugOrId);
+  const aliases = canonical
+    ? Array.from(
+        new Set([
+          canonical.slug,
+          canonical.id,
+          ...(COURSE_ALIAS_MAP[canonical.slug] || []),
+          ...(COURSE_ALIAS_MAP[canonical.id] || []),
+        ])
+      )
+    : [slugOrId];
+
   let dbCourse = await prisma.course.findFirst({
-    where: { OR: [{ id: slugOrId }, { slug: slugOrId }] },
+    where: {
+      OR: [
+        { id: slugOrId },
+        { slug: slugOrId },
+        ...(canonical ? [{ id: canonical.id }, { slug: canonical.slug }] : []),
+        ...aliases.map((a) => ({ id: a })),
+        ...aliases.map((a) => ({ slug: a })),
+      ],
+    },
   });
 
   if (!dbCourse) {
-    const canonical = COURSES.find((c) => c.id === slugOrId || c.slug === slugOrId);
     if (!canonical) {
       throw new Error(`Course definition not found for ${slugOrId}`);
     }
@@ -277,6 +320,29 @@ export async function POST(req: NextRequest) {
             });
           }
 
+          const toolkitEquivalent =
+            canonical?.slug === "30-day-launch" || canonical?.id === "30-day-tax-office-launch"
+              ? "30-day-tax-office"
+              : canonical?.slug === "due-diligence" || canonical?.id === "staff-audit-ready-due-diligence"
+              ? "due-diligence-course"
+              : canonical?.slug === "irs-audit-playbook" || canonical?.id === "irs-audit-playbook-course"
+              ? "audit-playbook"
+              : canonical?.slug || itemId;
+
+          const licExpires = new Date();
+          licExpires.setFullYear(licExpires.getFullYear() + 1);
+
+          await prisma.trainingLicense.upsert({
+            where: { eroId_toolkitId: { eroId: targetUser.id, toolkitId: toolkitEquivalent } },
+            create: {
+              eroId: targetUser.id,
+              toolkitId: toolkitEquivalent,
+              totalSeats: Math.max(staffSeats, 5),
+              expiresAt: licExpires,
+            },
+            update: {},
+          });
+
           if (notifyUsers) {
             await prisma.notification.create({
               data: {
@@ -300,25 +366,66 @@ export async function POST(req: NextRequest) {
                 { toolkitId: `bundle:${itemId}` },
                 { toolkitId: itemId },
                 { stripeSessionId: { startsWith: `admin_bundle_included_${itemId}` } },
+                { stripeSessionId: { startsWith: `admin_grant_bundle_${itemId}` } },
+                { stripeSessionId: { startsWith: `admin_bulk_grant_${itemId}` } },
               ],
             },
           });
         } else if (itemType === "toolkit") {
+          const aliases = TOOLKIT_ALIAS_MAP[itemId] || [itemId];
+          const allTkIds = Array.from(new Set([itemId, ...aliases, ...aliases.map((a) => `toolkit:${a}`)]));
           await prisma.toolkitPurchase.deleteMany({
-            where: { userId, toolkitId: itemId },
+            where: { userId, toolkitId: { in: allTkIds } },
           });
           await prisma.trainingLicense.deleteMany({
-            where: { eroId: userId, toolkitId: itemId },
+            where: { eroId: userId, toolkitId: { in: allTkIds } },
           });
         } else if (itemType === "course") {
-          const course = await prisma.course.findFirst({
-            where: { OR: [{ id: itemId }, { slug: itemId }] },
+          const canonical = COURSES.find((c) => c.id === itemId || c.slug === itemId);
+          const aliases = canonical
+            ? Array.from(
+                new Set([
+                  canonical.slug,
+                  canonical.id,
+                  ...(COURSE_ALIAS_MAP[canonical.slug] || []),
+                  ...(COURSE_ALIAS_MAP[canonical.id] || []),
+                ])
+              )
+            : [itemId];
+
+          const courses = await prisma.course.findMany({
+            where: {
+              OR: [
+                { id: itemId },
+                { slug: itemId },
+                ...aliases.map((a) => ({ id: a })),
+                ...aliases.map((a) => ({ slug: a })),
+              ],
+            },
+            select: { id: true },
           });
-          if (course) {
-            await prisma.enrollment.deleteMany({
-              where: { userId, courseId: course.id },
-            });
-          }
+
+          const courseIds = Array.from(new Set([itemId, ...courses.map((c) => c.id), ...aliases]));
+
+          await prisma.enrollment.deleteMany({
+            where: { userId, courseId: { in: courseIds } },
+          });
+
+          const toolkitEquivalent =
+            canonical?.slug === "30-day-launch" || canonical?.id === "30-day-tax-office-launch"
+              ? "30-day-tax-office"
+              : canonical?.slug === "due-diligence" || canonical?.id === "staff-audit-ready-due-diligence"
+              ? "due-diligence-course"
+              : canonical?.slug === "irs-audit-playbook" || canonical?.id === "irs-audit-playbook-course"
+              ? "audit-playbook"
+              : canonical?.slug || itemId;
+
+          await prisma.trainingLicense.deleteMany({
+            where: {
+              eroId: userId,
+              toolkitId: { in: [toolkitEquivalent, itemId, ...(canonical ? [canonical.slug, canonical.id] : [])] },
+            },
+          });
         }
         results.successful.push(userId);
       }

@@ -56,6 +56,30 @@ export const ALL_BUNDLES = BUNDLES.map((b) => ({
   features: b.features,
 }));
 
+export const COURSE_ALIAS_MAP: Record<string, string[]> = {
+  "30-day-launch": ["30-day-launch", "30-day-tax-office-launch", "30-day-tax-office", "30daylaunch", "cmooyt4qz000004l2hgvycccx"],
+  "30-day-tax-office-launch": ["30-day-launch", "30-day-tax-office-launch", "30-day-tax-office", "30daylaunch", "cmooyt4qz000004l2hgvycccx"],
+  "irs-fine-defense": ["irs-fine-defense", "irs-fine-defense-masterclass", "irsfinedefense", "cmop0lsdi000304jyzlcpvi78"],
+  "irs-fine-defense-masterclass": ["irs-fine-defense", "irs-fine-defense-masterclass", "irsfinedefense", "cmop0lsdi000304jyzlcpvi78"],
+  "schedule-c-reconstruction": ["schedule-c-reconstruction", "schedule-c-reconstruction-course", "schedule-c", "schedulecrecon", "mastering-schedule-c-reconstruction", "cmop0nigi000004kzll8bo7dj"],
+  "schedule-c-reconstruction-course": ["schedule-c-reconstruction", "schedule-c-reconstruction-course", "schedule-c", "schedulecrecon", "mastering-schedule-c-reconstruction", "cmop0nigi000004kzll8bo7dj"],
+  "irs-audit-playbook": ["irs-audit-playbook", "irs-audit-playbook-course", "audit-playbook", "auditplaybook", "audit-ready-playbook", "cmop0j4m9000004jyr7orpyav"],
+  "irs-audit-playbook-course": ["irs-audit-playbook", "irs-audit-playbook-course", "audit-playbook", "auditplaybook", "audit-ready-playbook", "cmop0j4m9000004jyr7orpyav"],
+  "credits-filing-status": ["credits-filing-status", "credits-filing-status-course", "credits", "credits-filing-status-explained"],
+  "credits-filing-status-course": ["credits-filing-status", "credits-filing-status-course", "credits", "credits-filing-status-explained"],
+  "due-diligence": ["due-diligence", "due-diligence-course", "staff-audit-ready", "staff-audit-ready-due-diligence"],
+  "staff-audit-ready-due-diligence": ["due-diligence", "due-diligence-course", "staff-audit-ready", "staff-audit-ready-due-diligence"],
+};
+
+export const TOOLKIT_ALIAS_MAP: Record<string, string[]> = {
+  "30-day-tax-office": ["30-day-tax-office", "30-day-tax-office-launch", "30-day-launch", "30daylaunch"],
+  "due-diligence-course": ["due-diligence-course", "due-diligence", "staff-audit-ready", "staff-audit-ready-due-diligence"],
+  "irs-fine-defense": ["irs-fine-defense", "irsfinedefense", "irs-fine-defense-masterclass"],
+  "schedule-c-reconstruction": ["schedule-c-reconstruction", "schedule-c", "schedulecrecon"],
+  "audit-playbook": ["audit-playbook", "irs-audit-playbook", "auditplaybook", "audit-ready-playbook"],
+  "credits-filing-status": ["credits-filing-status", "credits", "credits-filing-status-explained"],
+};
+
 /**
  * GET /api/admin/users/[userId]/access
  * Compiles full access matrix for a specific user
@@ -129,23 +153,40 @@ export async function GET(
 
   // Check Toolkits
   const toolkitsStatus = ALL_TOOLKITS.map((t) => {
-    const directPurchase = user.toolkitPurchases.find((p) => p.toolkitId === t.id);
-    const hasAccessViaBundle = hasUltimateBundle || hasUltimateBundlePlus;
-    const hasAccess = !!directPurchase || hasAccessViaBundle;
-    const isManual = directPurchase?.stripeSessionId?.startsWith("admin_") ?? false;
+    const aliases = TOOLKIT_ALIAS_MAP[t.id] || [t.id];
 
-    // Check corresponding training license
-    const license = user.trainingLicenses.find(
-      (l) => l.toolkitId.toLowerCase() === t.id.toLowerCase()
-    );
+    const directPurchase = user.toolkitPurchases.find((p) => {
+      const tid = p.toolkitId.toLowerCase();
+      return aliases.some(
+        (a) =>
+          tid === a.toLowerCase() ||
+          tid === `toolkit:${a.toLowerCase()}` ||
+          tid === `bundle:${a.toLowerCase()}`
+      );
+    });
+
+    const license = user.trainingLicenses.find((l) => {
+      const licTid = l.toolkitId.toLowerCase();
+      return aliases.some((a) => licTid === a.toLowerCase());
+    });
+
+    const hasAccessViaBundle = hasUltimateBundle || hasUltimateBundlePlus;
+    const hasAccess = !!directPurchase || !!license || hasAccessViaBundle;
+    const isManual = directPurchase?.stripeSessionId?.startsWith("admin_") ?? false;
 
     return {
       ...t,
       hasAccess,
-      purchaseId: directPurchase?.id || null,
-      grantedAt: directPurchase?.createdAt || null,
+      purchaseId: directPurchase?.id || license?.id || null,
+      grantedAt: directPurchase?.createdAt || license?.createdAt || null,
       accessSource: hasAccess
-        ? (directPurchase ? (isManual ? "MANUAL_GRANT" : "STRIPE_PURCHASE") : "BUNDLE_INCLUDED")
+        ? (directPurchase
+            ? isManual
+              ? "MANUAL_GRANT"
+              : "STRIPE_PURCHASE"
+            : license
+            ? "TRAINING_LICENSE"
+            : "BUNDLE_INCLUDED")
         : "NONE",
       stripeSessionId: directPurchase?.stripeSessionId || null,
       trainingLicense: license
@@ -160,36 +201,70 @@ export async function GET(
 
   // Check Courses
   const coursesStatus = ALL_COURSES.map((c) => {
-    // Check if enrolled by slug or course ID
-    const enrollment = user.enrollments.find(
-      (e) => e.course?.slug === c.slug || e.courseId === c.id || e.course?.id === c.id
+    const aliases = Array.from(
+      new Set([
+        c.slug,
+        c.id,
+        ...(COURSE_ALIAS_MAP[c.slug] || []),
+        ...(COURSE_ALIAS_MAP[c.id] || []),
+      ])
     );
-    // Bundle Plus includes all courses
-    const hasAccessViaBundle = hasUltimateBundlePlus;
-    const hasAccess = !!enrollment || hasAccessViaBundle;
+
+    // Check if enrolled by slug, course ID, or any alias
+    const enrollment = user.enrollments.find((e) => {
+      const eSlug = (e.course?.slug || "").toLowerCase();
+      const eCourseId = (e.courseId || "").toLowerCase();
+      const eId = (e.course?.id || "").toLowerCase();
+      return aliases.some(
+        (a) =>
+          a.toLowerCase() === eSlug ||
+          a.toLowerCase() === eCourseId ||
+          a.toLowerCase() === eId ||
+          (a.length > 5 && eSlug.includes(a.toLowerCase())) ||
+          (a.length > 5 && eCourseId.includes(a.toLowerCase()))
+      );
+    });
 
     // Check staff training license
-    const license = user.trainingLicenses.find(
-      (l) =>
-        l.toolkitId.toLowerCase() === c.slug.toLowerCase() ||
-        l.toolkitId.toLowerCase() === c.id.toLowerCase() ||
-        (c.slug === "irs-fine-defense" && l.toolkitId.toLowerCase() === "irs-fine-defense") ||
-        (c.slug === "30-day-launch" && l.toolkitId.toLowerCase() === "30-day-tax-office") ||
-        (c.slug === "schedule-c-reconstruction" && l.toolkitId.toLowerCase() === "schedule-c-reconstruction") ||
-        (c.slug === "irs-audit-playbook" && l.toolkitId.toLowerCase() === "audit-playbook") ||
-        (c.slug === "credits-filing-status" && l.toolkitId.toLowerCase() === "credits-filing-status") ||
-        (c.slug === "due-diligence" && l.toolkitId.toLowerCase() === "due-diligence-course")
-    );
+    const license = user.trainingLicenses.find((l) => {
+      const licTid = l.toolkitId.toLowerCase();
+      return aliases.some(
+        (a) =>
+          a.toLowerCase() === licTid ||
+          licTid === a.toLowerCase() ||
+          (a.length > 5 && licTid.includes(a.toLowerCase()))
+      );
+    });
+
+    // Check direct purchase
+    const directPurchase = user.toolkitPurchases.find((p) => {
+      const pTid = p.toolkitId.toLowerCase();
+      return (
+        pTid === `course:${c.slug}` ||
+        pTid === `course:${c.id}` ||
+        aliases.some((a) => pTid === `course:${a.toLowerCase()}` || pTid === a.toLowerCase())
+      );
+    });
+
+    // Bundle Plus includes all courses
+    const hasAccessViaBundle = hasUltimateBundlePlus;
+    const hasAccess = !!enrollment || !!license || !!directPurchase || hasAccessViaBundle;
 
     return {
       ...c,
       hasAccess,
-      enrollmentId: enrollment?.id || null,
-      grantedAt: enrollment?.createdAt || null,
+      enrollmentId: enrollment?.id || (license ? license.id : directPurchase ? directPurchase.id : null),
+      grantedAt: enrollment?.createdAt || license?.createdAt || directPurchase?.createdAt || null,
       completedAt: enrollment?.completedAt || null,
       completedLessonsCount: enrollment?.progress?.length || 0,
       accessSource: hasAccess
-        ? (enrollment ? "ENROLLED" : "BUNDLE_INCLUDED")
+        ? (enrollment
+            ? "ENROLLED"
+            : license
+            ? "TRAINING_LICENSE"
+            : directPurchase
+            ? "DIRECT_PURCHASE"
+            : "BUNDLE_INCLUDED")
         : "NONE",
       trainingLicense: license
         ? {
@@ -230,14 +305,31 @@ export async function GET(
  * Helper function to ensure course exists in DB before enrolling
  */
 async function ensureDbCourse(slugOrId: string, adminId: string) {
+  const canonical = COURSES.find((c) => c.id === slugOrId || c.slug === slugOrId);
+  const aliases = canonical
+    ? Array.from(
+        new Set([
+          canonical.slug,
+          canonical.id,
+          ...(COURSE_ALIAS_MAP[canonical.slug] || []),
+          ...(COURSE_ALIAS_MAP[canonical.id] || []),
+        ])
+      )
+    : [slugOrId];
+
   let dbCourse = await prisma.course.findFirst({
     where: {
-      OR: [{ id: slugOrId }, { slug: slugOrId }],
+      OR: [
+        { id: slugOrId },
+        { slug: slugOrId },
+        ...(canonical ? [{ id: canonical.id }, { slug: canonical.slug }] : []),
+        ...aliases.map((a) => ({ id: a })),
+        ...aliases.map((a) => ({ slug: a })),
+      ],
     },
   });
 
   if (!dbCourse) {
-    const canonical = COURSES.find((c) => c.id === slugOrId || c.slug === slugOrId);
     if (!canonical) {
       throw new Error(`Course definition not found for ${slugOrId}`);
     }
@@ -466,7 +558,7 @@ export async function POST(
         });
       }
 
-      // 2b. Auto-grant 5 staff training license seats (valid 12 months)
+      // 2b. Auto-grant staff training license seats (valid 12 months)
       const licExpires = new Date();
       licExpires.setFullYear(licExpires.getFullYear() + 1);
 
@@ -555,11 +647,11 @@ export async function POST(
 
       // 3c. Ensure staff training license for Atlas Academy / ERO Center
       const toolkitEquivalent =
-        canonical?.slug === "30-day-launch"
+        canonical?.slug === "30-day-launch" || canonical?.id === "30-day-tax-office-launch"
           ? "30-day-tax-office"
-          : canonical?.slug === "due-diligence"
+          : canonical?.slug === "due-diligence" || canonical?.id === "staff-audit-ready-due-diligence"
           ? "due-diligence-course"
-          : canonical?.slug === "irs-audit-playbook"
+          : canonical?.slug === "irs-audit-playbook" || canonical?.id === "irs-audit-playbook-course"
           ? "audit-playbook"
           : canonical?.slug || itemId;
 
@@ -644,6 +736,8 @@ export async function DELETE(
             { toolkitId: `bundle:${itemId}` },
             { toolkitId: itemId },
             { stripeSessionId: { startsWith: `admin_bundle_included_${itemId}` } },
+            { stripeSessionId: { startsWith: `admin_grant_bundle_${itemId}` } },
+            { stripeSessionId: { startsWith: `admin_bulk_grant_${itemId}` } },
           ],
         },
       });
@@ -652,27 +746,75 @@ export async function DELETE(
     }
 
     if (itemType === "toolkit") {
+      const aliases = TOOLKIT_ALIAS_MAP[itemId] || [itemId];
+      const allTkIds = Array.from(new Set([itemId, ...aliases, ...aliases.map((a) => `toolkit:${a}`)]));
+
       await prisma.toolkitPurchase.deleteMany({
-        where: { userId, toolkitId: itemId },
+        where: {
+          userId,
+          toolkitId: { in: allTkIds },
+        },
       });
 
       await prisma.trainingLicense.deleteMany({
-        where: { eroId: userId, toolkitId: itemId },
+        where: {
+          eroId: userId,
+          toolkitId: { in: allTkIds },
+        },
       });
 
       return NextResponse.json({ success: true, message: `Toolkit ${itemId} access revoked.` });
     }
 
     if (itemType === "course") {
-      const course = await prisma.course.findFirst({
-        where: { OR: [{ id: itemId }, { slug: itemId }] },
+      const canonical = COURSES.find((c) => c.id === itemId || c.slug === itemId);
+      const aliases = canonical
+        ? Array.from(
+            new Set([
+              canonical.slug,
+              canonical.id,
+              ...(COURSE_ALIAS_MAP[canonical.slug] || []),
+              ...(COURSE_ALIAS_MAP[canonical.id] || []),
+            ])
+          )
+        : [itemId];
+
+      const courses = await prisma.course.findMany({
+        where: {
+          OR: [
+            { id: itemId },
+            { slug: itemId },
+            ...aliases.map((a) => ({ id: a })),
+            ...aliases.map((a) => ({ slug: a })),
+          ],
+        },
+        select: { id: true },
       });
 
-      if (course) {
-        await prisma.enrollment.deleteMany({
-          where: { userId, courseId: course.id },
-        });
-      }
+      const courseIds = Array.from(new Set([itemId, ...courses.map((c) => c.id), ...aliases]));
+
+      await prisma.enrollment.deleteMany({
+        where: {
+          userId,
+          courseId: { in: courseIds },
+        },
+      });
+
+      const toolkitEquivalent =
+        canonical?.slug === "30-day-launch" || canonical?.id === "30-day-tax-office-launch"
+          ? "30-day-tax-office"
+          : canonical?.slug === "due-diligence" || canonical?.id === "staff-audit-ready-due-diligence"
+          ? "due-diligence-course"
+          : canonical?.slug === "irs-audit-playbook" || canonical?.id === "irs-audit-playbook-course"
+          ? "audit-playbook"
+          : canonical?.slug || itemId;
+
+      await prisma.trainingLicense.deleteMany({
+        where: {
+          eroId: userId,
+          toolkitId: { in: [toolkitEquivalent, itemId, ...(canonical ? [canonical.slug, canonical.id] : [])] },
+        },
+      });
 
       return NextResponse.json({ success: true, message: `Course ${itemId} access revoked.` });
     }
