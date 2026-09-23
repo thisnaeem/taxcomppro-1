@@ -1,4 +1,5 @@
 "use client";
+import { safeAuthReturn, accountUrl } from "@/lib/auth-navigation";
 
 import Link from "next/link";
 import { useForm } from "react-hook-form";
@@ -13,6 +14,7 @@ import Image from "next/image";
 function ResetPasswordForm() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
+  const nextPath = safeAuthReturn(searchParams.get("next"));
 
   const [serverError, setServerError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -91,7 +93,7 @@ function ResetPasswordForm() {
           The password reset token is missing or invalid. Please request a new password reset link.
         </p>
         <Link
-          href="/forgot-password"
+          href={accountUrl("/forgot-password", nextPath)}
           className="w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#ffbe24] to-[#ffbe24] text-[#0a1628] font-bold text-sm py-3.5 rounded-full hover:shadow-[0_0_20px_rgba(255, 190, 36,0.4)] transition-all"
         >
           Request New Reset Link <ArrowRight className="w-4 h-4" />
@@ -112,7 +114,7 @@ function ResetPasswordForm() {
           Your password has been successfully updated. You can now sign in to your Tax Compliance Pro account with your new password.
         </p>
         <Link
-          href="/login"
+          href={accountUrl("/login", nextPath)}
           className="w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#ffbe24] to-[#ffbe24] text-[#0a1628] font-bold text-sm py-3.5 rounded-full hover:shadow-[0_0_20px_rgba(255, 190, 36,0.4)] transition-all"
         >
           Sign In to Your Account <ArrowRight className="w-4 h-4" />
@@ -223,7 +225,7 @@ function ResetPasswordForm() {
 
       <div className="text-center mt-6 pt-6 border-t border-slate-100">
         <Link
-          href="/login"
+          href={accountUrl("/login", nextPath)}
           className="text-sm text-slate-600 hover:text-[#0a1628] font-semibold transition-colors"
         >
           Back to Sign In

@@ -1,4 +1,5 @@
 "use client";
+import { safeAuthReturn, accountUrl } from "@/lib/auth-navigation";
 import { PROFESSIONAL_TITLES } from "@/lib/professionalTitles";
 import ProfessionalTitleEditor from "@/components/networks/ProfessionalTitleEditor";
 
@@ -154,6 +155,7 @@ function ErrorBanner({ message }: { message: string }) {
 function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const nextPath = safeAuthReturn(searchParams.get("next") || searchParams.get("redirect"), "");
   const { data: session } = useSession();
 
   const [step, setStep] = useState<"account" | "verify" | "membership">("account");
@@ -171,7 +173,7 @@ function RegisterForm() {
   const [selectedTier, setSelectedTier] = useState<string>("MARKETPLACE");
   const [couponCode, setCouponCode] = useState("");
 
-  const [serverError, setServerError] = useState("");
+  const [serverError, setServerError] = useState(searchParams.has("error") ? "Sign-up was not completed. Please try again." : "");
   const [loading, setLoading] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -186,17 +188,21 @@ function RegisterForm() {
 
   // If user signed in via Google or has an active session, auto-advance to membership plan choice
   useEffect(() => {
-    if (searchParams.get("step") === "membership" || session?.user) {
+    if (session?.user && nextPath) {
+      window.location.replace(nextPath);
+      return;
+    }
+    if (session?.user) {
       setStep("membership");
     }
-  }, [searchParams, session]);
+  }, [searchParams, session, nextPath]);
 
   const {
     register, handleSubmit, setValue, watch, setError, clearErrors,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { agreeTerms: false, phone: "" },
+    defaultValues: { agreeTerms: false, phone: "", email: searchParams.get("email") || "", name: searchParams.get("name") || "" },
   });
 
   const phoneValue = watch("phone") || "";
@@ -310,6 +316,7 @@ function RegisterForm() {
         return;
       }
 
+      if (nextPath) { window.location.assign(nextPath); return; }
       // Verified and signed in. Continue to plan selection.
       setStep("membership");
     } catch {
@@ -347,7 +354,8 @@ function RegisterForm() {
   const handleGoogle = async () => {
     setGoogleLoading(true);
     try {
-      await signIn.social({ provider: "google", callbackURL: "/register?step=membership" });
+      const result = await signIn.social({ provider: "google", callbackURL: nextPath || "/register?step=membership", errorCallbackURL: accountUrl("/register", nextPath) });
+      if (result.error) throw new Error(result.error.message);
     } catch {
       setServerError("Google sign-in failed.");
       setGoogleLoading(false);
@@ -550,7 +558,7 @@ function RegisterForm() {
   if (step === "verify") {
     return (
       <AuthShell>
-        <StepRail current={2} />
+        <StepRail current={2} total={nextPath ? 2 : 3} />
 
         <header className="mb-7">
           <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-[#0a1628] dark:bg-amber-400/15">
@@ -631,7 +639,7 @@ function RegisterForm() {
   /* ─────────────────────────── STEP 1: ACCOUNT ─────────────────────────── */
   return (
     <AuthShell>
-      <StepRail current={1} />
+      <StepRail current={1} total={nextPath ? 2 : 3} />
 
       <header className="mb-7">
         <h1 className="text-[28px] font-black leading-tight tracking-tight text-[#0a1628] sm:text-[32px] dark:text-white">
@@ -639,7 +647,7 @@ function RegisterForm() {
         </h1>
         <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
           Already have an account?{" "}
-          <Link href="/login" className="font-bold text-[#ffbe24] underline-offset-2 hover:underline dark:text-[#ffbe24]">
+          <Link href={accountUrl("/login", nextPath || "/feed")} className="font-bold text-[#ffbe24] underline-offset-2 hover:underline dark:text-[#ffbe24]">
             Sign in
           </Link>
         </p>

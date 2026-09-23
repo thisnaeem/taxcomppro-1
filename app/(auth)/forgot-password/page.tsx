@@ -1,6 +1,8 @@
 "use client";
+import { safeAuthReturn, accountUrl } from "@/lib/auth-navigation";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState, Suspense } from "react";
@@ -10,6 +12,8 @@ import { Mail, ArrowRight, ArrowLeft, CheckCircle2, RefreshCw } from "lucide-rea
 import Image from "next/image";
 
 function ForgotPasswordForm() {
+  const params = useSearchParams();
+  const nextPath = safeAuthReturn(params.get("next"));
   const [serverError, setServerError] = useState("");
   const [loading, setLoading] = useState(false);
   const [submittedEmail, setSubmittedEmail] = useState<string | null>(null);
@@ -29,7 +33,7 @@ function ForgotPasswordForm() {
     try {
       const res = await requestPasswordReset({
         email: data.email,
-        redirectTo: "/reset-password",
+        redirectTo: accountUrl("/reset-password", nextPath),
       });
 
       if (res?.error) {
@@ -100,7 +104,7 @@ function ForgotPasswordForm() {
           </button>
 
           <Link
-            href="/login"
+            href={accountUrl("/login", nextPath)}
             className="w-full flex items-center justify-center gap-2 bg-[#0a1628] text-white font-bold text-sm py-3.5 rounded-full hover:bg-[#1a3a6b] transition-all"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -165,7 +169,7 @@ function ForgotPasswordForm() {
 
       <div className="text-center mt-6 pt-6 border-t border-slate-100">
         <Link
-          href="/login"
+          href={accountUrl("/login", nextPath)}
           className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-[#0a1628] font-semibold transition-colors"
         >
           <ArrowLeft className="w-4 h-4" /> Back to Sign In

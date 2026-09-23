@@ -1,3 +1,4 @@
+import { authOrigins, safeAuthReturn, sharedCookieOptions } from "@/lib/auth-navigation";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { ensureProfileSlug } from "@/lib/profileSlug";
@@ -14,11 +15,17 @@ export const auth = betterAuth({
     requireEmailVerification: false,
     resetPasswordTokenExpiresIn: 3600, // 1 hour
     sendResetPassword: async ({ user, url, token }) => {
-      const resetUrl = `${appUrl}/reset-password?token=${encodeURIComponent(token)}`;
+      const resetUrl = new URL("/reset-password", appUrl);
+      resetUrl.searchParams.set("token", token);
+      const callback = new URL(url).searchParams.get("callbackURL");
+      if (callback) {
+        const destination = new URL(callback, appUrl);
+        resetUrl.searchParams.set("next", safeAuthReturn(destination.searchParams.get("next")));
+      }
       await sendPasswordResetEmail({
         to: user.email,
         userName: user.name || "Member",
-        resetUrl,
+        resetUrl: resetUrl.href,
       });
     },
   },
@@ -44,49 +51,8 @@ export const auth = betterAuth({
   },
   secret: process.env.BETTER_AUTH_SECRET,
   baseURL: appUrl,
-  trustedOrigins: [
-    appUrl,
-    "http://localhost:3000",
-    "http://localhost:3001",
-    "http://localhost:3003",
-    "http://localhost:3004",
-    "http://localhost:3005",
-    "http://localhost:3006",
-    "http://localhost:3007",
-    "http://localhost:3008",
-    "http://localhost:3009",
-    "http://localhost:3010",
-    "http://localhost:3011",
-    "https://www.taxcomppro.com",
-    "https://taxcomppro.com",
-    "https://proconnect.taxcomppro.com",
-    "https://academy.taxcomppro.com",
-    "https://30daylaunch.taxcomppro.com",
-    "https://auditplaybook.taxcomppro.com",
-    "https://irsfinedefense.taxcomppro.com",
-    "https://schedulecrecon.taxcomppro.com",
-    "https://credits.taxcomppro.com",
-    "https://staffaudit.taxcomppro.com",
-    "https://staffauditready.taxcomppro.com",
-    "https://staff-audit.taxcomppro.com",
-    "https://staff-audit-ready.taxcomppro.com",
-    "https://affiliate.taxcomppro.com",
-    "https://ultimate.taxcomppro.com",
-    "https://ultimate.taxcompro.com",
-    "https://ultimateplus.taxcompro.com",
-    "https://ultimateplus.taxcomppro.com",
-  ],
-  advanced: {
-    crossSubdomainCookies: {
-      enabled: true,
-      domain: process.env.NODE_ENV === "production" ? ".taxcomppro.com" : undefined,
-    },
-    defaultCookieAttributes: {
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      domain: process.env.NODE_ENV === "production" ? ".taxcomppro.com" : undefined,
-    },
-  },
+  trustedOrigins: [appUrl, ...authOrigins],
+  advanced: sharedCookieOptions,
 });
 
 export type Session = typeof auth.$Infer.Session;

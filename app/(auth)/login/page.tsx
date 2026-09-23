@@ -1,11 +1,12 @@
 "use client";
+import { safeAuthReturn, accountUrl } from "@/lib/auth-navigation";
 
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState, useEffect, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { signIn } from "@/lib/auth-client";
+import { useSearchParams } from "next/navigation";
+import { signIn, useSession } from "@/lib/auth-client";
 import { loginSchema, type LoginInput } from "@/lib/schemas";
 import { Mail, Lock, ArrowRight, Eye, EyeOff, Check, AlertCircle, Loader2 } from "lucide-react";
 import AuthShell from "@/components/auth/AuthShell";
@@ -22,10 +23,11 @@ const inputErr =
   "border-red-400 focus:border-red-500 focus:ring-4 focus:ring-red-500/15";
 
 function LoginForm() {
-  const router = useRouter();
+  const { data: session, isPending } = useSession();
   const searchParams = useSearchParams();
-  const nextPath = searchParams.get("next") || searchParams.get("redirect") || "/feed";
-  const [serverError, setServerError] = useState("");
+  const nextPath = safeAuthReturn(searchParams.get("next") || searchParams.get("redirect"));
+  useEffect(() => { if (!isPending && session?.user) window.location.replace(nextPath); }, [isPending, session, nextPath]);
+  const [serverError, setServerError] = useState(searchParams.has("error") ? "Sign-in was not completed. Please try again." : "");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -39,8 +41,8 @@ function LoginForm() {
   // rememberMe already defaults to true, so only the field value needs restoring.
   useEffect(() => {
     const saved = localStorage.getItem("tcp_remembered_email");
-    if (saved) setValue("email", saved);
-  }, [setValue]);
+    if (searchParams.get("email") || saved) setValue("email", searchParams.get("email") || saved || "");
+  }, [setValue, searchParams]);
 
   const onSubmit = async (data: LoginInput) => {
     setLoading(true); setServerError("");
@@ -52,7 +54,7 @@ function LoginForm() {
         // Save or clear remembered email
         if (rememberMe) localStorage.setItem("tcp_remembered_email", data.email);
         else localStorage.removeItem("tcp_remembered_email");
-        router.push(nextPath);
+        window.location.assign(nextPath);
       }
     } catch { setServerError("Something went wrong. Please try again."); }
     finally { setLoading(false); }
@@ -60,12 +62,16 @@ function LoginForm() {
 
   const handleGoogle = async () => {
     setGoogleLoading(true);
-    try { await signIn.social({ provider: "google", callbackURL: nextPath }); }
+    try {
+      const result = await signIn.social({ provider: "google", callbackURL: nextPath, errorCallbackURL: accountUrl("/login", nextPath) });
+      if (result.error) throw new Error(result.error.message);
+    }
     catch { setServerError("Google sign-in failed."); setGoogleLoading(false); }
   };
 
   return (
     <>
+      <p className="mb-4 text-sm text-slate-500">Use the same account for Tax Compliance Pro, Academy and toolkits.</p>
       <header className="mb-8">
         <h1 className="text-[28px] sm:text-[32px] font-black leading-tight tracking-tight text-[#0a1628] dark:text-white">
           Welcome back
@@ -73,7 +79,7 @@ function LoginForm() {
         <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
           New to Tax Compliance Pro?{" "}
           <Link
-            href="/register"
+            href={accountUrl("/register", nextPath)}
             className="font-bold text-[#ffbe24] underline-offset-2 hover:underline dark:text-[#ffbe24]"
           >
             Create an account
@@ -138,7 +144,7 @@ function LoginForm() {
               Password
             </label>
             <Link
-              href="/forgot-password"
+              href={accountUrl("/forgot-password", nextPath)}
               className="text-xs font-semibold text-slate-600 transition-colors hover:text-[#ffbe24] dark:text-slate-300 dark:hover:text-[#ffbe24]"
             >
               Forgot password?

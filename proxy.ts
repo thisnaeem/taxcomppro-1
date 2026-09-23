@@ -5,6 +5,8 @@ import { auth } from "@/lib/auth";
 const PUBLIC_PAGES = new Set([
   "/",
   "/login",
+  "/sign-in",
+  "/sign-up",
   "/register",
   "/forgot-password",
   "/reset-password",
@@ -68,7 +70,7 @@ export async function proxy(request: NextRequest) {
   // stops that check being skipped. The OTP route calls auth.api.signUpEmail in-process,
   // so it never crosses this HTTP path. Google OAuth uses /api/auth/callback/* and is
   // unaffected: Google has already verified the address.
-  if (pathname === "/api/auth/sign-up/email" && request.method === "POST") {
+  if (pathname.replace(/\/$/, "") === "/api/auth/sign-up/email" && request.method === "POST") {
     return NextResponse.json(
       { message: "Email verification is required. Start at /register." },
       { status: 403 }
