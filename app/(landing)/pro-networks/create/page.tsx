@@ -705,9 +705,14 @@ export default function CreateProNetworkPage() {
 
                 {/* Cover Upload */}
                 <div className="space-y-3">
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                    Network Cover Banner
-                  </label>
+                  <div className="flex flex-wrap items-center justify-between gap-1">
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                      Network Cover Banner
+                    </label>
+                    <span className="text-[11px] font-bold text-[#ffbe24]">
+                      Recommended: 1200 × 400 px (3:1 ratio)
+                    </span>
+                  </div>
 
                   {/* Preview current cover */}
                   <div className="relative h-36 rounded-2xl overflow-hidden bg-gradient-to-r from-[#0a1628] via-[#112240] to-[#0a1628] border border-slate-200 dark:border-slate-700 shadow-inner">
@@ -735,7 +740,7 @@ export default function CreateProNetworkPage() {
                   </div>
 
                   {/* File Upload Input */}
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
                     <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs shadow-md transition-all">
                       <ImageIcon className="w-4 h-4" />
                       <span>Upload Cover from Device</span>
@@ -767,16 +772,21 @@ export default function CreateProNetworkPage() {
                       />
                     </label>
                     <span className="text-[11px] text-slate-400">
-                      PNG, JPG, or WebP up to 10MB
+                      Ideal size: 1200 × 400 px • PNG, JPG, or WebP up to 10MB
                     </span>
                   </div>
                 </div>
 
                 {/* Logo / Brand Icon Upload */}
                 <div className="space-y-3 pt-2 border-t border-slate-100 dark:border-slate-800">
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                    Network Brand Logo / Icon (Optional)
-                  </label>
+                  <div className="flex flex-wrap items-center justify-between gap-1">
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                      Network Brand Logo / Icon (Optional)
+                    </label>
+                    <span className="text-[11px] font-bold text-slate-400">
+                      Recommended: 400 × 400 px (1:1 square)
+                    </span>
+                  </div>
 
                   {logoImage && (
                     <div className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 w-fit">

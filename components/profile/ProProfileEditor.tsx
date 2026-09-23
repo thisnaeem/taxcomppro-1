@@ -462,9 +462,30 @@ export default function ProProfileEditor() {
       <input type="file" ref={avatarInputRef} onChange={handleAvatarUpload} accept="image/*" className="hidden" />
       <input type="file" ref={coverInputRef} onChange={handleCoverUpload} accept="image/*" className="hidden" />
 
-      <div className="flex flex-col lg:flex-row gap-6 items-start">
-        {/* ── LEFT SIDEBAR ────────────────────────────────────────────────── */}
-        <aside className="w-full lg:w-72 shrink-0 lg:sticky lg:top-[92px] lg:max-h-[calc(100vh-104px)] lg:overflow-y-auto scrollbar-none self-start space-y-5 z-20">
+      {/* ── MOBILE TABS BAR (horizontal scroll) ───────────────────────── */}
+      <div className="lg:hidden w-full overflow-x-auto scrollbar-none pb-1 flex gap-2">
+        {PRO_SIDEBAR_TABS.map((tab) => {
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap flex items-center gap-2 shrink-0 transition-all border ${
+                isActive
+                  ? "bg-[#ffbe24] text-[#0a1628] border-[#ffbe24] shadow-sm font-black"
+                  : "bg-white dark:bg-[#172135] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800"
+              }`}
+            >
+              <tab.icon className={`w-4 h-4 shrink-0 ${isActive ? "text-[#0a1628]" : "text-slate-400 dark:text-slate-500"}`} />
+              <span>{tab.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="flex flex-col lg:flex-row gap-6 items-start w-full min-w-0">
+        {/* ── DESKTOP SIDEBAR ────────────────────────────────────────────── */}
+        <aside className="hidden lg:block w-72 shrink-0 sticky top-[92px] max-h-[calc(100vh-104px)] overflow-y-auto scrollbar-none self-start space-y-5 z-20">
           <div className="bg-white dark:bg-[#172135] rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-sm p-3.5 space-y-1">
             <div className="px-3.5 py-2 text-[11px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
               PROFILE MENU
@@ -516,7 +537,7 @@ export default function ProProfileEditor() {
         </aside>
 
         {/* ── MAIN CONTENT AREA ───────────────────────────────────────────── */}
-        <div className="flex-1 min-w-0 space-y-6">
+        <div className="w-full flex-1 min-w-0 space-y-6">
 
           {/* ── HERO PROFILE CARD ─────────────────────────────────────────── */}
           <div className="rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
@@ -548,7 +569,7 @@ export default function ProProfileEditor() {
             )}
 
             {/* Profile Info Section */}
-            <div className="px-6 py-5 sm:px-8">
+            <div className="px-4 py-4 sm:px-8 sm:py-5">
               <div className="flex flex-col sm:flex-row gap-5">
                 {/* Square Avatar */}
                 <div className="relative shrink-0 w-24 h-24 sm:w-28 sm:h-28 -mt-14 sm:-mt-16 group self-start">
@@ -598,10 +619,10 @@ export default function ProProfileEditor() {
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="flex flex-wrap items-center gap-2.5 pt-3">
+                  <div className="flex flex-wrap items-center gap-2 pt-3">
                     <button
                       onClick={() => setEditModalOpen(true)}
-                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#1E56A0] hover:bg-[#16437E] text-white text-xs font-bold transition-all shadow-sm cursor-pointer"
+                      className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#1E56A0] hover:bg-[#16437E] text-white text-xs font-bold transition-all shadow-sm cursor-pointer"
                     >
                       <Edit3 className="w-3.5 h-3.5" />
                       EDIT PROFILE
@@ -609,7 +630,7 @@ export default function ProProfileEditor() {
 
                     <button
                       onClick={() => setShareDialogOpen(true)}
-                      className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-[#1E56A0] hover:text-[#1E56A0] bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-200 text-xs font-bold transition-all cursor-pointer"
+                      className="flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-[#1E56A0] hover:text-[#1E56A0] bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-200 text-xs font-bold transition-all cursor-pointer"
                     >
                       <Share2 className="w-3.5 h-3.5" />
                       SHARE
@@ -617,7 +638,7 @@ export default function ProProfileEditor() {
 
                     <button
                       onClick={() => setPromoteModalOpen(true)}
-                      className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-[#1E56A0] hover:text-[#1E56A0] bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-200 text-xs font-bold transition-all shadow-sm cursor-pointer"
+                      className="flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-[#1E56A0] hover:text-[#1E56A0] bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-200 text-xs font-bold transition-all shadow-sm cursor-pointer"
                     >
                       <Megaphone className="w-3.5 h-3.5 text-amber-500" />
                       PROMOTE NETWORK
@@ -629,78 +650,78 @@ export default function ProProfileEditor() {
           </div>
 
           {/* ── PRO NETWORK STATS BAR (100% DYNAMIC) ────────────────────────── */}
-          <div className="rounded-3xl bg-white dark:bg-[#172135] border border-slate-200/90 dark:border-slate-800 p-4 sm:p-5 shadow-xs mb-6 transition-colors">
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-y sm:divide-y-0 sm:divide-x divide-slate-100 dark:divide-slate-800/80 gap-y-4">
+          <div className="rounded-3xl bg-white dark:bg-[#172135] border border-slate-200/90 dark:border-slate-800 p-3 sm:p-5 shadow-xs mb-6 transition-colors">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-0 sm:divide-x divide-slate-100 dark:divide-slate-800/80">
               {/* 1. CONNECTIONS */}
-              <div className="flex items-center gap-3.5 px-3 sm:first:pl-2">
-                <div className="w-11 h-11 rounded-full border border-blue-500/25 bg-blue-500/10 dark:bg-blue-500/20 text-[#1E56A0] dark:text-blue-400 flex items-center justify-center shrink-0">
-                  <Users className="w-5 h-5" />
+              <div className="flex items-center gap-2.5 sm:gap-3.5 p-2 sm:p-0 sm:px-3 sm:first:pl-2 rounded-xl bg-slate-50/60 dark:bg-slate-800/40 sm:bg-transparent min-w-0">
+                <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-full border border-blue-500/25 bg-blue-500/10 dark:bg-blue-500/20 text-[#1E56A0] dark:text-blue-400 flex items-center justify-center shrink-0">
+                  <Users className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
-                <div className="min-w-0">
-                  <p className="text-xl sm:text-2xl font-black text-[#0A1628] dark:text-white leading-tight tracking-tight">
+                <div className="min-w-0 flex-1">
+                  <p className="text-base sm:text-2xl font-black text-[#0A1628] dark:text-white leading-tight tracking-tight truncate">
                     {proStats.connections.toLocaleString()}
                   </p>
-                  <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mt-0.5">
+                  <p className="text-[9px] sm:text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mt-0.5 truncate">
                     CONNECTIONS
                   </p>
                 </div>
               </div>
 
               {/* 2. PRO NETWORK MEMBERS */}
-              <div className="flex items-center gap-3.5 px-3 sm:pl-4">
-                <div className="w-11 h-11 rounded-full border border-blue-500/25 bg-blue-500/10 dark:bg-blue-500/20 text-[#1E56A0] dark:text-blue-400 flex items-center justify-center shrink-0">
-                  <Users2 className="w-5 h-5" />
+              <div className="flex items-center gap-2.5 sm:gap-3.5 p-2 sm:p-0 sm:px-3 sm:pl-4 rounded-xl bg-slate-50/60 dark:bg-slate-800/40 sm:bg-transparent min-w-0">
+                <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-full border border-blue-500/25 bg-blue-500/10 dark:bg-blue-500/20 text-[#1E56A0] dark:text-blue-400 flex items-center justify-center shrink-0">
+                  <Users2 className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
-                <div className="min-w-0">
-                  <p className="text-xl sm:text-2xl font-black text-[#0A1628] dark:text-white leading-tight tracking-tight">
+                <div className="min-w-0 flex-1">
+                  <p className="text-base sm:text-2xl font-black text-[#0A1628] dark:text-white leading-tight tracking-tight truncate">
                     {proStats.proNetworkMembers.toLocaleString()}
                   </p>
-                  <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mt-0.5">
+                  <p className="text-[9px] sm:text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mt-0.5 truncate">
                     PRO NETWORK MEMBERS
                   </p>
                 </div>
               </div>
 
               {/* 3. PRO NETWORKS OWNED */}
-              <div className="flex items-center gap-3.5 px-3 sm:pl-4">
-                <div className="w-11 h-11 rounded-full border border-blue-500/25 bg-blue-500/10 dark:bg-blue-500/20 text-[#1E56A0] dark:text-blue-400 flex items-center justify-center shrink-0">
-                  <Star className="w-5 h-5 fill-[#1E56A0]/20 dark:fill-blue-400/20" />
+              <div className="flex items-center gap-2.5 sm:gap-3.5 p-2 sm:p-0 sm:px-3 sm:pl-4 rounded-xl bg-slate-50/60 dark:bg-slate-800/40 sm:bg-transparent min-w-0">
+                <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-full border border-blue-500/25 bg-blue-500/10 dark:bg-blue-500/20 text-[#1E56A0] dark:text-blue-400 flex items-center justify-center shrink-0">
+                  <Star className="w-4 h-4 sm:w-5 sm:h-5 fill-[#1E56A0]/20 dark:fill-blue-400/20" />
                 </div>
-                <div className="min-w-0">
-                  <p className="text-xl sm:text-2xl font-black text-[#0A1628] dark:text-white leading-tight tracking-tight">
+                <div className="min-w-0 flex-1">
+                  <p className="text-base sm:text-2xl font-black text-[#0A1628] dark:text-white leading-tight tracking-tight truncate">
                     {(proStats.proNetworksOwned + proStats.proNetworksJoined).toLocaleString()}
                   </p>
-                  <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mt-0.5">
+                  <p className="text-[9px] sm:text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mt-0.5 truncate">
                     PRO NETWORKS
                   </p>
                 </div>
               </div>
 
               {/* 4. DISCUSSIONS STARTED */}
-              <div className="flex items-center gap-3.5 px-3 sm:pl-4">
-                <div className="w-11 h-11 rounded-full border border-blue-500/25 bg-blue-500/10 dark:bg-blue-500/20 text-[#1E56A0] dark:text-blue-400 flex items-center justify-center shrink-0">
-                  <MessageSquare className="w-5 h-5" />
+              <div className="flex items-center gap-2.5 sm:gap-3.5 p-2 sm:p-0 sm:px-3 sm:pl-4 rounded-xl bg-slate-50/60 dark:bg-slate-800/40 sm:bg-transparent min-w-0">
+                <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-full border border-blue-500/25 bg-blue-500/10 dark:bg-blue-500/20 text-[#1E56A0] dark:text-blue-400 flex items-center justify-center shrink-0">
+                  <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
-                <div className="min-w-0">
-                  <p className="text-xl sm:text-2xl font-black text-[#0A1628] dark:text-white leading-tight tracking-tight">
+                <div className="min-w-0 flex-1">
+                  <p className="text-base sm:text-2xl font-black text-[#0A1628] dark:text-white leading-tight tracking-tight truncate">
                     {proStats.discussionsStarted.toLocaleString()}
                   </p>
-                  <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mt-0.5">
-                    DISCUSSIONS STARTED
+                  <p className="text-[9px] sm:text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+                    DISCUSSIONS
                   </p>
                 </div>
               </div>
 
               {/* 5. PRO TALKS HOSTED */}
-              <div className="flex items-center gap-3.5 px-3 sm:pl-4 sm:last:pr-2">
-                <div className="w-11 h-11 rounded-full border border-blue-500/25 bg-blue-500/10 dark:bg-blue-500/20 text-[#1E56A0] dark:text-blue-400 flex items-center justify-center shrink-0">
-                  <Video className="w-5 h-5" />
+              <div className="col-span-2 sm:col-span-1 flex items-center gap-2.5 sm:gap-3.5 p-2 sm:p-0 sm:px-3 sm:last:pr-2 rounded-xl bg-slate-50/60 dark:bg-slate-800/40 sm:bg-transparent min-w-0">
+                <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-full border border-blue-500/25 bg-blue-500/10 dark:bg-blue-500/20 text-[#1E56A0] dark:text-blue-400 flex items-center justify-center shrink-0">
+                  <Video className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
-                <div className="min-w-0">
-                  <p className="text-xl sm:text-2xl font-black text-[#0A1628] dark:text-white leading-tight tracking-tight">
+                <div className="min-w-0 flex-1">
+                  <p className="text-base sm:text-2xl font-black text-[#0A1628] dark:text-white leading-tight tracking-tight truncate">
                     {proStats.proTalksHosted.toLocaleString()}
                   </p>
-                  <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mt-0.5">
+                  <p className="text-[9px] sm:text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mt-0.5 truncate">
                     PRO TALKS HOSTED
                   </p>
                 </div>
@@ -822,56 +843,56 @@ export default function ProProfileEditor() {
                 </div>
               </Column>
               <Column>
-                <div className="rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
+                <div className="rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-4 sm:p-6 shadow-xs space-y-4">
                   <h3 className="text-xs font-black text-[#0A1628] dark:text-white uppercase tracking-widest flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
-                    <Crown className="w-4 h-4 text-amber-500" />
-                    MEMBERSHIP STATUS
+                    <Crown className="w-4 h-4 text-amber-500 shrink-0" />
+                    <span>MEMBERSHIP STATUS</span>
                   </h3>
-                  <div className="flex items-center justify-between gap-3 p-3.5 rounded-xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-500/20">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 text-white flex items-center justify-center shrink-0">
-                        <Crown className="w-5 h-5" />
+                  <div className="flex items-center justify-between gap-2.5 p-3 sm:p-3.5 rounded-xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-500/20 min-w-0">
+                    <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 text-white flex items-center justify-center shrink-0">
+                        <Crown className="w-4 h-4 sm:w-5 sm:h-5" />
                       </div>
-                      <div>
-                        <h4 className="text-sm font-black text-[#0A1628] dark:text-white">{memberStats.tierName}</h4>
+                      <div className="min-w-0">
+                        <h4 className="text-xs sm:text-sm font-black text-[#0A1628] dark:text-white truncate">{memberStats.tierName}</h4>
                         {memberStats.validThru && (
-                          <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">Valid Thru: {memberStats.validThru}</p>
+                          <p className="text-[10px] sm:text-[11px] font-semibold text-slate-500 dark:text-slate-400 truncate">Valid Thru: {memberStats.validThru}</p>
                         )}
                       </div>
                     </div>
                     <button
                       onClick={openStripePortal}
                       disabled={portalLoading}
-                      className="px-3 py-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-[#0A1628] dark:text-white hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shrink-0"
+                      className="px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[11px] sm:text-xs font-bold text-[#0A1628] dark:text-white hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shrink-0"
                     >
                       {portalLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "MANAGE"}
                     </button>
                   </div>
-                  <div className="grid grid-cols-2 gap-2 text-xs font-bold text-slate-700 dark:text-slate-300 pt-1">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-bold text-slate-700 dark:text-slate-300 pt-1">
                     {["Unlimited Toolkit Access", "Priority Support", "All Course Access", "Exclusive Discounts", "Pro Talks Access", "Community Access"].map((b) => (
-                      <div key={b} className="flex items-center gap-1.5">
-                        <span className="profile-accent">✓</span>
-                        <span>{b}</span>
+                      <div key={b} className="flex items-center gap-1.5 min-w-0">
+                        <span className="profile-accent shrink-0">✓</span>
+                        <span className="truncate">{b}</span>
                       </div>
                     ))}
                   </div>
                 </div>
 
-              <div className="lg:col-span-7 rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
-                <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-                  <h3 className="text-xs font-black text-[#0A1628] dark:text-white uppercase tracking-widest flex items-center gap-2">
+              <div className="rounded-3xl bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 p-4 sm:p-6 shadow-xs space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 gap-2">
+                  <h3 className="text-xs font-black text-[#0A1628] dark:text-white uppercase tracking-widest flex items-center gap-2 shrink-0">
                     <Crown className="w-4 h-4 text-amber-500" />
-                    MY BADGES
+                    <span>MY BADGES</span>
                   </h3>
                   <Link
                     href={primaryNetwork ? `/pro-networks/${primaryNetwork.slug}` : "/pro-networks/create"}
-                    className="text-xs font-bold profile-accent hover:underline"
+                    className="text-xs font-bold profile-accent hover:underline shrink-0"
                   >
                     Manage Badges
                   </Link>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-6 pt-2">
+                <div className="flex flex-wrap items-center gap-4 sm:gap-6 pt-2">
                   {myBadges.map((badge) => (
                     <Link
                       key={badge.id}
@@ -889,7 +910,7 @@ export default function ProProfileEditor() {
                         borderColor={badge.borderColor}
                       />
 
-                      <div className="flex flex-col items-center text-center max-w-[125px] pt-1">
+                      <div className="flex flex-col items-center text-center max-w-[110px] sm:max-w-[125px] pt-1">
                         <span className="text-xs font-black text-[#0A1628] dark:text-white line-clamp-1 group-hover:text-[#1E56A0] dark:group-hover:text-[#60a5fa] transition-colors">
                           {badge.networkName}
                         </span>
@@ -907,7 +928,7 @@ export default function ProProfileEditor() {
                   ))}
 
                   {/* Decorative empty badge slot (no action) */}
-                  <svg aria-hidden="true" width="88" height="102" viewBox="0 0 100 116" className="text-slate-300 dark:text-slate-600">
+                  <svg aria-hidden="true" width="76" height="88" viewBox="0 0 100 116" className="text-slate-300 dark:text-slate-600 shrink-0">
                     <path d="M50 3 L93 17 V55 C93 84 73 103 50 113 C27 103 7 84 7 55 V17 Z" fill="currentColor" fillOpacity="0.08" stroke="currentColor" strokeWidth="2" strokeDasharray="6 5" />
                     <path d="M50 44 V68 M38 56 H62" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
                   </svg>
