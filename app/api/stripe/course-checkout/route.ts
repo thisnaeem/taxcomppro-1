@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getDubCheckoutFields, syncDubStripeCustomer } from "@/lib/dub-attribution";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
@@ -90,18 +91,31 @@ export async function POST(req: NextRequest) {
   const user = await prisma.user.findUnique({ where: { id: session.user.id } });
   if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
-  // Create / retrieve Stripe customer
-  let customerId = user.stripeCustomerId;
-  if (!customerId) {
-    const customer = await stripe.customers.create({ email: user.email, name: user.name ?? "" });
-    customerId = customer.id;
-    await prisma.user.update({ where: { id: user.id }, data: { stripeCustomerId: customerId } });
-  }
-
   const instructor = await prisma.user.findUnique({
     where: { id: course.instructorId },
     select: { id: true, stripeAccountId: true, stripeOnboarded: true, role: true },
   });
+  const isTaxCompProCourse = instructor?.role === "ADMIN";
+  const dub = isTaxCompProCourse ? getDubCheckoutFields(req, user.id) : null;
+
+  // Create / retrieve Stripe customer
+  let customerId = user.stripeCustomerId;
+  if (dub) {
+    customerId = await syncDubStripeCustomer({
+      stripe,
+      customerId,
+      email: user.email,
+      name: user.name,
+      userId: user.id,
+      clickId: dub.clickId,
+    });
+  } else if (!customerId) {
+    const customer = await stripe.customers.create({ email: user.email, name: user.name ?? "" });
+    customerId = customer.id;
+  }
+  if (!user.stripeCustomerId) {
+    await prisma.user.update({ where: { id: user.id }, data: { stripeCustomerId: customerId } });
+  }
 
   // Verify instructor has connected their Stripe account
   if (!instructor?.stripeAccountId) {
@@ -155,6 +169,7 @@ export async function POST(req: NextRequest) {
   const sessionMetadata: Record<string, string> = {
     type: "course",
     userId: user.id,
+    ...(dub?.metadata ?? {}),
     courseId: course.id,
     slug,
     couponCode: appliedCoupon?.code || "",
@@ -172,6 +187,7 @@ export async function POST(req: NextRequest) {
         mode: "payment",
         payment_method_types: ["card"],
         customer_email: user.email ?? undefined,
+        ...(dub?.clientReferenceId ? { client_reference_id: dub.clientReferenceId } : {}),
         line_items: lineItems,
         success_url: `${appUrl}/courses/${slug}?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${appUrl}/courses/${slug}`,
@@ -191,6 +207,7 @@ export async function POST(req: NextRequest) {
       customer: customerId,
       mode: "payment",
       payment_method_types: ["card"],
+      ...(dub?.clientReferenceId ? { client_reference_id: dub.clientReferenceId } : {}),
       line_items: lineItems,
       success_url: `${appUrl}/courses/${slug}?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${appUrl}/courses/${slug}`,

@@ -3,6 +3,7 @@ import Stripe from "stripe";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getToolkit } from "@/lib/toolkits";
+import { getDubCheckoutFields, syncDubStripeCustomer } from "@/lib/dub-attribution";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
@@ -95,11 +96,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ url: "/toolkits/success?free=1" });
   }
 
-  // Create or retrieve Stripe customer
-  let customerId = user.stripeCustomerId;
-  if (!customerId) {
-    const customer = await stripe.customers.create({ email: user.email, name: user.name ?? "" });
-    customerId = customer.id;
+  const dub = getDubCheckoutFields(req, user.id);
+
+  // Create or retrieve Stripe customer and associate this platform sale with Dub.
+  const customerId = await syncDubStripeCustomer({
+    stripe,
+    customerId: user.stripeCustomerId,
+    email: user.email,
+    name: user.name,
+    userId: user.id,
+    clickId: dub.clickId,
+  });
+  if (!user.stripeCustomerId) {
     await prisma.user.update({ where: { id: user.id }, data: { stripeCustomerId: customerId } });
   }
 
@@ -108,6 +116,7 @@ export async function POST(req: NextRequest) {
     mode: "payment",
     allow_promotion_codes: true,
     payment_method_types: ["card"],
+    ...(dub.clientReferenceId ? { client_reference_id: dub.clientReferenceId } : {}),
     // Save card for future VIP trial billing only if this toolkit includes membership
     ...(toolkit.membershipMonths > 0 ? {
       payment_intent_data: {
@@ -131,6 +140,7 @@ export async function POST(req: NextRequest) {
     cancel_url:  `${process.env.NEXT_PUBLIC_APP_URL}/toolkits`,
     metadata: {
       userId:           user.id,
+      ...dub.metadata,
       toolkitId,
       membershipTier:   toolkit.membershipMonths > 0 ? "VIP" : "",
       membershipMonths: String(toolkit.membershipMonths),
