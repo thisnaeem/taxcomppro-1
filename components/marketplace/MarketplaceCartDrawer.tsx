@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMarketplaceCart, MarketplaceCartItem } from "@/lib/marketplace-cart";
@@ -21,12 +22,17 @@ export function MarketplaceCartDrawer() {
   const { items, count, total, remove, clear, isOpen, closeCart } = useMarketplaceCart();
   const router = useRouter();
 
+  const [mounted, setMounted] = useState(false);
   const [couponCode, setCouponCode] = useState("");
   const [discountPercent, setDiscountPercent] = useState<number | null>(null);
   const [couponError, setCouponError] = useState<string | null>(null);
   const [validatingCoupon, setValidatingCoupon] = useState(false);
   const [loadingCheckout, setLoadingCheckout] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Close on Escape key
   useEffect(() => {
@@ -114,15 +120,19 @@ export function MarketplaceCartDrawer() {
     }
   };
 
-  if (!isOpen) return null;
+  if (!mounted || !isOpen) return null;
 
   const discountAmount = discountPercent ? (total * discountPercent) / 100 : 0;
   const finalTotal = Math.max(0, total - discountAmount);
 
-  return (
+  const drawerContent = (
     <div
       className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-sm flex justify-end transition-opacity duration-200"
-      onClick={closeCart}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          closeCart();
+        }
+      }}
       role="dialog"
       aria-modal="true"
     >
@@ -304,4 +314,10 @@ export function MarketplaceCartDrawer() {
       </div>
     </div>
   );
+
+  if (typeof document !== "undefined" && document.body) {
+    return createPortal(drawerContent, document.body);
+  }
+
+  return drawerContent;
 }

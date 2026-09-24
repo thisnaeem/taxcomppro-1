@@ -1,9 +1,9 @@
+"use client";
+
 import { MarketplaceCartDrawer } from "@/components/marketplace/MarketplaceCartDrawer";
 import { MarketplaceCartButton } from "@/components/marketplace/MarketplaceCartButton";
 import { MarketplaceSuccessModal } from "@/components/marketplace/MarketplaceSuccessModal";
 import { useMarketplaceCart } from "@/lib/marketplace-cart";
-"use client";
-
 import { useEffect, useState } from "react";
 import { useParams, notFound, useRouter } from "next/navigation";
 import Link from "next/link";

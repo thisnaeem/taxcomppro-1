@@ -19,6 +19,30 @@ export interface MarketplaceCartItem {
 
 const STORAGE_KEY = "tcp_marketplace_cart";
 const CART_EVENT = "tcp-marketplace-cart-change";
+const DRAWER_EVENT = "tcp-marketplace-cart-drawer-toggle";
+
+let globalMarketplaceDrawerOpen = false;
+
+export function openMarketplaceCartDrawer() {
+  globalMarketplaceDrawerOpen = true;
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent(DRAWER_EVENT, { detail: true }));
+  }
+}
+
+export function closeMarketplaceCartDrawer() {
+  globalMarketplaceDrawerOpen = false;
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent(DRAWER_EVENT, { detail: false }));
+  }
+}
+
+export function toggleMarketplaceCartDrawer(open?: boolean) {
+  globalMarketplaceDrawerOpen = typeof open === "boolean" ? open : !globalMarketplaceDrawerOpen;
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent(DRAWER_EVENT, { detail: globalMarketplaceDrawerOpen }));
+  }
+}
 
 export function getMarketplaceCart(): MarketplaceCartItem[] {
   if (typeof window === "undefined") return [];
@@ -72,7 +96,7 @@ export function getMarketplaceCartTotal(): number {
 export function useMarketplaceCart() {
   const [items, setItems] = useState<MarketplaceCartItem[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(globalMarketplaceDrawerOpen);
 
   useEffect(() => {
     setItems(getMarketplaceCart());
@@ -82,17 +106,24 @@ export function useMarketplaceCart() {
       setItems(getMarketplaceCart());
     };
 
+    const handleDrawer = (e: Event) => {
+      const customEvent = e as CustomEvent<boolean>;
+      setIsOpen(Boolean(customEvent.detail));
+    };
+
     window.addEventListener(CART_EVENT, handleUpdate);
     window.addEventListener("storage", handleUpdate);
+    window.addEventListener(DRAWER_EVENT, handleDrawer as EventListener);
     return () => {
       window.removeEventListener(CART_EVENT, handleUpdate);
       window.removeEventListener("storage", handleUpdate);
+      window.removeEventListener(DRAWER_EVENT, handleDrawer as EventListener);
     };
   }, []);
 
   const add = useCallback((item: MarketplaceCartItem) => {
     const success = addToMarketplaceCart(item);
-    setIsOpen(true);
+    openMarketplaceCartDrawer();
     return success;
   }, []);
 
@@ -116,8 +147,8 @@ export function useMarketplaceCart() {
     clear,
     isInCart: (id: string) => items.some((i) => i.id === id),
     isOpen,
-    openCart: () => setIsOpen(true),
-    closeCart: () => setIsOpen(false),
-    setIsOpen,
+    openCart: () => openMarketplaceCartDrawer(),
+    closeCart: () => closeMarketplaceCartDrawer(),
+    setIsOpen: (open: boolean) => toggleMarketplaceCartDrawer(open),
   };
 }
