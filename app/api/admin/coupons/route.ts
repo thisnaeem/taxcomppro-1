@@ -123,13 +123,24 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    let validListingId: string | null = null;
+    if (appliesTo && appliesTo !== "ALL") {
+      const listing = await prisma.marketplaceListing.findUnique({
+        where: { id: appliesTo },
+        select: { id: true },
+      });
+      if (listing) {
+        validListingId = listing.id;
+      }
+    }
+
     const coupon = await prisma.marketplaceCoupon.create({
       data: {
         code: cleanCode,
         discountType: discountType === "FIXED" ? "FIXED" : "PERCENT",
         discountValue: numDiscount,
         sellerId: admin.user.id,
-        listingId: appliesTo && appliesTo !== "ALL" ? appliesTo : null,
+        listingId: validListingId,
         maxUses: maxUses ? parseInt(maxUses, 10) : null,
         expiresAt: expiresAt ? new Date(expiresAt) : null,
         isActive: Boolean(isActive),

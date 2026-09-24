@@ -65,7 +65,17 @@ export async function PATCH(
   }
 
   if (appliesTo !== undefined) {
-    updateData.listingId = appliesTo && appliesTo !== "ALL" ? appliesTo : null;
+    let validListingId: string | null = null;
+    if (appliesTo && appliesTo !== "ALL") {
+      const listing = await prisma.marketplaceListing.findUnique({
+        where: { id: appliesTo },
+        select: { id: true },
+      });
+      if (listing) {
+        validListingId = listing.id;
+      }
+    }
+    updateData.listingId = validListingId;
   }
 
   if (maxUses !== undefined) {
