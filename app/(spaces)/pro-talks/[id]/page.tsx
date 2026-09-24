@@ -4,10 +4,11 @@ import { Fragment, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { Loader2, Calendar, Clock, Users, Check, CheckCheck, Copy, Play } from "lucide-react";
+import { Loader2, Calendar, Clock, Users, Check, CheckCheck, Copy, Play, Pencil } from "lucide-react";
 import { Radio01Icon } from "hugeicons-react";
 import SpaceRoom from "@/components/spaces/SpaceRoom";
 import RsvpPanel from "@/components/spaces/RsvpPanel";
+import EditTalkDialog from "@/components/spaces/EditTalkDialog";
 import "./talk-room.css";
 
 interface SpaceHost {
@@ -214,13 +215,18 @@ function ScheduledScreen({
   currentUserId,
   onStartNow,
   starting,
+  onSpaceUpdated,
+  onCancelled,
 }: {
   space: Space;
   isHost: boolean;
   currentUserId: string;
   onStartNow: () => void;
   starting: boolean;
+  onSpaceUpdated: (updated: Space) => void;
+  onCancelled: (id: string) => void;
 }) {
+  const [showEdit, setShowEdit] = useState(false);
   const [rsvped, setRsvped] = useState(false);
   const [rsvping, setRsvping] = useState(false);
   const [rsvpCount, setRsvpCount] = useState(space._count?.rsvps ?? 0);
@@ -278,10 +284,15 @@ function ScheduledScreen({
 
       <div className="ptr-actions">
         {isHost && (
-          <button id="host-start-now-btn" onClick={onStartNow} disabled={starting} className="ptr-btn ptr-btn--live">
-            {starting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4 fill-white" />}
-            {starting ? "Starting stage…" : "Go live now"}
-          </button>
+          <>
+            <button id="host-start-now-btn" onClick={onStartNow} disabled={starting} className="ptr-btn ptr-btn--live">
+              {starting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4 fill-white" />}
+              {starting ? "Starting stage…" : "Go live now"}
+            </button>
+            <button id="host-edit-talk-btn" onClick={() => setShowEdit(true)} className="ptr-btn ptr-btn--ghost">
+              <Pencil className="w-4 h-4" /> Edit Talk
+            </button>
+          </>
         )}
         {currentUserId && !isHost && (
           <button id="detail-rsvp-btn" onClick={toggleRsvp} disabled={rsvping} className={`ptr-btn ${rsvped ? "ptr-btn--ghost" : "ptr-btn--primary"}`}>
@@ -447,6 +458,8 @@ export default function ProTalkPage() {
         currentUserId={userId}
         onStartNow={handleStartNow}
         starting={starting}
+        onSpaceUpdated={(updated) => setSpace(s => s ? { ...s, ...updated } : updated)}
+        onCancelled={() => router.push("/pro-talks")}
       />
     );
   }

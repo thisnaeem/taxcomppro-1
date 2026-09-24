@@ -24,37 +24,78 @@ export async function GET(req: NextRequest) {
     const session = await auth.api.getSession({ headers: req.headers }).catch(() => null);
     const userId = session?.user?.id;
 
-    // Base conditions
-    const whereConditions: Prisma.SpaceWhereInput = { AND: [{ OR: [{ visibility: "PUBLIC" }, ...(userId ? [{ hostId: userId }, { coHostIds: { has: userId } }] : [])] }] };
+    // Collect invite cookies: pro-talk-invite-[spaceId]
+    const inviteCookies = req.cookies.getAll()
+      .filter(c => c.name.startsWith("pro-talk-invite-"))
+      .map(c => ({
+        id: c.name.replace("pro-talk-invite-", ""),
+        token: c.value,
+      }))
+      .filter(c => !!c.id && !!c.token);
+
+    // Build visibility OR conditions
+    const visibilityOrConditions: Prisma.SpaceWhereInput[] = [
+      { visibility: "PUBLIC" },
+    ];
+
+    if (userId) {
+      if (session?.user?.role === "ADMIN") {
+        visibilityOrConditions.push({ visibility: "PRIVATE" });
+      } else {
+        visibilityOrConditions.push(
+          { hostId: userId },
+          { coHostIds: { has: userId } },
+          { rsvps: { some: { userId } } },
+          { attendances: { some: { userId } } }
+        );
+      }
+    }
+
+    for (const ic of inviteCookies) {
+      visibilityOrConditions.push({
+        id: ic.id,
+        shareToken: ic.token,
+      });
+    }
+
+    const andConditions: Prisma.SpaceWhereInput[] = [
+      { OR: visibilityOrConditions },
+    ];
 
     // Category filter
     if (category && category !== "all") {
-      whereConditions.category = { equals: category, mode: "insensitive" };
+      andConditions.push({ category: { equals: category, mode: "insensitive" } });
     }
 
     // Keyword search filter (matches title, description, or host name)
     if (search) {
-      whereConditions.OR = [
-        { name: { contains: search, mode: "insensitive" } },
-        { description: { contains: search, mode: "insensitive" } },
-        { category: { contains: search, mode: "insensitive" } },
-        { host: { name: { contains: search, mode: "insensitive" } } },
-      ];
+      andConditions.push({
+        OR: [
+          { name: { contains: search, mode: "insensitive" } },
+          { description: { contains: search, mode: "insensitive" } },
+          { category: { contains: search, mode: "insensitive" } },
+          { host: { name: { contains: search, mode: "insensitive" } } },
+        ],
+      });
     }
 
     // Filter by tab type
     if (tab === "live") {
-      whereConditions.isLive = true;
+      andConditions.push({ isLive: true });
     } else if (tab === "upcoming") {
-      whereConditions.isLive = false;
-      whereConditions.endedAt = null;
-      whereConditions.scheduledAt = { gt: new Date() };
+      andConditions.push({
+        isLive: false,
+        endedAt: null,
+        scheduledAt: { gt: new Date() },
+      });
     } else if (tab === "replays") {
-      whereConditions.OR = [
-        { isReplay: true },
-        { replayUrl: { not: null } },
-        { endedAt: { not: null } },
-      ];
+      andConditions.push({
+        OR: [
+          { isReplay: true },
+          { replayUrl: { not: null } },
+          { endedAt: { not: null } },
+        ],
+      });
     } else if (tab === "following") {
       if (userId) {
         // Find hosts the user is connected to
@@ -70,25 +111,30 @@ export async function GET(req: NextRequest) {
           c.requesterId === userId ? c.receiverId : c.requesterId
         );
 
-        whereConditions.hostId = { in: followedHostIds };
-        // Show live or upcoming from followed hosts
-        whereConditions.OR = [
-          { isLive: true },
-          { isLive: false, endedAt: null, scheduledAt: { gt: new Date() } },
-        ];
+        andConditions.push({
+          hostId: { in: followedHostIds },
+          OR: [
+            { isLive: true },
+            { isLive: false, endedAt: null, scheduledAt: { gt: new Date() } },
+          ],
+        });
       } else {
         // Not logged in -> return empty for following tab
         return NextResponse.json([]);
       }
     } else if (!tab || tab === "all" || tab === "popular") {
       // Default: Live + Upcoming sessions (or Replays if explicitly requested)
-      if (!whereConditions.OR) {
-        whereConditions.OR = [
+      andConditions.push({
+        OR: [
           { isLive: true },
           { isLive: false, endedAt: null, scheduledAt: { gt: new Date() } },
-        ];
-      }
+        ],
+      });
     }
+
+    const whereConditions: Prisma.SpaceWhereInput = {
+      AND: andConditions,
+    };
 
     // Determine order
     let orderBy: Prisma.SpaceOrderByWithRelationInput[] = [
@@ -114,12 +160,31 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    const registrations = userId ? await prisma.spaceRsvp.findMany({
-      where: { userId, spaceId: { in: spaces.map(space => space.id) } },
-      select: { spaceId: true },
-    }) : [];
-    const registeredIds = new Set(registrations.map(item => item.spaceId));
-    return NextResponse.json(spaces.map(space => ({ ...space, isRsvped: registeredIds.has(space.id) })));
+    let registeredIds = new Set<string>();
+    let joinedIds = new Set<string>();
+
+    if (userId) {
+      const [registrations, attendances] = await Promise.all([
+        prisma.spaceRsvp.findMany({
+          where: { userId, spaceId: { in: spaces.map(space => space.id) } },
+          select: { spaceId: true },
+        }),
+        prisma.spaceAttendance.findMany({
+          where: { userId, spaceId: { in: spaces.map(space => space.id) } },
+          select: { spaceId: true },
+        }),
+      ]);
+      registeredIds = new Set(registrations.map(item => item.spaceId));
+      joinedIds = new Set(attendances.map(item => item.spaceId));
+    }
+
+    return NextResponse.json(
+      spaces.map(space => ({
+        ...space,
+        isRsvped: registeredIds.has(space.id),
+        hasJoined: joinedIds.has(space.id),
+      }))
+    );
   } catch (error) {
     console.error("Error fetching spaces:", error);
     return NextResponse.json({ error: "Failed to fetch Pro Talks" }, { status: 500 });

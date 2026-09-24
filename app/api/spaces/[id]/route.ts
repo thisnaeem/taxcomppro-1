@@ -9,18 +9,23 @@ type Params = { params: Promise<{ id: string }> };
 
 const HOST_SELECT = { id: true, name: true, image: true, headline: true, role: true, tier: true };
 
-// GET /api/spaces/[id]
 export async function GET(req: NextRequest, { params }: Params) {
   const { id } = await params;
+  const session = await auth.api.getSession({ headers: req.headers }).catch(() => null);
+  const userId = session?.user?.id;
+
   const space = await prisma.space.findUnique({
     where: { id },
     include: {
       host: { select: HOST_SELECT },
       _count: { select: { rsvps: true, attendances: true } },
+      ...(userId ? {
+        attendances: { where: { userId }, select: { userId: true } },
+        rsvps: { where: { userId }, select: { userId: true } },
+      } : {}),
     },
   });
   if (!space) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  const session = await auth.api.getSession({ headers: req.headers });
   if (!canAccessSpace(req, space, session?.user)) return NextResponse.json({ error: "This Pro Talk is invite only. Open your invitation link to join." }, { status: 403 });
   return NextResponse.json(space);
 }
@@ -41,6 +46,30 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
   const dataToUpdate: Record<string, unknown> = {};
+
+  if (typeof body.name === "string" && body.name.trim()) {
+    dataToUpdate.name = body.name.trim();
+  }
+  if (body.description !== undefined) {
+    dataToUpdate.description = typeof body.description === "string" ? body.description.trim() || null : null;
+  }
+  if (typeof body.category === "string" && body.category.trim()) {
+    dataToUpdate.category = body.category.trim();
+  }
+  if (body.mediaType === "AUDIO" || body.mediaType === "AUDIO_VIDEO") {
+    dataToUpdate.mediaType = body.mediaType;
+  }
+  if (body.scheduledAt !== undefined) {
+    if (body.scheduledAt === null || body.scheduledAt === "") {
+      dataToUpdate.scheduledAt = null;
+    } else {
+      const parsed = new Date(body.scheduledAt as string);
+      if (!isNaN(parsed.getTime())) {
+        dataToUpdate.scheduledAt = parsed;
+      }
+    }
+  }
+
   if (body.visibility !== undefined) {
     if (body.visibility !== "PUBLIC" && body.visibility !== "PRIVATE") return NextResponse.json({ error: "Invalid visibility" }, { status: 400 });
     dataToUpdate.visibility = body.visibility;
@@ -87,7 +116,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   return NextResponse.json(updated);
 }
 
-// DELETE /api/spaces/[id] — only host can end a space
+// DELETE /api/spaces/[id] — host/admin can end a live space or cancel a scheduled space
 export async function DELETE(req: NextRequest, { params }: Params) {
   const session = await auth.api.getSession({ headers: req.headers });
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -96,9 +125,19 @@ export async function DELETE(req: NextRequest, { params }: Params) {
   const space = await prisma.space.findUnique({ where: { id } });
   if (!space) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
+  const isAdmin = session.user.role === "ADMIN";
   const isHost = space.hostId === session.user.id;
-  if (!isHost)
-    return NextResponse.json({ error: "Only the host can end this Pro Talk." }, { status: 403 });
+  if (!isAdmin && !isHost)
+    return NextResponse.json({ error: "Only the host or admin can manage this Pro Talk." }, { status: 403 });
+
+  const { searchParams } = new URL(req.url);
+  const action = searchParams.get("action");
+  const isScheduledNotLive = Boolean(space.scheduledAt && !space.isLive && !space.endedAt);
+
+  if (action === "cancel" || action === "delete" || isScheduledNotLive) {
+    await prisma.space.delete({ where: { id } });
+    return NextResponse.json({ ok: true, cancelled: true, id });
+  }
 
   const endedAt = new Date();
   const durationMinutes = Math.max(

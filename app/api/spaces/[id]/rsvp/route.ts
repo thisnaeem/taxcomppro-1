@@ -35,7 +35,15 @@ export async function POST(req: NextRequest, { params }: Params) {
   const session = await auth.api.getSession({ headers: req.headers });
 
   const { id } = await params;
-  const space = await prisma.space.findUnique({ where: { id } });
+  const space = await prisma.space.findUnique({
+    where: { id },
+    include: {
+      ...(session?.user?.id ? {
+        attendances: { where: { userId: session.user.id }, select: { userId: true } },
+        rsvps: { where: { userId: session.user.id }, select: { userId: true } },
+      } : {}),
+    },
+  });
   if (!space) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   if (!canAccessSpace(req, space, session?.user)) return NextResponse.json({ error: "Invitation required" }, { status: 403 });

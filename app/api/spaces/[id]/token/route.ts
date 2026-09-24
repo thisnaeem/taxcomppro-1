@@ -13,7 +13,13 @@ export async function POST(req: NextRequest, { params }: Params) {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
-  const space = await prisma.space.findUnique({ where: { id } });
+  const space = await prisma.space.findUnique({
+    where: { id },
+    include: {
+      attendances: { where: { userId: session.user.id }, select: { userId: true } },
+      rsvps: { where: { userId: session.user.id }, select: { userId: true } },
+    },
+  });
   if (!space || !space.isLive)
     return NextResponse.json({ error: "Space not found or ended" }, { status: 404 });
 

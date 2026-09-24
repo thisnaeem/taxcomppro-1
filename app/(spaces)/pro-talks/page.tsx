@@ -7,7 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAppSelector } from "@/store/hooks";
 import {
   Loader2, Copy, CheckCheck,
-  Calendar, Clock, Users, Mic, Video, ArrowRight
+  Calendar, Clock, Users, Mic, Video, ArrowRight, Lock, Pencil
 } from "lucide-react";
 import {
   Radio01Icon, Add01Icon, CalendarAdd01Icon, Search01Icon, Cancel01Icon,
@@ -19,6 +19,7 @@ import {
   ArrowRight01Icon, ArrowDown01Icon,
 } from "hugeicons-react";
 import { PRO_TALK_CATEGORIES } from "@/lib/proTalks";
+import EditTalkDialog from "@/components/spaces/EditTalkDialog";
 import "./pro-talks-directory.css";
 
 interface SpaceHost {
@@ -51,6 +52,8 @@ interface Space {
   endedAt: string | null;
   host: SpaceHost;
   _count: { rsvps: number; attendances?: number };
+  isRsvped?: boolean;
+  hasJoined?: boolean;
 }
 
 function CategoryIcon({ slug, className = "w-3.5 h-3.5 shrink-0" }: { slug?: string; className?: string }) {
@@ -167,6 +170,12 @@ function LiveCard({ space }: { space: Space }) {
             <span className="w-2 h-2 rounded-full bg-lime-400 animate-pulse" />
             <span className="text-lime-300 text-[11px] font-black uppercase tracking-wide">Live</span>
           </div>
+          {space.visibility === "PRIVATE" && (
+            <div className="flex items-center gap-1 bg-purple-500/20 border border-purple-400/40 text-purple-300 rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wide">
+              <Lock className="w-3 h-3 text-purple-300" />
+              <span>Private</span>
+            </div>
+          )}
           <LiveWave />
         </div>
 
@@ -240,13 +249,27 @@ function LiveCard({ space }: { space: Space }) {
 function UpcomingCard({
   space,
   currentUserId,
+  isAdmin = false,
+  onSpaceUpdated,
+  onSpaceCancelled,
 }: {
   space: Space;
   currentUserId: string;
+  isAdmin?: boolean;
+  onSpaceUpdated?: (updated: Space) => void;
+  onSpaceCancelled?: (spaceId: string) => void;
 }) {
-  const [rsvped, setRsvped] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
+  const [rsvped, setRsvped] = useState(Boolean(space.isRsvped));
   const [rsvping, setRsvping] = useState(false);
   const [rsvpCount, setRsvpCount] = useState(space._count?.rsvps ?? 0);
+
+  useEffect(() => {
+    setRsvped(Boolean(space.isRsvped));
+    setRsvpCount(space._count?.rsvps ?? 0);
+  }, [space.isRsvped, space._count?.rsvps]);
+
+  const isHost = (!!currentUserId && space.hostId === currentUserId) || isAdmin;
 
   const shareUrl = space.shareToken
     ? typeof window !== "undefined"
@@ -288,6 +311,12 @@ function UpcomingCard({
               Upcoming
             </span>
           </div>
+          {space.visibility === "PRIVATE" && (
+            <div className="flex items-center gap-1 bg-purple-500/20 border border-purple-400/40 text-purple-300 rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wide">
+              <Lock className="w-3 h-3 text-purple-300" />
+              <span>Private</span>
+            </div>
+          )}
           {space.scheduledAt && (
             <span className="text-emerald-300/80 text-xs font-semibold">
               {timeUntil(space.scheduledAt)}
@@ -324,7 +353,7 @@ function UpcomingCard({
         </div>
       )}
 
-      {/* Host profile and RSVP */}
+      {/* Host profile and Actions */}
       <div className="mt-auto flex items-center justify-between gap-3 pt-3 border-t border-emerald-900/30">
         <div className="flex items-center gap-2.5 min-w-0">
           <div className="w-7 h-7 rounded-full overflow-hidden shrink-0 border border-emerald-400/40 bg-gradient-to-br from-emerald-600 to-teal-800">
@@ -344,19 +373,50 @@ function UpcomingCard({
           <div className="text-white text-xs font-semibold truncate">{space.host.name}</div>
         </div>
 
-        <button
-          onClick={toggleRsvp}
-          disabled={rsvping}
-          className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-black transition-all ${
-            rsvped
-              ? "bg-emerald-500/25 border border-emerald-400 text-lime-300"
-              : "bg-white/10 hover:bg-white/18 text-white border border-white/10 hover:border-emerald-400/40"
-          }`}
-        >
-          <Users className="w-3 h-3" />
-          <span>{rsvped ? "Reminding You ✓" : `Remind Me (${rsvpCount})`}</span>
-        </button>
+        {isHost ? (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setShowEdit(true);
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-400/40 text-lime-300 text-xs font-black transition-all"
+            >
+              <Pencil className="w-3.5 h-3.5" /> Edit
+            </button>
+            <Link
+              href={`/pro-talks/${space.id}`}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs font-bold transition-all"
+            >
+              Stage Room <ArrowRight className="w-3 h-3" />
+            </Link>
+          </div>
+        ) : (
+          <button
+            onClick={toggleRsvp}
+            disabled={rsvping}
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-black transition-all ${
+              rsvped
+                ? "bg-emerald-500/25 border border-emerald-400 text-lime-300"
+                : "bg-white/10 hover:bg-white/18 text-white border border-white/10 hover:border-emerald-400/40"
+            }`}
+          >
+            <Users className="w-3 h-3" />
+            <span>{rsvped ? "Reminding You ✓" : `Remind Me (${rsvpCount})`}</span>
+          </button>
+        )}
       </div>
+
+      {isHost && (
+        <EditTalkDialog
+          space={space}
+          isOpen={showEdit}
+          onClose={() => setShowEdit(false)}
+          onSaved={(updated) => onSpaceUpdated?.(updated)}
+          onCancelled={(id) => onSpaceCancelled?.(id)}
+        />
+      )}
     </div>
   );
 }
@@ -487,9 +547,27 @@ function ProTalksInner() {
       <button onClick={handleScheduleClick} className="ptd-secondary"><CalendarAdd01Icon className="w-4 h-4" /> Schedule a talk</button>
     </div>
   );
+  const handleSpaceUpdated = (updated: Space) => {
+    setSpaces(prev => prev.map(s => (s.id === updated.id ? { ...s, ...updated } : s)));
+  };
+  const handleSpaceCancelled = (spaceId: string) => {
+    setSpaces(prev => prev.filter(s => s.id !== spaceId));
+  };
+
   const mixedCards = (list: Space[]) =>
     list.map(space =>
-      space.isLive ? <LiveCard key={space.id} space={space} /> : <UpcomingCard key={space.id} space={space} currentUserId={user?.id ?? ""} />
+      space.isLive ? (
+        <LiveCard key={space.id} space={space} />
+      ) : (
+        <UpcomingCard
+          key={space.id}
+          space={space}
+          currentUserId={user?.id ?? ""}
+          isAdmin={user?.role === "ADMIN"}
+          onSpaceUpdated={handleSpaceUpdated}
+          onSpaceCancelled={handleSpaceCancelled}
+        />
+      )
     );
 
   return (
@@ -620,14 +698,34 @@ function ProTalksInner() {
                 </div>
                 {upcomingSpaces.length === 0
                   ? upcomingEmpty
-                  : upcomingSpaces.map(space => <UpcomingCard key={space.id} space={space} currentUserId={user?.id ?? ""} />)}
+                  : upcomingSpaces.map(space => (
+                      <UpcomingCard
+                        key={space.id}
+                        space={space}
+                        currentUserId={user?.id ?? ""}
+                        isAdmin={user?.role === "ADMIN"}
+                        onSpaceUpdated={handleSpaceUpdated}
+                        onSpaceCancelled={handleSpaceCancelled}
+                      />
+                    ))}
               </section>
             </div>
           ) : activeTab === "live" ? (
             liveSpaces.length === 0 ? liveEmpty : <div className="ptd-grid">{liveSpaces.map(space => <LiveCard key={space.id} space={space} />)}</div>
           ) : activeTab === "upcoming" ? (
             upcomingSpaces.length === 0 ? upcomingEmpty : (
-              <div className="ptd-grid">{upcomingSpaces.map(space => <UpcomingCard key={space.id} space={space} currentUserId={user?.id ?? ""} />)}</div>
+              <div className="ptd-grid">
+                {upcomingSpaces.map(space => (
+                  <UpcomingCard
+                    key={space.id}
+                    space={space}
+                    currentUserId={user?.id ?? ""}
+                    isAdmin={user?.role === "ADMIN"}
+                    onSpaceUpdated={handleSpaceUpdated}
+                    onSpaceCancelled={handleSpaceCancelled}
+                  />
+                ))}
+              </div>
             )
           ) : spaces.length === 0 ? (
             <div className="ptd-empty">

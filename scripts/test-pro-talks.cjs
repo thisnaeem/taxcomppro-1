@@ -7,7 +7,7 @@ const { NextRequest } = require('next/server');
 function load(file, mocks = {}) {
   const exports = {};
   const code = ts.transpileModule(fs.readFileSync(path.join(__dirname, '..', file), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
-  vm.runInNewContext(code, { exports, require: name => name in mocks ? mocks[name] : require(name), process, console, Date, Math });
+  vm.runInNewContext(code, { exports, require: name => name in mocks ? mocks[name] : require(name), process, console, Date, Math, URL, Set, Promise, Array });
   return exports;
 }
 const { proTalkPublishPermissions } = load('lib/proTalkPermissions.ts');
@@ -116,6 +116,97 @@ const params = { params: Promise.resolve({ id: 'talk' }) };
   await toggleProTalkScreenShare(participant);
   assert.equal(captures, 3, 'Audience cannot capture');
   assert.equal(proTalkPublishPermissions(true).canPublishSources.length, 4);
+  // Test attendance and RSVP access
+  assert.equal(canAccessSpace(req(), { ...space, attendances: [{ userId: 'attendee' }] }, { id: 'attendee' }), true);
+  assert.equal(canAccessSpace(req(), { ...space, rsvps: [{ userId: 'attendee' }] }, { id: 'attendee' }), true);
+  assert.equal(canAccessSpace(req(), { ...space, attendances: [{ userId: 'other' }] }, { id: 'attendee' }), false);
+
+  // Test GET /api/spaces spaces listing with private spaces
+  let queriedWhere;
+  const spacesDb = {
+    space: {
+      findMany: async ({ where }) => {
+        queriedWhere = where;
+        return [space];
+      }
+    },
+    spaceRsvp: { findMany: async () => [{ spaceId: 'talk' }] },
+    spaceAttendance: { findMany: async () => [{ spaceId: 'talk' }] },
+  };
+  const spacesRoute = load('app/api/spaces/route.ts', { ...mocks, '@/lib/prisma': { prisma: spacesDb } });
+  session = { user: { id: 'attendee' } };
+  const spacesReq = new NextRequest('http://localhost/api/spaces', { method: 'GET', headers: { cookie: 'pro-talk-invite-cookietalk=secret' } });
+  const spacesRes = await spacesRoute.GET(spacesReq);
+  assert.equal(spacesRes.status, 200);
+  const spacesData = await spacesRes.json();
+  assert.equal(spacesData[0].isRsvped, true);
+  assert.equal(spacesData[0].hasJoined, true);
+  // Verify visibility OR conditions included attendances, rsvps, host, cohosts, and invite cookies
+  const orConds = queriedWhere.AND[0].OR;
+  assert.ok(orConds.some(c => c.visibility === 'PUBLIC'));
+  assert.ok(orConds.some(c => c.hostId === 'attendee'));
+  assert.ok(orConds.some(c => c.rsvps?.some?.userId === 'attendee'));
+  assert.ok(orConds.some(c => c.attendances?.some?.userId === 'attendee'));
+  assert.ok(orConds.some(c => c.id === 'cookietalk' && c.shareToken === 'secret'));
+
+  // Test GET /api/spaces/invite/[token] auto-joining for authenticated user
+  let upsertCalled = false;
+  const inviteDb = {
+    space: {
+      findUnique: async () => ({ id: 'talk', name: 'Talk', isLive: true, scheduledAt: null, endedAt: null }),
+    },
+    spaceAttendance: {
+      upsert: async () => { upsertCalled = true; }
+    },
+    spaceRsvp: {
+      upsert: async () => {}
+    }
+  };
+  const inviteRoute = load('app/api/spaces/invite/[token]/route.ts', { ...mocks, '@/lib/prisma': { prisma: inviteDb } });
+  session = { user: { id: 'attendee', name: 'Attendee' } };
+  const inviteRes = await inviteRoute.GET(new NextRequest('http://localhost/api/spaces/invite/secret'), { params: Promise.resolve({ token: 'secret' }) });
+  assert.equal(inviteRes.status, 200);
+  assert.equal(upsertCalled, true);
+
   console.log('Passed: admin audience entry, host/admin-only room ending, repeat and browser-ended screen sharing.');
   console.log('Passed: invite access, guest/member publish grants, host-only stage management, promotion/demotion/co-host persistence, visibility updates.');
+  
+  // Test editing scheduled talk via PATCH
+  const editDb = {
+    space: {
+      findUnique: async () => ({ id: 'talk', hostId: 'host', isLive: false, scheduledAt: new Date(Date.now() + 86400000) }),
+      update: async ({ data }) => ({ id: 'talk', hostId: 'host', ...data }),
+    }
+  };
+  const editRoute = load('app/api/spaces/[id]/route.ts', { ...mocks, '@/lib/prisma': { prisma: editDb } });
+  session = { user: { id: 'host' } };
+  const patchReq = new NextRequest('http://localhost/api/spaces/talk', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: 'Updated Title', description: 'Updated Desc', category: 'IRS Audits & Notices' })
+  });
+  const patchRes = await editRoute.PATCH(patchReq, params);
+  assert.equal(patchRes.status, 200);
+  const patchData = await patchRes.json();
+  assert.equal(patchData.name, 'Updated Title');
+  assert.equal(patchData.description, 'Updated Desc');
+  assert.equal(patchData.category, 'IRS Audits & Notices');
+
+  // Test cancelling scheduled talk via DELETE
+  let deleteCalled = false;
+  const cancelDb = {
+    space: {
+      findUnique: async () => ({ id: 'talk', hostId: 'host', isLive: false, scheduledAt: new Date(Date.now() + 86400000), endedAt: null }),
+      delete: async () => { deleteCalled = true; },
+    }
+  };
+  const cancelRoute = load('app/api/spaces/[id]/route.ts', { ...mocks, '@/lib/prisma': { prisma: cancelDb } });
+  session = { user: { id: 'host' } };
+  const cancelReq = new NextRequest('http://localhost/api/spaces/talk?action=cancel', { method: 'DELETE' });
+  const cancelRes = await cancelRoute.DELETE(cancelReq, params);
+  assert.equal(cancelRes.status, 200);
+  assert.equal(deleteCalled, true);
+
+  console.log('Passed: private pro talks landing listing, auto-join on invite accept, attendance/RSVP access checks.');
+  console.log('Passed: editing and cancelling scheduled pro talks.');
 })().catch(error => { console.error(error); process.exitCode = 1; });
