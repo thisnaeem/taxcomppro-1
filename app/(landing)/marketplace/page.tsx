@@ -27,6 +27,11 @@ import {
 } from "hugeicons-react";
 import { GridSwitcher, useGridView, type GridViewType } from "@/components/pros/GridSwitcher";
 import "./marketplace.css";
+import { MarketplaceCartDrawer } from "@/components/marketplace/MarketplaceCartDrawer";
+import { MarketplaceCartButton } from "@/components/marketplace/MarketplaceCartButton";
+import { MarketplaceSuccessModal } from "@/components/marketplace/MarketplaceSuccessModal";
+import { useMarketplaceCart } from "@/lib/marketplace-cart";
+
 
 const MK_GRID_OPTIONS: GridViewType[] = ["grid-4", "grid-3", "grid-2"];
 
@@ -100,9 +105,59 @@ const prices: { value: Price; label: string }[] = [
   { value: "100plus", label: "$100 and up" },
 ];
 
-function ListingCard({ listing: l }: { listing: Listing }) {
+function ListingCard({
+  listing: l,
+  isPurchased,
+}: {
+  listing: Listing;
+  isPurchased?: boolean;
+}) {
   const category = categories.find((c) => c.value === l.category) ?? categories[0];
   const Icon = category.icon;
+  const { add, isInCart, openCart } = useMarketplaceCart();
+  const inCart = isInCart(l.id);
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (inCart) {
+      openCart();
+    } else {
+      add({
+        id: l.id,
+        slug: l.slug,
+        title: l.title,
+        price: l.price,
+        category: l.category,
+        image: l.images?.[0] || "",
+        seller: {
+          id: l.user?.id || "",
+          name: l.user?.name || "Tax Professional",
+          image: l.user?.image,
+        },
+      });
+    }
+  };
+
+  const handleQuickBuy = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    add({
+      id: l.id,
+      slug: l.slug,
+      title: l.title,
+      price: l.price,
+      category: l.category,
+      image: l.images?.[0] || "",
+      seller: {
+        id: l.user?.id || "",
+        name: l.user?.name || "Tax Professional",
+        image: l.user?.image,
+      },
+    });
+    openCart();
+  };
+
   return (
     <Link className="mk-card" href={l.href || `/${l.slug || l.id}`}>
       <div className="mk-cover">
@@ -142,6 +197,34 @@ function ListingCard({ listing: l }: { listing: Listing }) {
           </span>
           <span>{l.user.name}</span>
           <ArrowRight01Icon size={18} />
+        </div>
+
+        <div className="mk-card-actions-row">
+          {isPurchased ? (
+            <span className="mk-card-purchased-badge">
+              <CheckCircle2 size={13} /> Purchased
+            </span>
+          ) : (
+            <div className="mk-card-btn-group">
+              <button
+                type="button"
+                onClick={handleAddToCart}
+                className={`mk-card-btn ${inCart ? "in-cart" : "cart"}`}
+                title={inCart ? "View in Cart" : "Add to Cart"}
+              >
+                <ShoppingBag01Icon size={14} />
+                <span>{inCart ? "In Cart" : "Add"}</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleQuickBuy}
+                className="mk-card-btn buy"
+                title="Quick Checkout"
+              >
+                <span>{l.price === 0 ? "Get Free" : "Buy Now"}</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </Link>
@@ -434,6 +517,7 @@ function MarketplaceContent() {
     }
   };
 
+  const purchasedListingIds = new Set(purchases.map((p) => p.listing?.id).filter(Boolean));
   const query = search.trim().toLowerCase();
 
   // Filter Discover listings
@@ -865,10 +949,13 @@ function MarketplaceContent() {
                 <h1>Your next opportunity.</h1>
                 <p>Explore services, products, courses, and networks from tax professionals.</p>
               </div>
-              <Link href={createHref} className="mk-primary">
-                <Add01Icon size={18} />
-                {createLabel}
-              </Link>
+              <div className="flex items-center gap-3">
+                <MarketplaceCartButton />
+                <Link href={createHref} className="mk-primary">
+                  <Add01Icon size={18} />
+                  {createLabel}
+                </Link>
+              </div>
             </header>
 
             <div className="mk-banner">
@@ -987,7 +1074,7 @@ function MarketplaceContent() {
               ) : filtered.length ? (
                 <div className={`mk-grid ${gridView}`}>
                   {filtered.map((l) => (
-                    <ListingCard key={l.id} listing={l} />
+                    <ListingCard key={l.id} listing={l} isPurchased={purchasedListingIds.has(l.id)} />
                   ))}
                 </div>
               ) : (
@@ -1017,6 +1104,8 @@ function MarketplaceContent() {
           </div>
         )}
       </main>
+      <MarketplaceCartDrawer />
+      <MarketplaceSuccessModal />
     </div>
   );
 }

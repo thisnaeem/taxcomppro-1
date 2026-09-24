@@ -90,15 +90,16 @@ export async function POST(req: NextRequest) {
 
     // ── Marketplace item purchase ──────────────────────────
     if (type === "marketplace" && userId) {
-      const { listingId } = session.metadata ?? {};
-      if (listingId) {
+      const { listingId, listingIds } = session.metadata ?? {};
+      const ids = (listingIds ? listingIds.split(",") : [listingId]).filter(Boolean);
+      for (const id of ids) {
         await prisma.marketplacePurchase.upsert({
-          where:  { userId_listingId: { userId, listingId } },
-          create: { userId, listingId, price: Number(session.amount_total ? session.amount_total / 100 : 0), stripeSessionId: session.id },
+          where:  { userId_listingId: { userId, listingId: id } },
+          create: { userId, listingId: id, price: Number(session.amount_total ? (session.amount_total / 100) / ids.length : 0), stripeSessionId: session.id },
           update: { stripeSessionId: session.id },
-        });
+        }).catch(() => {});
 
-        const listing = await prisma.marketplaceListing.findUnique({ where: { id: listingId }, select: { title: true, userId: true, slug: true } });
+        const listing = await prisma.marketplaceListing.findUnique({ where: { id }, select: { title: true, userId: true, slug: true } });
         if (listing) {
           await prisma.notification.create({
             data: {
@@ -106,7 +107,7 @@ export async function POST(req: NextRequest) {
               type: "SYSTEM",
               title: "💰 Listing Purchased!",
               message: `Someone purchased your listing: ${listing.title}`,
-              link: `/${listing.slug ?? listingId}`,
+              link: `/${listing.slug ?? id}`,
             },
           }).catch(() => {});
           await prisma.notification.create({
@@ -115,7 +116,7 @@ export async function POST(req: NextRequest) {
               type: "SYSTEM",
               title: "🎉 Purchase Complete!",
               message: `Your purchase of "${listing.title}" is complete. Your product download is ready!`,
-              link: `/${listing.slug ?? listingId}`,
+              link: `/${listing.slug ?? id}`,
             },
           }).catch(() => {});
         }

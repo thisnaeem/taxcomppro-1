@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Loader2, X, Trash2, Calendar, Clock, Video, Mic, Globe, Lock, Check } from "lucide-react";
 import { PRO_TALK_CATEGORIES } from "@/lib/proTalks";
 
@@ -8,8 +9,8 @@ interface SpaceData {
   id: string;
   name: string;
   description: string | null;
-  category: string;
-  mediaType: string;
+  category?: string | null;
+  mediaType?: string | null;
   visibility?: "PUBLIC" | "PRIVATE" | string;
   scheduledAt: string | null;
 }
@@ -29,6 +30,7 @@ export default function EditTalkDialog({
   onSaved,
   onCancelled,
 }: EditTalkDialogProps) {
+  const [mounted, setMounted] = useState(false);
   const [name, setName] = useState(space.name);
   const [description, setDescription] = useState(space.description || "");
   const [category, setCategory] = useState(space.category || "Open Discussion");
@@ -51,6 +53,10 @@ export default function EditTalkDialog({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
     if (isOpen) {
       setName(space.name);
       setDescription(space.description || "");
@@ -69,7 +75,26 @@ export default function EditTalkDialog({
     }
   }, [isOpen, space]);
 
-  if (!isOpen) return null;
+  // Lock body scroll and handle Escape key
+  useEffect(() => {
+    if (!isOpen) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen, onClose]);
+
+  if (!isOpen || !mounted) return null;
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -136,19 +161,21 @@ export default function EditTalkDialog({
     }
   };
 
-  return (
+  const modalContent = (
     <div
-      className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn"
+      className="fixed inset-0 z-[100000] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md animate-fadeIn"
       onClick={onClose}
+      role="dialog"
+      aria-modal="true"
     >
       <div
-        className="relative w-full max-w-xl bg-gradient-to-b from-[#0a192f] via-[#071324] to-[#040c18] border border-emerald-500/30 rounded-3xl p-6 sm:p-7 shadow-[0_10px_50px_rgba(0,0,0,0.8)] overflow-hidden max-h-[90vh] flex flex-col"
-        onClick={e => e.stopPropagation()}
+        className="relative w-full max-w-xl bg-gradient-to-b from-[#0a192f] via-[#071324] to-[#040c18] border border-emerald-500/40 rounded-3xl p-6 sm:p-7 shadow-[0_20px_70px_rgba(0,0,0,0.95)] overflow-hidden max-h-[90vh] flex flex-col z-[100001]"
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-emerald-500/20 mb-5">
           <div className="flex items-center gap-2.5">
-            <span className="w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-400/30 flex items-center justify-center text-emerald-400">
+            <span className="w-9 h-9 rounded-xl bg-emerald-500/15 border border-emerald-400/30 flex items-center justify-center text-emerald-400">
               <Calendar className="w-4 h-4" />
             </span>
             <div>
@@ -159,6 +186,7 @@ export default function EditTalkDialog({
           <button
             onClick={onClose}
             className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
+            aria-label="Close dialog"
           >
             <X className="w-4 h-4" />
           </button>
@@ -180,7 +208,7 @@ export default function EditTalkDialog({
             <input
               type="text"
               value={name}
-              onChange={e => setName(e.target.value)}
+              onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Navigating ERC Audits & Appeals"
               maxLength={120}
               required
@@ -195,7 +223,7 @@ export default function EditTalkDialog({
             </label>
             <textarea
               value={description}
-              onChange={e => setDescription(e.target.value)}
+              onChange={(e) => setDescription(e.target.value)}
               placeholder="What will you cover in this session?"
               rows={3}
               maxLength={600}
@@ -211,10 +239,10 @@ export default function EditTalkDialog({
               </label>
               <select
                 value={category}
-                onChange={e => setCategory(e.target.value)}
+                onChange={(e) => setCategory(e.target.value)}
                 className="w-full px-3.5 py-3 rounded-2xl bg-[#040e1c] border border-emerald-500/30 focus:border-lime-400 text-white text-sm outline-none transition-all"
               >
-                {PRO_TALK_CATEGORIES.map(c => (
+                {PRO_TALK_CATEGORIES.map((c) => (
                   <option key={c.id} value={c.name} className="bg-[#071324] text-white">
                     {c.name}
                   </option>
@@ -262,7 +290,7 @@ export default function EditTalkDialog({
               <input
                 type="datetime-local"
                 value={scheduledAt}
-                onChange={e => setScheduledAt(e.target.value)}
+                onChange={(e) => setScheduledAt(e.target.value)}
                 className="w-full px-4 py-3 rounded-2xl bg-[#040e1c] border border-emerald-500/30 focus:border-lime-400 text-white text-sm outline-none transition-all"
               />
             </div>
@@ -316,7 +344,7 @@ export default function EditTalkDialog({
                   type="button"
                   onClick={handleCancelTalk}
                   disabled={cancelling}
-                  className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-black shadow-lg shadow-red-600/30 transition-all"
+                  className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-black shadow-lg shadow-red-600/30 transition-all"
                 >
                   {cancelling ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
                   Confirm Cancel Talk
@@ -324,7 +352,7 @@ export default function EditTalkDialog({
                 <button
                   type="button"
                   onClick={() => setConfirmCancel(false)}
-                  className="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-slate-300 text-xs font-semibold"
+                  className="px-3 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-slate-300 text-xs font-semibold"
                 >
                   Keep Talk
                 </button>
@@ -368,4 +396,6 @@ export default function EditTalkDialog({
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }

@@ -1,3 +1,7 @@
+import { MarketplaceCartDrawer } from "@/components/marketplace/MarketplaceCartDrawer";
+import { MarketplaceCartButton } from "@/components/marketplace/MarketplaceCartButton";
+import { MarketplaceSuccessModal } from "@/components/marketplace/MarketplaceSuccessModal";
+import { useMarketplaceCart } from "@/lib/marketplace-cart";
 "use client";
 
 import { useEffect, useState } from "react";
@@ -135,6 +139,8 @@ function SkeletonDetail() {
           </div>
         </div>
       </div>
+      <MarketplaceCartDrawer />
+      <MarketplaceSuccessModal />
     </div>
   );
 }
@@ -150,6 +156,29 @@ export default function ListingDetailPage() {
   const [copied,      setCopied]      = useState(false);
   const [purchasing,  setPurchasing]  = useState(false);
   const [openSecs,    setOpenSecs]    = useState<Set<string>>(new Set());
+  const { add: addToCart, isInCart, openCart } = useMarketplaceCart();
+  const inCart = listing ? isInCart(listing.id) : false;
+
+  const handleAddToCart = () => {
+    if (!listing) return;
+    if (inCart) {
+      openCart();
+    } else {
+      addToCart({
+        id: listing.id,
+        slug: listing.slug,
+        title: listing.title,
+        price: listing.price,
+        category: listing.category,
+        image: listing.images?.[0] || "",
+        seller: {
+          id: listing.user?.id || "",
+          name: listing.user?.name || "Tax Professional",
+          image: listing.user?.image,
+        },
+      });
+    }
+  };
 
   // Coupon & Referral state
   const [couponInput,      setCouponInput]      = useState("");
@@ -779,14 +808,28 @@ export default function ListingDetailPage() {
                       );
                     }
                     return (
-                      <button
-                        onClick={handleBuyListing}
-                        disabled={purchasing}
-                        className="w-full flex items-center justify-center gap-2 font-bold text-sm py-4 rounded-2xl bg-[#0a1628] hover:bg-[#1a3a6b] text-white shadow-md transition-all disabled:opacity-60"
-                      >
-                        {purchasing ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShoppingBag01Icon className="w-4 h-4" />}
-                        {purchasing ? "Processing…" : `Buy & Unlock Download ($${listing.price})`}
-                      </button>
+                      <div className="flex flex-col gap-2.5 w-full">
+                        <button
+                          onClick={handleBuyListing}
+                          disabled={purchasing}
+                          className="w-full flex items-center justify-center gap-2 font-bold text-sm py-3.5 rounded-2xl bg-[#0a1628] hover:bg-[#1a3a6b] text-white shadow-md transition-all disabled:opacity-60"
+                        >
+                          {purchasing ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShoppingBag01Icon className="w-4 h-4" />}
+                          {purchasing ? "Processing…" : `Buy Now (${listing.price})`}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleAddToCart}
+                          className={`w-full flex items-center justify-center gap-2 font-bold text-sm py-3 rounded-2xl border transition-all ${
+                            inCart
+                              ? "bg-emerald-500/10 border-emerald-500/40 text-emerald-400"
+                              : "bg-white dark:bg-[#0c1527] border-slate-200 dark:border-slate-800 hover:border-[#ffbe24]/60 text-slate-700 dark:text-slate-200"
+                          }`}
+                        >
+                          <ShoppingBag01Icon className="w-4 h-4" />
+                          <span>{inCart ? "In Cart — View Cart" : "Add to Cart"}</span>
+                        </button>
+                      </div>
                     );
                   }
 
@@ -815,14 +858,28 @@ export default function ListingDetailPage() {
                       );
                     }
                     return (
-                      <button
-                        onClick={handleBuyListing}
-                        disabled={purchasing}
-                        className={`w-full flex items-center justify-center gap-2 font-bold text-sm py-4 rounded-2xl transition-all disabled:opacity-60 ${cfg.ctaCls}`}
-                      >
-                        {purchasing ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShoppingBag01Icon className="w-4 h-4" />}
-                        {purchasing ? "Processing…" : `Buy Now ($${listing.price})`}
-                      </button>
+                      <div className="flex flex-col gap-2.5 w-full">
+                        <button
+                          onClick={handleBuyListing}
+                          disabled={purchasing}
+                          className={`w-full flex items-center justify-center gap-2 font-bold text-sm py-3.5 rounded-2xl transition-all disabled:opacity-60 ${cfg.ctaCls}`}
+                        >
+                          {purchasing ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShoppingBag01Icon className="w-4 h-4" />}
+                          {purchasing ? "Processing…" : `Buy Now (${listing.price})`}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleAddToCart}
+                          className={`w-full flex items-center justify-center gap-2 font-bold text-sm py-3 rounded-2xl border transition-all ${
+                            inCart
+                              ? "bg-emerald-500/10 border-emerald-500/40 text-emerald-400"
+                              : "bg-white dark:bg-[#0c1527] border-slate-200 dark:border-slate-800 hover:border-[#ffbe24]/60 text-slate-700 dark:text-slate-200"
+                          }`}
+                        >
+                          <ShoppingBag01Icon className="w-4 h-4" />
+                          <span>{inCart ? "In Cart — View Cart" : "Add to Cart"}</span>
+                        </button>
+                      </div>
                     );
                   }
 

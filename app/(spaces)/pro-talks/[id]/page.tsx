@@ -313,6 +313,16 @@ function ScheduledScreen({
           <RsvpPanel spaceId={space.id} />
         </section>
       )}
+
+      {isHost && (
+        <EditTalkDialog
+          space={space}
+          isOpen={showEdit}
+          onClose={() => setShowEdit(false)}
+          onSaved={(updated) => onSpaceUpdated(updated)}
+          onCancelled={(id) => onCancelled(id)}
+        />
+      )}
     </main>
   );
 }

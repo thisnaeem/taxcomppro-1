@@ -108,3 +108,68 @@
 .mk-badge-skeleton{margin-left:auto;width:18px;height:16px;border-radius:5px;background:var(--mk-inner);position:relative;overflow:hidden;display:inline-block;flex-shrink:0}
 .mk-badge-skeleton::after{content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--mk-muted) 25%,transparent),transparent);animation:mk-shimmer 1.5s infinite}
 
+
+/* Marketplace Card Action Buttons */
+.mk-card-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--mk-line);
+}
+.mk-card-btn-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+.mk-card-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 750;
+  cursor: pointer;
+  transition: all .18s;
+  flex: 1;
+  border: 1px solid transparent;
+}
+.mk-card-btn.cart {
+  background: var(--mk-inner);
+  border-color: var(--mk-line);
+  color: var(--mk-text);
+}
+.mk-card-btn.cart:hover {
+  border-color: var(--mk-gold);
+  color: var(--mk-gold);
+}
+.mk-card-btn.in-cart {
+  background: #10b9811f;
+  border-color: #10b98140;
+  color: #10b981;
+}
+.mk-card-btn.buy {
+  background: var(--mk-gold);
+  color: #101827;
+}
+.mk-card-btn.buy:hover {
+  background: #ffcb4d;
+}
+.mk-card-purchased-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 750;
+  background: #10b9811f;
+  color: #10b981;
+  border: 1px solid #10b98140;
+  width: 100%;
+  justify-content: center;
+}

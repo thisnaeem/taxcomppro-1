@@ -98,6 +98,24 @@ export async function POST(req: NextRequest) {
     enrolledCourseSlug = res.enrolledCourseSlug || null;
   }
 
+  // Marketplace item(s) purchase fulfillment
+  if (type === "marketplace") {
+    const { listingId, listingIds } = stripeSession.metadata ?? {};
+    const ids = (listingIds ? listingIds.split(",") : [listingId]).filter(Boolean);
+    for (const id of ids) {
+      await prisma.marketplacePurchase.upsert({
+        where:  { userId_listingId: { userId, listingId: id } },
+        create: {
+          userId,
+          listingId: id,
+          price: Number(stripeSession.amount_total ? (stripeSession.amount_total / 100) / ids.length : 0),
+          stripeSessionId: stripeSession.id,
+        },
+        update: { stripeSessionId: stripeSession.id },
+      }).catch(() => {});
+    }
+  }
+
   await reconcileAcademyMembershipBonus(userId);
 
   // Return the fresh tier so the client can update Redux
