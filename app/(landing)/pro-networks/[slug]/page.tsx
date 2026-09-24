@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import { useSession } from "@/lib/auth-client";
+import { useAppSelector } from "@/store/hooks";
 import { networkAccentInk } from "@/lib/networkBranding";
 import NetworkDetailsSettings from "@/components/networks/NetworkDetailsSettings";
 import NetworkBranding from "@/components/networks/NetworkBranding";
@@ -373,6 +374,8 @@ export default function ProNetworkHubPage({
   const slug = routeParams?.slug || "";
   const router = useRouter();
   const { data: session } = useSession();
+  const storeUser = useAppSelector((state) => state.auth.user);
+  const currentUser = storeUser || session?.user;
 
   const [network, setNetwork] = useState<ProNetworkDetails | null>(null);
   const [loading, setLoading] = useState(true);
@@ -1202,31 +1205,41 @@ export default function ProNetworkHubPage({
             <span>← Back to Networks</span>
           </Link>
 
-          {/* Host Profile Header */}
-          <div className="flex items-center gap-3 p-2 rounded-2xl bg-white/5 border border-white/10 mb-6">
+          {/* My Profile Header (Logged-in user profile) */}
+          <Link
+            href="/profile"
+            className="flex items-center gap-3 p-2 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors mb-6 group cursor-pointer block text-left"
+            title="View your profile"
+          >
             <div className="relative shrink-0">
-              <img
-                src={network.owner?.image || "/pros/tonique-clay.jpg"}
-                alt={network.owner?.name || "Tonique Clay"}
-                className="w-12 h-12 rounded-xl object-cover"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = "/pros/tonique-clay.jpg";
-                }}
-              />
+              {currentUser?.image ? (
+                <img
+                  src={currentUser.image}
+                  alt={currentUser.name || "My Profile"}
+                  className="w-12 h-12 rounded-xl object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = "/pros/tonique-clay.jpg";
+                  }}
+                />
+              ) : (
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-800 flex items-center justify-center text-white font-bold text-base shadow-sm">
+                  {currentUser?.name?.[0]?.toUpperCase() || "U"}
+                </div>
+              )}
               <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-[#08101e]" />
             </div>
-            <div className="min-w-0">
-              <div className="text-sm font-bold text-white truncate">
-                {network.owner?.name || "Tonique Clay"}
+            <div className="min-w-0 flex-1">
+              <div className="text-sm font-bold text-white truncate group-hover:text-amber-400 transition-colors">
+                {currentUser?.name || "My Profile"}
               </div>
               <div className="inline-flex items-center gap-1 bg-[#1a56db] text-white text-[9px] font-extrabold px-2 py-0.5 rounded-full mt-0.5 tracking-wider uppercase">
-                <span>✔</span> VERIFIED PRO
+                <span>✔</span> {(currentUser as any)?.role === "ADMIN" ? "ADMIN PRO" : "VERIFIED PRO"}
               </div>
               <div className="text-[11px] text-slate-400 mt-0.5 truncate">
-                {network.isOwner ? "Network Owner" : "Network Member"}
+                {network.isOwner ? "Network Owner" : network.isMember ? "Network Member" : "Active Member"}
               </div>
             </div>
-          </div>
+          </Link>
 
           {/* Section: MY NETWORK */}
           <div className="space-y-1">
@@ -1331,7 +1344,7 @@ export default function ProNetworkHubPage({
       </aside>
 
       {/* ── MAIN CONTENT AREA ── */}
-      <div className="flex-1 flex flex-col min-w-0 min-h-screen bg-[#f4f6fa] dark:bg-[#0b1322]">
+      <div className="flex-1 flex flex-col min-w-0 min-h-screen bg-[#08101e]">
         {/* ── TOP HEADER BAR (WITH COVER IMAGE BACKGROUND) ── */}
         <header className="relative overflow-hidden min-h-[125px] sm:min-h-[145px] px-4 sm:px-7 py-5 flex items-center justify-between gap-4 border-b border-white/10 bg-[#08101e]">
           {/* Cover Image Backdrop */}

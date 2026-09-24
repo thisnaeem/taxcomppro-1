@@ -885,8 +885,27 @@ export default function ListingDetailPage() {
                         href={`/login?redirect=/${listing.slug ?? listing.id}`}
                         className={`w-full flex items-center justify-center gap-2 font-bold text-sm py-4 rounded-2xl transition-all ${cfg.ctaCls}`}
                       >
-                        {isFree ? "Sign in to Claim (Free)" : `Sign in to Buy ($${listing.price})`} <ArrowRight01Icon className="w-4 h-4" />
+                        {isFree ? "Sign in for Free Access" : `Sign in to Buy ($${listing.price})`} <ArrowRight01Icon className="w-4 h-4" />
                       </Link>
+                    );
+                  }
+
+                  if (isFree) {
+                    return (
+                      <div className="flex flex-col gap-2.5 w-full">
+                        <button
+                          onClick={handleBuyListing}
+                          disabled={purchasing}
+                          className="w-full flex items-center justify-center gap-2 font-bold text-sm py-3.5 rounded-2xl transition-all bg-emerald-600 hover:bg-emerald-700 text-white shadow-md disabled:opacity-60 cursor-pointer"
+                        >
+                          {purchasing ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <CheckCircle2 className="w-4 h-4" />
+                          )}
+                          {purchasing ? "Accessing…" : "Free"}
+                        </button>
+                      </div>
                     );
                   }
 
@@ -904,8 +923,6 @@ export default function ListingDetailPage() {
                         )}
                         {purchasing
                           ? "Processing…"
-                          : isFree
-                          ? "Claim for Free"
                           : `Buy Now ($${listing.price})`}
                       </button>
                       <button
@@ -918,7 +935,7 @@ export default function ListingDetailPage() {
                         }`}
                       >
                         <ShoppingBag01Icon className="w-4 h-4" />
-                        <span>{inCart ? "In Cart — View Cart" : isFree ? "Add to Cart (Free)" : "Add to Cart"}</span>
+                        <span>{inCart ? "In Cart — View Cart" : "Add to Cart"}</span>
                       </button>
                     </div>
                   );

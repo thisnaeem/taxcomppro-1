@@ -137,6 +137,7 @@ function ListingCard({
 
   const isOwner = Boolean(currentUserId && l.user?.id && l.user.id === currentUserId);
   const isNetwork = l.category === "NETWORK" || l.id.startsWith("network-");
+  const isFree = l.price === 0 || l.price == null;
 
   const buildCartItem = (): MarketplaceCartItem => ({
     id: l.id,
@@ -289,6 +290,28 @@ function ListingCard({
                 Your Listing
               </button>
             </div>
+          ) : isFree ? (
+            <div className="mk-card-btn-group" style={{ width: "100%" }}>
+              <span
+                className="mk-card-btn free"
+                style={{
+                  width: "100%",
+                  justifyContent: "center",
+                  background: "rgba(16, 185, 129, 0.12)",
+                  color: "#10b981",
+                  border: "1px solid rgba(16, 185, 129, 0.3)",
+                  fontWeight: 700,
+                  fontSize: "13px",
+                  padding: "6px 12px",
+                  borderRadius: "6px",
+                  textAlign: "center",
+                  display: "inline-flex",
+                  alignItems: "center",
+                }}
+              >
+                Free
+              </span>
+            </div>
           ) : (
             <div className="mk-card-btn-group">
               <button
@@ -306,7 +329,7 @@ function ListingCard({
                 className="mk-card-btn buy"
                 title="Quick Checkout"
               >
-                <span>{l.price === 0 ? "Get Free" : "Buy Now"}</span>
+                <span>Buy Now</span>
               </button>
             </div>
           )}
