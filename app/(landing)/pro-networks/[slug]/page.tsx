@@ -2040,25 +2040,29 @@ export default function ProNetworkHubPage({
                         key={m.id || idx}
                         className="py-2.5 flex items-center justify-between gap-3 hover:bg-slate-50/80 dark:hover:bg-white/[0.02] px-2 -mx-2 rounded-xl transition-colors"
                       >
-                        <div className="flex items-center gap-2.5 min-w-0">
+                        <Link
+                          href={`/member/${m.user?.profileSlug || m.profileSlug || m.user?.id || m.id}`}
+                          className="flex items-center gap-2.5 min-w-0 group"
+                          title={`View ${m.name || m.user?.name || "Member"}'s profile`}
+                        >
                           <img
                             src={m.image || m.user?.image || "/pros/tonique-clay.jpg"}
                             alt=""
-                            className="w-8 h-8 rounded-full object-cover shrink-0"
+                            className="w-8 h-8 rounded-full object-cover shrink-0 ring-1 ring-white/10 group-hover:ring-amber-400/50 transition-all"
                             onError={(e) => {
                               (e.target as HTMLImageElement).src =
                                 "/pros/tonique-clay.jpg";
                             }}
                           />
                           <div className="min-w-0">
-                            <h5 className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                            <h5 className="text-xs font-bold text-slate-900 dark:text-white truncate group-hover:text-blue-400 transition-colors">
                               {m.name || m.user?.name || "Member"}
                             </h5>
                             <div className="text-[10px] text-slate-400 truncate">
                               {m.location || m.user?.location || "Houston, TX"}
                             </div>
                           </div>
-                        </div>
+                        </Link>
 
                         <div className="flex items-center gap-2 shrink-0">
                           <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-500/20">
@@ -2499,61 +2503,79 @@ export default function ProNetworkHubPage({
                   />
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                    {filteredMembers.map((m) => (
-                      <div
-                        key={m.id}
-                        className="p-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/5 flex items-center justify-between gap-3 shadow-sm hover:border-amber-400/30 transition-all"
-                      >
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-11 h-11 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden ring-2 ring-amber-400/30 shrink-0">
-                            {m.user.image ? (
-                              <img
-                                src={m.user.image}
-                                alt={m.user.name}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center font-black text-sm text-amber-400">
-                                {m.user.name ? m.user.name[0].toUpperCase() : "?"}
-                              </div>
-                            )}
-                          </div>
-                          <div className="min-w-0">
-                            <h4 className="text-xs font-black text-slate-900 dark:text-white truncate flex items-center gap-1">
-                              <span>{m.user.name}</span>
-                              {m.role.toUpperCase() === "OWNER" && (
-                                <Crown className="w-3 h-3 text-amber-400 fill-amber-400 shrink-0" />
-                              )}
-                            </h4>
-                            <p className="text-[10px] text-slate-400 truncate">
-                              {m.user.professionalTitle ||
-                                m.user.headline ||
-                                m.user.location ||
-                                "Tax Professional"}
-                            </p>
-                            <span
-                              className={`text-[9px] font-bold px-1.5 py-0.2 rounded mt-1 inline-block ${
-                                m.role.toUpperCase() === "OWNER"
-                                  ? "text-amber-500 bg-amber-500/10"
-                                  : "text-blue-500 bg-blue-500/10"
-                              }`}
+                    {filteredMembers.map((m) => {
+                      const profileUrl = `/member/${m.user.profileSlug || m.user.id}`;
+                      return (
+                        <div
+                          key={m.id}
+                          className="p-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/5 flex items-center justify-between gap-3 shadow-sm hover:border-amber-400/30 transition-all"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <Link
+                              href={profileUrl}
+                              className="w-11 h-11 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden ring-2 ring-amber-400/30 shrink-0 block hover:opacity-90 transition-opacity"
+                              title={`View ${m.user.name}'s public profile`}
                             >
-                              {m.role}
-                            </span>
+                              {m.user.image ? (
+                                <img
+                                  src={m.user.image}
+                                  alt={m.user.name}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center font-black text-sm text-amber-400">
+                                  {m.user.name ? m.user.name[0].toUpperCase() : "?"}
+                                </div>
+                              )}
+                            </Link>
+                            <div className="min-w-0">
+                              <Link
+                                href={profileUrl}
+                                className="text-xs font-black text-slate-900 dark:text-white truncate flex items-center gap-1 hover:text-amber-400 transition-colors"
+                                title={`View ${m.user.name}'s public profile`}
+                              >
+                                <span>{m.user.name}</span>
+                                {m.role.toUpperCase() === "OWNER" && (
+                                  <Crown className="w-3 h-3 text-amber-400 fill-amber-400 shrink-0" />
+                                )}
+                              </Link>
+                              <p className="text-[10px] text-slate-400 truncate">
+                                {m.user.professionalTitle ||
+                                  m.user.headline ||
+                                  m.user.location ||
+                                  "Tax Professional"}
+                              </p>
+                              <span
+                                className={`text-[9px] font-bold px-1.5 py-0.2 rounded mt-1 inline-block ${
+                                  m.role.toUpperCase() === "OWNER"
+                                    ? "text-amber-500 bg-amber-500/10"
+                                    : "text-blue-500 bg-blue-500/10"
+                                }`}
+                              >
+                                {m.role}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <Link
+                              href={`/messages?userId=${m.user.id}`}
+                              className="p-2 rounded-xl bg-blue-600/10 hover:bg-blue-600 text-blue-600 hover:text-white transition-colors"
+                              title="Send Direct Message"
+                            >
+                              <MessageCircle className="w-4 h-4" />
+                            </Link>
+                            <Link
+                              href={profileUrl}
+                              className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition-colors border border-white/5"
+                              title="View Public Profile"
+                            >
+                              <ExternalLink className="w-4 h-4" />
+                            </Link>
                           </div>
                         </div>
-
-                        <div className="flex items-center gap-1">
-                          <Link
-                            href={`/messages?userId=${m.user.id}`}
-                            className="p-2 rounded-xl bg-blue-600/10 hover:bg-blue-600 text-blue-600 hover:text-white transition-colors"
-                            title="Send Direct Message"
-                          >
-                            <MessageCircle className="w-4 h-4" />
-                          </Link>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>

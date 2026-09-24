@@ -28,6 +28,7 @@ export interface NetworkMemberItem {
     headline?: string | null;
     professionalTitle?: string | null;
     location?: string | null;
+    profileSlug?: string | null;
     digitalCard?: {
       username: string;
     } | null;
@@ -221,6 +222,7 @@ export default function MemberBubbleCloud({
               <div
                 key={m.id}
                 onMouseEnter={(e) => handleMouseEnterBubble(m, e)}
+                onClick={(e) => handleMouseEnterBubble(m, e)}
                 className="relative group cursor-pointer transition-all duration-300"
                 style={{
                   animation: `bubbleFloat ${floatDuration} ease-in-out infinite alternate`,
@@ -330,7 +332,11 @@ export default function MemberBubbleCloud({
               {/* Header Avatar & Role Badge */}
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-2xl overflow-hidden ring-2 ring-amber-400/40 bg-slate-800 shrink-0">
+                  <Link
+                    href={`/member/${hoveredMember.user.profileSlug || hoveredMember.user.id}`}
+                    className="w-12 h-12 rounded-2xl overflow-hidden ring-2 ring-amber-400/40 bg-slate-800 shrink-0 block hover:opacity-90 transition-opacity"
+                    title={`View ${hoveredMember.user.name}'s public profile`}
+                  >
                     {hoveredMember.user.image ? (
                       <img
                         src={hoveredMember.user.image}
@@ -342,14 +348,18 @@ export default function MemberBubbleCloud({
                         {hoveredMember.user.name.charAt(0)}
                       </div>
                     )}
-                  </div>
+                  </Link>
                   <div className="min-w-0">
-                    <h4 className="text-sm font-black text-slate-900 dark:text-white truncate flex items-center gap-1.5">
+                    <Link
+                      href={`/member/${hoveredMember.user.profileSlug || hoveredMember.user.id}`}
+                      className="text-sm font-black text-slate-900 dark:text-white truncate flex items-center gap-1.5 hover:text-amber-400 transition-colors"
+                      title={`View ${hoveredMember.user.name}'s public profile`}
+                    >
                       <span>{hoveredMember.user.name}</span>
                       {hoveredMember.role.toUpperCase() === "OWNER" && (
                         <Crown className="w-3.5 h-3.5 text-amber-400 fill-amber-400 shrink-0" />
                       )}
-                    </h4>
+                    </Link>
                     <span
                       className={`inline-block text-[10px] font-black uppercase px-2 py-0.5 rounded-full mt-0.5 ${
                         hoveredMember.role.toUpperCase() === "OWNER"
@@ -401,12 +411,9 @@ export default function MemberBubbleCloud({
                 </Link>
 
                 <Link
-                  href={
-                    hoveredMember.user.digitalCard?.username
-                      ? `/u/${hoveredMember.user.digitalCard.username}`
-                      : `/find-a-pro/${hoveredMember.user.id}`
-                  }
+                  href={`/member/${hoveredMember.user.profileSlug || hoveredMember.user.id}`}
                   className="inline-flex items-center justify-center gap-1 py-2 px-3 rounded-xl bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 text-slate-700 dark:text-white font-black text-xs transition-all"
+                  title="View Public Profile"
                 >
                   <span>Profile</span>
                   <ExternalLink className="w-3 h-3 text-slate-400" />

@@ -1,8 +1,8 @@
 /* A shared social workspace for network posts, with the site's navy theme. */
-html .pn-page.pn-hub{--pn-gold:var(--pn-accent,#65a832)}
-.np-shimmer{display:block;background:var(--pn-inner);position:relative;overflow:hidden;border-radius:12px}
-.np-shimmer::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 10%,#ffffff13 50%,transparent 90%);transform:translateX(-100%);animation:np-shimmer 1.6s infinite}
-@keyframes np-shimmer{to{transform:translateX(100%)}}
+html .pn-page.pn-hub{--pn-gold:var(--pn-accent,#3b82f6)}
+.np-shimmer{display:block;background-color:#142036!important;position:relative;overflow:hidden;border-radius:12px}
+.np-shimmer::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 20%,rgba(59,130,246,0.15) 48%,rgba(147,197,253,0.25) 52%,rgba(59,130,246,0.15) 56%,transparent 80%);transform:translateX(-100%);animation:np-shimmer 1.8s infinite ease-in-out}
+@keyframes np-shimmer{100%{transform:translateX(100%)}}
 .np-skeleton-line{height:18px;width:75%;margin:12px 0}
 .np-skeleton-cover{height:300px;width:100%}
 .np-skeleton-post{padding:24px;margin-bottom:18px}

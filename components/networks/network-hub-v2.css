@@ -359,3 +359,28 @@
     transform: translateY(4px);
   }
 }
+
+/* ── Navy Skeleton Shimmer Animation ── */
+.pn-v2-shell .np-shimmer {
+  display: block;
+  background-color: #142036 !important;
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+.pn-v2-shell .np-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 20%,
+    rgba(59, 130, 246, 0.15) 48%,
+    rgba(147, 197, 253, 0.25) 52%,
+    rgba(59, 130, 246, 0.15) 56%,
+    transparent 80%
+  ) !important;
+  transform: translateX(-100%);
+  animation: np-shimmer 1.8s infinite ease-in-out;
+}

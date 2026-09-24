@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { hasNetworkMembership } from "@/lib/networkAccess";
 import { auth } from "@/lib/auth";
+import { ensureProfileSlug } from "@/lib/profileSlug";
 
 // GET /api/pro-networks/[slug]/members - Member directory
 export async function GET(
@@ -75,6 +76,7 @@ export async function GET(
             headline: true,
             professionalTitle: true,
             location: true,
+            profileSlug: true,
             digitalCard: {
               select: {
                 username: true,
@@ -85,11 +87,31 @@ export async function GET(
       },
     });
 
+    const mappedMembers = await Promise.all(
+      members.map(async (m) => {
+        let profileSlug = m.user.profileSlug;
+        if (!profileSlug && m.user.name) {
+          try {
+            profileSlug = await ensureProfileSlug(m.user.id, m.user.name);
+          } catch {
+            profileSlug = null;
+          }
+        }
+        return {
+          ...m,
+          user: {
+            ...m.user,
+            profileSlug,
+          },
+        };
+      })
+    );
+
     const totalCount = await prisma.proNetworkMember.count({
       where: { networkId: network.id, status: "ACTIVE" },
     });
 
-    return NextResponse.json({ members, totalCount, isMember });
+    return NextResponse.json({ members: mappedMembers, totalCount, isMember });
   } catch (error) {
     console.error("Failed to fetch members:", error);
     return NextResponse.json({ error: "Failed to fetch members" }, { status: 500 });

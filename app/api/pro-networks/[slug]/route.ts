@@ -28,6 +28,7 @@ export async function GET(
             location: true,
             specialties: true,
             certifications: true,
+            profileSlug: true,
             digitalCard: {
               select: {
                 username: true,
