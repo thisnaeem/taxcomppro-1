@@ -21,6 +21,7 @@ import "@/components/networks/network-posts.css";
 import MemberBubbleCloud from "@/components/networks/MemberBubbleCloud";
 import NetworkAnalytics from "@/components/networks/NetworkAnalytics";
 import NetworkModeration from "@/components/networks/NetworkModeration";
+import { Trash2 } from "lucide-react";
 import {
   Home01Icon as Home,
   BubbleChatIcon as MessageSquare,
@@ -445,6 +446,12 @@ export default function ProNetworkHubPage({
   const [newDiscussionContent, setNewDiscussionContent] = useState("");
   const [creatingDiscussion, setCreatingDiscussion] = useState(false);
 
+  // Delete Network modal & state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteConfirmInput, setDeleteConfirmInput] = useState("");
+  const [isDeletingNetwork, setIsDeletingNetwork] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
+
   // Media filter & carousel
   const [mediaFilter, setMediaFilter] = useState<"ALL" | "PHOTOS" | "VIDEOS" | "FILES">("ALL");
   const mediaCarouselRef = useRef<HTMLDivElement>(null);
@@ -563,6 +570,26 @@ export default function ProNetworkHubPage({
       });
     } finally {
       setDisconnectingStripe(false);
+    }
+  };
+
+  const handleDeleteNetwork = async () => {
+    if (!network) return;
+    setIsDeletingNetwork(true);
+    setDeleteError("");
+    try {
+      const res = await fetch(`/api/pro-networks/${slug}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to delete Pro Network.");
+      }
+      setShowDeleteModal(false);
+      router.push("/pro-networks");
+    } catch (err: any) {
+      setDeleteError(err.message || "An unexpected error occurred while deleting.");
+      setIsDeletingNetwork(false);
     }
   };
 
@@ -2786,6 +2813,43 @@ export default function ProNetworkHubPage({
                   )}
                 </div>
               </div>
+
+              {/* Danger Zone: Delete Pro Network */}
+              <div className="bg-rose-500/5 border border-rose-500/20 rounded-2xl p-6 space-y-4">
+                <div className="flex items-start sm:items-center justify-between gap-4 flex-col sm:flex-row border-b border-rose-500/10 pb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-rose-500/15 border border-rose-500/20 flex items-center justify-center shrink-0">
+                      <Trash2 className="w-5 h-5 text-rose-500" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h4 className="font-black text-rose-600 dark:text-rose-400 text-base">
+                          Danger Zone: Delete Pro Network
+                        </h4>
+                        <span className="text-[10px] font-black uppercase tracking-wider bg-rose-500/15 text-rose-600 dark:text-rose-400 px-2 py-0.5 rounded-md">
+                          Permanent
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                        Permanently delete this Pro Network, including all member subscriptions, discussions, media files, resources, and live talk events. This action is irreversible.
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDeleteConfirmInput("");
+                      setDeleteError("");
+                      setShowDeleteModal(true);
+                    }}
+                    className="inline-flex items-center gap-2 bg-rose-600 hover:bg-rose-700 text-white font-black text-xs px-5 py-2.5 rounded-xl transition-all shadow-md shrink-0 hover:scale-[1.02] active:scale-[0.98]"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    <span>Delete Network</span>
+                  </button>
+                </div>
+              </div>
             </div>
           )}
 
@@ -3520,6 +3584,106 @@ export default function ProNetworkHubPage({
                   <>
                     <CheckCircle2 className="w-4 h-4" />
                     <span>Save Pricing Changes</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Network Confirmation Modal */}
+      {showDeleteModal && network && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
+          <div className="bg-white dark:bg-[#0c1628] border border-rose-500/30 rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl space-y-5 relative">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-rose-500/15 border border-rose-500/20 flex items-center justify-center shrink-0">
+                  <Trash2 className="w-6 h-6 text-rose-500" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white">
+                    Delete Pro Network?
+                  </h3>
+                  <p className="text-xs text-rose-500 font-bold">
+                    This action is permanent and cannot be reversed.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!isDeletingNetwork) setShowDeleteModal(false);
+                }}
+                disabled={isDeletingNetwork}
+                className="text-slate-400 hover:text-slate-200 p-1.5 rounded-lg hover:bg-white/5 transition-all"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs text-slate-600 dark:text-slate-300 leading-relaxed bg-rose-500/5 border border-rose-500/10 rounded-2xl p-4">
+              <p className="font-semibold text-slate-800 dark:text-slate-200">
+                You are about to permanently delete <span className="font-black text-rose-500 underline">{network.name}</span>.
+              </p>
+              <ul className="space-y-1.5 text-[11px] text-slate-500 dark:text-slate-400 list-disc list-inside">
+                <li>All member subscriptions and access will be cancelled</li>
+                <li>All community discussions, questions & comments will be erased</li>
+                <li>All uploaded videos, photos, and resource documents will be deleted</li>
+                <li>All scheduled Pro Talks & calendar events will be removed</li>
+                <li>The network hub URL will become inaccessible</li>
+              </ul>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                Please type <span className="font-black text-rose-500 select-all">{network.name}</span> or <span className="font-black text-rose-500">delete</span> to confirm:
+              </label>
+              <input
+                type="text"
+                placeholder={network.name}
+                value={deleteConfirmInput}
+                onChange={(e) => setDeleteConfirmInput(e.target.value)}
+                disabled={isDeletingNetwork}
+                className="w-full px-4 py-2.5 rounded-xl border border-rose-500/30 bg-white dark:bg-[#162238] text-slate-900 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500 transition-all"
+              />
+            </div>
+
+            {deleteError && (
+              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-semibold flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{deleteError}</span>
+              </div>
+            )}
+
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-white/10">
+              <button
+                type="button"
+                onClick={() => setShowDeleteModal(false)}
+                disabled={isDeletingNetwork}
+                className="px-5 py-2.5 rounded-xl border border-slate-300 dark:border-white/10 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteNetwork}
+                disabled={
+                  (deleteConfirmInput.trim().toLowerCase() !== network.name.trim().toLowerCase() &&
+                   deleteConfirmInput.trim().toLowerCase() !== "delete") ||
+                  isDeletingNetwork
+                }
+                className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs transition-all shadow-lg shadow-rose-600/20 disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center gap-2"
+              >
+                {isDeletingNetwork ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Deleting Network...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" />
+                    <span>Permanently Delete Network</span>
                   </>
                 )}
               </button>
