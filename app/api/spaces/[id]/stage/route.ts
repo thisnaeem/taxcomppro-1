@@ -10,11 +10,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const { id } = await params;
   const space = await prisma.space.findUnique({ where: { id } });
   if (!space?.isLive) return NextResponse.json({ error: "Talk is not live" }, { status: 404 });
-  const owner = space.hostId === session.user.id || session.user.role === "ADMIN";
-  if (!owner && !space.coHostIds.includes(session.user.id)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const isHost = space.hostId === session.user.id;
+  if (!isHost) return NextResponse.json({ error: "Only the host can manage the stage and speakers" }, { status: 403 });
   const { identity, action } = await req.json();
   if (typeof identity !== "string" || !["speaker", "audience", "cohost"].includes(action)) return NextResponse.json({ error: "Invalid stage action" }, { status: 400 });
-  if (identity === space.hostId || (!owner && (action === "cohost" || space.coHostIds.includes(identity)))) return NextResponse.json({ error: "Only the host can manage co-hosts" }, { status: 403 });
+  if (identity === space.hostId) return NextResponse.json({ error: "Cannot modify host stage permissions" }, { status: 400 });
   try {
     const service = new RoomServiceClient((process.env.LIVEKIT_URL || process.env.NEXT_PUBLIC_LIVEKIT_URL || "").replace(/^ws/, "http"), process.env.LIVEKIT_API_KEY!, process.env.LIVEKIT_API_SECRET!);
     const participant = await service.getParticipant(space.roomName, identity);

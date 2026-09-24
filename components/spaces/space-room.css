@@ -306,31 +306,20 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 22px;
-  min-height: 260px;
-  border: 1px solid #10b98115;
-  background:
-    radial-gradient(ellipse at 50% 30%, #a3e63509, transparent 70%), #071729;
-  border-radius: 21px;
-  padding: 45px 18px 25px;
+  gap: 12px;
+  min-height: auto;
+  border: none !important;
+  background: transparent !important;
+  border-radius: 0;
+  padding: 16px 12px;
   position: relative;
-  box-shadow: inset 0 1px #f1f5f907;
+  box-shadow: none !important;
 }
 .sr-speaker.is-speaking {
-  border-color: #a3e63570;
+  border-color: transparent !important;
 }
 .sr-speaker-top {
-  position: absolute;
-  top: 17px;
-  left: 18px;
-  right: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 15px;
-  color: #64748b;
-  font-size: 8px;
-  letter-spacing: 1.5px;
+  display: none !important;
 }
 .sr-speaker-signal {
   letter-spacing: 0;
@@ -374,7 +363,7 @@
   font-size: 17px;
 }
 .sr-solo-stage .sr-speaker {
-  min-height: 360px;
+  min-height: auto;
 }
 .sr-solo-stage .sr-avatar {
   width: 122px;

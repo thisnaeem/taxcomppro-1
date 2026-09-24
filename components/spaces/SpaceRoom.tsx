@@ -31,6 +31,7 @@ import {
   Message01Icon,
 } from "hugeicons-react";
 import {
+  Clock,
   Loader2,
   X,
   Hand,
@@ -77,6 +78,7 @@ interface Space {
   totalAttendees?: number;
   shareToken?: string | null;
   visibility?: string;
+  createdAt?: string;
 }
 
 interface DiscussionMsg {
@@ -106,6 +108,99 @@ interface Props {
 
 const enc = new TextEncoder();
 const dec = new TextDecoder();
+
+
+// ── Helper Hook: Elapsed Session Time ─────────────────────────────────────────
+function useElapsedTime(startedAt?: string | null) {
+  const [elapsed, setElapsed] = useState("00:00");
+
+  useEffect(() => {
+    const startTime = startedAt ? new Date(startedAt).getTime() : Date.now();
+    const update = () => {
+      const now = Date.now();
+      const diffSecs = Math.max(0, Math.floor((now - startTime) / 1000));
+      const hours = Math.floor(diffSecs / 3600);
+      const minutes = Math.floor((diffSecs % 3600) / 60);
+      const seconds = diffSecs % 60;
+      if (hours > 0) {
+        setElapsed(
+          `${hours}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`
+        );
+      } else {
+        setElapsed(
+          `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`
+        );
+      }
+    };
+    update();
+    const timer = setInterval(update, 1000);
+    return () => clearInterval(timer);
+  }, [startedAt]);
+
+  return elapsed;
+}
+
+// ── Exit Screen Component ─────────────────────────────────────────────────────
+function ExitScreen({
+  spaceName,
+  duration,
+  onExit,
+}: {
+  spaceName: string;
+  duration?: string;
+  onExit: () => void;
+}) {
+  const [secondsLeft, setSecondsLeft] = useState(4);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setSecondsLeft((s) => {
+        if (s <= 1) {
+          clearInterval(timer);
+          onExit();
+          return 0;
+        }
+        return s - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [onExit]);
+
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-gradient-to-br from-[#061426]/95 via-[#07192f]/95 to-[#040a14]/95 backdrop-blur-xl animate-fade-in">
+      <div className="relative w-full max-w-md bg-[#071729] border border-emerald-500/40 rounded-3xl p-8 shadow-2xl text-center">
+        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-lime-400 to-emerald-600 flex items-center justify-center mx-auto mb-4 text-[#04111f] shadow-lg shadow-emerald-500/25">
+          <Radio01Icon className="w-8 h-8" />
+        </div>
+        <span className="inline-block px-3 py-1 rounded-full bg-rose-500/20 text-rose-300 text-xs font-black uppercase tracking-wider mb-2">
+          Pro Talk Ended
+        </span>
+        <h2 className="text-white font-black text-xl mb-2">
+          {spaceName}
+        </h2>
+        <p className="text-slate-300 text-xs mb-5">
+          This Pro Talk has concluded. Thank you for listening and participating!
+        </p>
+        {duration && (
+          <div className="inline-flex items-center gap-1.5 text-xs text-emerald-300 bg-emerald-950/60 border border-emerald-500/20 px-3 py-1 rounded-xl mb-5">
+            <Clock className="w-3.5 h-3.5 text-lime-400" />
+            <span>Duration: {duration}</span>
+          </div>
+        )}
+        <div className="flex items-center justify-center gap-2 text-xs text-slate-400 mb-6 bg-white/5 border border-white/10 rounded-xl py-2 px-4">
+          <span>Redirecting to Pro Talks in</span>
+          <strong className="text-lime-300 text-sm font-black">{secondsLeft}s</strong>
+        </div>
+        <button
+          onClick={onExit}
+          className="w-full py-3 rounded-xl bg-gradient-to-r from-lime-400 to-emerald-500 text-[#04111f] font-black text-xs hover:scale-[1.02] transition-all shadow-md shadow-emerald-500/20"
+        >
+          Return to Pro Talks Now
+        </button>
+      </div>
+    </div>
+  );
+}
 
 // Helper to safely parse participant avatar image from metadata
 function getParticipantMetadata(metadata?: string): {
@@ -715,6 +810,8 @@ function RoomInner({ space, isAdmin, userId, onEnd, ending }: Props) {
 
   // Toasts
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isEndedByHost, setIsEndedByHost] = useState(false);
+  const elapsedTalkTime = useElapsedTime(space.createdAt);
   const [inviteToken, setInviteToken] = useState(space.shareToken);
   const [copied, setCopied] = useState(false);
   const [visibility, setVisibility] = useState(space.visibility || "PUBLIC");
@@ -1312,6 +1409,14 @@ function RoomInner({ space, isAdmin, userId, onEnd, ending }: Props) {
     >
       <RoomAudioRenderer />
       <StartAudio label="Enable stage audio" className="sr-enable-audio" />
+
+      {isEndedByHost && (
+        <ExitScreen
+          spaceName={space.name}
+          duration={elapsedTalkTime}
+          onExit={onEnd}
+        />
+      )}
 
       {/* Toast Alert */}
       {toastMessage && (
@@ -2127,7 +2232,7 @@ function RoomInner({ space, isAdmin, userId, onEnd, ending }: Props) {
         {/* ── TAB 2: LIVE POLLS ── */}
         {rightPanelTab === "polls" && (
           <div className="flex-1 flex flex-col p-4 overflow-y-auto space-y-4">
-            {isAuthorizedManager && !showCreatePoll && (
+            {isHost && !showCreatePoll && (
               <button
                 onClick={() => setShowCreatePoll(true)}
                 className="w-full py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500 text-white font-bold text-xs transition-all shadow-md"
@@ -2246,7 +2351,7 @@ function RoomInner({ space, isAdmin, userId, onEnd, ending }: Props) {
                   })}
                 </div>
 
-                {isAuthorizedManager && activePoll.isActive && (
+                {isHost && activePoll.isActive && (
                   <button
                     onClick={closePoll}
                     className="w-full py-2 rounded-xl bg-white/10 hover:bg-white/15 text-slate-300 text-xs font-bold transition-all"

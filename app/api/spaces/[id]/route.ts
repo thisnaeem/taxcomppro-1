@@ -56,6 +56,14 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     dataToUpdate.isLive = true;
   }
 
+  // Scheduled Pro Talks cannot be started before their scheduled time
+  if (dataToUpdate.isLive === true && space.scheduledAt && new Date(space.scheduledAt).getTime() > Date.now()) {
+    return NextResponse.json(
+      { error: "Scheduled Pro Talks cannot be started before their scheduled time." },
+      { status: 400 }
+    );
+  }
+
   if (typeof body.replayUrl === "string") {
     dataToUpdate.replayUrl = body.replayUrl.trim() || null;
     dataToUpdate.isReplay = true;
@@ -79,7 +87,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   return NextResponse.json(updated);
 }
 
-// DELETE /api/spaces/[id] — host or admin ends a space
+// DELETE /api/spaces/[id] — only host can end a space
 export async function DELETE(req: NextRequest, { params }: Params) {
   const session = await auth.api.getSession({ headers: req.headers });
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -88,10 +96,9 @@ export async function DELETE(req: NextRequest, { params }: Params) {
   const space = await prisma.space.findUnique({ where: { id } });
   if (!space) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const isAdmin = session.user.role === "ADMIN";
   const isHost = space.hostId === session.user.id;
-  if (!isAdmin && !isHost)
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!isHost)
+    return NextResponse.json({ error: "Only the host can end this Pro Talk." }, { status: 403 });
 
   const endedAt = new Date();
   const durationMinutes = Math.max(

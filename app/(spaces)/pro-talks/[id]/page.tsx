@@ -131,6 +131,82 @@ function GuestJoinScreen({
   );
 }
 
+
+// ── Exit Screen Component ─────────────────────────────────────────────────────
+function ExitScreen({
+  space,
+  onExit,
+}: {
+  space: Space;
+  onExit: () => void;
+}) {
+  const [seconds, setSeconds] = useState(4);
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setSeconds((s) => {
+        if (s <= 1) {
+          clearInterval(timer);
+          onExit();
+          return 0;
+        }
+        return s - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [onExit]);
+
+  return (
+    <main className="ptr-screen" style={{ textAlign: "center", maxWidth: "480px" }}>
+      <span className="ptr-mic">
+        <Image src="/protalk.png" alt="" fill className="object-cover" sizes="88px" priority />
+      </span>
+      <span
+        className="ptr-status"
+        style={{
+          background: "rgba(244,63,94,0.15)",
+          borderColor: "rgba(244,63,94,0.3)",
+          color: "#fda4af",
+        }}
+      >
+        Pro Talk Concluded
+      </span>
+      <h1 style={{ fontSize: "24px", marginTop: "12px", marginBottom: "8px" }}>
+        {space.name}
+      </h1>
+      <p className="ptr-desc" style={{ marginBottom: "20px" }}>
+        This Pro Talk session has ended. Thank you for participating in the conversation!
+      </p>
+
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "8px",
+          fontSize: "13px",
+          color: "#94a3b8",
+          background: "rgba(255,255,255,0.05)",
+          border: "1px solid rgba(255,255,255,0.1)",
+          borderRadius: "14px",
+          padding: "10px 16px",
+          marginBottom: "24px",
+        }}
+      >
+        <span>Returning to Pro Talks in</span>
+        <strong style={{ color: "#a3e635", fontSize: "16px", minWidth: "16px" }}>
+          {seconds}s
+        </strong>
+      </div>
+
+      <div className="ptr-actions" style={{ justifyContent: "center" }}>
+        <button onClick={onExit} className="ptr-btn ptr-btn--primary">
+          Return to Pro Talks Now
+        </button>
+      </div>
+    </main>
+  );
+}
+
 // ── Scheduled (pre-live) Screen ────────────────────────────────────────────────
 function ScheduledScreen({
   space,
@@ -244,6 +320,7 @@ export default function ProTalkPage() {
   const [ending, setEnding] = useState(false);
   const [starting, setStarting] = useState(false);
   const [showGuestForm, setShowGuestForm] = useState(false);
+  const [showExitScreen, setShowExitScreen] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -354,6 +431,11 @@ export default function ProTalkPage() {
 
   // Guest name form
   if (showGuestForm && space) return <GuestJoinScreen space={space} onJoin={handleGuestJoin} />;
+
+    // Exit screen on conclusion
+  if (showExitScreen && space) {
+    return <ExitScreen space={space} onExit={() => router.push("/pro-talks")} />;
+  }
 
   // Scheduled screen
   if (space && !space.isLive && !space.endedAt) {
