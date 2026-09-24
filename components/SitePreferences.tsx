@@ -23,12 +23,20 @@ export default function SitePreferences() {
   const [supportChat, setSupportChat] = useState(false);
   const [notice, setNotice] = useState<"offline" | "restored" | null>(null);
   const [storageError, setStorageError] = useState(false);
+  const [hasConsent, setHasConsent] = useState(true);
+  const [mounted, setMounted] = useState(false);
   const onlineNow = useSyncExternalStore(subscribeConnection, getConnection, getServerConnection);
   const connectionNotice = onlineNow ? notice : "offline";
 
   useEffect(() => {
+    setMounted(true);
     const saved = readCookieConsent();
-    if (!saved) dialog.current?.showModal();
+    if (!saved) {
+      setHasConsent(false);
+      dialog.current?.showModal();
+    } else {
+      setHasConsent(true);
+    }
     let timer: ReturnType<typeof setTimeout> | undefined;
     let wasOffline = !navigator.onLine;
     const offline = () => { clearTimeout(timer); wasOffline = true; setNotice("offline"); };
@@ -58,6 +66,7 @@ export default function SitePreferences() {
       return;
     }
     setSupportChat(allowChat);
+    setHasConsent(true);
     window.dispatchEvent(new CustomEvent(CONSENT_EVENT, { detail: value }));
     dialog.current?.close();
     // Remove any already-running third-party widget when consent is withdrawn.
@@ -72,11 +81,13 @@ export default function SitePreferences() {
           <p>{connectionNotice === "offline" ? "Check your internet connection. New content and actions may be unavailable." : "Your connection has been restored."}</p></div>
       </div>}
     </div>
-    <button className="tcp-cookie-launcher" aria-label="Cookie preferences" title="Cookie preferences" onClick={() => {
-      setCustomize(true); setStorageError(false);
-      setSupportChat(readCookieConsent()?.supportChat ?? false);
-      dialog.current?.showModal();
-    }}><Settings01Icon size={17} aria-hidden /><span>Cookies</span></button>
+    {mounted && !hasConsent && (
+      <button className="tcp-cookie-launcher" aria-label="Cookie preferences" title="Cookie preferences" onClick={() => {
+        setCustomize(true); setStorageError(false);
+        setSupportChat(readCookieConsent()?.supportChat ?? false);
+        dialog.current?.showModal();
+      }}><Settings01Icon size={17} aria-hidden /><span>Cookies</span></button>
+    )}
     <dialog ref={dialog} className="tcp-cookie-dialog" aria-labelledby="tcp-cookie-title" aria-describedby="tcp-cookie-description">
       <div className="tcp-cookie-heading"><span className="tcp-cookie-symbol"><Shield01Icon size={27} aria-hidden /></span><span>YOUR PRIVACY MATTERS</span></div>
       <h2 id="tcp-cookie-title">A little control. A better experience.</h2>
@@ -92,7 +103,7 @@ export default function SitePreferences() {
         {customize ? <button onClick={() => save(supportChat)}>Save preferences</button> : <button onClick={() => setCustomize(true)}>Customize</button>}
         <button className="tcp-cookie-accept" onClick={() => save(true)}>Accept all</button>
       </div>
-      <p className="tcp-cookie-note">Change your choice anytime using the Cookies button.</p>
+      <p className="tcp-cookie-note">You can manage your choices anytime in our <Link href="/cookie-policy" onClick={() => dialog.current?.close()}>Cookie Policy</Link>.</p>
     </dialog>
   </>;
 }
