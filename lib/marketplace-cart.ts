@@ -20,8 +20,34 @@ export interface MarketplaceCartItem {
 }
 
 const STORAGE_KEY = "tcp_marketplace_cart";
+const COUPON_STORAGE_KEY = "tcp_marketplace_coupon";
 const CART_EVENT = "tcp-marketplace-cart-change";
+const COUPON_EVENT = "tcp-marketplace-coupon-change";
 const DRAWER_EVENT = "tcp-marketplace-cart-drawer-toggle";
+
+export function getMarketplaceCoupon(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return localStorage.getItem(COUPON_STORAGE_KEY) || null;
+  } catch {
+    return null;
+  }
+}
+
+export function saveMarketplaceCoupon(code: string | null) {
+  if (typeof window === "undefined") return;
+  try {
+    if (code && code.trim()) {
+      localStorage.setItem(COUPON_STORAGE_KEY, code.toUpperCase().trim());
+      window.dispatchEvent(new CustomEvent(COUPON_EVENT, { detail: code.toUpperCase().trim() }));
+    } else {
+      localStorage.removeItem(COUPON_STORAGE_KEY);
+      window.dispatchEvent(new CustomEvent(COUPON_EVENT, { detail: null }));
+    }
+  } catch (err) {
+    console.error("Failed to save marketplace coupon:", err);
+  }
+}
 
 let globalMarketplaceDrawerOpen = false;
 

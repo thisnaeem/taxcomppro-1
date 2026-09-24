@@ -4,6 +4,7 @@ import { Suspense, useEffect, useReducer, useState, useCallback } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useAppSelector } from "@/store/hooks";
+import { useSession } from "@/lib/auth-client";
 import {
   Search01Icon,
   ShoppingBag01Icon,
@@ -30,7 +31,13 @@ import "./marketplace.css";
 import { MarketplaceCartDrawer } from "@/components/marketplace/MarketplaceCartDrawer";
 import { MarketplaceCartButton } from "@/components/marketplace/MarketplaceCartButton";
 import { MarketplaceSuccessModal } from "@/components/marketplace/MarketplaceSuccessModal";
-import { useMarketplaceCart, type MarketplaceCartItem, type MarketplaceCartSeller } from "@/lib/marketplace-cart";
+import {
+  useMarketplaceCart,
+  type MarketplaceCartItem,
+  type MarketplaceCartSeller,
+  saveMarketplaceCoupon,
+  openMarketplaceCartDrawer,
+} from "@/lib/marketplace-cart";
 import { AlertCircle } from "lucide-react";
 
 
@@ -110,11 +117,13 @@ function ListingCard({
   listing: l,
   isPurchased,
   currentUserId,
+  isAuthLoading,
   onSellerConflict,
 }: {
   listing: Listing;
   isPurchased?: boolean;
   currentUserId?: string;
+  isAuthLoading?: boolean;
   onSellerConflict?: (data: {
     pendingItem: MarketplaceCartItem;
     currentSeller?: MarketplaceCartSeller;
@@ -225,7 +234,12 @@ function ListingCard({
         </div>
 
         <div className="mk-card-actions-row">
-          {isPurchased ? (
+          {isAuthLoading && !isOwner ? (
+            <div className="mk-btn-skeleton-row" aria-label="Loading listing actions...">
+              <div className="mk-btn-skeleton" />
+              {!isNetwork && <div className="mk-btn-skeleton" style={{ flex: 1.25 }} />}
+            </div>
+          ) : isPurchased ? (
             <span className="mk-card-purchased-badge">
               <CheckCircle2 size={13} /> Purchased
             </span>
@@ -440,6 +454,12 @@ function ListingSkeletons() {
               <div className="mk-seller">
                 <i />
               </div>
+              <div className="mk-card-actions-row">
+                <div className="mk-btn-skeleton-row">
+                  <div className="mk-btn-skeleton" />
+                  <div className="mk-btn-skeleton" style={{ flex: 1.25 }} />
+                </div>
+              </div>
             </div>
           </div>
         ))}
@@ -450,7 +470,9 @@ function ListingSkeletons() {
 
 function MarketplaceContent() {
   const router = useRouter();
-  const user = useAppSelector((s) => s.auth.user);
+  const authState = useAppSelector((s) => s.auth);
+  const user = authState.user;
+  const { data: session, isPending: sessionLoading } = useSession();
   const params = useSearchParams();
 
   const requestedView = params.get("view");
@@ -496,6 +518,15 @@ function MarketplaceContent() {
     mount();
   }, []);
 
+  // Capture coupon from query params (e.g. from seller dashboard share links)
+  useEffect(() => {
+    const qCoupon = params.get("coupon");
+    if (qCoupon && qCoupon.trim()) {
+      saveMarketplaceCoupon(qCoupon.trim().toUpperCase());
+      openMarketplaceCartDrawer();
+    }
+  }, [params]);
+
   // Fetch Discover listings
   useEffect(() => {
     const controller = new AbortController();
@@ -513,7 +544,10 @@ function MarketplaceContent() {
     return () => controller.abort();
   }, [request]);
 
-  const authed = mounted ? user : null;
+  const currentUserId = user?.id || session?.user?.id;
+  const isAuthLoading = !mounted || (authState.isLoading && sessionLoading && !currentUserId);
+  const isCardActionLoading = isAuthLoading || (Boolean(currentUserId) && purchasesLoading && !purchasesLoaded);
+  const authed = mounted ? user || (session?.user as any) : null;
   const canSell =
     !!authed &&
     (authed.role === "ADMIN" ||
@@ -1155,7 +1189,8 @@ function MarketplaceContent() {
                       key={l.id}
                       listing={l}
                       isPurchased={purchasedListingIds.has(l.id)}
-                      currentUserId={authed?.id}
+                      currentUserId={currentUserId}
+                      isAuthLoading={isCardActionLoading}
                       onSellerConflict={setSellerConflict}
                     />
                   ))}

@@ -84,44 +84,96 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ alreadyPurchased: true, message: "All items in cart have already been purchased" });
   }
 
-  // Calculate pricing & apply coupon if single item or global
+  // 1. Resolve coupon if provided
+  let validCoupon: any = null;
+  if (couponCode && typeof couponCode === "string" && couponCode.trim()) {
+    const cleanCode = couponCode.toUpperCase().trim();
+    const primarySellerId = sellerIds[0];
+
+    const matchingCoupons = await prisma.marketplaceCoupon.findMany({
+      where: {
+        code: cleanCode,
+        isActive: true,
+        OR: [
+          { sellerId: primarySellerId },
+          { seller: { role: "ADMIN" } },
+        ],
+      },
+      include: {
+        seller: { select: { id: true, role: true } },
+      },
+    });
+
+    if (matchingCoupons.length > 0) {
+      // Prioritize seller's own coupon, or admin platform promo code
+      const candidate =
+        matchingCoupons.find((c) => c.sellerId === primarySellerId) ||
+        matchingCoupons.find((c) => c.seller?.role === "ADMIN") ||
+        matchingCoupons[0];
+
+      const isValidTime = !candidate.expiresAt || new Date() <= candidate.expiresAt;
+      const isValidUses = candidate.maxUses == null || candidate.usedCount < candidate.maxUses;
+
+      let isTargetValid = true;
+      if (candidate.listingId) {
+        const target = candidate.listingId.toUpperCase();
+        if (candidate.seller?.role === "ADMIN") {
+          if (target === "MEMBERSHIP" || target === "COURSES" || target === "TOOLKITS") {
+            isTargetValid = false;
+          } else if (target !== "ALL" && target !== "PLATFORM" && target !== "MARKETPLACE") {
+            const matchesAny = itemsToBuy.some(
+              (l) => l.id === candidate.listingId || l.slug === candidate.listingId
+            );
+            if (!matchesAny) isTargetValid = false;
+          }
+        } else {
+          const matchesAny = itemsToBuy.some(
+            (l) => l.id === candidate.listingId || l.slug === candidate.listingId
+          );
+          if (!matchesAny) isTargetValid = false;
+        }
+      }
+
+      if (isValidTime && isValidUses && isTargetValid) {
+        validCoupon = candidate;
+      }
+    }
+  }
+
+  // 2. Calculate pricing & apply coupon across itemsToBuy
   let totalAmount = 0;
   const lineItems: NonNullable<Stripe.Checkout.SessionCreateParams["line_items"]> = [];
   const freeListingIds: string[] = [];
   const paidListings: typeof itemsToBuy = [];
 
+  let remainingFixedDiscount =
+    validCoupon && validCoupon.discountType === "FIXED" ? validCoupon.discountValue : 0;
+  let couponApplied = false;
+
   for (const listing of itemsToBuy) {
     let finalPrice = listing.price || 0;
 
-    // Apply Coupon if single item or seller matches
-    if (couponCode && finalPrice > 0) {
-      const coupon = await prisma.marketplaceCoupon.findFirst({
-        where: {
-          code: couponCode.toUpperCase().trim(),
-          sellerId: listing.userId,
-          isActive: true,
-        },
-      });
+    if (validCoupon && finalPrice > 0) {
+      const isApplicableToThisItem =
+        !validCoupon.listingId ||
+        validCoupon.listingId.toUpperCase() === "ALL" ||
+        validCoupon.listingId.toUpperCase() === "PLATFORM" ||
+        validCoupon.listingId.toUpperCase() === "MARKETPLACE" ||
+        validCoupon.listingId === listing.id ||
+        validCoupon.listingId === listing.slug;
 
-      if (coupon) {
-        const isValidTime = !coupon.expiresAt || new Date() <= coupon.expiresAt;
-        const isValidUses = coupon.maxUses == null || coupon.usedCount < coupon.maxUses;
-        const isValidListing = !coupon.listingId || coupon.listingId === listing.id;
-
-        if (isValidTime && isValidUses && isValidListing) {
-          if (coupon.discountType === "PERCENT") {
-            const discount = (finalPrice * coupon.discountValue) / 100;
-            finalPrice = Math.max(0, finalPrice - discount);
-          } else {
-            finalPrice = Math.max(0, finalPrice - coupon.discountValue);
-          }
-          finalPrice = Math.round(finalPrice * 100) / 100;
-
-          await prisma.marketplaceCoupon.update({
-            where: { id: coupon.id },
-            data: { usedCount: { increment: 1 } },
-          }).catch(() => {});
+      if (isApplicableToThisItem) {
+        if (validCoupon.discountType === "PERCENT") {
+          const discount = (finalPrice * validCoupon.discountValue) / 100;
+          finalPrice = Math.max(0, finalPrice - discount);
+          couponApplied = true;
+        } else if (remainingFixedDiscount > 0) {
+          const deduct = Math.min(finalPrice, remainingFixedDiscount);
+          finalPrice = Math.max(0, finalPrice - deduct);
+          remainingFixedDiscount -= deduct;
+          couponApplied = true;
         }
+        finalPrice = Math.round(finalPrice * 100) / 100;
       }
     }
 
@@ -143,6 +195,14 @@ export async function POST(req: NextRequest) {
         quantity: 1,
       });
     }
+  }
+
+  // 3. Increment coupon usage ONCE per order if applied
+  if (validCoupon && couponApplied) {
+    await prisma.marketplaceCoupon.update({
+      where: { id: validCoupon.id },
+      data: { usedCount: { increment: 1 } },
+    }).catch(() => {});
   }
 
   // Track referral if provided

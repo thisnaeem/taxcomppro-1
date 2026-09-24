@@ -3,7 +3,7 @@
 import { MarketplaceCartDrawer } from "@/components/marketplace/MarketplaceCartDrawer";
 import { MarketplaceCartButton } from "@/components/marketplace/MarketplaceCartButton";
 import { MarketplaceSuccessModal } from "@/components/marketplace/MarketplaceSuccessModal";
-import { useMarketplaceCart } from "@/lib/marketplace-cart";
+import { useMarketplaceCart, saveMarketplaceCoupon } from "@/lib/marketplace-cart";
 import { useEffect, useState } from "react";
 import { useParams, notFound, useRouter } from "next/navigation";
 import Link from "next/link";
@@ -148,7 +148,8 @@ function SkeletonDetail() {
 export default function ListingDetailPage() {
   const { slug } = useParams<{ slug: string }>();
   const router   = useRouter();
-  const user     = useAppSelector(s => s.auth.user);
+  const authState = useAppSelector(s => s.auth);
+  const user     = authState.user;
 
   const [listing,     setListing]     = useState<Listing | null>(null);
   const [loading,     setLoading]     = useState(true);
@@ -181,6 +182,9 @@ export default function ListingDetailPage() {
           image: listing.user?.image,
         },
       }, user?.id);
+      if (appliedCoupon?.code) {
+        saveMarketplaceCoupon(appliedCoupon.code);
+      }
       if (!res.success && "message" in res && res.message) {
         alert(res.message);
       }
@@ -244,8 +248,11 @@ export default function ListingDetailPage() {
           if (data.course?.sections?.length) {
             setOpenSecs(new Set(data.course.sections.map((s: Section) => s.id)));
           }
-          if (qCoupon && (data.price > 0 || (data.course && data.course.price > 0))) {
-            applyPromo(qCoupon, data);
+          if (qCoupon) {
+            saveMarketplaceCoupon(qCoupon.trim().toUpperCase());
+            if (data.price > 0 || (data.course && data.course.price > 0)) {
+              applyPromo(qCoupon, data);
+            }
           }
         }
       })
@@ -790,6 +797,12 @@ export default function ListingDetailPage() {
                   const isOwner = user?.id === listing.user.id || user?.role === "ADMIN";
                   const downloadUrl = listing.metadata?.downloadUrl;
                   if (listing.metadata?.isDemo) return <div className="rounded-2xl border border-amber-400/30 bg-amber-400/10 p-4 text-center text-sm font-semibold text-amber-700 dark:text-amber-300">Demo listing · Preview only<br /><span className="text-xs font-normal">Purchases and downloads are disabled for this sample.</span></div>;
+
+                  if (authState.isLoading && !user) {
+                    return (
+                      <div className="w-full h-14 rounded-2xl bg-slate-100 dark:bg-white/10 relative overflow-hidden animate-pulse" />
+                    );
+                  }
 
                   if (user?.id && user.id === listing.user.id) {
                     return (

@@ -124,6 +124,33 @@
   gap: 8px;
   width: 100%;
 }
+.mk-btn-skeleton-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+.mk-btn-skeleton {
+  height: 33px;
+  border-radius: 9px;
+  background: var(--mk-inner);
+  position: relative;
+  overflow: hidden;
+  flex: 1;
+}
+.mk-btn-skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--mk-muted) 22%, transparent),
+    transparent
+  );
+  animation: mk-shimmer 1.5s infinite;
+}
 .mk-card-btn {
   display: inline-flex;
   align-items: center;

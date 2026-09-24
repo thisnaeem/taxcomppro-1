@@ -38,11 +38,18 @@ export async function POST(req: NextRequest) {
 
   // Apply Coupon if provided
   if (couponCode && finalPrice > 0) {
+    const cleanCode = couponCode.toUpperCase().trim();
     const coupon = await prisma.marketplaceCoupon.findFirst({
       where: {
-        code: couponCode.toUpperCase().trim(),
-        sellerId: course.instructorId,
+        code: cleanCode,
         isActive: true,
+        OR: [
+          { sellerId: course.instructorId },
+          { seller: { role: "ADMIN" } },
+        ],
+      },
+      include: {
+        seller: { select: { role: true } },
       },
     });
 
@@ -50,7 +57,28 @@ export async function POST(req: NextRequest) {
       const isValidTime = !coupon.expiresAt || new Date() <= coupon.expiresAt;
       const isValidUses = coupon.maxUses == null || coupon.usedCount < coupon.maxUses;
 
-      if (isValidTime && isValidUses) {
+      let isScopeValid = true;
+      if (coupon.seller?.role === "ADMIN" && coupon.listingId) {
+        const target = coupon.listingId.toUpperCase();
+        if (target === "MEMBERSHIP" || target === "TOOLKITS" || target === "MARKETPLACE") {
+          isScopeValid = false;
+        } else if (
+          target !== "ALL" &&
+          target !== "PLATFORM" &&
+          target !== "COURSES" &&
+          target !== "COURSE" &&
+          coupon.listingId !== course.id &&
+          coupon.listingId !== course.slug
+        ) {
+          isScopeValid = false;
+        }
+      } else if (coupon.seller?.role !== "ADMIN" && coupon.listingId) {
+        if (coupon.listingId !== course.id && coupon.listingId !== course.slug) {
+          isScopeValid = false;
+        }
+      }
+
+      if (isValidTime && isValidUses && isScopeValid) {
         appliedCoupon = coupon;
         if (coupon.discountType === "PERCENT") {
           const discount = (finalPrice * coupon.discountValue) / 100;

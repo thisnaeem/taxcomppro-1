@@ -5,7 +5,13 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAppSelector } from "@/store/hooks";
-import { useMarketplaceCart, MarketplaceCartItem, saveMarketplaceCart } from "@/lib/marketplace-cart";
+import {
+  useMarketplaceCart,
+  MarketplaceCartItem,
+  saveMarketplaceCart,
+  getMarketplaceCoupon,
+  saveMarketplaceCoupon,
+} from "@/lib/marketplace-cart";
 import {
   ShoppingBag,
   X,
@@ -24,9 +30,17 @@ export function MarketplaceCartDrawer() {
   const router = useRouter();
   const currentUser = useAppSelector((s) => s.auth.user);
 
+  interface AppliedCouponInfo {
+    code: string;
+    discountType: string;
+    discountValue: number;
+    savings: number;
+    label: string;
+  }
+
   const [mounted, setMounted] = useState(false);
   const [couponCode, setCouponCode] = useState("");
-  const [discountPercent, setDiscountPercent] = useState<number | null>(null);
+  const [appliedCoupon, setAppliedCoupon] = useState<AppliedCouponInfo | null>(null);
   const [couponError, setCouponError] = useState<string | null>(null);
   const [validatingCoupon, setValidatingCoupon] = useState(false);
   const [loadingCheckout, setLoadingCheckout] = useState(false);
@@ -87,8 +101,13 @@ export function MarketplaceCartDrawer() {
     }
   }, [isOpen, items]);
 
-  const handleApplyCoupon = async () => {
-    if (!couponCode.trim()) return;
+  const handleApplyCoupon = async (codeOverride?: string) => {
+    const codeToValidate = (codeOverride !== undefined ? codeOverride : couponCode).trim().toUpperCase();
+    if (!codeToValidate) return;
+    if (items.length === 0) {
+      setCouponError("Add items to cart to apply promo code");
+      return;
+    }
     setValidatingCoupon(true);
     setCouponError(null);
 
@@ -97,22 +116,59 @@ export function MarketplaceCartDrawer() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          code: couponCode.trim(),
-          listingId: items[0]?.id,
+          code: codeToValidate,
+          cartItems: items.map((i) => ({
+            id: i.id,
+            slug: i.slug,
+            title: i.title,
+            price: i.price ?? 0,
+            sellerId: i.seller?.id,
+            category: i.category,
+          })),
+          subtotal: total,
+          sellerId: items[0]?.seller?.id,
         }),
       });
       const data = await res.json();
       if (data.valid) {
-        setDiscountPercent(data.discountValue || 10);
+        setAppliedCoupon({
+          code: data.code,
+          discountType: data.discountType,
+          discountValue: data.discountValue,
+          savings: data.savings,
+          label: data.label,
+        });
+        setCouponCode(data.code);
+        saveMarketplaceCoupon(data.code);
       } else {
+        setAppliedCoupon(null);
         setCouponError(data.error || "Invalid promo code");
       }
     } catch {
+      setAppliedCoupon(null);
       setCouponError("Could not validate promo code");
     } finally {
       setValidatingCoupon(false);
     }
   };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode("");
+    setCouponError(null);
+    saveMarketplaceCoupon(null);
+  };
+
+  // Auto-load saved coupon from storage
+  useEffect(() => {
+    if (isOpen && items.length > 0 && !appliedCoupon) {
+      const savedCode = getMarketplaceCoupon();
+      if (savedCode) {
+        setCouponCode(savedCode);
+        handleApplyCoupon(savedCode);
+      }
+    }
+  }, [isOpen, items.length]);
 
   const handleCheckout = async () => {
     if (items.length === 0) return;
@@ -125,12 +181,13 @@ export function MarketplaceCartDrawer() {
     setCheckoutError(null);
 
     try {
+      const activeCode = appliedCoupon?.code || couponCode.trim().toUpperCase() || undefined;
       const res = await fetch("/api/stripe/marketplace-checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           listingIds: items.map((i) => i.id),
-          couponCode: couponCode || undefined,
+          couponCode: activeCode,
         }),
       });
 
@@ -140,6 +197,7 @@ export function MarketplaceCartDrawer() {
         window.location.href = data.url;
       } else if (data.isFree || data.success) {
         clear();
+        saveMarketplaceCoupon(null);
         closeCart();
         router.push("/marketplace?view=purchases&checkout_success=true");
       } else if (data.alreadyPurchased) {
@@ -157,7 +215,7 @@ export function MarketplaceCartDrawer() {
 
   if (!mounted || !isOpen) return null;
 
-  const discountAmount = discountPercent ? (total * discountPercent) / 100 : 0;
+  const discountAmount = appliedCoupon ? appliedCoupon.savings : 0;
   const finalTotal = Math.max(0, total - discountAmount);
 
   const drawerContent = (
@@ -342,33 +400,54 @@ export function MarketplaceCartDrawer() {
 
             {/* Footer Summary & Checkout */}
             <div className="p-5 border-t border-white/10 bg-[#071120] flex flex-col gap-4">
-              {/* Promo code input */}
-              <div className="flex gap-2">
-                <div className="relative flex-1">
-                  <Tag className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <input
-                    type="text"
-                    placeholder="Promo code"
-                    value={couponCode}
-                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                    className="w-full pl-8 pr-3 py-2 bg-[#0a1628] border border-white/10 rounded-lg text-xs text-white placeholder-slate-500 uppercase tracking-wider focus:outline-none focus:border-[#ffbe24]"
-                  />
+              {/* Promo Code Section */}
+              {appliedCoupon ? (
+                <div className="flex items-center justify-between p-2.5 bg-emerald-500/10 border border-emerald-500/25 rounded-lg text-xs">
+                  <div className="flex items-center gap-2 text-emerald-400 font-semibold min-w-0">
+                    <Tag className="w-3.5 h-3.5 shrink-0" />
+                    <span className="truncate">
+                      Promo <strong className="text-white font-mono">{appliedCoupon.code}</strong> applied ({appliedCoupon.label})
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleRemoveCoupon}
+                    className="text-slate-400 hover:text-white p-1 rounded hover:bg-white/10 transition-colors ml-2 shrink-0"
+                    title="Remove promo code"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={handleApplyCoupon}
-                  disabled={validatingCoupon || !couponCode.trim()}
-                  className="px-3 py-2 bg-white/10 hover:bg-white/15 text-slate-200 font-semibold text-xs rounded-lg transition-colors disabled:opacity-50"
-                >
-                  {validatingCoupon ? <Loader2 className="w-3 h-3 animate-spin" /> : "Apply"}
-                </button>
-              </div>
-
-              {couponError && <p className="text-[11px] text-red-400">{couponError}</p>}
-              {discountPercent && (
-                <p className="text-[11px] text-emerald-400 font-semibold">
-                  ✓ {discountPercent}% discount applied!
-                </p>
+              ) : (
+                <div className="space-y-1.5">
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <Tag className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <input
+                        type="text"
+                        placeholder="Promo code"
+                        value={couponCode}
+                        onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            handleApplyCoupon();
+                          }
+                        }}
+                        className="w-full pl-8 pr-3 py-2 bg-[#0a1628] border border-white/10 rounded-lg text-xs text-white placeholder-slate-500 uppercase tracking-wider focus:outline-none focus:border-[#ffbe24]"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleApplyCoupon()}
+                      disabled={validatingCoupon || !couponCode.trim()}
+                      className="px-3 py-2 bg-white/10 hover:bg-white/15 text-slate-200 font-semibold text-xs rounded-lg transition-colors disabled:opacity-50"
+                    >
+                      {validatingCoupon ? <Loader2 className="w-3 h-3 animate-spin" /> : "Apply"}
+                    </button>
+                  </div>
+                  {couponError && <p className="text-[11px] text-red-400 pl-1">{couponError}</p>}
+                </div>
               )}
 
               {/* Total Calculation */}
@@ -379,7 +458,7 @@ export function MarketplaceCartDrawer() {
                 </div>
                 {discountAmount > 0 && (
                   <div className="flex justify-between text-emerald-400 font-medium">
-                    <span>Discount</span>
+                    <span>Discount {appliedCoupon ? `(${appliedCoupon.label})` : ""}</span>
                     <span>-${discountAmount.toFixed(2)}</span>
                   </div>
                 )}
