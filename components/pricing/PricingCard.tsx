@@ -20,7 +20,7 @@ export interface PricingCardProps {
   isLoading?: boolean;
   upgradeLoadingTier?: string | null;
   onUpgrade?: (tier: PlanTier) => void;
-  // Optional features expansion
+  // Optional features expansion 
   expanded?: boolean;
   className?: string;
 }

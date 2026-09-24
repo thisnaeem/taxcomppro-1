@@ -546,6 +546,7 @@ export default function AdminUsersPage() {
   // Delete modal state
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   // Fetch users from API (requesting up to 1000 so admin has comprehensive access)
   const fetchUsers = useCallback(() => {
@@ -1016,6 +1017,7 @@ export default function AdminUsersPage() {
   const handleDeleteUser = async () => {
     if (!userToDelete) return;
     setDeleting(true);
+    setDeleteError(null);
     setActionError(null);
     try {
       const res = await fetch(`/api/admin/users/${userToDelete.id}`, {
@@ -1025,11 +1027,16 @@ export default function AdminUsersPage() {
       if (res.ok) {
         setUsers((prev) => prev.filter((u) => u.id !== userToDelete.id));
         setUserToDelete(null);
+        setDeleteError(null);
       } else {
-        setActionError(data.error || "Failed to delete user");
+        const errMsg = data.error || "Failed to delete user";
+        setDeleteError(errMsg);
+        setActionError(errMsg);
       }
     } catch {
-      setActionError("Network error while deleting user");
+      const errMsg = "Network error while deleting user";
+      setDeleteError(errMsg);
+      setActionError(errMsg);
     } finally {
       setDeleting(false);
     }
@@ -3071,10 +3078,20 @@ export default function AdminUsersPage() {
               account, sessions, Connect Card, and all related records.
             </p>
 
+            {deleteError && (
+              <div className="mb-4 bg-red-500/10 border border-red-500/30 text-red-400 rounded-xl p-3 text-xs flex items-start gap-2">
+                <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                <span className="leading-relaxed">{deleteError}</span>
+              </div>
+            )}
+
             <div className="flex gap-3 justify-end pt-3 border-t border-slate-800">
               <button
                 type="button"
-                onClick={() => setUserToDelete(null)}
+                onClick={() => {
+                  setUserToDelete(null);
+                  setDeleteError(null);
+                }}
                 disabled={deleting}
                 className="px-4 py-2.5 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 transition-colors cursor-pointer"
               >

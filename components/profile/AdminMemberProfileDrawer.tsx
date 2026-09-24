@@ -925,6 +925,29 @@ export function AdminMemberProfileDrawer({
                       </div>
                     )}
                   </div>
+
+                  {/* Danger Zone */}
+                  {onDeleteUser && (
+                    <div className="bg-red-500/5 border border-red-500/20 rounded-2xl p-5 space-y-3">
+                      <h4 className="text-xs font-bold text-red-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Danger Zone</span>
+                      </h4>
+                      <p className="text-xs text-slate-400 leading-relaxed">
+                        Permanently delete this user account, subscription, sessions, Connect Card, and all related database records. This action cannot be undone.
+                      </p>
+                      <div className="pt-1">
+                        <button
+                          type="button"
+                          onClick={() => onDeleteUser(user)}
+                          className="px-4 py-2 rounded-xl bg-red-500/10 hover:bg-red-600 text-red-400 hover:text-white border border-red-500/30 hover:border-red-600 text-xs font-bold flex items-center gap-2 transition-all cursor-pointer shadow-sm"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>Delete User Account</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
