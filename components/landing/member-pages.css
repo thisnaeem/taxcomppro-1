@@ -1,5 +1,6 @@
-.mp-page { --mp-bg:#f1f5f9; --mp-panel:#fff; --mp-inner:#f8fafc; --mp-text:#0a1628; --mp-muted:#64748b; --mp-line:#e2e8f0; --mp-gold:#ffbe24; background:var(--mp-bg); color:var(--mp-text); font-family:var(--font-urbanist),sans-serif; padding:0 0 72px; }
-.dark .mp-page { --mp-bg:#0c1527; --mp-panel:#172135; --mp-inner:#1e2e45; --mp-text:#e2e8f0; --mp-muted:#94a3b8; --mp-line:#243550; --mp-gold:#ffbe24; }
+:root, .mp-page { --mp-bg:#f1f5f9; --mp-panel:#fff; --mp-inner:#f8fafc; --mp-text:#0a1628; --mp-muted:#64748b; --mp-line:#e2e8f0; --mp-gold:#ffbe24; background:var(--mp-bg); color:var(--mp-text); font-family:var(--font-urbanist),sans-serif; }
+.mp-page { padding:0 0 72px; }
+.dark, .dark .mp-page { --mp-bg:#0c1527; --mp-panel:#172135; --mp-inner:#1e2e45; --mp-text:#e2e8f0; --mp-muted:#94a3b8; --mp-line:#243550; --mp-gold:#ffbe24; }
 .mp-page *, .mp-page *::before, .mp-page *::after { box-sizing:border-box; }
 .mp-page a { text-decoration:none; }
 .mp-page button, .mp-page input, .mp-page textarea, .mp-page select { font:inherit; }
@@ -14,7 +15,7 @@
 .mp-hero-links { display:flex; flex-wrap:wrap; gap:24px; margin-top:25px; }
 .mp-hero-links a { display:inline-flex; align-items:center; gap:8px; color:var(--mp-text); font-size:15px; font-weight:650; }
 .mp-hero-links a:hover { color:var(--mp-gold); }
-.mp-button { display:inline-flex; align-items:center; justify-content:center; gap:10px; border:1px solid transparent; border-radius:999px; background:#ffbe24; color:#0a1628; min-height:48px; padding:12px 19px; font-size:15px; font-weight:750; line-height:1.4; text-align:center; }
+.mp-button { display:inline-flex; align-items:center; justify-content:center; gap:10px; border:1px solid transparent; border-radius:999px; background:#ffbe24; color:#0a1628; min-height:48px; padding:12px 19px; font-size:15px; font-weight:750; line-height:1.4; text-align:center; text-decoration:none; transition:all .2s ease; }
 .mp-button:hover { background:#ffcb4d; }
 .mp-button-secondary { border-color:var(--mp-line); background:var(--mp-inner); color:var(--mp-text); }
 .mp-button-secondary:hover { background:var(--mp-inner); border-color:var(--mp-gold); }
@@ -27,8 +28,16 @@
 .pricing-toolbar p { margin:0; font-size:19px; font-weight:700; }
 .pricing-toolbar span { font-size:14px; color:var(--mp-muted); }
 .pricing-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:20px; align-items:stretch; }
-.pricing-card { min-width:0; background:var(--mp-panel); border:1px solid var(--mp-line); border-radius:24px; padding:5px; overflow:hidden; }
+.pricing-card { position:relative; min-width:0; background:var(--mp-panel); border:1px solid var(--mp-line); border-radius:24px; padding:5px; overflow:hidden; display:flex; flex-direction:column; transition:transform .25s ease, border-color .25s ease, box-shadow .25s ease; }
+.pricing-card:hover { transform:translateY(-4px); box-shadow:0 16px 36px rgba(0,0,0,.08); }
+.dark .pricing-card:hover { box-shadow:0 16px 36px rgba(0,0,0,.35); }
 .pricing-featured { border-color:var(--mp-gold); }
+.pricing-selected { border-color:var(--mp-gold) !important; box-shadow:0 0 0 2px var(--mp-gold), 0 12px 36px rgba(255,190,36,.22) !important; }
+.pricing-selectable { cursor:pointer; text-align:left; user-select:none; }
+.pricing-selectable:focus-visible { outline:2px solid var(--mp-gold); outline-offset:4px; }
+.pricing-select-indicator { position:absolute; top:12px; right:12px; width:26px; height:26px; border-radius:9999px; border:2px solid var(--mp-line); background:var(--mp-panel); display:flex; align-items:center; justify-content:center; transition:all .2s ease; z-index:5; color:transparent; }
+.pricing-select-indicator.is-selected { border-color:var(--mp-gold); background:var(--mp-gold); color:#0a1628; box-shadow:0 0 12px rgba(255,190,36,.4); }
+.pricing-badge-left { right:auto !important; left:12px !important; }
 .pricing-art { position:relative; height:146px; border-radius:19px; background:var(--mp-inner); display:flex; align-items:center; padding:16px 20px; }
 .pricing-art img { width:110px; height:110px; object-fit:contain; }
 .pricing-badge { position:absolute; right:12px; top:12px; border:1px solid var(--mp-line); border-radius:999px; padding:6px 10px; background:var(--mp-panel); color:var(--mp-gold); font-size:12px; font-weight:750; }

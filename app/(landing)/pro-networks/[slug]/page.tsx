@@ -1766,10 +1766,10 @@ export default function ProNetworkHubPage({
 
                   {/* Carousel Cards or Empty State */}
                   {displayMedia.length === 0 ? (
-                    <div className="py-8 text-center space-y-2 rounded-xl bg-slate-50/60 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 my-2">
-                      <Images className="w-7 h-7 text-slate-400 mx-auto" />
+                    <div className="py-8 text-center space-y-2">
+                      <Images className="w-8 h-8 text-slate-400 dark:text-slate-500 mx-auto" />
                       <p className="text-xs font-bold text-slate-700 dark:text-slate-300">No media uploaded yet.</p>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
                         {canManage
                           ? "Share videos, photos, and files with your network members."
                           : "Photos and videos shared in this network will appear here."}
@@ -1850,12 +1850,12 @@ export default function ProNetworkHubPage({
                     </button>
                   </div>
 
-                  <div className="space-y-4 pt-3">
+                  <div className="pt-2">
                     {displayProTalks.length === 0 ? (
-                      <div className="p-5 text-center space-y-2 rounded-xl bg-slate-50/60 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5">
-                        <Radio className="w-6 h-6 text-slate-400 mx-auto" />
+                      <div className="py-7 text-center space-y-2">
+                        <Radio className="w-8 h-8 text-slate-400 dark:text-slate-500 mx-auto" />
                         <p className="text-xs font-bold text-slate-700 dark:text-slate-300">No upcoming Pro Talks scheduled.</p>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed max-w-xs mx-auto">
                           {canManage
                             ? "Schedule interactive live talk sessions for your members."
                             : "Check back soon for live interactive broadcasts."}
@@ -1959,12 +1959,12 @@ export default function ProNetworkHubPage({
                     </button>
                   </div>
 
-                  <div className="divide-y divide-slate-100 dark:divide-white/5 pt-1">
+                  <div className={displayResources.length === 0 ? "pt-1" : "divide-y divide-slate-100 dark:divide-white/5 pt-1"}>
                     {displayResources.length === 0 ? (
-                      <div className="p-5 text-center space-y-2 rounded-xl bg-slate-50/60 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5">
-                        <FolderDown className="w-6 h-6 text-slate-400 mx-auto" />
+                      <div className="py-7 text-center space-y-2">
+                        <FolderDown className="w-8 h-8 text-slate-400 dark:text-slate-500 mx-auto" />
                         <p className="text-xs font-bold text-slate-700 dark:text-slate-300">No resources uploaded yet.</p>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed max-w-xs mx-auto">
                           {canManage
                             ? "Upload guides, templates, and checklists for your members."
                             : "Downloadable guides and worksheets will be posted here."}

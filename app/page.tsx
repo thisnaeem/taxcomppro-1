@@ -9,6 +9,8 @@ import {
 } from "lucide-react";
 import Navbar from "@/components/landing/Navbar";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
+import { PRICING_PLANS } from "@/lib/pricing-plans";
+import PricingCard from "@/components/pricing/PricingCard";
 
 const features = [
   {
@@ -83,33 +85,6 @@ const sampleMarketplace = [
     reviews: "29",
     color: "from-purple-500/15 to-pink-500/10 text-purple-600",
     icon: Users,
-  },
-];
-
-const plans = [
-  {
-    name: "Basic Members Only", price: "FREE", period: "", img: "/plan-basic.webp",
-    popular: false, badge: null, savings: null,
-    features: ["Email Support","Marketplace Access (View)","Member Directory Access","Groups Access (View)","Marketplace Feed Access","Secure Members-Only Environment"],
-    cta: "Join For Free", href: "/register",
-  },
-  {
-    name: "VIP Members Only", price: "$39.99", period: "/month", img: "/plan-vip.webp",
-    popular: false, badge: "2 Months FREE", savings: null,
-    features: ["Priority Email Support","Private Messaging & DMs","Training & Educational Support","Marketplace Feed Interaction","Groups Interaction","Private Discussion Forums","Ongoing Education & Training","Ability to Connect","Pro Training Access","ATLAS AI Tax Bot","Professional Networking"],
-    cta: "Join VIP", href: "/register?plan=VIP",
-  },
-  {
-    name: "VIP + Marketplace Bundle", price: "$79.99", period: "/month", img: "/plan-marketplace.webp",
-    popular: true, badge: "Most Popular", savings: null,
-    features: ["Professional marketplace listing","Custom seller profile page","Ability to sell services","Private Discussion Forums","Fully Customizable Profile","Featured in Marketplace directory","Enhanced Visibility & Credibility","Stronger Brand Authority"],
-    cta: "Start Marketplace Plan", href: "/register?plan=MARKETPLACE",
-  },
-  {
-    name: "VIP + Marketplace Plus", price: "$129.99", period: "/month", img: "/plan-marketplace-plus.webp",
-    popular: false, badge: "Best Value", savings: null,
-    features: ["Professional marketplace listing","Custom seller profile","Ability to sell services","Private Discussion Forums","Fully Customizable Profile","Featured in directory","Enhanced Visibility","Live Audio Session Hosting","Live Video Session Hosting","Post Ads/Products/Services"],
-    cta: "Get Best Value", href: "/register?plan=MARKETPLACE_PLUS",
   },
 ];
 
@@ -564,88 +539,13 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 items-stretch">
-            {plans.map((plan) => (
-              <div
-                key={plan.name}
-                className={`relative bg-white dark:bg-[#0c182b] rounded-3xl flex flex-col overflow-hidden transition-all duration-300 hover:-translate-y-2 ${
-                  plan.popular
-                    ? "shadow-2xl shadow-[#ffbe24]/15 border-2 border-[#ffbe24] dark:border-[#ffbe24]"
-                    : "shadow-md border border-slate-200 dark:border-slate-800 hover:shadow-xl"
-                }`}
-              >
-                {/* Gold Top Accent Bar */}
-                {plan.popular && (
-                  <div className="h-2 w-full bg-gradient-to-r from-[#ffbe24] via-[#ffbe24] to-[#ffbe24]" />
-                )}
-
-                {/* Badge */}
-                {plan.badge && (
-                  <div className="absolute top-4 right-4 z-10">
-                    <span className={`text-[11px] font-black px-3 py-1 rounded-full uppercase tracking-wider ${
-                      plan.popular
-                        ? "bg-gradient-to-r from-[#ffbe24] to-[#ffbe24] text-[#0a1628] shadow-sm"
-                        : "bg-[#0a1628] dark:bg-white text-white dark:text-[#0a1628]"
-                    }`}>
-                      {plan.badge}
-                    </span>
-                  </div>
-                )}
-
-                <div className="p-7 sm:p-8 flex flex-col flex-1">
-                  {/* Plan image */}
-                  <div className="flex justify-center mb-5 mt-2">
-                    <Image src={plan.img} alt={plan.name} width={120} height={120} className="object-contain hover:scale-105 transition-transform" style={{ width: "auto", height: "auto" }} />
-                  </div>
-
-                  {/* Name */}
-                  <h3 className="text-center font-black text-lg text-[#0a1628] dark:text-white mb-1">
-                    {plan.name}
-                  </h3>
-
-                  {/* Savings */}
-                  {plan.savings ? (
-                    <p className="text-center text-xs font-bold text-[#ffbe24] dark:text-[#ffbe24] mb-3">{plan.savings}</p>
-                  ) : (
-                    <div className="h-5 mb-1" />
-                  )}
-
-                  {/* Price */}
-                  <div className="flex items-baseline justify-center gap-1 mb-6">
-                    <span className="text-4xl sm:text-5xl font-black text-[#0a1628] dark:text-white">{plan.price}</span>
-                    <span className="text-sm font-semibold text-slate-600 dark:text-slate-400">{plan.period}</span>
-                  </div>
-
-                  {/* Features */}
-                  <ul className="space-y-3 mb-8 flex-1">
-                    {plan.features.map((f) => {
-                      const isBold =
-                        plan.name.includes("Marketplace Plus") &&
-                        (f.toLowerCase().includes("live audio") ||
-                         f.toLowerCase().includes("live video") ||
-                         f.toLowerCase().includes("post ads"));
-                      return (
-                        <li key={f} className={`flex gap-2.5 items-start text-xs sm:text-sm ${isBold ? "text-[#0a1628] dark:text-white font-bold" : "text-slate-600 dark:text-slate-300"}`}>
-                          <CheckCircle2 className={`w-4 h-4 shrink-0 mt-0.5 ${isBold ? "text-emerald-600 stroke-[2.5]" : "text-emerald-500"}`} />
-                          <span className={isBold ? "font-bold text-[#0a1628] dark:text-white" : ""}>{f}</span>
-                        </li>
-                      );
-                    })}
-                  </ul>
-
-                  {/* CTA */}
-                  <Link
-                    href={plan.href}
-                    className={`w-full text-center block font-black text-sm py-4 rounded-full transition-all mt-auto ${
-                      plan.popular
-                        ? "bg-gradient-to-r from-[#ffbe24] via-[#ffbe24] to-[#ffbe24] text-[#0a1628] hover:shadow-[0_0_25px_rgba(255, 190, 36,0.4)] hover:scale-[1.02]"
-                        : "bg-[#0a1628] dark:bg-white text-white dark:text-[#0a1628] hover:bg-[#1a3a6b] dark:hover:bg-slate-100"
-                    }`}
-                  >
-                    {plan.cta}
-                  </Link>
-                </div>
-              </div>
+          <div className="pricing-grid">
+            {PRICING_PLANS.map((plan) => (
+              <PricingCard
+                key={plan.id}
+                plan={plan}
+                mode="landing"
+              />
             ))}
           </div>
 

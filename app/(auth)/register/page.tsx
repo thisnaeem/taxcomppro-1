@@ -19,6 +19,8 @@ import {
 import OtpInput from "@/components/auth/OtpInput";
 import GoogleMark from "@/components/auth/GoogleMark";
 import AuthShell, { StepRail } from "@/components/auth/AuthShell";
+import { PRICING_PLANS, PlanTier } from "@/lib/pricing-plans";
+import PricingCard from "@/components/pricing/PricingCard";
 
 interface Country {
   code: string;
@@ -68,63 +70,6 @@ const schema = z
 
 type FormData = z.infer<typeof schema>;
 
-const membershipPlans = [
-  {
-    id: "VIP",
-    name: "VIP Members Only",
-    price: "$39.99",
-    period: "/month",
-    badge: "Core Membership",
-    popular: false,
-    icon: Crown,
-    summary: "The library, the forums and the directory.",
-    features: [
-      "Priority access to the Tax SOP and due diligence library",
-      "Private discussion forums and feed interaction",
-      "Full member directory and direct networking",
-      "ATLAS AI tax concierge and assistant bot",
-      "Ongoing tax training and CE masterclasses",
-      "2 months free with annual billing",
-    ],
-  },
-  {
-    id: "MARKETPLACE",
-    name: "VIP + Marketplace Bundle",
-    price: "$79.99",
-    period: "/month",
-    badge: "Most Popular",
-    popular: true,
-    icon: Sparkles,
-    summary: "Everything in VIP, plus you can sell.",
-    features: [
-      "Everything in VIP Members Only",
-      "Verified seller profile in the marketplace",
-      "Sell tax services and digital products at 0% platform fee",
-      "Verified Pro badge next to your name",
-      "Custom marketplace storefront and showcase",
-      "Connect digital business card integration",
-    ],
-  },
-  {
-    id: "MARKETPLACE_PLUS",
-    name: "VIP + Marketplace Plus",
-    price: "$129.99",
-    period: "/month",
-    badge: "Best Value",
-    popular: false,
-    icon: Zap,
-    summary: "Everything, plus you can host and advertise.",
-    features: [
-      "Everything in the Marketplace Bundle",
-      "Host live Pro Talk audio rooms",
-      "Host video training workshops and masterclasses",
-      "Priority search ranking in the Pro directory",
-      "Post featured ads, banners and announcements",
-      "Unlimited toolkit and compliance vault downloads",
-    ],
-  },
-];
-
 // Shared control tokens. Same radius and contrast system as the login screen:
 // inputs 12px, cards 16px, primary CTA full pill.
 const inputBase =
@@ -170,7 +115,13 @@ function RegisterForm() {
   const [resendIn, setResendIn] = useState(0);
   const [resendLoading, setResendLoading] = useState(false);
 
-  const [selectedTier, setSelectedTier] = useState<string>("MARKETPLACE");
+  const urlPlan = searchParams.get("plan") as PlanTier | null;
+  const initialTier: PlanTier =
+    urlPlan && (["FREE", "VIP", "MARKETPLACE", "MARKETPLACE_PLUS"] as PlanTier[]).includes(urlPlan)
+      ? urlPlan
+      : "MARKETPLACE";
+
+  const [selectedTier, setSelectedTier] = useState<PlanTier>(initialTier);
   const [couponCode, setCouponCode] = useState("");
 
   const [serverError, setServerError] = useState(searchParams.has("error") ? "Sign-up was not completed. Please try again." : "");
@@ -363,6 +314,10 @@ function RegisterForm() {
   };
 
   const handleProceedToCheckout = async () => {
+    if (selectedTier === "FREE") {
+      router.push(nextPath || "/feed?welcome=1");
+      return;
+    }
     setCheckoutLoading(true);
     setServerError("");
     try {
@@ -372,7 +327,7 @@ function RegisterForm() {
         body: JSON.stringify({
           tier: selectedTier,
           couponCode: couponCode.trim() || undefined,
-          redirectUrl: "/feed?welcome=1",
+          redirectUrl: nextPath || "/feed?welcome=1",
         }),
       });
 
@@ -382,7 +337,7 @@ function RegisterForm() {
       } else if (data.error) {
         setServerError(data.error);
       } else {
-        router.push("/feed?welcome=1");
+        router.push(nextPath || "/feed?welcome=1");
       }
     } catch {
       setServerError("Failed to initiate checkout. Please try again.");
@@ -399,14 +354,13 @@ function RegisterForm() {
   );
 
   /* ─────────────────────────── STEP 3: MEMBERSHIP ───────────────────────────
-     Full width, no brand panel: three plans need the horizontal room, and by this
-     point the marketing column has already done its job. */
+     Full width, clean 4-tier cards mirroring the /pricing page design. */
   if (step === "membership") {
-    const selected = membershipPlans.find((p) => p.id === selectedTier);
+    const selected = PRICING_PLANS.find((p) => p.id === selectedTier);
 
     return (
-      <div className="min-h-[100dvh] bg-[#f8fafc] px-5 py-12 font-[var(--font-urbanist,Urbanist),sans-serif] dark:bg-[#0a1220]">
-        <div className="mx-auto w-full max-w-5xl">
+      <div className="min-h-[100dvh] bg-[#f8fafc] px-4 py-12 font-[var(--font-urbanist,Urbanist),sans-serif] dark:bg-[#0a1220] sm:px-6">
+        <div className="mx-auto w-full max-w-7xl">
           <div className="mb-9 flex justify-center">
             <Link href="/">
               <Image src="/logo.webp" alt="TaxCompPro" width={150} height={52}
@@ -435,119 +389,90 @@ function RegisterForm() {
             </div>
           )}
 
-          {/* Plans. The popular tier is lifted rather than merely outlined, so the
-              recommendation reads before any colour is processed. */}
+          {!pendingSignup && (
+            <div className="mx-auto mb-8 max-w-xl">
+              <ProfessionalTitleEditor />
+            </div>
+          )}
+
+          {/* 4-tier Pricing Grid matching /pricing */}
           <div
             role="radiogroup"
             aria-label="Membership plan"
-            className="grid grid-cols-1 items-start gap-5 md:grid-cols-3"
+            className="pricing-grid mb-10"
           >
-            {!pendingSignup && <ProfessionalTitleEditor />}
-            {membershipPlans.map((p) => {
-              const isSelected = selectedTier === p.id;
-              const Icon = p.icon;
-              return (
-                <button
-                  key={p.id}
-                  type="button"
-                  role="radio"
-                  aria-checked={isSelected}
-                  onClick={() => setSelectedTier(p.id)}
-                  className={`relative flex h-full flex-col rounded-2xl border-2 p-6 text-left transition-all ${
-                    p.popular ? "md:-mt-3 md:pb-8" : ""
-                  } ${
-                    isSelected
-                      ? "border-[#ffbe24] bg-white shadow-[0_12px_36px_rgba(255, 190, 36,0.18)] dark:bg-white/[0.06]"
-                      : "border-slate-200 bg-white hover:border-slate-300 dark:border-white/12 dark:bg-white/[0.03] dark:hover:border-white/25"
-                  }`}
-                >
-                  {p.popular && (
-                    <span className="absolute -top-3 left-6 rounded-full bg-[#0a1628] px-3 py-1 text-[10px] font-black uppercase tracking-wider text-[#ffbe24]">
-                      {p.badge}
-                    </span>
-                  )}
-
-                  <div className="mb-4 flex items-start justify-between gap-3">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0a1628]">
-                      <Icon className="h-5 w-5 text-[#ffbe24]" strokeWidth={2} />
-                    </span>
-                    <span
-                      className={`mt-0.5 flex h-5 w-5 items-center justify-center rounded-full border-2 transition-all ${
-                        isSelected
-                          ? "border-[#ffbe24] bg-[#ffbe24]"
-                          : "border-slate-300 dark:border-white/30"
-                      }`}
-                    >
-                      {isSelected && <Check className="h-3 w-3 text-white" strokeWidth={3} />}
-                    </span>
-                  </div>
-
-                  <h2 className="text-base font-black leading-tight text-[#0a1628] dark:text-white">
-                    {p.name}
-                  </h2>
-                  <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">{p.summary}</p>
-
-                  <div className="mt-4 flex items-baseline gap-1">
-                    <span className="text-[32px] font-black leading-none tabular-nums text-[#0a1628] dark:text-white">
-                      {p.price}
-                    </span>
-                    <span className="text-xs font-bold text-slate-600 dark:text-slate-400">{p.period}</span>
-                  </div>
-
-                  <ul className="mt-5 space-y-2.5 border-t border-slate-100 pt-5 dark:border-white/10">
-                    {p.features.map((feat) => (
-                      <li key={feat} className="flex items-start gap-2 text-xs leading-snug text-slate-700 dark:text-slate-300">
-                        <CheckCircle2 className="mt-px h-3.5 w-3.5 shrink-0 text-[#ffbe24]" />
-                        <span>{feat}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </button>
-              );
-            })}
+            {PRICING_PLANS.map((p) => (
+              <PricingCard
+                key={p.id}
+                plan={p}
+                mode="select"
+                selected={selectedTier === p.id}
+                onSelect={(tier) => setSelectedTier(tier)}
+              />
+            ))}
           </div>
 
-          {/* One checkout CTA for the whole step. The cards select; this commits. */}
+          {/* Checkout / Free Continuation CTA */}
           <div className="mx-auto mt-9 max-w-lg">
-            <div className="mb-4">
-              <label htmlFor="coupon" className={`${fieldLabel} mb-2`}>
-                Promo or referral code{" "}
-                <span className="font-normal text-slate-600 dark:text-slate-400">(optional)</span>
-              </label>
-              <div className="relative">
-                <Tag className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 dark:text-slate-400" />
-                <input
-                  id="coupon"
-                  type="text"
-                  placeholder="Enter your code"
-                  value={couponCode}
-                  onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                  className={`${inputBase} ${inputOk} py-3 pl-11 pr-4 uppercase tracking-wider placeholder:normal-case placeholder:tracking-normal`}
-                />
-              </div>
-              <p className="mt-2 text-xs text-slate-600 dark:text-slate-400">
-                Codes are validated and applied at checkout.
-              </p>
-            </div>
+            {selectedTier !== "FREE" ? (
+              <>
+                <div className="mb-4">
+                  <label htmlFor="coupon" className={`${fieldLabel} mb-2`}>
+                    Promo or referral code{" "}
+                    <span className="font-normal text-slate-600 dark:text-slate-400">(optional)</span>
+                  </label>
+                  <div className="relative">
+                    <Tag className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 dark:text-slate-400" />
+                    <input
+                      id="coupon"
+                      type="text"
+                      placeholder="Enter your code"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                      className={`${inputBase} ${inputOk} py-3 pl-11 pr-4 uppercase tracking-wider placeholder:normal-case placeholder:tracking-normal`}
+                    />
+                  </div>
+                  <p className="mt-2 text-xs text-slate-600 dark:text-slate-400">
+                    Codes are validated and applied at checkout.
+                  </p>
+                </div>
 
-            <button type="button" disabled={checkoutLoading} onClick={handleProceedToCheckout} className={goldCta}>
-              {checkoutLoading ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Connecting to Stripe…</span>
-                </>
-              ) : (
-                <>
-                  <span>Continue to checkout{selected ? ` (${selected.price}${selected.period})` : ""}</span>
+                <button type="button" disabled={checkoutLoading} onClick={handleProceedToCheckout} className={goldCta}>
+                  {checkoutLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Connecting to Stripe…</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Continue to checkout{selected ? ` (${selected.price}${selected.period})` : ""}</span>
+                      <ArrowRight className="h-4 w-4" />
+                    </>
+                  )}
+                </button>
+
+                <p className="mt-4 flex items-center justify-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
+                  <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
+                  Secure 256-bit encrypted checkout on Stripe.
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="mb-5 rounded-2xl border border-slate-200 bg-white p-5 text-center dark:border-white/10 dark:bg-white/[0.04]">
+                  <p className="text-sm font-bold text-[#0a1628] dark:text-white">
+                    You selected Basic Members Only (Free Forever)
+                  </p>
+                  <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
+                    No credit card required. You can explore the community and upgrade anytime from your settings.
+                  </p>
+                </div>
+
+                <button type="button" onClick={handleProceedToCheckout} className={goldCta}>
+                  <span>Get started for free</span>
                   <ArrowRight className="h-4 w-4" />
-                </>
-              )}
-            </button>
-
-            <p className="mt-4 flex items-center justify-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
-              <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
-              Secure 256-bit encrypted checkout on Stripe.
-            </p>
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>

@@ -6,103 +6,20 @@ import { useRef, useState } from "react";
 import { Tick02Icon, LockKeyIcon, ArrowRight01Icon, ArrowDown01Icon } from "hugeicons-react";
 import { useAppSelector } from "@/store/hooks";
 
-// Tier hierarchy: higher index = higher tier
-const TIER_RANK: Record<string, number> = {
-  FREE: 0,
-  VIP: 1,
-  MARKETPLACE: 2,
-  MARKETPLACE_PLUS: 3,
-};
-
-const plans = [
-  {
-    name: "Basic Members Only", price: 0, label: "FREE", period: "",
-    img: "/plan-basic.webp", tier: "FREE", popular: false, badge: null, savings: null,
-    features: [
-      "Email Support",
-      "Marketplace Access (View)",
-      "Member Directory Access",
-      "Groups Access (View)",
-      "Marketplace Feed Access",
-      "Secure Members-Only Environment",
-    ],
-    cta: "Current Plan",
-    href: null,
-  },
-  {
-    name: "VIP Members Only", price: 39.99, label: "$39.99", period: "/month",
-    img: "/plan-vip.webp", tier: "VIP", popular: false, badge: "2 Months FREE", savings: null,
-    features: [
-      "Priority Email Support",
-      "Private Messaging & DMs",
-      "Training & Educational Support",
-      "Marketplace Feed Interaction",
-      "Groups Interaction",
-      "Private Discussion Forums",
-      "Ongoing Education & Training",
-      "Ability to Connect",
-      "Pro Training Access",
-      "ATLAS AI Tax Bot",
-      "Professional Networking",
-    ],
-    cta: "Upgrade to VIP",
-    href: null,
-  },
-  {
-    name: "VIP + Marketplace Bundle", price: 79.99, label: "$79.99", period: "/month",
-    img: "/plan-marketplace.webp", tier: "MARKETPLACE", popular: true, badge: "Most Popular", savings: "Save $131.96/yr",
-    features: [
-      "Professional marketplace listing",
-      "Custom seller profile",
-      "Ability to sell services",
-      "Private Discussion Forums",
-      "Fully Customizable Profile",
-      "Featured in Marketplace directory",
-      "Enhanced Visibility & Credibility",
-      "Stronger Brand Authority",
-    ],
-    cta: "Upgrade to Marketplace",
-    href: null,
-  },
-  {
-    name: "VIP + Marketplace Plus", price: 129.99, label: "$129.99", period: "/month",
-    img: "/plan-marketplace-plus.webp", tier: "MARKETPLACE_PLUS", popular: true, badge: "Best Value", savings: "Save $131.96/yr",
-    features: [
-      "Professional marketplace listing",
-      "Custom seller profile",
-      "Ability to sell services",
-      "Private Discussion Forums",
-      "Fully Customizable Profile",
-      "Featured in directory",
-      "Enhanced Visibility",
-      "Live Audio Session Hosting",
-      "Live Video Session Hosting",
-      "Post Ads/Products/Services",
-    ],
-    cta: "Upgrade to Plus",
-    href: null,
-  },
-];
-
+import { PRICING_PLANS, TIER_RANK, PlanTier } from "@/lib/pricing-plans";
+import PricingCard from "@/components/pricing/PricingCard";
 import "@/components/landing/member-pages.css";
-
-const descriptions: Record<string, string> = {
-  FREE: "Explore the community and discover your next connection.",
-  VIP: "Build your expertise with training and professional connections.",
-  MARKETPLACE: "Put your practice in front of your next client.",
-  MARKETPLACE_PLUS: "Grow your visibility with live sessions and more ways to share.",
-};
 
 export default function UpgradePage() {
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [expanded, setExpanded] = useState(false);
   const checkoutPending = useRef(false);
-  const { user, isLoading } = useAppSelector(s => s.auth);
-  const userTier = user?.tier ?? "FREE";
+  const { user, isLoading } = useAppSelector((s) => s.auth);
+  const userTier = (user?.tier as PlanTier) ?? "FREE";
   const userRank = TIER_RANK[userTier] ?? 0;
 
-  const handleUpgrade = async (tier: string) => {
+  const handleUpgrade = async (tier: PlanTier) => {
     if (checkoutPending.current) return;
     checkoutPending.current = true;
     setLoading(tier);
@@ -135,44 +52,63 @@ export default function UpgradePage() {
       <div className="mp-container">
         <header className="mp-hero">
           <p className="mp-eyebrow">Memberships for your next chapter</p>
-          <h1>Upgrade your plan.<br /><span>Move your practice forward.</span></h1>
+          <h1>
+            Upgrade your plan.
+            <br />
+            <span>Move your practice forward.</span>
+          </h1>
           <p>All paid plans include 2 months free community access. Cancel anytime.</p>
-          <div className="mp-hero-links"><a href="#plans">Explore plans <ArrowDown01Icon size={18} /></a><Link href="/contact">Need help choosing? <ArrowRight01Icon size={18} /></Link></div>
+          <div className="mp-hero-links">
+            <a href="#plans">
+              Explore plans <ArrowDown01Icon size={18} />
+            </a>
+            <Link href="/contact">
+              Need help choosing? <ArrowRight01Icon size={18} />
+            </Link>
+          </div>
         </header>
 
         <section id="plans" aria-label="Membership plans">
-          <div className="pricing-toolbar"><p>Find the right fit for your practice</p><span>Monthly memberships · USD</span></div>
-          {error && <div className="mp-error" role="alert">{error} <Link href="/contact">Contact support</Link></div>}
+          <div className="pricing-toolbar">
+            <p>Find the right fit for your practice</p>
+            <span>Monthly memberships · USD</span>
+          </div>
+          {error && (
+            <div className="mp-error" role="alert">
+              {error} <Link href="/contact">Contact support</Link>
+            </div>
+          )}
           <div className="pricing-grid">
-            {plans.map((plan) => {
+            {PRICING_PLANS.map((plan) => {
               const isCurrent = !!user && userTier === plan.tier;
               const included = !!user && (TIER_RANK[plan.tier] ?? 0) < userRank;
               return (
-                <article key={plan.tier} className={`pricing-card ${plan.popular ? "pricing-featured" : ""}`}>
-                  <div className="pricing-art">
-                    <Image src={plan.img} alt="" width={120} height={120} />
-                    {(isCurrent || included || plan.badge) && <span className="pricing-badge">{isCurrent ? "Current plan" : included ? "Included" : plan.badge}</span>}
-                  </div>
-                  <div className="pricing-body">
-                    <h2>{plan.name}</h2>
-                    <p className="pricing-description">{descriptions[plan.tier]}</p>
-                    <div className="pricing-price"><strong>{plan.label}</strong><span>{plan.period || "Forever"}</span></div>
-                    <p className="pricing-savings">{plan.savings || (plan.price === 0 ? "Start with the essentials" : "Invest in your professional growth")}</p>
-                    <div className="pricing-action">
-                      {isCurrent || included ? <span className="mp-button mp-button-secondary"><Tick02Icon size={18} />{isCurrent ? "Current plan" : "Included in your plan"}</span>
-                        : !user && !isLoading ? <Link className={`mp-button ${plan.popular ? "" : "mp-button-secondary"}`} href={plan.tier === "FREE" ? "/register" : "/login?next=%2Fupgrade"}>{plan.tier === "FREE" ? "Get started free" : "Sign in to upgrade"}<ArrowRight01Icon size={17} /></Link>
-                        : <button className={`mp-button ${plan.popular ? "" : "mp-button-secondary"}`} onClick={() => handleUpgrade(plan.tier)} disabled={!!loading || isLoading}>{isLoading ? "Loading your plan…" : loading === plan.tier ? "Opening checkout…" : plan.cta}<ArrowRight01Icon size={17} /></button>}
-                    </div>
-                    <p className="pricing-list-label">What’s included</p>
-                    <ul id={`features-${plan.tier}`} className="pricing-features">
-                      {(expanded ? plan.features : plan.tier === "MARKETPLACE_PLUS" ? [...plan.features.slice(-3), ...plan.features.slice(0, 2)] : plan.features.slice(0, 5)).map(feature => <li key={feature}><Tick02Icon size={17} aria-hidden="true" /><span>{feature}</span></li>)}
-                    </ul>
-                  </div>
-                </article>
+                <PricingCard
+                  key={plan.tier}
+                  plan={plan}
+                  mode="upgrade"
+                  isCurrent={isCurrent}
+                  included={included}
+                  user={user}
+                  isLoading={isLoading}
+                  upgradeLoadingTier={loading}
+                  onUpgrade={handleUpgrade}
+                  expanded={expanded}
+                />
               );
             })}
           </div>
-          <div className="pricing-compare"><button type="button" onClick={() => setExpanded(!expanded)} aria-expanded={expanded} aria-controls={plans.map(p => `features-${p.tier}`).join(" ")}>{expanded ? "Show key features" : "Compare all plan features"}<ArrowDown01Icon size={18} className={expanded ? "mp-rotate" : ""} /></button></div>
+          <div className="pricing-compare">
+            <button
+              type="button"
+              onClick={() => setExpanded(!expanded)}
+              aria-expanded={expanded}
+              aria-controls={PRICING_PLANS.map((p) => `features-${p.tier}`).join(" ")}
+            >
+              {expanded ? "Show key features" : "Compare all plan features"}
+              <ArrowDown01Icon size={18} className={expanded ? "mp-rotate" : ""} />
+            </button>
+          </div>
         </section>
         <div className="pricing-trust"><LockKeyIcon size={21} aria-hidden="true" /><p>Secure payments powered by <strong>Stripe</strong>. Cancel anytime. No hidden fees.</p><Link href="/contact">Contact support <ArrowRight01Icon size={17} /></Link></div>
         <section className="mp-faq" aria-labelledby="pricing-faq">
