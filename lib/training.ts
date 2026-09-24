@@ -3,10 +3,27 @@
 // (crypto, dns, etc.) — it's imported from client components. Server-only
 // helpers (DB access, crypto) live in `@/lib/trainingServer` instead.
 
-// Toolkits that include a staff due-diligence training license. Extend this
-// list when other toolkits (Audit Playbook, Schedule C Reconstruction, etc.)
-// get their own ERO Training Center in a later phase.
-export const TRAINING_TOOLKIT_IDS = new Set(["irs-fine-defense"]);
+// Toolkits that include a staff due-diligence training license.
+export const TRAINING_TOOLKIT_IDS = new Set([
+  "irs-fine-defense",
+  "30-day-launch",
+  "30-day-tax-office",
+  "30-day-tax-office-launch",
+  "30daylaunch",
+  "schedule-c-reconstruction",
+  "schedulecrecon",
+  "mastering-schedule-c-reconstruction",
+  "audit-playbook",
+  "irs-audit-playbook",
+  "audit-ready-playbook",
+  "auditplaybook",
+  "credits-filing-status",
+  "credits-filing-status-explained",
+  "credits",
+  "staff-audit-ready",
+  "due-diligence-course",
+  "due-diligence",
+]);
 
 export const DEFAULT_SEATS = 5;
 export const LICENSE_MONTHS = 12;

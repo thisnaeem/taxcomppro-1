@@ -6,6 +6,7 @@ import type { SubscriptionTier } from "@prisma/client";
 import { TRAINING_TOOLKIT_IDS, DEFAULT_SEATS, LICENSE_MONTHS } from "@/lib/training";
 import { ensureActiveTrainingVersion } from "@/lib/trainingServer";
 import { sendMembershipUpgradedEmail } from "@/lib/email";
+import { fulfillStripePurchase } from "@/lib/fulfillment";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
@@ -47,42 +48,14 @@ export async function POST(req: NextRequest) {
     if(session.payment_status === "unpaid") return NextResponse.json({received:true});
     const membershipBonus = await grantAcademyMembershipBonus(session);
 
-    // ── Toolkit one-time purchase ──────────────────────────
-    if (type === "toolkit" && userId && toolkitId) {
-      const mTier = "MARKETPLACE_PLUS" as SubscriptionTier;
-      const months = 2;
-      const customerId = session.customer as string;
-
-      // Idempotent: the /toolkits/success page also calls verify-session as a
-      // fallback for local dev / delayed webhook delivery, so this record may
-      // already exist by the time this event arrives. Guard against the
-      // unique stripeSessionId constraint so a race never crashes the
-      // handler before it reaches the training-license grant below.
-      const alreadyRecorded = await prisma.toolkitPurchase.findFirst({ where: { stripeSessionId: session.id } });
-      if (!alreadyRecorded) {
-        await prisma.toolkitPurchase.create({
-          data: { userId, toolkitId, stripeSessionId: session.id, membershipGranted: membershipBonus?.sessionId === session.id, membershipTier: mTier, membershipMonths: membershipBonus?.sessionId === session.id ? months : 0 },
-        });
-      }
-
-      // ── ERO Training Center: auto-grant a 5-seat, 12-month staff training license ──
-      if (TRAINING_TOOLKIT_IDS.has(toolkitId)) {
-        try {
-          await ensureActiveTrainingVersion(toolkitId);
-          const expiresAt = new Date();
-          expiresAt.setMonth(expiresAt.getMonth() + LICENSE_MONTHS);
-          await prisma.trainingLicense.upsert({
-            where: { eroId_toolkitId: { eroId: userId, toolkitId } },
-            create: { eroId: userId, toolkitId, totalSeats: DEFAULT_SEATS, expiresAt },
-            update: {}, // don't reset an existing license if somehow purchased twice
-          });
-        } catch (e) {
-          console.error("Failed to create training license:", e);
-        }
-      }
-
+    // ── Toolkits, Courses & Bundles (Centralized Robust Fulfillment) ──────
+    if (userId && (type === "toolkit" || type === "course" || type === "bundle" || session.metadata?.productKey)) {
+      await fulfillStripePurchase({
+        userId,
+        session,
+        membershipBonus,
+      });
     }
-
 
     // ── Additional staff-training seats ────────────────────
     if (type === "training_seats" && userId) {
@@ -113,40 +86,6 @@ export async function POST(req: NextRequest) {
           link: "/pro-talks",
         },
       });
-    }
-
-    // ── Course one-time purchase ───────────────────────────
-    if (type === "course" && userId) {
-      const { courseId, slug } = session.metadata ?? {};
-      if (courseId) {
-        const alreadyEnrolled = await prisma.enrollment.findUnique({
-          where: { userId_courseId: { userId, courseId } },
-        });
-        if (!alreadyEnrolled) {
-          await prisma.enrollment.create({ data: { userId, courseId } });
-          const course = await prisma.course.findUnique({ where: { id: courseId }, select: { title: true, instructorId: true } });
-          if (course) {
-            await prisma.notification.create({
-              data: {
-                userId: course.instructorId,
-                type: "ENROLLMENT",
-                title: "New Paid Enrollment",
-                message: `Someone purchased your course: ${course.title}`,
-                link: `/courses/${slug ?? ""}`,
-              },
-            }).catch(() => {});
-            await prisma.notification.create({
-              data: {
-                userId,
-                type: "SYSTEM",
-                title: "🎉 Course Purchase Complete!",
-                message: `You are now enrolled in "${course.title}". Start learning now!`,
-                link: `/courses/${slug ?? ""}/learn`,
-              },
-            }).catch(() => {});
-          }
-        }
-      }
     }
 
     // ── Marketplace item purchase ──────────────────────────
@@ -181,15 +120,6 @@ export async function POST(req: NextRequest) {
           }).catch(() => {});
         }
       }
-    }
-
-    if (type === "bundle" && userId) {
-      const { bundleId } = session.metadata ?? {};
-      await prisma.toolkitPurchase.upsert({
-        where: { stripeSessionId: session.id },
-        create: { userId, toolkitId: `bundle:${bundleId ?? "unknown"}`, stripeSessionId: session.id, membershipGranted: membershipBonus?.sessionId === session.id, membershipTier: "MARKETPLACE_PLUS", membershipMonths: membershipBonus?.sessionId === session.id ? 2 : 0 },
-        update: {},
-      });
     }
 
     // ── ProConnect Card purchase ($29 one-time) ───────────

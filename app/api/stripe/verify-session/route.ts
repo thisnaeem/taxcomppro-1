@@ -7,6 +7,7 @@ import type { SubscriptionTier } from "@prisma/client";
 import { TRAINING_TOOLKIT_IDS, DEFAULT_SEATS, LICENSE_MONTHS } from "@/lib/training";
 import { ensureActiveTrainingVersion } from "@/lib/trainingServer";
 import { sendMembershipUpgradedEmail } from "@/lib/email";
+import { fulfillStripePurchase } from "@/lib/fulfillment";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
@@ -86,61 +87,15 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Toolkit / bundle one-time purchase — apply upgrade ourselves (idempotent fallback for webhook)
-  if (type === "toolkit" || type === "bundle") {
-    const { toolkitId, bundleId } = stripeSession.metadata ?? {};
-    const tkId = type === "toolkit" ? toolkitId : `bundle:${bundleId ?? "unknown"}`;
-    if(tkId) await prisma.toolkitPurchase.upsert({
-      where: { stripeSessionId: stripeSession.id },
-      create: {userId, toolkitId:tkId, stripeSessionId:stripeSession.id, membershipGranted:membershipBonus?.sessionId === stripeSession.id,membershipTier:"MARKETPLACE_PLUS",membershipMonths:membershipBonus?.sessionId === stripeSession.id ? 2 : 0},
-      update: {},
-    });
-
-    // ── ERO Training Center: auto-grant a 5-seat, 12-month staff training license ──
-    // Idempotent (upsert on eroId+toolkitId) so it's safe to run here even if the
-    // webhook already handled it, and it's the only path that fires in local dev
-    // when Stripe webhooks aren't forwarded to localhost.
-    if (type === "toolkit" && toolkitId && TRAINING_TOOLKIT_IDS.has(toolkitId)) {
-      try {
-        await ensureActiveTrainingVersion(toolkitId);
-        const expiresAt = new Date();
-        expiresAt.setMonth(expiresAt.getMonth() + LICENSE_MONTHS);
-        await prisma.trainingLicense.upsert({
-          where: { eroId_toolkitId: { eroId: userId, toolkitId } },
-          create: { eroId: userId, toolkitId, totalSeats: DEFAULT_SEATS, expiresAt },
-          update: {},
-        });
-      } catch (e) {
-        console.error("verify-session: Failed to create training license:", e);
-      }
-    }
-  }
-
-  // Course one-time purchase — idempotent fallback for webhook
+  // Toolkit / bundle / course purchase (Centralized Robust Fulfillment)
   let enrolledCourseSlug: string | null = null;
-  if (type === "course" && userId) {
-    const { courseId, slug } = stripeSession.metadata ?? {};
-    if (courseId) {
-      const alreadyEnrolled = await prisma.enrollment.findUnique({
-        where: { userId_courseId: { userId, courseId } },
-      });
-      if (!alreadyEnrolled) {
-        await prisma.enrollment.create({ data: { userId, courseId } });
-        const course = await prisma.course.findUnique({ where: { id: courseId }, select: { title: true, instructorId: true } });
-        if (course) {
-          await prisma.notification.create({
-            data: {
-              userId,
-              type: "SYSTEM",
-              title: "🎉 Course Purchase Complete!",
-              message: `You are now enrolled in "${course.title}". Start learning now!`,
-              link: `/courses/${slug ?? ""}/learn`,
-            },
-          }).catch(() => {});
-        }
-      }
-      enrolledCourseSlug = slug ?? null;
-    }
+  if (type === "toolkit" || type === "bundle" || type === "course" || stripeSession.metadata?.productKey) {
+    const res = await fulfillStripePurchase({
+      userId,
+      session: stripeSession,
+      membershipBonus,
+    });
+    enrolledCourseSlug = res.enrolledCourseSlug || null;
   }
 
   await reconcileAcademyMembershipBonus(userId);
