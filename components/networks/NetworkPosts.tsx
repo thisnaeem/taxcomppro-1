@@ -11,21 +11,29 @@ import { BubbleChatIcon, LockIcon, PinIcon, SentIcon, Loading03Icon, UserCircleI
 
 
 
-type Person = { id: string; name: string; image?: string | null; profileSlug?: string | null };
+type Person = { id?: string; name?: string; image?: string | null; profileSlug?: string | null };
 
-export type NetworkPost = { images?: string[]; videoUrl?: string | null; id: string; title: string; content: string; category: string; createdAt: string; isPinned?: boolean; isMembersOnly?: boolean; isLocked?: boolean; author: Person; _count?: { replies: number }; replyCount?: number };
+export type NetworkPost = { images?: string[]; videoUrl?: string | null; id: string; title: string; content: string; category: string; createdAt: string; isPinned?: boolean; isMembersOnly?: boolean; isLocked?: boolean; author: Person | string; _count?: { replies: number }; replyCount?: number };
 
-type Reply = { id: string; content: string; author: Person };
+type Reply = { id: string; content: string; author: Person | string };
 
-
-
-function Avatar({ person }: { person: Person }) {
-
-  return person.image ? <img className="np-avatar" src={person.image} alt="" /> : <span className="np-avatar np-avatar-fallback"><UserCircleIcon size={24} /></span>;
-
+function Avatar({ person }: { person?: Person | string | null }) {
+  if (!person) return <span className="np-avatar np-avatar-fallback"><UserCircleIcon size={24} /></span>;
+  const image = typeof person === "object" ? person.image : null;
+  return image ? <img className="np-avatar" src={image} alt="" /> : <span className="np-avatar np-avatar-fallback"><UserCircleIcon size={24} /></span>;
 }
 
-function profile(person: Person) { return `/member/${person.profileSlug || person.id}`; }
+function profile(person?: Person | string | null) {
+  if (!person) return "#";
+  if (typeof person === "string") return `/member/${person}`;
+  return `/member/${person.profileSlug || person.id || ""}`;
+}
+
+function authorName(person?: Person | string | null) {
+  if (!person) return "Member";
+  if (typeof person === "string") return person;
+  return person.name || "Member";
+}
 
 
 
@@ -95,7 +103,7 @@ function Post({ post, slug }: { post: NetworkPost; slug: string }) {
 
     {post.isPinned && <div className="np-pinned"><PinIcon size={14} /> Featured post</div>}
 
-    <header className="np-post-header"><Link href={profile(post.author)}><Avatar person={post.author} /></Link><div><Link className="np-author" href={profile(post.author)}>{post.author.name}</Link><div className="np-meta"><time dateTime={post.createdAt}>{new Date(post.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</time><span>·</span><LockIcon size={12} /><span>{post.isMembersOnly ? "Members only" : "Network post"}</span></div></div><span className="np-category">{post.category}</span></header>
+    <header className="np-post-header"><Link href={profile(post.author)}><Avatar person={post.author} /></Link><div><Link className="np-author" href={profile(post.author)}>{authorName(post.author)}</Link><div className="np-meta"><time dateTime={post.createdAt}>{new Date(post.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</time><span>·</span><LockIcon size={12} /><span>{post.isMembersOnly ? "Members only" : "Network post"}</span></div></div><span className="np-category">{post.category}</span></header>
 
     <div className="np-post-content">{post.title !== automaticTitle && <h3>{post.title}</h3>}<p>{expanded || post.content.length < 650 ? post.content : `${post.content.slice(0, 650)}…`}</p>{post.content.length >= 650 && <button className="np-text-button" onClick={() => setExpanded(!expanded)}>{expanded ? "Show less" : "See more"}</button>}</div>
 
@@ -109,7 +117,7 @@ function Post({ post, slug }: { post: NetworkPost; slug: string }) {
 
       {error && <p role="alert" className="np-error">{error} {!replies && <button onClick={loadComments}>Try again</button>}</p>}
 
-      {replies?.map(reply => <div className="np-comment" key={reply.id}><Link href={profile(reply.author)}><Avatar person={reply.author} /></Link><div><Link className="np-author" href={profile(reply.author)}>{reply.author.name}</Link><p>{reply.content}</p></div></div>)}
+      {replies?.map(reply => <div className="np-comment" key={reply.id}><Link href={profile(reply.author)}><Avatar person={reply.author} /></Link><div><Link className="np-author" href={profile(reply.author)}>{authorName(reply.author)}</Link><p>{reply.content}</p></div></div>)}
 
       {replies?.length === 0 && <p className="np-meta">Be the first to comment.</p>}
 
@@ -192,7 +200,7 @@ export default function NetworkPosts({ slug, posts, user, canPost, onCreated, se
 
     {canPost && user && <form className="np-card np-composer" onSubmit={publish}>
 
-      <div className="np-compose-row"><Avatar person={user} /><div><label htmlFor="network-post">Share with your network</label><textarea id="network-post" placeholder={`What's on your mind, ${user.name.split(" ")[0]}?`} value={content} onChange={e => setContent(e.target.value)} maxLength={10000} rows={3} /></div></div>
+      <div className="np-compose-row"><Avatar person={user} /><div><label htmlFor="network-post">Share with your network</label><textarea id="network-post" placeholder={`What's on your mind, ${(user.name || "there").split(" ")[0]}?`} value={content} onChange={e => setContent(e.target.value)} maxLength={10000} rows={3} /></div></div>
 
       <div className="np-attachments">{images.map(url => <div key={url}><img src={url} alt="Photo ready to post" /><button type="button" aria-label="Remove photo" disabled={busy || uploading} onClick={() => setImages(previous => previous.filter(image => image !== url))}><Cancel01Icon size={16} /></button></div>)}{videoUrl && <div><video src={videoUrl} controls preload="metadata" /><button type="button" aria-label="Remove video" disabled={busy || uploading} onClick={() => setVideoUrl(null)}><Cancel01Icon size={16} /></button></div>}</div>
       <div className="np-upload-controls"><label><Image01Icon size={19} /> Photo<input className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" multiple disabled={busy || uploading || images.length >= 4} onChange={e => {void upload(e.target.files, false);e.target.value="";}} /></label><label><Video01Icon size={19} /> Video<input className="sr-only" type="file" accept="video/mp4,video/webm,video/quicktime" disabled={busy || uploading || Boolean(videoUrl)} onChange={e => {void upload(e.target.files, true);e.target.value="";}} /></label>{uploading && <span role="status">Uploading attachment…</span>}</div>
