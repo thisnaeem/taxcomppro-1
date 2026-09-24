@@ -19,6 +19,8 @@ import NetworkSkeleton from "@/components/networks/NetworkSkeleton";
 import NetworkPosts from "@/components/networks/NetworkPosts";
 import "@/components/networks/network-posts.css";
 import MemberBubbleCloud from "@/components/networks/MemberBubbleCloud";
+import NetworkAnalytics from "@/components/networks/NetworkAnalytics";
+import NetworkModeration from "@/components/networks/NetworkModeration";
 import {
   Home01Icon as Home,
   BubbleChatIcon as MessageSquare,
@@ -390,6 +392,8 @@ export default function ProNetworkHubPage({
     | "members"
     | "chat"
     | "manage"
+    | "analytics"
+    | "moderation"
   >("home");
 
   // Host Stripe Connect State
@@ -573,6 +577,10 @@ export default function ProNetworkHubPage({
       const params = new URLSearchParams(window.location.search);
       if (params.get("tab") === "manage") {
         setActiveTab("manage");
+      } else if (params.get("tab") === "analytics") {
+        setActiveTab("analytics");
+      } else if (params.get("tab") === "moderation") {
+        setActiveTab("moderation");
       }
       if (params.get("stripe") === "success" || params.get("stripe") === "refresh") {
         setActiveTab("manage");
@@ -1130,7 +1138,8 @@ export default function ProNetworkHubPage({
   if (loading || !network) return <NetworkSkeleton />;
 
   const canManage = network.canManage === true;
-  const currentTab = activeTab === "manage" && !canManage ? "home" : activeTab;
+  const adminTabs = ["manage", "analytics", "moderation"];
+  const currentTab = adminTabs.includes(activeTab) && !canManage ? "home" : activeTab;
 
   const renderPaywall = (title?: string, desc?: string) => (
     <div className="pn-v2-card space-y-6 text-center py-10 relative overflow-hidden">
@@ -1193,18 +1202,9 @@ export default function ProNetworkHubPage({
 
   return (
     <div className="pn-v2-shell">
-      {/* ── LEFT DARK SIDEBAR ── */}
+      {/* ── LEFT DARK SIDEBAR (Fixed) ── */}
       <aside className="pn-v2-sidebar">
         <div>
-          {/* Back to All Networks link */}
-          <Link
-            href="/pro-networks"
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-300 hover:text-white transition-all mb-4 px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 w-full border border-white/5 shadow-xs"
-          >
-            <ChevronLeft className="w-4 h-4 text-slate-400" />
-            <span>← Back to Networks</span>
-          </Link>
-
           {/* My Profile Header (Logged-in user profile) */}
           <Link
             href="/profile"
@@ -1273,54 +1273,56 @@ export default function ProNetworkHubPage({
             })}
           </div>
 
-          {/* Section: NETWORK TOOLS */}
-          <div className="space-y-1 pt-6">
-            <p className="pn-v2-nav-label">NETWORK TOOLS</p>
-            <button
-              type="button"
-              onClick={() => setActiveTab("manage")}
-              className={`pn-v2-nav-item ${currentTab === "manage" ? "active" : ""}`}
-            >
-              <Settings className="w-4 h-4 shrink-0" />
-              <span>Manage Network</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab("manage")}
-              className="pn-v2-nav-item"
-            >
-              <Pencil className="w-4 h-4 shrink-0" />
-              <span>Network Settings</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab("manage")}
-              className="pn-v2-nav-item"
-            >
-              <BarChart2 className="w-4 h-4 shrink-0" />
-              <span>Analytics</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab("manage")}
-              className="pn-v2-nav-item"
-            >
-              <Shield className="w-4 h-4 shrink-0" />
-              <span>Moderation</span>
-            </button>
-            <Link
-              href="/messages"
-              className="pn-v2-nav-item justify-between"
-            >
-              <span className="flex items-center gap-3">
-                <Mail className="w-4 h-4 shrink-0" />
-                <span>Messages</span>
-              </span>
-              <span className="bg-[#1a56db] text-white font-bold text-[10px] px-2 py-0.5 rounded-full">
-                12
-              </span>
-            </Link>
-          </div>
+          {/* Section: NETWORK TOOLS (Admins & Owners only) */}
+          {canManage && (
+            <div className="space-y-1 pt-6">
+              <p className="pn-v2-nav-label">NETWORK TOOLS</p>
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab("manage");
+                  setSearchQuery("");
+                }}
+                className={`pn-v2-nav-item ${currentTab === "manage" ? "active" : ""}`}
+              >
+                <Settings className="w-4 h-4 shrink-0" />
+                <span>Manage Network</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab("manage");
+                  setSearchQuery("");
+                }}
+                className="pn-v2-nav-item"
+              >
+                <Pencil className="w-4 h-4 shrink-0" />
+                <span>Network Settings</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab("analytics");
+                  setSearchQuery("");
+                }}
+                className={`pn-v2-nav-item ${currentTab === "analytics" ? "active" : ""}`}
+              >
+                <BarChart2 className="w-4 h-4 shrink-0" />
+                <span>Analytics</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab("moderation");
+                  setSearchQuery("");
+                }}
+                className={`pn-v2-nav-item ${currentTab === "moderation" ? "active" : ""}`}
+              >
+                <Shield className="w-4 h-4 shrink-0" />
+                <span>Moderation</span>
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Section: Need Help Support Box */}
@@ -1344,7 +1346,7 @@ export default function ProNetworkHubPage({
       </aside>
 
       {/* ── MAIN CONTENT AREA ── */}
-      <div className="flex-1 flex flex-col min-w-0 min-h-screen bg-[#08101e]">
+      <div className="pn-v2-main-content flex-1 flex flex-col min-w-0 min-h-screen bg-[#08101e]">
         {/* ── TOP HEADER BAR (WITH COVER IMAGE BACKGROUND) ── */}
         <header className="relative overflow-hidden min-h-[125px] sm:min-h-[145px] px-4 sm:px-7 py-5 flex items-center justify-between gap-4 border-b border-white/10 bg-[#08101e]">
           {/* Cover Image Backdrop */}
@@ -1500,6 +1502,12 @@ export default function ProNetworkHubPage({
               { id: "events", label: "Events", icon: Calendar },
               { id: "members", label: "Members", icon: Users },
               { id: "chat", label: "Members Chat", icon: MessagesSquare },
+              ...(canManage
+                ? [
+                    { id: "analytics", label: "Analytics", icon: BarChart2 },
+                    { id: "moderation", label: "Moderation", icon: Shield },
+                  ]
+                : []),
             ].map((tab) => {
               const Icon = tab.icon;
               const isActive = currentTab === tab.id;
@@ -2801,6 +2809,39 @@ export default function ProNetworkHubPage({
                 </div>
               </div>
             </div>
+          )}
+
+          {/* ═════════ TAB 9: ANALYTICS DASHBOARD (Admins & Owners) ═════════ */}
+          {currentTab === "analytics" && canManage && (
+            <NetworkAnalytics
+              network={network}
+              discussions={discussions}
+              membersList={membersList}
+              resourcesList={resourcesList}
+              eventsList={eventsList}
+              mediaList={mediaList}
+              chatMessages={chatMessages}
+            />
+          )}
+
+          {/* ═════════ TAB 10: MODERATION SUITE (Admins & Owners) ═════════ */}
+          {currentTab === "moderation" && canManage && (
+            <NetworkModeration
+              slug={slug}
+              network={network}
+              discussions={discussions}
+              membersList={membersList}
+              onDiscussionRemoved={(id) => {
+                setDiscussions((prev) => prev.filter((d) => d.id !== id));
+              }}
+              onMemberUpdated={(memberId, updates) => {
+                setMembersList((prev) =>
+                  prev.map((m) =>
+                    m.id === memberId || m.user?.id === memberId ? { ...m, ...updates } : m
+                  )
+                );
+              }}
+            />
           )}
         </div>
       </div>
