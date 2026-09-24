@@ -157,13 +157,36 @@ body {
 .dark .hover\:bg-slate-200:hover  { background-color: #2d4668 !important; }
 
 /* ── Text ── */
-.dark .text-\[\#0a1628\]  { color: #e2e8f0 !important; }
-.dark .text-slate-900     { color: #e2e8f0 !important; }
-.dark .text-slate-800     { color: #e2e8f0 !important; }
+/* Invert navy/slate text in dark mode, but EXCLUDE buttons, links, and gold/yellow elements */
+.dark .text-\[\#0a1628\]:not(button):not(button *):not(a):not(a *):not([class*="bg-\[\#ffbe24\]"]):not([class*="bg-\[\#ffbe24\]"] *):not([class*="bg-amber-"]):not([class*="bg-amber-"] *):not([class*="bg-yellow-"]):not([class*="bg-yellow-"] *)  { color: #e2e8f0 !important; }
+.dark .text-slate-900:not(button):not(button *):not(a):not(a *):not([class*="bg-\[\#ffbe24\]"]):not([class*="bg-\[\#ffbe24\]"] *):not([class*="bg-amber-"]):not([class*="bg-amber-"] *)     { color: #e2e8f0 !important; }
+.dark .text-slate-800:not(button):not(button *):not(a):not(a *):not([class*="bg-\[\#ffbe24\]"]):not([class*="bg-\[\#ffbe24\]"] *):not([class*="bg-amber-"]):not([class*="bg-amber-"] *)     { color: #e2e8f0 !important; }
 .dark .text-slate-700     { color: #cbd5e1 !important; }
 .dark .text-slate-600     { color: #94a3b8 !important; }
 .dark .text-slate-500     { color: #64748b !important; }
 .dark .text-slate-400     { color: #4e6280 !important; }
+
+/* ── Gold / Yellow CTA Buttons (Ensure dark text for maximum contrast) ── */
+button.bg-\[\#ffbe24\],
+button.bg-\[\#ffbe24\] *,
+a.bg-\[\#ffbe24\],
+a.bg-\[\#ffbe24\] *,
+button.bg-amber-400,
+button.bg-amber-400 *,
+button.bg-amber-500,
+button.bg-amber-500 *,
+.dark button.bg-\[\#ffbe24\],
+.dark button.bg-\[\#ffbe24\] *,
+.dark a.bg-\[\#ffbe24\],
+.dark a.bg-\[\#ffbe24\] *,
+.dark button.bg-amber-400,
+.dark button.bg-amber-400 *,
+.dark button.bg-amber-500,
+.dark button.bg-amber-500 *,
+.dark .btn-gold,
+.dark .btn-gold * {
+  color: #0a1628 !important;
+}
 
 /* ── Borders ── */
 .dark .border-slate-50    { border-color: #172135 !important; }

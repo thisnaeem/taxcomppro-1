@@ -30,7 +30,8 @@ import "./marketplace.css";
 import { MarketplaceCartDrawer } from "@/components/marketplace/MarketplaceCartDrawer";
 import { MarketplaceCartButton } from "@/components/marketplace/MarketplaceCartButton";
 import { MarketplaceSuccessModal } from "@/components/marketplace/MarketplaceSuccessModal";
-import { useMarketplaceCart } from "@/lib/marketplace-cart";
+import { useMarketplaceCart, type MarketplaceCartItem, type MarketplaceCartSeller } from "@/lib/marketplace-cart";
+import { AlertCircle } from "lucide-react";
 
 
 const MK_GRID_OPTIONS: GridViewType[] = ["grid-4", "grid-3", "grid-2"];
@@ -108,54 +109,78 @@ const prices: { value: Price; label: string }[] = [
 function ListingCard({
   listing: l,
   isPurchased,
+  currentUserId,
+  onSellerConflict,
 }: {
   listing: Listing;
   isPurchased?: boolean;
+  currentUserId?: string;
+  onSellerConflict?: (data: {
+    pendingItem: MarketplaceCartItem;
+    currentSeller?: MarketplaceCartSeller;
+    newSeller?: MarketplaceCartSeller;
+  }) => void;
 }) {
   const category = categories.find((c) => c.value === l.category) ?? categories[0];
   const Icon = category.icon;
   const { add, isInCart, openCart } = useMarketplaceCart();
   const inCart = isInCart(l.id);
 
+  const isOwner = Boolean(currentUserId && l.user?.id && l.user.id === currentUserId);
+  const isNetwork = l.category === "NETWORK" || l.id.startsWith("network-");
+
+  const buildCartItem = (): MarketplaceCartItem => ({
+    id: l.id,
+    slug: l.slug,
+    title: l.title,
+    price: l.price,
+    category: l.category,
+    image: l.images?.[0] || "",
+    seller: {
+      id: l.user?.id || "",
+      name: l.user?.name || "Tax Professional",
+      image: l.user?.image,
+    },
+  });
+
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (inCart) {
       openCart();
-    } else {
-      add({
-        id: l.id,
-        slug: l.slug,
-        title: l.title,
-        price: l.price,
-        category: l.category,
-        image: l.images?.[0] || "",
-        seller: {
-          id: l.user?.id || "",
-          name: l.user?.name || "Tax Professional",
-          image: l.user?.image,
-        },
-      });
+      return;
+    }
+    const item = buildCartItem();
+    const result = add(item, currentUserId);
+    if (!result.success) {
+      if (result.reason === "DIFFERENT_SELLER") {
+        onSellerConflict?.({
+          pendingItem: item,
+          currentSeller: result.currentSeller,
+          newSeller: result.newSeller,
+        });
+      } else if (result.reason === "OWN_LISTING") {
+        alert("You cannot purchase your own listing.");
+      }
     }
   };
 
   const handleQuickBuy = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    add({
-      id: l.id,
-      slug: l.slug,
-      title: l.title,
-      price: l.price,
-      category: l.category,
-      image: l.images?.[0] || "",
-      seller: {
-        id: l.user?.id || "",
-        name: l.user?.name || "Tax Professional",
-        image: l.user?.image,
-      },
-    });
-    openCart();
+    const item = buildCartItem();
+    const result = add(item, currentUserId);
+    if (result.success) {
+      openCart();
+    } else if (result.reason === "DIFFERENT_SELLER") {
+      onSellerConflict?.({
+        pendingItem: item,
+        currentSeller: result.currentSeller,
+        newSeller: result.newSeller,
+      });
+    } else if (result.reason === "OWN_LISTING") {
+      alert("You cannot purchase your own listing.");
+    }
   };
 
   return (
@@ -204,6 +229,52 @@ function ListingCard({
             <span className="mk-card-purchased-badge">
               <CheckCircle2 size={13} /> Purchased
             </span>
+          ) : isNetwork ? (
+            <div className="mk-card-btn-group" style={{ width: "100%" }}>
+              {isOwner ? (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    window.location.href = l.href || `/pro-networks/${l.slug}`;
+                  }}
+                  className="mk-card-btn your-listing"
+                  title="You created this network"
+                >
+                  Your Network
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    window.location.href = l.href || `/pro-networks/${l.slug}`;
+                  }}
+                  className="mk-card-btn buy"
+                  style={{ width: "100%", justifyContent: "center" }}
+                  title="Join Pro Network"
+                >
+                  <span>{l.price === 0 ? "Join Network (Free)" : "Join Network"}</span>
+                </button>
+              )}
+            </div>
+          ) : isOwner ? (
+            <div className="mk-card-btn-group" style={{ width: "100%" }}>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  window.location.href = "/my-listings";
+                }}
+                className="mk-card-btn your-listing"
+                title="You created this listing — manage it in your dashboard"
+              >
+                Your Listing
+              </button>
+            </div>
           ) : (
             <div className="mk-card-btn-group">
               <button
@@ -414,6 +485,12 @@ function MarketplaceContent() {
   const [myListingsLoaded, setMyListingsLoaded] = useState(false);
   const [listingStatusFilter, setListingStatusFilter] = useState<"ALL" | "APPROVED" | "PENDING" | "REJECTED">("ALL");
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [sellerConflict, setSellerConflict] = useState<{
+    pendingItem: MarketplaceCartItem;
+    currentSeller?: MarketplaceCartSeller;
+    newSeller?: MarketplaceCartSeller;
+  } | null>(null);
+  const { add: addCartItem } = useMarketplaceCart();
 
   useEffect(() => {
     mount();
@@ -1074,7 +1151,13 @@ function MarketplaceContent() {
               ) : filtered.length ? (
                 <div className={`mk-grid ${gridView}`}>
                   {filtered.map((l) => (
-                    <ListingCard key={l.id} listing={l} isPurchased={purchasedListingIds.has(l.id)} />
+                    <ListingCard
+                      key={l.id}
+                      listing={l}
+                      isPurchased={purchasedListingIds.has(l.id)}
+                      currentUserId={authed?.id}
+                      onSellerConflict={setSellerConflict}
+                    />
                   ))}
                 </div>
               ) : (
@@ -1106,6 +1189,49 @@ function MarketplaceContent() {
       </main>
       <MarketplaceCartDrawer />
       <MarketplaceSuccessModal />
+
+      {sellerConflict && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="bg-[#0c1527] border border-slate-700/80 rounded-2xl max-w-md w-full p-6 text-white shadow-2xl relative">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
+                <AlertCircle size={22} />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white">Different Seller</h3>
+                <p className="text-xs text-slate-400">Direct Stripe connected payout</p>
+              </div>
+            </div>
+            <p className="text-sm text-slate-300 leading-relaxed mb-3">
+              Your cart currently contains items from{" "}
+              <strong className="text-amber-400 font-semibold">{sellerConflict.currentSeller?.name || "another seller"}</strong>.
+            </p>
+            <p className="text-xs text-slate-400 leading-relaxed mb-6">
+              Because checkout payments go directly to each seller&apos;s verified Stripe account, listings from different sellers must be purchased in separate orders. Would you like to clear your current cart and start an order with <strong className="text-slate-200">{sellerConflict.newSeller?.name || "this seller"}</strong>?
+            </p>
+            <div className="flex items-center justify-end gap-2.5">
+              <button
+                type="button"
+                onClick={() => setSellerConflict(null)}
+                className="px-4 py-2.5 text-xs font-semibold rounded-xl border border-slate-700 hover:bg-slate-800 text-slate-300 transition-colors"
+              >
+                Keep Current Cart
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const { pendingItem } = sellerConflict;
+                  setSellerConflict(null);
+                  addCartItem(pendingItem, authed?.id, true);
+                }}
+                className="px-4 py-2.5 text-xs font-bold rounded-xl bg-amber-500 hover:bg-amber-400 text-black transition-colors"
+              >
+                Start Order with {sellerConflict.newSeller?.name?.split(" ")[0] || "Seller"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

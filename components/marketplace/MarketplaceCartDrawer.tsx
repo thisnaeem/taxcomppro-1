@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMarketplaceCart, MarketplaceCartItem } from "@/lib/marketplace-cart";
+import { useAppSelector } from "@/store/hooks";
+import { useMarketplaceCart, MarketplaceCartItem, saveMarketplaceCart } from "@/lib/marketplace-cart";
 import {
   ShoppingBag,
   X,
@@ -21,6 +22,7 @@ import {
 export function MarketplaceCartDrawer() {
   const { items, count, total, remove, clear, isOpen, closeCart } = useMarketplaceCart();
   const router = useRouter();
+  const currentUser = useAppSelector((s) => s.auth.user);
 
   const [mounted, setMounted] = useState(false);
   const [couponCode, setCouponCode] = useState("");
@@ -29,6 +31,22 @@ export function MarketplaceCartDrawer() {
   const [validatingCoupon, setValidatingCoupon] = useState(false);
   const [loadingCheckout, setLoadingCheckout] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
+
+  // Check for owned listings in cart
+  const ownItems = items.filter(
+    (i) => Boolean(currentUser?.id && i.seller?.id && i.seller.id === currentUser.id)
+  );
+  const hasOwnItems = ownItems.length > 0;
+
+  // Check for multiple sellers in cart
+  const sellersMap = new Map<string, { id: string; name: string }>();
+  items.forEach((i) => {
+    if (i.seller?.id) {
+      sellersMap.set(i.seller.id, { id: i.seller.id, name: i.seller.name });
+    }
+  });
+  const distinctSellers: { id: string; name: string }[] = Array.from(sellersMap.values());
+  const hasMultipleSellers = distinctSellers.length > 1;
 
   useEffect(() => {
     setMounted(true);
@@ -56,6 +74,18 @@ export function MarketplaceCartDrawer() {
       document.body.style.overflow = "";
     };
   }, [isOpen]);
+
+  // Auto-clean any legacy network items on drawer open
+  useEffect(() => {
+    if (isOpen) {
+      const cleaned = items.filter(
+        (i) => i.category !== "NETWORK" && !i.id?.startsWith("network-")
+      );
+      if (cleaned.length !== items.length) {
+        saveMarketplaceCart(cleaned);
+      }
+    }
+  }, [isOpen, items]);
 
   const handleApplyCoupon = async () => {
     if (!couponCode.trim()) return;
@@ -86,6 +116,11 @@ export function MarketplaceCartDrawer() {
 
   const handleCheckout = async () => {
     if (items.length === 0) return;
+    if (!currentUser) {
+      closeCart();
+      router.push(`/login?redirect=${encodeURIComponent(typeof window !== "undefined" ? window.location.pathname : "/marketplace")}`);
+      return;
+    }
     setLoadingCheckout(true);
     setCheckoutError(null);
 
@@ -170,6 +205,69 @@ export function MarketplaceCartDrawer() {
           </div>
         )}
 
+        {/* Own Listing Warning */}
+        {hasOwnItems && (
+          <div className="p-3.5 bg-red-500/15 border-b border-red-500/30 text-xs text-red-300 flex flex-col gap-2">
+            <div className="flex items-center gap-2 font-bold text-red-200">
+              <AlertCircle className="w-4 h-4 shrink-0 text-red-400" />
+              <span>You cannot purchase your own listing</span>
+            </div>
+            <p className="text-[11px] text-red-300/90 leading-tight">
+              Direct Stripe payouts cannot charge yourself. Please remove your listing ({ownItems.map(i => i.title).join(", ")}) to proceed.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                const cleaned = items.filter((i) => i.seller?.id !== currentUser?.id);
+                saveMarketplaceCart(cleaned);
+              }}
+              className="self-start px-2.5 py-1 bg-red-500/20 hover:bg-red-500/30 text-red-200 border border-red-500/40 rounded text-[11px] font-bold transition-colors"
+            >
+              Remove My Listing(s)
+            </button>
+          </div>
+        )}
+
+        {/* Multiple Sellers Notice */}
+        {hasMultipleSellers && !hasOwnItems && (
+          <div className="p-3.5 bg-amber-500/15 border-b border-amber-500/30 text-xs text-amber-200 flex flex-col gap-2">
+            <div className="flex items-center gap-2 font-bold text-amber-300">
+              <AlertCircle className="w-4 h-4 shrink-0 text-amber-400" />
+              <span>Multiple sellers in cart</span>
+            </div>
+            <p className="text-[11px] text-amber-200/90 leading-tight">
+              Payments go directly to each seller's connected Stripe account. Stripe requires checking out one seller at a time.
+            </p>
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              {distinctSellers.map((seller) => (
+                <button
+                  key={seller.id}
+                  type="button"
+                  onClick={() => {
+                    const cleaned = items.filter((i) => i.seller?.id === seller.id);
+                    saveMarketplaceCart(cleaned);
+                  }}
+                  className="px-2.5 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-500/40 rounded text-[11px] font-bold transition-colors"
+                >
+                  Keep only {seller.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Single Seller Direct Payout Banner */}
+        {!hasMultipleSellers && !hasOwnItems && items.length > 0 && (
+          <div className="px-5 py-2.5 bg-[#071120] border-b border-white/5 flex items-center justify-between text-xs">
+            <span className="text-slate-400">
+              Seller: <strong className="text-white ml-1">{items[0]?.seller?.name || "Professional"}</strong>
+            </span>
+            <span className="text-[10.5px] text-emerald-400 flex items-center gap-1 font-bold">
+              <ShieldCheck className="w-3.5 h-3.5" /> Direct Stripe Payout
+            </span>
+          </div>
+        )}
+
         {/* Cart Contents */}
         {items.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
@@ -206,9 +304,16 @@ export function MarketplaceCartDrawer() {
                   <div className="flex-1 min-w-0 flex flex-col justify-between">
                     <div>
                       <div className="flex items-center justify-between gap-2 mb-1">
-                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-white/10 text-slate-300">
-                          {item.category}
-                        </span>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-white/10 text-slate-300">
+                            {item.category}
+                          </span>
+                          {currentUser?.id && item.seller?.id === currentUser.id && (
+                            <span className="text-[9.5px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-red-500/20 text-red-300 border border-red-500/30">
+                              Your Listing
+                            </span>
+                          )}
+                        </div>
                         <button
                           onClick={() => remove(item.id)}
                           className="text-slate-500 hover:text-red-400 transition-colors p-1"
@@ -288,18 +393,28 @@ export function MarketplaceCartDrawer() {
               <button
                 type="button"
                 onClick={handleCheckout}
-                disabled={loadingCheckout}
-                className="w-full bg-[#ffbe24] hover:bg-[#f0b01c] text-[#0a1628] font-bold text-xs py-3 rounded-lg flex items-center justify-center gap-2 shadow-lg shadow-[#ffbe24]/20 transition-all hover:-translate-y-0.5 disabled:opacity-60"
+                disabled={loadingCheckout || hasOwnItems || hasMultipleSellers}
+                style={{ color: "#0a1628" }}
+                className="w-full bg-[#ffbe24] hover:bg-[#f0b01c] !text-[#0a1628] font-bold text-xs py-3 rounded-lg flex items-center justify-center gap-2 shadow-lg shadow-[#ffbe24]/20 transition-all hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {loadingCheckout ? (
                   <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Preparing Stripe Checkout…</span>
+                    <Loader2 className="w-4 h-4 animate-spin text-[#0a1628]" />
+                    <span className="text-[#0a1628]">Preparing Checkout…</span>
+                  </>
+                ) : hasOwnItems ? (
+                  <span className="text-[#0a1628]">Remove Own Listing to Proceed</span>
+                ) : hasMultipleSellers ? (
+                  <span className="text-[#0a1628]">Select One Seller to Proceed</span>
+                ) : finalTotal === 0 ? (
+                  <>
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#0a1628]" />
+                    <span className="text-[#0a1628]">Claim Free Listing{items.length > 1 ? "s" : ""} &rarr;</span>
                   </>
                 ) : (
                   <>
-                    <Lock className="w-3.5 h-3.5" />
-                    <span>Checkout with Stripe &rarr;</span>
+                    <Lock className="w-3.5 h-3.5 text-[#0a1628]" />
+                    <span className="text-[#0a1628]">Checkout with Stripe &rarr;</span>
                   </>
                 )}
               </button>

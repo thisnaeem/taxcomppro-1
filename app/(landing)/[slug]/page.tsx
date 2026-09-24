@@ -161,10 +161,14 @@ export default function ListingDetailPage() {
 
   const handleAddToCart = () => {
     if (!listing) return;
+    if (user?.id && listing.user?.id === user.id) {
+      alert("You cannot purchase your own listing.");
+      return;
+    }
     if (inCart) {
       openCart();
     } else {
-      addToCart({
+      const res = addToCart({
         id: listing.id,
         slug: listing.slug,
         title: listing.title,
@@ -176,7 +180,10 @@ export default function ListingDetailPage() {
           name: listing.user?.name || "Tax Professional",
           image: listing.user?.image,
         },
-      });
+      }, user?.id);
+      if (!res.success && "message" in res && res.message) {
+        alert(res.message);
+      }
     }
   };
 
@@ -327,6 +334,10 @@ export default function ListingDetailPage() {
 
   const handleBuyListing = async () => {
     if (!user || !listing) return;
+    if (user.id === listing.user.id) {
+      alert("You cannot purchase your own listing.");
+      return;
+    }
     setPurchasing(true);
     try {
       const res = await fetch("/api/stripe/marketplace-checkout", {
@@ -779,60 +790,68 @@ export default function ListingDetailPage() {
                   const isOwner = user?.id === listing.user.id || user?.role === "ADMIN";
                   const downloadUrl = listing.metadata?.downloadUrl;
                   if (listing.metadata?.isDemo) return <div className="rounded-2xl border border-amber-400/30 bg-amber-400/10 p-4 text-center text-sm font-semibold text-amber-700 dark:text-amber-300">Demo listing · Preview only<br /><span className="text-xs font-normal">Purchases and downloads are disabled for this sample.</span></div>;
-                  const linkUrl = listing.metadata?.linkUrl || listing.metadata?.externalUrl || listing.metadata?.actionUrl;
-                  const hasAccess = isFree || listing.hasPurchased || isOwner;
 
-                  if (downloadUrl && hasAccess) {
-                    return (
-                      <a
-                        href={downloadUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        download
-                        className="w-full flex items-center justify-center gap-2 font-bold text-sm py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-md transition-all"
-                      >
-                        <Download className="w-4 h-4" /> Download Product
-                      </a>
-                    );
-                  }
-
-                  if (downloadUrl && !hasAccess) {
-                    if (!user) {
-                      return (
-                        <Link
-                          href={`/login?redirect=/${listing.slug ?? listing.id}`}
-                          className="w-full flex items-center justify-center gap-2 font-bold text-sm py-4 rounded-2xl bg-[#0a1628] hover:bg-[#1a3a6b] text-white transition-all"
-                        >
-                          Sign in to Buy (${listing.price}) <ArrowRight01Icon className="w-4 h-4" />
-                        </Link>
-                      );
-                    }
+                  if (user?.id && user.id === listing.user.id) {
                     return (
                       <div className="flex flex-col gap-2.5 w-full">
-                        <button
-                          onClick={handleBuyListing}
-                          disabled={purchasing}
-                          className="w-full flex items-center justify-center gap-2 font-bold text-sm py-3.5 rounded-2xl bg-[#0a1628] hover:bg-[#1a3a6b] text-white shadow-md transition-all disabled:opacity-60"
+                        <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3.5 text-center text-xs font-semibold text-amber-600 dark:text-amber-400">
+                          You created this listing
+                        </div>
+                        {downloadUrl && (
+                          <a
+                            href={downloadUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            download
+                            className="w-full flex items-center justify-center gap-2 font-bold text-sm py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-md transition-all"
+                          >
+                            <Download className="w-4 h-4" /> Download Product File
+                          </a>
+                        )}
+                        <Link
+                          href="/my-listings"
+                          className="w-full flex items-center justify-center gap-2 font-bold text-sm py-3.5 rounded-2xl bg-[#0a1628] hover:bg-[#1a3a6b] text-white dark:bg-amber-500 dark:hover:bg-amber-400 dark:text-black transition-all shadow-md"
                         >
-                          {purchasing ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShoppingBag01Icon className="w-4 h-4" />}
-                          {purchasing ? "Processing…" : `Buy Now (${listing.price})`}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={handleAddToCart}
-                          className={`w-full flex items-center justify-center gap-2 font-bold text-sm py-3 rounded-2xl border transition-all ${
-                            inCart
-                              ? "bg-emerald-500/10 border-emerald-500/40 text-emerald-400"
-                              : "bg-white dark:bg-[#0c1527] border-slate-200 dark:border-slate-800 hover:border-[#ffbe24]/60 text-slate-700 dark:text-slate-200"
-                          }`}
-                        >
-                          <ShoppingBag01Icon className="w-4 h-4" />
-                          <span>{inCart ? "In Cart — View Cart" : "Add to Cart"}</span>
-                        </button>
+                          <Briefcase01Icon className="w-4 h-4" /> Manage in Dashboard
+                        </Link>
                       </div>
                     );
                   }
 
+                  const linkUrl = listing.metadata?.linkUrl || listing.metadata?.externalUrl || listing.metadata?.actionUrl;
+                  const hasAccess = Boolean(listing.hasPurchased || isOwner);
+
+                  // 1. If user already owns or claimed the listing
+                  if (hasAccess) {
+                    if (downloadUrl) {
+                      return (
+                        <a
+                          href={downloadUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          download
+                          className="w-full flex items-center justify-center gap-2 font-bold text-sm py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-md transition-all"
+                        >
+                          <Download className="w-4 h-4" /> Download Product
+                        </a>
+                      );
+                    }
+                    return (
+                      <div className="flex flex-col gap-2.5 w-full">
+                        <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-3.5 text-center text-xs font-semibold text-emerald-400">
+                          ✓ You have access to this listing
+                        </div>
+                        <Link
+                          href="/marketplace?view=purchases"
+                          className="w-full flex items-center justify-center gap-2 font-bold text-sm py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-md transition-all"
+                        >
+                          View in My Purchases
+                        </Link>
+                      </div>
+                    );
+                  }
+
+                  // 2. If listing has a designated external link
                   if (linkUrl) {
                     return (
                       <a
@@ -846,50 +865,49 @@ export default function ListingDetailPage() {
                     );
                   }
 
-                  if (!isFree && !hasAccess) {
-                    if (!user) {
-                      return (
-                        <Link
-                          href={`/login?redirect=/${listing.slug ?? listing.id}`}
-                          className={`w-full flex items-center justify-center gap-2 font-bold text-sm py-4 rounded-2xl transition-all ${cfg.ctaCls}`}
-                        >
-                          Sign in to Buy (${listing.price}) <ArrowRight01Icon className="w-4 h-4" />
-                        </Link>
-                      );
-                    }
+                  // 3. User has NOT purchased/claimed yet: Show Buy / Claim actions (for both Free and Paid!)
+                  if (!user) {
                     return (
-                      <div className="flex flex-col gap-2.5 w-full">
-                        <button
-                          onClick={handleBuyListing}
-                          disabled={purchasing}
-                          className={`w-full flex items-center justify-center gap-2 font-bold text-sm py-3.5 rounded-2xl transition-all disabled:opacity-60 ${cfg.ctaCls}`}
-                        >
-                          {purchasing ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShoppingBag01Icon className="w-4 h-4" />}
-                          {purchasing ? "Processing…" : `Buy Now (${listing.price})`}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={handleAddToCart}
-                          className={`w-full flex items-center justify-center gap-2 font-bold text-sm py-3 rounded-2xl border transition-all ${
-                            inCart
-                              ? "bg-emerald-500/10 border-emerald-500/40 text-emerald-400"
-                              : "bg-white dark:bg-[#0c1527] border-slate-200 dark:border-slate-800 hover:border-[#ffbe24]/60 text-slate-700 dark:text-slate-200"
-                          }`}
-                        >
-                          <ShoppingBag01Icon className="w-4 h-4" />
-                          <span>{inCart ? "In Cart — View Cart" : "Add to Cart"}</span>
-                        </button>
-                      </div>
+                      <Link
+                        href={`/login?redirect=/${listing.slug ?? listing.id}`}
+                        className={`w-full flex items-center justify-center gap-2 font-bold text-sm py-4 rounded-2xl transition-all ${cfg.ctaCls}`}
+                      >
+                        {isFree ? "Sign in to Claim (Free)" : `Sign in to Buy ($${listing.price})`} <ArrowRight01Icon className="w-4 h-4" />
+                      </Link>
                     );
                   }
 
                   return (
-                    <Link
-                      href={user ? `/messages?receiverId=${listing.user.id}` : `/login?redirect=/${listing.slug ?? listing.id}`}
-                      className={`w-full flex items-center justify-center gap-2 font-bold text-sm py-4 rounded-2xl transition-all ${cfg.ctaCls}`}
-                    >
-                      Contact Seller <ArrowRight01Icon className="w-4 h-4" />
-                    </Link>
+                    <div className="flex flex-col gap-2.5 w-full">
+                      <button
+                        onClick={handleBuyListing}
+                        disabled={purchasing}
+                        className={`w-full flex items-center justify-center gap-2 font-bold text-sm py-3.5 rounded-2xl transition-all disabled:opacity-60 ${cfg.ctaCls}`}
+                      >
+                        {purchasing ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <ShoppingBag01Icon className="w-4 h-4" />
+                        )}
+                        {purchasing
+                          ? "Processing…"
+                          : isFree
+                          ? "Claim for Free"
+                          : `Buy Now ($${listing.price})`}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleAddToCart}
+                        className={`w-full flex items-center justify-center gap-2 font-bold text-sm py-3 rounded-2xl border transition-all ${
+                          inCart
+                            ? "bg-emerald-500/10 border-emerald-500/40 text-emerald-400"
+                            : "bg-white dark:bg-[#0c1527] border-slate-200 dark:border-slate-800 hover:border-[#ffbe24]/60 text-slate-700 dark:text-slate-200"
+                        }`}
+                      >
+                        <ShoppingBag01Icon className="w-4 h-4" />
+                        <span>{inCart ? "In Cart — View Cart" : isFree ? "Add to Cart (Free)" : "Add to Cart"}</span>
+                      </button>
+                    </div>
                   );
                 })()
               )}

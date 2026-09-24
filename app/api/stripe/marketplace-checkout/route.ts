@@ -34,7 +34,25 @@ export async function POST(req: NextRequest) {
   });
 
   if (listings.length === 0) {
-    return NextResponse.json({ error: "No matching listings found" }, { status: 404 });
+    return NextResponse.json({
+      error: "No matching marketplace listings found. If you selected a Pro Network, please join directly from the Network page.",
+    }, { status: 404 });
+  }
+
+  // Check if current user owns any of the listings
+  const ownListings = listings.filter((l) => l.userId === session.user.id);
+  if (ownListings.length > 0) {
+    return NextResponse.json({
+      error: `You cannot purchase your own listing (${ownListings[0].title}). Please remove it from your cart.`,
+    }, { status: 400 });
+  }
+
+  // Enforce single-seller per checkout (due to direct Stripe Connect payouts)
+  const sellerIds = Array.from(new Set(listings.map((l) => l.userId)));
+  if (sellerIds.length > 1) {
+    return NextResponse.json({
+      error: "Your cart contains items from multiple sellers. Because payments go directly to each seller's Stripe account, please checkout items from one seller at a time.",
+    }, { status: 400 });
   }
 
   // Filter out demo listings
@@ -49,11 +67,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Demo listings cannot be purchased" }, { status: 400 });
   }
 
-  // Filter out listings where current user is seller
-  const purchasableListings = validListings.filter((l) => l.userId !== session.user.id);
-  if (purchasableListings.length === 0) {
-    return NextResponse.json({ error: "You cannot purchase your own listing" }, { status: 400 });
-  }
+  const purchasableListings = validListings;
 
   // Check which items are already purchased
   const alreadyPurchased = await prisma.marketplacePurchase.findMany({
@@ -188,48 +202,47 @@ export async function POST(req: NextRequest) {
     refCode: refCode || "",
   };
 
-  // If single item and seller has direct Stripe connected account enabled
-  if (isSingleItem && singleListing.user?.stripeAccountId) {
-    const seller = singleListing.user;
-    let isChargesEnabled = seller.stripeOnboarded;
+  // Direct Stripe Connect payment to seller's account
+  // (All items in this cart belong to the same seller)
+  const seller = paidListings[0].user;
+  let isChargesEnabled = seller.stripeOnboarded;
 
-    if (!isChargesEnabled && seller.stripeAccountId) {
-      try {
-        const acct = await stripe.accounts.retrieve(seller.stripeAccountId);
-        if (acct.charges_enabled) {
-          isChargesEnabled = true;
-          await prisma.user.update({
-            where: { id: seller.id },
-            data: { stripeOnboarded: true },
-          }).catch(() => {});
-        }
-      } catch (err: any) {
-        console.warn("[Marketplace Checkout] Check seller account status failed:", err?.message);
+  if (!isChargesEnabled && seller.stripeAccountId) {
+    try {
+      const acct = await stripe.accounts.retrieve(seller.stripeAccountId);
+      if (acct.charges_enabled) {
+        isChargesEnabled = true;
+        await prisma.user.update({
+          where: { id: seller.id },
+          data: { stripeOnboarded: true },
+        }).catch(() => {});
       }
+    } catch (err: any) {
+      console.warn("[Marketplace Checkout] Check seller account status failed:", err?.message);
     }
+  }
 
-    if (isChargesEnabled) {
-      try {
-        const checkoutSession = await stripe.checkout.sessions.create(
-          {
-            mode: "payment",
-            payment_method_types: ["card"],
-            customer_email: user.email ?? undefined,
-            line_items: lineItems,
-            success_url: `${appUrl}/marketplace?view=purchases&checkout_success=true&session_id={CHECKOUT_SESSION_ID}`,
-            cancel_url: `${appUrl}/${primarySlugOrId}`,
-            metadata: {
-              ...sessionMetadata,
-              sellerId: seller.id,
-              sellerStripeAccountId: seller.stripeAccountId,
-            },
+  if (seller.stripeAccountId && isChargesEnabled) {
+    try {
+      const checkoutSession = await stripe.checkout.sessions.create(
+        {
+          mode: "payment",
+          payment_method_types: ["card"],
+          customer_email: user.email ?? undefined,
+          line_items: lineItems,
+          success_url: `${appUrl}/marketplace?view=purchases&checkout_success=true&session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: `${appUrl}/${primarySlugOrId}`,
+          metadata: {
+            ...sessionMetadata,
+            sellerId: seller.id,
+            sellerStripeAccountId: seller.stripeAccountId,
           },
-          { stripeAccount: seller.stripeAccountId || undefined }
-        );
-        return NextResponse.json({ url: checkoutSession.url, sessionId: checkoutSession.id });
-      } catch (directErr: any) {
-        console.warn("[Marketplace Checkout] Direct connect charge failed, falling back to platform checkout:", directErr?.message);
-      }
+        },
+        { stripeAccount: seller.stripeAccountId }
+      );
+      return NextResponse.json({ url: checkoutSession.url, sessionId: checkoutSession.id });
+    } catch (directErr: any) {
+      console.warn("[Marketplace Checkout] Direct connect charge failed, falling back to platform checkout:", directErr?.message);
     }
   }
 
