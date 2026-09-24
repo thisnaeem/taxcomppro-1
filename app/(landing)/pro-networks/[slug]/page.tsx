@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, useRef, use } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { useSession } from "@/lib/auth-client";
 import { networkAccentInk } from "@/lib/networkBranding";
 import NetworkDetailsSettings from "@/components/networks/NetworkDetailsSettings";
@@ -367,9 +367,10 @@ function RedLineLogo({
 export default function ProNetworkHubPage({
   params,
 }: {
-  params: Promise<{ slug: string }>;
+  params?: Promise<{ slug: string }>;
 }) {
-  const { slug } = use(params);
+  const routeParams = useParams<{ slug: string }>();
+  const slug = routeParams?.slug || "";
   const router = useRouter();
   const { data: session } = useSession();
 
@@ -578,11 +579,15 @@ export default function ProNetworkHubPage({
   }, []);
 
   useEffect(() => {
-    fetchNetworkDetails();
+    if (slug) {
+      fetchNetworkDetails();
+    }
   }, [slug]);
 
   const fetchNetworkDetails = async () => {
+    if (!slug) return;
     setLoading(true);
+    setLoadError("");
     try {
       const res = await fetch(`/api/pro-networks/${slug}`);
       if (res.ok) {
@@ -593,20 +598,23 @@ export default function ProNetworkHubPage({
         }
         fetchAllTabData();
       } else {
+        const errData = await res.json().catch(() => null);
         setLoadError(
           res.status === 404
-            ? "This network could not be found."
-            : "We couldn’t load this network. Please try again.",
+            ? "This Pro Network could not be found or has been moved."
+            : (errData?.error || "We couldn’t load this network. Please try again.")
         );
       }
     } catch (err) {
-      console.error(err);
+      console.error("Failed to load network:", err);
+      setLoadError("We couldn’t load this network. Please check your connection and try again.");
     } finally {
       setLoading(false);
     }
   };
 
   const fetchPosts = async () => {
+    if (!slug) return;
     setPostsLoading(true);
     setPostsError("");
     try {
@@ -622,21 +630,37 @@ export default function ProNetworkHubPage({
   };
 
   const fetchAllTabData = async () => {
+    if (!slug) return;
     void fetchPosts();
     try {
       const [annRes, mediaRes, resRes, eventRes, memRes] = await Promise.all([
-        fetch(`/api/pro-networks/${slug}/announcements`),
-        fetch(`/api/pro-networks/${slug}/media`),
-        fetch(`/api/pro-networks/${slug}/resources`),
-        fetch(`/api/pro-networks/${slug}/events`),
-        fetch(`/api/pro-networks/${slug}/members`),
+        fetch(`/api/pro-networks/${slug}/announcements`).catch(() => null),
+        fetch(`/api/pro-networks/${slug}/media`).catch(() => null),
+        fetch(`/api/pro-networks/${slug}/resources`).catch(() => null),
+        fetch(`/api/pro-networks/${slug}/events`).catch(() => null),
+        fetch(`/api/pro-networks/${slug}/members`).catch(() => null),
       ]);
 
-      if (annRes.ok) setAnnouncements((await annRes.json()).announcements || []);
-      if (mediaRes.ok) setMediaList((await mediaRes.json()).media || []);
-      if (resRes.ok) setResourcesList((await resRes.json()).resources || []);
-      if (eventRes.ok) setEventsList((await eventRes.json()).events || []);
-      if (memRes.ok) setMembersList((await memRes.json()).members || []);
+      if (annRes && annRes.ok) {
+        const d = await annRes.json().catch(() => null);
+        setAnnouncements(d?.announcements || []);
+      }
+      if (mediaRes && mediaRes.ok) {
+        const d = await mediaRes.json().catch(() => null);
+        setMediaList(d?.media || []);
+      }
+      if (resRes && resRes.ok) {
+        const d = await resRes.json().catch(() => null);
+        setResourcesList(d?.resources || []);
+      }
+      if (eventRes && eventRes.ok) {
+        const d = await eventRes.json().catch(() => null);
+        setEventsList(d?.events || []);
+      }
+      if (memRes && memRes.ok) {
+        const d = await memRes.json().catch(() => null);
+        setMembersList(d?.members || []);
+      }
     } catch (err) {
       console.error("Error loading tab data:", err);
     }
@@ -1017,24 +1041,35 @@ export default function ProNetworkHubPage({
   );
 
   const displayProTalks =
-    filteredEvents.filter((e) => e.type === "PRO_TALK" || e.isLiveNow).length > 0
+    filteredEvents.filter((e) => e?.type === "PRO_TALK" || e?.eventType === "PRO_TALK" || e?.isLiveNow || e?.isLive).length > 0
       ? filteredEvents
-          .filter((e) => e.type === "PRO_TALK" || e.isLiveNow)
-          .map((e) => ({
-            id: e.id,
-            title: e.title,
-            date: new Date(e.startDate).toLocaleString([], {
-              month: "short",
-              day: "numeric",
-              year: "numeric",
-              hour: "numeric",
-              minute: "2-digit",
-            }),
-            isLive: e.isLiveNow,
-            isRegistered: e.isRegistered,
-            speaker: network?.owner?.name || "Host",
-            speakerImage: network?.owner?.image || "/pros/tonique-clay.jpg",
-          }))
+          .filter((e) => e?.type === "PRO_TALK" || e?.eventType === "PRO_TALK" || e?.isLiveNow || e?.isLive)
+          .map((e) => {
+            const dateVal = e.scheduledAt || e.startDate || e.createdAt;
+            let formattedDate = "Upcoming";
+            try {
+              if (dateVal) {
+                formattedDate = new Date(dateVal).toLocaleString([], {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                  hour: "numeric",
+                  minute: "2-digit",
+                });
+              }
+            } catch {
+              formattedDate = "Upcoming";
+            }
+            return {
+              id: e.id,
+              title: e.title || "Pro Talk Session",
+              date: formattedDate,
+              isLive: Boolean(e.isLiveNow || e.isLive),
+              isRegistered: Boolean(e.isRegistered),
+              speaker: network?.owner?.name || "Host",
+              speakerImage: network?.owner?.image || "/pros/tonique-clay.jpg",
+            };
+          })
       : DEFAULT_PRO_TALKS;
 
   const displayResources =
@@ -1045,21 +1080,36 @@ export default function ProNetworkHubPage({
 
   if (!loading && (loadError || !network)) {
     return (
-      <div className="min-h-screen bg-[#08101e] flex flex-col items-center justify-center p-6 text-white text-center space-y-4">
-        <Lock className="w-10 h-10 text-amber-400 mx-auto" />
-        <h1 className="text-2xl font-black">{loadError || "This network is unavailable."}</h1>
-        <button
-          onClick={fetchNetworkDetails}
-          className="px-6 py-2.5 rounded-full bg-blue-600 text-white font-bold text-xs"
-        >
-          Try again
-        </button>
-        <Link href="/pro-networks" className="text-xs text-slate-400 hover:text-white">
-          Back to all networks
-        </Link>
+      <div className="min-h-screen bg-[#08101e] flex flex-col items-center justify-center p-6 text-white text-center">
+        <div className="max-w-md w-full bg-[#0d1627] border border-white/10 rounded-3xl p-8 sm:p-10 shadow-2xl space-y-6">
+          <div className="w-16 h-16 rounded-2xl bg-amber-400/10 border border-amber-400/20 text-amber-400 mx-auto flex items-center justify-center shadow-lg shadow-amber-400/10">
+            <Lock className="w-8 h-8 text-amber-400" />
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-xl sm:text-2xl font-black">{loadError || "This network is unavailable."}</h1>
+            <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
+              The network link you followed could not be found or has changed.
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+            <button
+              onClick={fetchNetworkDetails}
+              className="w-full sm:w-auto px-6 py-3 rounded-xl bg-[#1a56db] hover:bg-blue-600 text-white font-black text-xs transition-all active:scale-95"
+            >
+              Try again
+            </button>
+            <Link
+              href="/pro-networks"
+              className="w-full sm:w-auto px-5 py-3 rounded-xl bg-white/10 hover:bg-white/15 text-slate-200 font-bold text-xs transition-all"
+            >
+              Back to all networks
+            </Link>
+          </div>
+        </div>
       </div>
     );
   }
+
 
   if (loading || !network) return <NetworkSkeleton />;
 
@@ -2263,7 +2313,7 @@ export default function ProNetworkHubPage({
                     <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
                       <Users className="w-5 h-5 text-amber-500" />
                       <span>
-                        Network Member Directory ({network.memberCount.toLocaleString()})
+                        Network Member Directory ({(network.memberCount ?? 0).toLocaleString()})
                       </span>
                     </h3>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -2399,7 +2449,7 @@ export default function ProNetworkHubPage({
                 <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/5 space-y-1">
                   <span className="text-xs text-slate-400 font-bold">Total Members</span>
                   <div className="text-2xl font-black text-slate-900 dark:text-white">
-                    {network.memberCount.toLocaleString()}
+                    {(network.memberCount ?? 0).toLocaleString()}
                   </div>
                 </div>
 
@@ -2407,7 +2457,7 @@ export default function ProNetworkHubPage({
                   <span className="text-xs text-slate-400 font-bold">Monthly Revenue</span>
                   <div className="text-2xl font-black text-emerald-500">
                     $
-                    {(network.memberCount * network.monthlyPrice).toLocaleString("en-US", {
+                    {(((network.memberCount ?? 0) * (network.monthlyPrice ?? 0))).toLocaleString("en-US", {
                       minimumFractionDigits: 2,
                     })}
                   </div>
@@ -2419,7 +2469,7 @@ export default function ProNetworkHubPage({
                 <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/5 space-y-1">
                   <span className="text-xs text-slate-400 font-bold">Total Followers</span>
                   <div className="text-2xl font-black text-slate-900 dark:text-white">
-                    {network.followerCount.toLocaleString()}
+                    {(network.followerCount ?? 0).toLocaleString()}
                   </div>
                 </div>
 

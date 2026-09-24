@@ -416,21 +416,7 @@ export default function MemberBubbleCloud({
           </div>
         )}
       </div>
-
-      {/* Global CSS for organic float animation */}
-      <style jsx global>{`
-        @keyframes bubbleFloat {
-          0% {
-            transform: translateY(0px);
-          }
-          50% {
-            transform: translateY(-8px);
-          }
-          100% {
-            transform: translateY(4px);
-          }
-        }
-      `}</style>
     </div>
   );
 }
+

@@ -7,8 +7,16 @@ type Props = {
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { slug } = await params;
   try {
+    const resolved = await Promise.resolve(params);
+    const slug = resolved?.slug;
+    if (!slug) {
+      return {
+        title: "Pro Network | Tax Compliance Pro",
+        description: "Join professional networks on Tax Compliance Pro.",
+      };
+    }
+
     const network = await prisma.proNetwork.findUnique({
       where: { slug },
       include: {
