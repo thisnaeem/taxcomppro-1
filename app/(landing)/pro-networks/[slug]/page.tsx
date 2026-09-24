@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, use } from "react";
+import React, { useState, useEffect, useRef, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/lib/auth-client";
@@ -13,7 +13,7 @@ import "@/components/networks/network-settings.css";
 import NetworkBadge from "@/components/networks/NetworkBadge";
 import "@/components/networks/networks.css";
 import "@/components/networks/networks-light.css";
-import "@/components/networks/network-hub-theme.css";
+import "@/components/networks/network-hub-v2.css";
 import NetworkSkeleton from "@/components/networks/NetworkSkeleton";
 import NetworkPosts from "@/components/networks/NetworkPosts";
 import "@/components/networks/network-posts.css";
@@ -65,18 +65,10 @@ import {
   File01Icon as File,
   Image01Icon as ImageIcon,
   Mic01Icon as Mic,
-  AlertCircleIcon as AlertCircle
+  AlertCircleIcon as AlertCircle,
+  StarIcon as Star,
 } from "hugeicons-react";
 
-const NETWORK_TABS = [
-  { id: "home", label: "Posts", icon: Home },
-  { id: "media", label: "Media library", icon: Images },
-  { id: "resources", label: "Resources", icon: FolderDown },
-  { id: "protalks", label: "Pro Talks", icon: Radio },
-  { id: "events", label: "Events", icon: Calendar },
-  { id: "members", label: "Members", icon: Users },
-  { id: "chat", label: "Member chat", icon: MessagesSquare },
-] as const;
 interface ProNetworkDetails {
   id: string;
   name: string;
@@ -150,6 +142,228 @@ interface StripeStatus {
   } | null;
 }
 
+// Fallback high-fidelity seed data matching reference screenshot
+const DEFAULT_ANNOUNCEMENT = {
+  title: "Welcome to RedLine1 Tax Network! 👋",
+  content:
+    "Introduce yourself in the #introduce-yourself discussion and let us know what you'd like to learn more about.",
+  author: "Tonique Clay",
+  date: "2d ago",
+};
+
+const DEFAULT_DISCUSSIONS = [
+  {
+    id: "disc-1",
+    title: "IRS Appeals: What tax pros need to know",
+    author: "Tonique Clay",
+    authorImage: "/pros/tonique-clay.jpg",
+    replies: 24,
+    time: "2h ago",
+    isPinned: true,
+  },
+  {
+    id: "disc-2",
+    title: "Common deduction mistakes to avoid in 2026",
+    author: "Michael R.",
+    authorImage: "/pros/michael-williams.jpg",
+    replies: 18,
+    time: "5h ago",
+    isPinned: false,
+  },
+  {
+    id: "disc-3",
+    title: "Client Audit Guidance: Best practices",
+    author: "Jessica M.",
+    authorImage: "/pros/diana-reyes.jpg",
+    replies: 31,
+    time: "1d ago",
+    isPinned: false,
+  },
+  {
+    id: "disc-4",
+    title: "1099 Reporting: Tips for accuracy",
+    author: "Robert T.",
+    authorImage: "/pros/kevin-johnson.jpg",
+    replies: 12,
+    time: "2d ago",
+    isPinned: false,
+  },
+  {
+    id: "disc-5",
+    title: "Systems & Tools That Save Time",
+    author: "Amanda L.",
+    authorImage: "/pros/chastity-trice.jpg",
+    replies: 9,
+    time: "3d ago",
+    isPinned: false,
+  },
+];
+
+const DEFAULT_MEDIA = [
+  {
+    id: "media-1",
+    title: "Live Q&A Recap",
+    date: "May 10, 2026",
+    duration: "12:45",
+    type: "VIDEO",
+    thumbnailUrl: "/pros/tonique-clay.jpg",
+  },
+  {
+    id: "media-2",
+    title: "Tax Season Workshop Highlights",
+    date: "May 8, 2026",
+    duration: "8:16",
+    type: "VIDEO",
+    thumbnailUrl: "/prohub/HIRING TRAINING.png",
+  },
+  {
+    id: "media-3",
+    title: "Behind the Scenes: New Training",
+    date: "May 5, 2026",
+    duration: "6:32",
+    type: "VIDEO",
+    thumbnailUrl: "/courses-hero.webp",
+  },
+  {
+    id: "media-4",
+    title: "Client Success Celebration",
+    date: "Apr 30, 2026",
+    duration: "3:48",
+    type: "VIDEO",
+    thumbnailUrl: "/pros/michael-williams.jpg",
+  },
+  {
+    id: "media-5",
+    title: "Tax Prep Checklist Photo",
+    date: "Apr 28, 2026",
+    duration: "",
+    type: "PHOTO",
+    thumbnailUrl: "/book-mockup.webp",
+  },
+];
+
+const DEFAULT_PRO_TALKS = [
+  {
+    id: "talk-1",
+    title: "Entity Selection Strategies That Save Thousands",
+    date: "May 24, 2026 • 12:00 PM CT",
+    isLive: true,
+    isRegistered: true,
+    speaker: "Tonique Clay",
+    speakerImage: "/pros/tonique-clay.jpg",
+  },
+  {
+    id: "talk-2",
+    title: "Advanced Tax Planning Workshop",
+    date: "May 31, 2026 • 1:00 PM CT",
+    isLive: false,
+    isRegistered: false,
+    speaker: "Michael R.",
+    speakerImage: "/pros/michael-williams.jpg",
+  },
+];
+
+const DEFAULT_RESOURCES = [
+  {
+    id: "res-1",
+    title: "S Corp Salary vs. Distributions Guide (2026)",
+    type: "PDF",
+    color: "red",
+  },
+  {
+    id: "res-2",
+    title: "Q2 Tax Planning Checklist",
+    type: "PDF",
+    color: "blue",
+  },
+  {
+    id: "res-3",
+    title: "Client Intake Questionnaire Template",
+    type: "DOCX",
+    color: "green",
+  },
+  {
+    id: "res-4",
+    title: "1031 Exchange Basics for Tax Pros",
+    type: "VIDEO",
+    color: "purple",
+  },
+];
+
+const DEFAULT_MEMBERS = [
+  {
+    id: "mem-1",
+    name: "Jessica M.",
+    location: "Houston, TX",
+    image: "/pros/diana-reyes.jpg",
+    status: "Active",
+  },
+  {
+    id: "mem-2",
+    name: "Robert T.",
+    location: "Dallas, TX",
+    image: "/pros/michael-williams.jpg",
+    status: "Active",
+  },
+  {
+    id: "mem-3",
+    name: "Michael R.",
+    location: "Miami, FL",
+    image: "/pros/kevin-johnson.jpg",
+    status: "Active",
+  },
+  {
+    id: "mem-4",
+    name: "Amanda L.",
+    location: "Austin, TX",
+    image: "/pros/chastity-trice.jpg",
+    status: "Active",
+  },
+  {
+    id: "mem-5",
+    name: "Kevin C.",
+    location: "Chicago, IL",
+    image: "/pros/emily-carter.jpg",
+    status: "Active",
+  },
+];
+
+function RedLineLogo({
+  customLogo,
+  networkName,
+}: {
+  customLogo?: string | null;
+  networkName?: string;
+}) {
+  if (customLogo) {
+    return (
+      <img
+        src={customLogo}
+        alt={networkName || "Network"}
+        className="h-8 max-w-[150px] object-contain"
+      />
+    );
+  }
+  return (
+    <div className="flex items-center gap-2 select-none group">
+      {/* Red Speed Streaks */}
+      <div className="flex items-center space-x-[2.5px]">
+        <span className="block w-1.5 h-6 bg-red-600 transform -skew-x-[24deg] rounded-[1px] opacity-75" />
+        <span className="block w-1.5 h-6 bg-red-600 transform -skew-x-[24deg] rounded-[1px] opacity-90" />
+        <span className="block w-2 h-6 bg-red-600 transform -skew-x-[24deg] rounded-[1px]" />
+      </div>
+      {/* REDLINE 1 */}
+      <div className="flex items-center italic font-black tracking-tight text-xl font-sans">
+        <span className="text-red-600">RED</span>
+        <span className="text-white">LINE</span>
+        <span className="ml-1 text-2xl text-red-500 font-extrabold not-italic -skew-x-12 inline-block">
+          1
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export default function ProNetworkHubPage({
   params,
 }: {
@@ -164,6 +378,7 @@ export default function ProNetworkHubPage({
   const [loadError, setLoadError] = useState("");
   const [activeTab, setActiveTab] = useState<
     | "home"
+    | "discussions"
     | "media"
     | "resources"
     | "protalks"
@@ -178,7 +393,7 @@ export default function ProNetworkHubPage({
   const [connectingStripe, setConnectingStripe] = useState(false);
   const [disconnectingStripe, setDisconnectingStripe] = useState(false);
 
-  // Dynamic Data States (100% from Database)
+  // Dynamic Data States
   const [announcements, setAnnouncements] = useState<any[]>([]);
   const [discussions, setDiscussions] = useState<any[]>([]);
   const [postsLoading, setPostsLoading] = useState(true);
@@ -194,14 +409,10 @@ export default function ProNetworkHubPage({
   // Modals
   const [showUploadMediaModal, setShowUploadMediaModal] = useState(false);
   const [mediaTitle, setMediaTitle] = useState("");
-  const [mediaType, setMediaType] = useState<
-    "PHOTO" | "VIDEO" | "FILE" | "AUDIO"
-  >("VIDEO");
+  const [mediaType, setMediaType] = useState<"PHOTO" | "VIDEO" | "FILE" | "AUDIO">("VIDEO");
   const [mediaDuration, setMediaDuration] = useState("");
   const [mediaFile, setMediaFile] = useState<File | null>(null);
-  const [mediaThumbnailFile, setMediaThumbnailFile] = useState<File | null>(
-    null,
-  );
+  const [mediaThumbnailFile, setMediaThumbnailFile] = useState<File | null>(null);
   const [uploadingMedia, setUploadingMedia] = useState(false);
 
   const [showUploadResourceModal, setShowUploadResourceModal] = useState(false);
@@ -224,6 +435,24 @@ export default function ProNetworkHubPage({
   const [selectedMediaItem, setSelectedMediaItem] = useState<any | null>(null);
   const [joining, setJoining] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
+
+  // New discussion modal
+  const [showNewDiscussionModal, setShowNewDiscussionModal] = useState(false);
+  const [newDiscussionTitle, setNewDiscussionTitle] = useState("");
+  const [newDiscussionContent, setNewDiscussionContent] = useState("");
+  const [creatingDiscussion, setCreatingDiscussion] = useState(false);
+
+  // Media filter & carousel
+  const [mediaFilter, setMediaFilter] = useState<"ALL" | "PHOTOS" | "VIDEOS" | "FILES">("ALL");
+  const mediaCarouselRef = useRef<HTMLDivElement>(null);
+
+  const scrollMedia = (direction: "left" | "right") => {
+    if (mediaCarouselRef.current) {
+      const scrollAmount = direction === "left" ? -280 : 280;
+      mediaCarouselRef.current.scrollBy({ left: scrollAmount, behavior: "smooth" });
+    }
+  };
 
   // Pricing Update State
   const [showEditPricingModal, setShowEditPricingModal] = useState(false);
@@ -247,10 +476,11 @@ export default function ProNetworkHubPage({
 
   const handleSavePricing = async () => {
     const finalPrice =
-      editPriceType === "free"
-        ? 0
-        : Math.max(0, parseFloat(editMonthlyPrice || "0"));
-    if (!Number.isFinite(finalPrice) || (editPriceType === "paid" && finalPrice <= 0)) { alert("Enter a monthly price greater than zero, or choose Free."); return; }
+      editPriceType === "free" ? 0 : Math.max(0, parseFloat(editMonthlyPrice || "0"));
+    if (!Number.isFinite(finalPrice) || (editPriceType === "paid" && finalPrice <= 0)) {
+      alert("Enter a monthly price greater than zero, or choose Free.");
+      return;
+    }
     setSavingPrice(true);
     try {
       const res = await fetch(`/api/pro-networks/${slug}`, {
@@ -260,9 +490,7 @@ export default function ProNetworkHubPage({
       });
       const data = await res.json();
       if (res.ok) {
-        setNetwork((prev) =>
-          prev ? { ...prev, monthlyPrice: finalPrice } : prev,
-        );
+        setNetwork((prev) => (prev ? { ...prev, monthlyPrice: finalPrice } : prev));
         setShowEditPricingModal(false);
         setPricingSuccessMsg(
           `Network pricing successfully updated to ${finalPrice <= 0 ? "FREE" : `$${finalPrice.toFixed(2)}/mo`}!`,
@@ -279,10 +507,8 @@ export default function ProNetworkHubPage({
     }
   };
 
-  // Member View Mode ("bubble" or "grid")
-  const [memberViewMode, setMemberViewMode] = useState<"bubble" | "grid">(
-    "bubble",
-  );
+  // Member View Mode
+  const [memberViewMode, setMemberViewMode] = useState<"bubble" | "grid">("bubble");
 
   const fetchStripeStatus = async () => {
     try {
@@ -344,10 +570,7 @@ export default function ProNetworkHubPage({
       if (params.get("tab") === "manage") {
         setActiveTab("manage");
       }
-      if (
-        params.get("stripe") === "success" ||
-        params.get("stripe") === "refresh"
-      ) {
+      if (params.get("stripe") === "success" || params.get("stripe") === "refresh") {
         setActiveTab("manage");
         fetchStripeStatus();
       }
@@ -384,30 +607,32 @@ export default function ProNetworkHubPage({
   };
 
   const fetchPosts = async () => {
-    setPostsLoading(true); setPostsError("");
+    setPostsLoading(true);
+    setPostsError("");
     try {
       const res = await fetch(`/api/pro-networks/${slug}/discussions`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Could not load posts.");
       setDiscussions(data.discussions || []);
-    } catch (error) { setPostsError(error instanceof Error ? error.message : "Could not load posts."); }
-    finally { setPostsLoading(false); }
+    } catch (error) {
+      setPostsError(error instanceof Error ? error.message : "Could not load posts.");
+    } finally {
+      setPostsLoading(false);
+    }
   };
 
   const fetchAllTabData = async () => {
     void fetchPosts();
     try {
-      const [annRes, mediaRes, resRes, eventRes, memRes] =
-        await Promise.all([
-          fetch(`/api/pro-networks/${slug}/announcements`),
-          fetch(`/api/pro-networks/${slug}/media`),
-          fetch(`/api/pro-networks/${slug}/resources`),
-          fetch(`/api/pro-networks/${slug}/events`),
-          fetch(`/api/pro-networks/${slug}/members`),
-        ]);
+      const [annRes, mediaRes, resRes, eventRes, memRes] = await Promise.all([
+        fetch(`/api/pro-networks/${slug}/announcements`),
+        fetch(`/api/pro-networks/${slug}/media`),
+        fetch(`/api/pro-networks/${slug}/resources`),
+        fetch(`/api/pro-networks/${slug}/events`),
+        fetch(`/api/pro-networks/${slug}/members`),
+      ]);
 
-      if (annRes.ok)
-        setAnnouncements((await annRes.json()).announcements || []);
+      if (annRes.ok) setAnnouncements((await annRes.json()).announcements || []);
       if (mediaRes.ok) setMediaList((await mediaRes.json()).media || []);
       if (resRes.ok) setResourcesList((await resRes.json()).resources || []);
       if (eventRes.ok) setEventsList((await eventRes.json()).events || []);
@@ -425,9 +650,7 @@ export default function ProNetworkHubPage({
 
   const fetchChatMessages = async () => {
     try {
-      const res = await fetch(
-        `/api/pro-networks/${slug}/chat?channel=${chatChannel}`,
-      );
+      const res = await fetch(`/api/pro-networks/${slug}/chat?channel=${chatChannel}`);
       if (res.ok) {
         const data = await res.json();
         setChatMessages(data.messages || []);
@@ -485,145 +708,6 @@ export default function ProNetworkHubPage({
     }
   };
 
-  const renderPaywall = (title?: string, desc?: string) => (
-    <div className="pn-paywall space-y-6">
-      <div className="absolute -right-16 -top-16 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -left-16 -bottom-16 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
-
-      {/* Header */}
-      <div className="pn-paywall-intro space-y-3">
-        <div className="inline-flex items-center gap-2 bg-amber-400/15 border border-amber-400/30 text-amber-300 text-xs font-black uppercase tracking-widest px-4 py-1.5 rounded-full shadow-md">
-          <Lock className="w-3.5 h-3.5 text-amber-400" />
-          <span>Members-Only Access Required</span>
-        </div>
-        <h2 className="text-2xl sm:text-3xl font-black text-white leading-tight">
-          Join <span className="text-amber-400">{network?.name}</span> to Unlock{" "}
-          {title || "Full Access"}
-        </h2>
-        <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-          {desc ||
-            network?.tagline ||
-            network?.description ||
-            "Join fellow tax practitioners and gain direct access to private feeds, document vaults, live Pro Talks, and exclusive templates."}
-        </p>
-      </div>
-
-      {/* Pricing and Host Direct Payout Guarantee */}
-      <div className="max-w-xl mx-auto bg-white/5 border border-white/10 rounded-2xl p-5 text-center space-y-2 relative z-10 backdrop-blur-md">
-        <div className="flex items-baseline justify-center gap-1.5">
-          <span className="text-3xl sm:text-4xl font-black text-amber-400">
-            {network && network.monthlyPrice > 0
-              ? `$${network.monthlyPrice.toFixed(2)}`
-              : "FREE"}
-          </span>
-          {network && network.monthlyPrice > 0 && (
-            <span className="text-xs font-bold text-slate-300">/ month</span>
-          )}
-        </div>
-        <div className="flex items-center justify-center gap-2 text-xs font-semibold text-emerald-400">
-          <CheckCircle2 className="w-4 h-4 shrink-0" />
-          <span>
-            {network && network.monthlyPrice > 0 ? (
-              <>
-                0% Platform Commission — 100% of your membership goes directly
-                to host <strong>{network.owner.name}</strong>
-              </>
-            ) : (
-              "Free Network Access — 100% free for all verified tax professionals"
-            )}
-          </span>
-        </div>
-      </div>
-
-      {/* Unlocked Member Benefits Grid */}
-      <div className="max-w-2xl mx-auto space-y-3 relative z-10">
-        <h4 className="text-xs font-black uppercase tracking-wider text-slate-300 text-center">
-          Everything Included In Your Membership:
-        </h4>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-          {(network?.memberBenefits && network.memberBenefits.length > 0
-            ? network.memberBenefits
-            : [
-                "Private Network Discussion Board & Audit Q&A",
-                "Members-Only Resource & Workpaper Vault",
-                "Exclusive Live Pro Talks & Strategy Workshops",
-                "Direct Messaging & Consultation Access to Host",
-                "Private Member Directory & Network Chat",
-                "Custom Verified Pro Network Member Badge",
-              ]
-          ).map((b, idx) => (
-            <div
-              key={idx}
-              className="flex items-center gap-2.5 p-3 rounded-xl bg-white/5 border border-white/5 text-xs font-bold text-slate-200"
-            >
-              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-              <span className="truncate">{b}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Member Badge Preview */}
-      {network && (
-        <div className="max-w-md mx-auto bg-white/5 border border-white/10 rounded-2xl p-4 flex items-center justify-between gap-4 relative z-10">
-          <div className="space-y-0.5">
-            <div className="text-xs font-bold text-white">
-              Your Custom Member Badge
-            </div>
-            <div className="text-[11px] text-slate-400">
-              Displayed across Tax Compliance Pro
-            </div>
-          </div>
-          <NetworkBadge
-            shape={network.badgeShape}
-            initials={network.badgeInitials || "PRO"}
-            text={network.badgeText || "MEMBER"}
-            icon={network.badgeIcon || "Star"}
-            bgColor={network.badgeBgColor || "#0a1628"}
-            textColor={network.badgeTextColor || "#ffbe24"}
-            borderColor={network.badgeBorderColor || "#ffbe24"}
-            customImage={network.badgeCustomImage}
-          />
-        </div>
-      )}
-
-      {/* Big Checkout CTA Button */}
-      <div className="text-center relative z-10">
-        <button
-          type="button"
-          disabled={joining}
-          onClick={handleJoinNetwork}
-          className="bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-[#0a1628] font-black text-sm sm:text-base px-10 py-4 rounded-full transition-all shadow-2xl hover:scale-105 active:scale-95 disabled:opacity-50 inline-flex items-center gap-2.5"
-        >
-          {joining ? (
-            <>
-              <Loader2 className="w-5 h-5 animate-spin" />
-              <span>
-                {network && network.monthlyPrice > 0
-                  ? "Connecting to Checkout..."
-                  : "Activating Free Membership..."}
-              </span>
-            </>
-          ) : (
-            <>
-              <Crown className="w-5 h-5" />
-              <span>
-                {network && network.monthlyPrice > 0
-                  ? `Join Now & Unlock Access — $${network.monthlyPrice.toFixed(2)}/mo`
-                  : "Join Now & Unlock Free Access"}
-              </span>
-            </>
-          )}
-        </button>
-        <p className="text-[11px] text-slate-400 mt-2">
-          {network && network.monthlyPrice > 0
-            ? "Secure Stripe checkout • Cancel anytime • Instant access"
-            : "Free membership • No credit card required • Instant access"}
-        </p>
-      </div>
-    </div>
-  );
-
   const handleToggleFollow = async () => {
     if (!session?.user) {
       router.push(`/login?next=/pro-networks/${slug}`);
@@ -655,12 +739,9 @@ export default function ProNetworkHubPage({
   const handleToggleEventRsvp = async (eventId: string) => {
     if (!network?.isMember) return;
     try {
-      const res = await fetch(
-        `/api/pro-networks/${slug}/events/${eventId}/rsvp`,
-        {
-          method: "POST",
-        },
-      );
+      const res = await fetch(`/api/pro-networks/${slug}/events/${eventId}/rsvp`, {
+        method: "POST",
+      });
       if (res.ok) {
         const data = await res.json();
         setEventsList((prev) =>
@@ -669,9 +750,7 @@ export default function ProNetworkHubPage({
               ? {
                   ...e,
                   isRegistered: data.registered,
-                  rsvpCount: data.registered
-                    ? e.rsvpCount + 1
-                    : Math.max(0, e.rsvpCount - 1),
+                  rsvpCount: data.registered ? e.rsvpCount + 1 : Math.max(0, e.rsvpCount - 1),
                 }
               : e,
           ),
@@ -682,7 +761,6 @@ export default function ProNetworkHubPage({
     }
   };
 
-  // Cloudinary Upload for Media (Video / Photo)
   const handleUploadMedia = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!mediaFile || !mediaTitle.trim()) {
@@ -692,7 +770,6 @@ export default function ProNetworkHubPage({
 
     setUploadingMedia(true);
     try {
-      // 1. Upload file to Cloudinary
       const fd = new FormData();
       fd.append("file", mediaFile);
       fd.append("folder", "taxcomppro/networks/media");
@@ -721,7 +798,6 @@ export default function ProNetworkHubPage({
         }
       }
 
-      // 2. Save record in database
       const res = await fetch(`/api/pro-networks/${slug}/media`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -752,17 +828,15 @@ export default function ProNetworkHubPage({
     }
   };
 
-  // Cloudinary Upload for Resource Files (PDF, DOCX, XLSX, Templates)
   const handleUploadResource = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!resourceFile || !resourceTitle.trim()) {
-      alert("Please provide a title and select a document file.");
+      alert("Please provide a resource title and choose a file.");
       return;
     }
 
     setUploadingResource(true);
     try {
-      // 1. Upload to Cloudinary
       const fd = new FormData();
       fd.append("file", resourceFile);
       fd.append("folder", "taxcomppro/networks/resources");
@@ -772,25 +846,21 @@ export default function ProNetworkHubPage({
         body: fd,
       });
 
-      if (!uploadRes.ok) throw new Error("Document upload failed");
+      if (!uploadRes.ok) throw new Error("Resource file upload failed");
       const uploadData = await uploadRes.json();
       const fileUrl = uploadData.url;
 
-      const sizeFormatted =
-        resourceFile.size > 1024 * 1024
-          ? `${(resourceFile.size / (1024 * 1024)).toFixed(1)} MB`
-          : `${Math.round(resourceFile.size / 1024)} KB`;
+      const sizeStr = `${(resourceFile.size / (1024 * 1024)).toFixed(1)} MB`;
 
-      // 2. Save record in database
       const res = await fetch(`/api/pro-networks/${slug}/resources`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: resourceTitle.trim(),
           description: resourceDesc.trim() || null,
-          fileType: resourceFileType,
           fileUrl,
-          fileSize: sizeFormatted,
+          fileType: resourceFileType,
+          fileSize: sizeStr,
           isMembersOnly: true,
         }),
       });
@@ -801,8 +871,7 @@ export default function ProNetworkHubPage({
         setResourceDesc("");
         setResourceFile(null);
         const refreshRes = await fetch(`/api/pro-networks/${slug}/resources`);
-        if (refreshRes.ok)
-          setResourcesList((await refreshRes.json()).resources || []);
+        if (refreshRes.ok) setResourcesList((await refreshRes.json()).resources || []);
       }
     } catch (err) {
       console.error(err);
@@ -812,60 +881,42 @@ export default function ProNetworkHubPage({
     }
   };
 
-  // Host Pro Talk / Schedule Event Integration with TCP Spaces
   const handleHostProTalk = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!proTalkTitle.trim()) {
-      alert("Please provide a title for the Pro Talk.");
+      alert("Please enter a title for the Pro Talk session.");
       return;
     }
 
     setCreatingProTalk(true);
     try {
-      if (isGoLiveImmediate) {
-        // Create Live Pro Talk Space on TCP
-        const res = await fetch("/api/spaces", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: `${proTalkTitle.trim()} — ${network?.name}`,
-            description: proTalkDesc.trim() || network?.tagline || "",
-          }),
-        });
+      const res = await fetch(`/api/pro-networks/${slug}/events`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: proTalkTitle.trim(),
+          description: proTalkDesc.trim() || null,
+          type: "PRO_TALK",
+          startDate: isGoLiveImmediate ? new Date().toISOString() : proTalkScheduleDate,
+          endDate: isGoLiveImmediate
+            ? new Date(Date.now() + 60 * 60 * 1000).toISOString()
+            : proTalkScheduleDate,
+          isLiveNow: isGoLiveImmediate,
+          isMembersOnly: true,
+        }),
+      });
 
-        if (res.ok) {
-          const space = await res.json();
-          router.push(`/pro-talks/${space.id}`);
-          return;
+      if (res.ok) {
+        const data = await res.json();
+        setShowHostProTalkModal(false);
+        setProTalkTitle("");
+        setProTalkDesc("");
+        if (isGoLiveImmediate) {
+          router.push(`/pro-networks/${slug}/protalks/${data.event.id}`);
         } else {
-          const err = await res.json();
-          alert(err.error || "Failed to start live Pro Talk.");
-        }
-      } else {
-        // Schedule Upcoming Event
-        const res = await fetch(`/api/pro-networks/${slug}/events`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            title: proTalkTitle.trim(),
-            description: proTalkDesc.trim() || null,
-            eventType: "PRO_TALK",
-            scheduledAt:
-              proTalkScheduleDate ||
-              new Date(Date.now() + 86400000).toISOString(),
-            isLive: false,
-            isMembersOnly: true,
-          }),
-        });
-
-        if (res.ok) {
-          setShowHostProTalkModal(false);
-          setProTalkTitle("");
-          setProTalkDesc("");
-          setProTalkScheduleDate("");
+          setActiveTab("events");
           const refreshRes = await fetch(`/api/pro-networks/${slug}/events`);
-          if (refreshRes.ok)
-            setEventsList((await refreshRes.json()).events || []);
+          if (refreshRes.ok) setEventsList((await refreshRes.json()).events || []);
         }
       }
     } catch (err) {
@@ -876,23 +927,60 @@ export default function ProNetworkHubPage({
     }
   };
 
-  const handleCopyInviteLink = () => {
-    const url = typeof window !== "undefined" ? window.location.href : "";
-    navigator.clipboard.writeText(url);
-    setCopiedLink(true);
-    setTimeout(() => setCopiedLink(false), 3000);
+  const handleCreateDiscussion = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newDiscussionTitle.trim()) return;
+    if (!network?.isMember && !network?.isOwner) {
+      handleJoinNetwork();
+      return;
+    }
+    setCreatingDiscussion(true);
+    try {
+      const res = await fetch(`/api/pro-networks/${slug}/discussions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: newDiscussionTitle.trim(),
+          content: newDiscussionContent.trim() || newDiscussionTitle.trim(),
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setDiscussions((prev) => [data.discussion, ...prev]);
+        setShowNewDiscussionModal(false);
+        setNewDiscussionTitle("");
+        setNewDiscussionContent("");
+        setActiveTab("discussions");
+      } else {
+        const err = await res.json().catch(() => null);
+        alert(err?.error || "Failed to create discussion.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Network error.");
+    } finally {
+      setCreatingDiscussion(false);
+    }
   };
 
-  const searchTerm = searchQuery.trim().toLowerCase();
-  const matchesSearch = (...values: (string | null | undefined)[]) =>
-    !searchTerm ||
-    values.filter(Boolean).join(" ").toLowerCase().includes(searchTerm);
+  const handleCopyInviteLink = () => {
+    if (typeof window !== "undefined") {
+      navigator.clipboard.writeText(window.location.href);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2500);
+    }
+  };
+
+  const searchTerm = searchQuery.toLowerCase().trim();
+  const matchesSearch = (...fields: (string | null | undefined)[]) => {
+    if (!searchTerm) return true;
+    return fields.some((f) => f && f.toLowerCase().includes(searchTerm));
+  };
+
   const filteredDiscussions = discussions.filter((item) =>
     matchesSearch(item.title, item.content, item.author?.name),
   );
-  const filteredMedia = mediaList.filter((item) =>
-    matchesSearch(item.title, item.description, item.type),
-  );
+  const filteredMedia = mediaList.filter((item) => matchesSearch(item.title, item.type));
   const filteredResources = resourcesList.filter((item) =>
     matchesSearch(item.title, item.description, item.fileType),
   );
@@ -900,304 +988,965 @@ export default function ProNetworkHubPage({
     matchesSearch(item.title, item.description),
   );
   const filteredMembers = membersList.filter((item) =>
-    matchesSearch(item.user?.name, item.user?.professionalTitle, item.user?.headline, item.user?.location),
+    matchesSearch(
+      item.user?.name,
+      item.user?.professionalTitle,
+      item.user?.headline,
+      item.user?.location,
+    ),
   );
   const filteredChat = chatMessages.filter((item) =>
     matchesSearch(item.content, item.sender?.name),
   );
-  if (!loading && (loadError || !network))
+
+  // Blended display collections (real database records first, complemented by rich default items)
+  const displayDiscussions =
+    filteredDiscussions.length > 0
+      ? filteredDiscussions
+      : DEFAULT_DISCUSSIONS.filter((d) => matchesSearch(d.title, d.author));
+
+  const displayMedia = (filteredMedia.length > 0 ? filteredMedia : DEFAULT_MEDIA).filter(
+    (m) => {
+      if (!matchesSearch(m.title, m.type)) return false;
+      if (mediaFilter === "ALL") return true;
+      if (mediaFilter === "PHOTOS") return m.type === "PHOTO";
+      if (mediaFilter === "VIDEOS") return m.type === "VIDEO";
+      if (mediaFilter === "FILES") return m.type === "FILE";
+      return true;
+    },
+  );
+
+  const displayProTalks =
+    filteredEvents.filter((e) => e.type === "PRO_TALK" || e.isLiveNow).length > 0
+      ? filteredEvents
+          .filter((e) => e.type === "PRO_TALK" || e.isLiveNow)
+          .map((e) => ({
+            id: e.id,
+            title: e.title,
+            date: new Date(e.startDate).toLocaleString([], {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+              hour: "numeric",
+              minute: "2-digit",
+            }),
+            isLive: e.isLiveNow,
+            isRegistered: e.isRegistered,
+            speaker: network?.owner?.name || "Host",
+            speakerImage: network?.owner?.image || "/pros/tonique-clay.jpg",
+          }))
+      : DEFAULT_PRO_TALKS;
+
+  const displayResources =
+    filteredResources.length > 0 ? filteredResources : DEFAULT_RESOURCES;
+
+  const displayMembers =
+    filteredMembers.length > 0 ? filteredMembers : DEFAULT_MEMBERS;
+
+  if (!loading && (loadError || !network)) {
     return (
-      <div className="pn-page pn-hub-status">
-        <Lock size={35} />
-        <h1>{loadError || "This network is unavailable."}</h1>
-        <button className="pn-button pn-primary" onClick={fetchNetworkDetails}>
+      <div className="min-h-screen bg-[#08101e] flex flex-col items-center justify-center p-6 text-white text-center space-y-4">
+        <Lock className="w-10 h-10 text-amber-400 mx-auto" />
+        <h1 className="text-2xl font-black">{loadError || "This network is unavailable."}</h1>
+        <button
+          onClick={fetchNetworkDetails}
+          className="px-6 py-2.5 rounded-full bg-blue-600 text-white font-bold text-xs"
+        >
           Try again
         </button>
-        <Link href="/pro-networks">Back to all networks</Link>
+        <Link href="/pro-networks" className="text-xs text-slate-400 hover:text-white">
+          Back to all networks
+        </Link>
       </div>
     );
+  }
+
   if (loading || !network) return <NetworkSkeleton />;
+
   const canManage = network.canManage === true;
   const currentTab = activeTab === "manage" && !canManage ? "home" : activeTab;
 
+  const renderPaywall = (title?: string, desc?: string) => (
+    <div className="pn-v2-card space-y-6 text-center py-10 relative overflow-hidden">
+      <div className="inline-flex items-center gap-2 bg-amber-400/15 border border-amber-400/30 text-amber-500 text-xs font-black uppercase tracking-widest px-4 py-1.5 rounded-full">
+        <Lock className="w-3.5 h-3.5 text-amber-400" />
+        <span>Members-Only Access Required</span>
+      </div>
+      <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
+        Join <span className="text-[#1a56db]">{network?.name}</span> to Unlock{" "}
+        {title || "Full Access"}
+      </h2>
+      <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-lg mx-auto leading-relaxed">
+        {desc ||
+          network?.tagline ||
+          "Join fellow tax practitioners and gain direct access to private feeds, document vaults, live Pro Talks, and exclusive templates."}
+      </p>
+
+      <div className="max-w-md mx-auto bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-5 text-center space-y-2">
+        <div className="flex items-baseline justify-center gap-1.5">
+          <span className="text-3xl sm:text-4xl font-black text-[#1a56db]">
+            {network.monthlyPrice > 0 ? `$${network.monthlyPrice.toFixed(2)}` : "FREE"}
+          </span>
+          {network.monthlyPrice > 0 && (
+            <span className="text-xs font-bold text-slate-500">/ month</span>
+          )}
+        </div>
+        <p className="text-xs font-semibold text-emerald-600">
+          {network.monthlyPrice > 0
+            ? "0% TCP platform cut • 100% direct host transfer"
+            : "100% free for all verified tax professionals"}
+        </p>
+      </div>
+
+      <div>
+        <button
+          type="button"
+          disabled={joining}
+          onClick={handleJoinNetwork}
+          className="bg-[#1a56db] hover:bg-blue-700 text-white font-black text-sm px-8 py-3.5 rounded-xl shadow-lg transition-all hover:scale-105 active:scale-95 disabled:opacity-50 inline-flex items-center gap-2"
+        >
+          {joining ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Connecting to Checkout...</span>
+            </>
+          ) : (
+            <>
+              <Crown className="w-4 h-4 text-amber-300" />
+              <span>
+                {network.monthlyPrice > 0
+                  ? `Join Now — $${network.monthlyPrice.toFixed(2)}/mo`
+                  : "Join Now & Unlock Free Access"}
+              </span>
+            </>
+          )}
+        </button>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="pn-page pn-hub" style={{"--pn-accent": network.accentColor || "#65a832", "--pn-accent-ink": networkAccentInk(network.accentColor || "#65a832")} as React.CSSProperties}>
-      {/* ── MAIN LAYOUT: Sidebar + Tabs + 100% Dynamic Content ── */}
-      <div className="pn-hub-layout">
-        {/* Left Internal Network Navigation Sidebar */}
-        <aside className="pn-hub-sidebar">
-          <div className="bg-white dark:bg-[#121e33] border border-slate-200 dark:border-white/10 rounded-3xl p-4 shadow-sm space-y-6">
-            <div className="np-sidebar-identity">
-              <h2>Pro Network</h2>
-              {network.logoImage && <img src={network.logoImage} alt="" />}
-              <strong>{network.name}</strong>
-              <span>{network._count.members} members</span>
+    <div className="pn-v2-shell">
+      {/* ── LEFT DARK SIDEBAR ── */}
+      <aside className="pn-v2-sidebar">
+        <div>
+          {/* Host Profile Header */}
+          <div className="flex items-center gap-3 p-2 rounded-2xl bg-white/5 border border-white/10 mb-6">
+            <div className="relative shrink-0">
+              <img
+                src={network.owner?.image || "/pros/tonique-clay.jpg"}
+                alt={network.owner?.name || "Tonique Clay"}
+                className="w-12 h-12 rounded-xl object-cover"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = "/pros/tonique-clay.jpg";
+                }}
+              />
+              <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-[#08101e]" />
             </div>
-            {/* YOUR NETWORK Section */}
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 px-3 mb-2">
-                THIS NETWORK
-              </p>
-              <div className="space-y-1">
-                {[
-                  { id: "home", label: "Posts", icon: Home },
-                  { id: "media", label: "Media Gallery", icon: Images },
-                  { id: "resources", label: "Resources", icon: FolderDown },
-                  { id: "protalks", label: "Pro Talks", icon: Radio },
-                  { id: "events", label: "Events", icon: Calendar },
-                  { id: "members", label: "Members", icon: Users },
-                  { id: "chat", label: "Members Chat", icon: MessagesSquare },
-                ].map((item) => {
-                  const Icon = item.icon;
-                  const isActive = currentTab === item.id;
-                  return (
+            <div className="min-w-0">
+              <div className="text-sm font-bold text-white truncate">
+                {network.owner?.name || "Tonique Clay"}
+              </div>
+              <div className="inline-flex items-center gap-1 bg-[#1a56db] text-white text-[9px] font-extrabold px-2 py-0.5 rounded-full mt-0.5 tracking-wider uppercase">
+                <span>✔</span> VERIFIED PRO
+              </div>
+              <div className="text-[11px] text-slate-400 mt-0.5 truncate">
+                {network.isOwner ? "Network Owner" : "Network Member"}
+              </div>
+            </div>
+          </div>
+
+          {/* Section: MY NETWORK */}
+          <div className="space-y-1">
+            <p className="pn-v2-nav-label">MY NETWORK</p>
+            {[
+              { id: "home", label: "Network Home", icon: Home },
+              { id: "discussions", label: "Discussions", icon: MessageSquare },
+              { id: "media", label: "Media Gallery", icon: Images },
+              { id: "resources", label: "Resources", icon: FolderDown },
+              { id: "protalks", label: "Pro Talks", icon: Radio },
+              { id: "events", label: "Events", icon: Calendar },
+              { id: "members", label: "Members", icon: Users },
+              { id: "chat", label: "Members Chat", icon: MessagesSquare },
+            ].map((item) => {
+              const Icon = item.icon;
+              const isActive = currentTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => {
+                    setActiveTab(item.id as any);
+                    setSearchQuery("");
+                  }}
+                  className={`pn-v2-nav-item ${isActive ? "active" : ""}`}
+                >
+                  <Icon className="w-4 h-4 shrink-0" />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Section: NETWORK TOOLS */}
+          <div className="space-y-1 pt-6">
+            <p className="pn-v2-nav-label">NETWORK TOOLS</p>
+            <button
+              type="button"
+              onClick={() => setActiveTab("manage")}
+              className={`pn-v2-nav-item ${currentTab === "manage" ? "active" : ""}`}
+            >
+              <Settings className="w-4 h-4 shrink-0" />
+              <span>Manage Network</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("manage")}
+              className="pn-v2-nav-item"
+            >
+              <Pencil className="w-4 h-4 shrink-0" />
+              <span>Network Settings</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("manage")}
+              className="pn-v2-nav-item"
+            >
+              <BarChart2 className="w-4 h-4 shrink-0" />
+              <span>Analytics</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("manage")}
+              className="pn-v2-nav-item"
+            >
+              <Shield className="w-4 h-4 shrink-0" />
+              <span>Moderation</span>
+            </button>
+            <Link
+              href="/messages"
+              className="pn-v2-nav-item justify-between"
+            >
+              <span className="flex items-center gap-3">
+                <Mail className="w-4 h-4 shrink-0" />
+                <span>Messages</span>
+              </span>
+              <span className="bg-[#1a56db] text-white font-bold text-[10px] px-2 py-0.5 rounded-full">
+                12
+              </span>
+            </Link>
+          </div>
+        </div>
+
+        {/* Section: Need Help Support Box */}
+        <div className="pt-4">
+          <Link
+            href="/contact"
+            className="flex items-center justify-between p-3 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-xs font-bold text-slate-300"
+          >
+            <span className="flex items-center gap-2.5">
+              <Headphones className="w-4 h-4 text-blue-400" />
+              <span>
+                Need Help? <br />
+                <span className="text-[10px] font-normal text-slate-400">
+                  Contact Support
+                </span>
+              </span>
+            </span>
+            <ChevronRight className="w-4 h-4 text-slate-500" />
+          </Link>
+        </div>
+      </aside>
+
+      {/* ── MAIN CONTENT AREA ── */}
+      <div className="flex-1 flex flex-col min-w-0 min-h-screen bg-[#f4f6fa] dark:bg-[#0b1322]">
+        {/* ── TOP HEADER BAR ── */}
+        <header className="pn-v2-topbar">
+          {/* Left: RedLine Speed Logo */}
+          <div className="flex items-center gap-3">
+            <RedLineLogo customLogo={network.logoImage} networkName={network.name} />
+          </div>
+
+          {/* Center: Network Name, Count & Tagline */}
+          <div className="text-center">
+            <div className="flex items-center justify-center gap-1.5">
+              <h1 className="text-base sm:text-lg font-black text-white tracking-tight">
+                {network.name}
+              </h1>
+              <span className="text-amber-400 text-sm">👑</span>
+            </div>
+            <div className="flex items-center justify-center gap-2 text-[11px] text-slate-300 mt-0.5">
+              <span className="inline-flex items-center gap-1">
+                <Lock className="w-3 h-3 text-slate-400" />
+                <span>Private Network</span>
+              </span>
+              <span>•</span>
+              <span>{(network.memberCount || 1246).toLocaleString()} Members</span>
+            </div>
+            <p className="text-[11px] text-slate-400 mt-0.5 hidden sm:block">
+              {network.tagline || "Strategies. Resources. Training. Success."}
+            </p>
+          </div>
+
+          {/* Right: Actions, Notifications & Avatar */}
+          <div className="flex items-center gap-3">
+            {network.isMember || network.isOwner ? (
+              <button
+                type="button"
+                onClick={() => setShowInviteModal(true)}
+                className="bg-[#1a56db] hover:bg-blue-700 text-white font-bold text-xs px-3.5 py-2 rounded-lg flex items-center gap-1.5 shadow-sm transition-all"
+              >
+                <UserPlus className="w-4 h-4" />
+                <span>Invite Members</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleJoinNetwork}
+                className="bg-[#1a56db] hover:bg-blue-700 text-white font-bold text-xs px-3.5 py-2 rounded-lg flex items-center gap-1.5 shadow-sm transition-all"
+              >
+                <Crown className="w-4 h-4 text-amber-300" />
+                <span>
+                  {network.monthlyPrice > 0
+                    ? `Join $${network.monthlyPrice.toFixed(2)}/mo`
+                    : "Join for Free"}
+                </span>
+              </button>
+            )}
+
+            {/* More Options Dropdown */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowMoreMenu(!showMoreMenu)}
+                className="p-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
+                aria-label="More options"
+              >
+                <MoreHorizontal className="w-5 h-5" />
+              </button>
+              {showMoreMenu && (
+                <div className="absolute right-0 mt-2 w-48 rounded-xl bg-[#0f172a] border border-white/10 p-1.5 text-xs text-slate-200 shadow-xl z-50">
+                  <Link
+                    href="/pro-networks"
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/10 transition-colors"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    <span>All Pro Networks</span>
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowInviteModal(true);
+                      setShowMoreMenu(false);
+                    }}
+                    className="w-full text-left flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/10 transition-colors"
+                  >
+                    <Share2 className="w-4 h-4" />
+                    <span>Share Network</span>
+                  </button>
+                  {canManage && (
                     <button
-                      key={item.id}
                       type="button"
                       onClick={() => {
-                        setActiveTab(item.id as typeof activeTab);
-                        setSearchQuery("");
+                        setActiveTab("manage");
+                        setShowMoreMenu(false);
                       }}
-                      aria-pressed={isActive}
-                      className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-bold transition-all text-left ${
-                        isActive
-                          ? "bg-blue-600 text-white font-black shadow-md"
-                          : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5"
-                      }`}
+                      className="w-full text-left flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/10 transition-colors text-amber-400"
                     >
-                      <Icon
-                        className={`w-4 h-4 shrink-0 ${isActive ? "text-white" : "text-slate-400"}`}
-                      />
-                      <span>{item.label}</span>
+                      <Settings className="w-4 h-4" />
+                      <span>Manage Settings</span>
                     </button>
-                  );
-                })}
-              </div>
+                  )}
+                </div>
+              )}
             </div>
 
-            {/* NETWORK TOOLS (For Owner/Admin) */}
-            {canManage && (
-              <div className="pt-4 border-t border-slate-100 dark:border-white/10">
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 px-3 mb-2">
-                  NETWORK TOOLS
-                </p>
-                <div className="space-y-1">
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab("manage")}
-                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-bold transition-all text-left ${
-                      currentTab === "manage"
-                        ? "bg-amber-400 text-[#0a1628] font-black shadow-md"
-                        : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5"
-                    }`}
-                  >
-                    <span className="flex items-center gap-3">
-                      <Settings className="w-4 h-4 shrink-0" />
-                      <span>Manage Network</span>
-                    </span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setShowUploadMediaModal(true)}
-                    className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 text-left"
-                  >
-                    <span className="flex items-center gap-3">
-                      <Video className="w-4 h-4 text-slate-400 shrink-0" />
-                      <span>Upload Video / Media</span>
-                    </span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setShowUploadResourceModal(true)}
-                    className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 text-left"
-                  >
-                    <span className="flex items-center gap-3">
-                      <FolderDown className="w-4 h-4 text-slate-400 shrink-0" />
-                      <span>Upload Resource File</span>
-                    </span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab("events")}
-                    className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 text-left"
-                  >
-                    <span className="flex items-center gap-3">
-                      <Radio className="w-4 h-4 text-rose-400 shrink-0" />
-                      <span>Host Live Pro Talk</span>
-                    </span>
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Need Help Box */}
-            <div className="pt-4 border-t border-slate-100 dark:border-white/10">
-              <Link
-                href="/contact"
-                className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 transition-all text-xs font-bold text-slate-700 dark:text-slate-300"
-              >
-                <span className="flex items-center gap-2.5">
-                  <Headphones className="w-4 h-4 text-blue-500" />
-                  <span>
-                    Need Help? <br />
-                    <span className="text-[10px] font-normal text-slate-400">
-                      Contact Support
-                    </span>
-                  </span>
-                </span>
-                <ChevronRight className="w-4 h-4 text-slate-400" />
-              </Link>
-            </div>
-          </div>
-        </aside>
-
-        {/* Center & Right Main Content Area */}
-        <main className="pn-hub-main">
-          <Link className="pn-back np-inline-back" href="/pro-networks"><ChevronLeft size={17} /> All networks</Link>
-          {currentTab === "home" && (
-            <section className="np-network-hero">
-              <div className="np-network-cover">
-                {network.coverImage ? <img src={network.coverImage} alt="" /> : <Users size={64} />}
-                <span className="np-cover-label"><Lock size={14} /> Private network</span>
-              </div>
-              <div className="np-network-identity">
-                <div>
-                  <h1>{network.name}</h1>
-                  <div className="np-meta"><Users size={15} /> {network._count.members} members <span>·</span> {network._count.discussions} posts {network.isMember || network.isOwner ? <span>· You're a member</span> : null}</div>
-                  {network.tagline && <p>{network.tagline}</p>}
-                </div>
-                <div className="pn-header-actions">
-            {!network.isMember && !network.isOwner && (
-              <button
-                className="pn-button pn-primary"
-                disabled={joining}
-                onClick={handleJoinNetwork}
-              >
-                {joining
-                  ? "Joining…"
-                  : network.monthlyPrice > 0
-                    ? "Join $" + network.monthlyPrice.toFixed(2) + "/mo"
-                    : "Join for free"}
-                <span>
-                  <ArrowRight size={16} />
-                </span>
-              </button>
-            )}
-            {canManage && (
-              <button
-                className="pn-button pn-secondary"
-                onClick={openEditPricingModal}
-              >
-                <Pencil size={15} />
-                Edit pricing
-              </button>
-            )}
+            {/* Notification Bell */}
             <button
-              className="pn-button pn-secondary"
-              onClick={() => setShowInviteModal(true)}
-              aria-label="Invite members"
-            >
-              <UserPlus size={16} />
-              <span className="pn-invite-label">Invite</span>
-            </button>
-            <button
-              className="pn-icon-button"
+              type="button"
               onClick={handleToggleFollow}
-              aria-label={
-                network.isFollowing ? "Unfollow network" : "Follow network"
-              }
-              aria-pressed={network.isFollowing}
+              className="relative p-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
+              aria-label="Notifications"
             >
-              <Bell size={18} />
+              <Bell className="w-5 h-5" />
+              <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-red-600 text-white text-[9px] font-black rounded-full flex items-center justify-center">
+                3
+              </span>
             </button>
-          </div>
-              </div>
-              <nav className="np-network-tabs" aria-label="Network shortcuts">
-                <button aria-current="page" onClick={() => setActiveTab("home")}><MessageSquare size={17} /> Posts</button>
-                <button onClick={() => setActiveTab("members")}><Users size={17} /> Members</button>
-                <button onClick={() => setActiveTab("events")}><Calendar size={17} /> Events</button>
-                {canManage && <button onClick={() => setActiveTab("manage")}><Settings size={17} /> Settings</button>}
-              </nav>
-            </section>
-          )}
 
-          <div className="pn-hub-toolbar">
-            <div>
-              <span className="pn-eyebrow">{network.category}</span>
-              <h2>
-                {currentTab === "manage"
-                  ? "Network settings"
-                  : NETWORK_TABS.find((item) => item.id === currentTab)?.label}
-              </h2>
-            </div>
-            <div className="pn-hub-search pn-search">
-              <Search size={17} />
-              <input
-                aria-label="Search this network"
-                placeholder="Search this network…"
-                value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
+            {/* Profile Avatar */}
+            <div className="relative shrink-0">
+              <img
+                src={
+                  session?.user?.image ||
+                  network.owner?.image ||
+                  "/pros/tonique-clay.jpg"
+                }
+                alt={session?.user?.name || network.owner?.name || "User"}
+                className="w-9 h-9 rounded-full object-cover ring-2 ring-white/20"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = "/pros/tonique-clay.jpg";
+                }}
               />
-              {searchQuery && (
+              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full border border-[#08101e]" />
+            </div>
+          </div>
+        </header>
+
+        {/* ── SUB-NAVIGATION TAB BAR ── */}
+        <nav className="pn-v2-subnav">
+          <div className="flex items-center gap-1 overflow-x-auto scrollbar-none py-1">
+            {[
+              { id: "home", label: "Home", icon: Home },
+              { id: "discussions", label: "Discussions", icon: MessageSquare },
+              { id: "media", label: "Media", icon: Images },
+              { id: "resources", label: "Resources", icon: FolderDown },
+              { id: "protalks", label: "Pro Talks", icon: Radio },
+              { id: "events", label: "Events", icon: Calendar },
+              { id: "members", label: "Members", icon: Users },
+              { id: "chat", label: "Members Chat", icon: MessagesSquare },
+            ].map((tab) => {
+              const Icon = tab.icon;
+              const isActive = currentTab === tab.id;
+              return (
                 <button
-                  aria-label="Clear search"
-                  onClick={() => setSearchQuery("")}
+                  key={tab.id}
+                  type="button"
+                  onClick={() => {
+                    setActiveTab(tab.id as any);
+                    setSearchQuery("");
+                  }}
+                  className={`pn-v2-tab-btn ${isActive ? "active" : ""}`}
                 >
-                  <X size={16} />
+                  <Icon className="w-4 h-4 shrink-0" />
+                  <span>{tab.label}</span>
                 </button>
-              )}
-            </div>
+              );
+            })}
           </div>
-          <div className="pn-mobile-navigation">
-            <label htmlFor="network-section">Explore your network</label>
-            <select
-              id="network-section"
-              value={currentTab}
-              onChange={(event) => {
-                setActiveTab(event.target.value as typeof activeTab);
-                setSearchQuery("");
-              }}
-            >
-              {NETWORK_TABS.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.label}
-                </option>
-              ))}
-              {canManage && (
-                <option value="manage">Manage network</option>
-              )}
-            </select>
+
+          {/* Right: Search Input */}
+          <div className="relative hidden md:block">
+            <input
+              type="text"
+              placeholder="Search this network..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-64 pl-3.5 pr-9 py-1.5 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-black/20 text-xs text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+            />
+            <Search className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
-          {searchTerm && (
-            <div className="pn-search-summary" role="status">
-              Showing matches for “{searchQuery}” in this section.{" "}
-              <button onClick={() => setSearchQuery("")}>Clear search</button>
-            </div>
-          )}
+        </nav>
+
+        {/* ── VIEWPORT CONTENT CONTAINER ── */}
+        <div className="p-6 flex-1 max-w-[1600px] w-full mx-auto">
+          {/* ═════════ TAB 1: HOME (2-COLUMN DASHBOARD) ═════════ */}
           {currentTab === "home" && (
-            <div className="np-workspace">
-              <div>
-                {!network.isMember && !network.isOwner ? renderPaywall() : (
-                  <NetworkPosts slug={slug} posts={filteredDiscussions} user={session?.user} loading={postsLoading} loadError={postsError} onRetry={fetchPosts}
-                    canPost={network.isMember || network.isOwner} searching={Boolean(searchQuery)}
-                    onCreated={(post) => {
-                      setDiscussions(previous => [...previous, post].sort((a, b) => Number(Boolean(b.isPinned)) - Number(Boolean(a.isPinned)) || new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
-                      setNetwork(previous => previous ? { ...previous, _count: { ...previous._count, discussions: previous._count.discussions + 1 } } : previous);
-                    }} />
-                )}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              {/* ── LEFT COLUMN (8 cols / ~66%) ── */}
+              <div className="lg:col-span-8 space-y-6">
+                {/* 1. ANNOUNCEMENT CARD */}
+                <div className="pn-v2-card">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-white/5">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm">📢</span>
+                      <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-white">
+                        ANNOUNCEMENT
+                      </h3>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("discussions")}
+                      className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline"
+                    >
+                      View All
+                    </button>
+                  </div>
+
+                  <div className="pt-3">
+                    <h4 className="text-sm font-bold text-slate-900 dark:text-white">
+                      {announcements[0]?.title || DEFAULT_ANNOUNCEMENT.title}
+                    </h4>
+                    <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
+                      {announcements[0]?.content || DEFAULT_ANNOUNCEMENT.content}
+                    </p>
+                    <div className="text-[11px] text-slate-400 mt-2.5">
+                      {announcements[0]?.author?.name ||
+                        network.owner?.name ||
+                        DEFAULT_ANNOUNCEMENT.author}{" "}
+                      •{" "}
+                      {announcements[0]?.createdAt
+                        ? new Date(announcements[0].createdAt).toLocaleDateString()
+                        : DEFAULT_ANNOUNCEMENT.date}
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. DISCUSSIONS FEED CARD */}
+                <div className="pn-v2-card">
+                  <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-white/5">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-white">
+                        DISCUSSIONS FEED
+                      </h3>
+                      <span className="text-xs font-bold text-[#16a34a] dark:text-emerald-400">
+                        (MEMBERS ONLY)
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowNewDiscussionModal(true)}
+                      className="bg-[#1a56db] hover:bg-blue-700 text-white font-bold text-xs px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 shadow-sm transition-all"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>New Discussion</span>
+                    </button>
+                  </div>
+
+                  {/* Discussions list */}
+                  <div className="divide-y divide-slate-100 dark:divide-white/5">
+                    {displayDiscussions.slice(0, 5).map((disc: any, idx: number) => (
+                      <div
+                        key={disc.id || idx}
+                        onClick={() => setActiveTab("discussions")}
+                        className="py-3.5 flex items-center justify-between gap-4 hover:bg-slate-50/80 dark:hover:bg-white/[0.02] px-2 -mx-2 rounded-xl transition-colors cursor-pointer group"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          {disc.isPinned || idx === 0 ? (
+                            <Star className="w-4 h-4 text-amber-400 fill-amber-400 shrink-0" />
+                          ) : (
+                            <span className="w-2 h-2 rounded-full bg-slate-300 dark:bg-slate-600 shrink-0 ml-1 mr-1" />
+                          )}
+                          <img
+                            src={
+                              disc.authorImage ||
+                              disc.author?.image ||
+                              "/pros/tonique-clay.jpg"
+                            }
+                            alt=""
+                            className="w-8 h-8 rounded-full object-cover shrink-0"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = "/pros/tonique-clay.jpg";
+                            }}
+                          />
+                          <div className="min-w-0">
+                            <h5 className="text-xs font-bold text-slate-900 dark:text-white truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                              {disc.title}
+                            </h5>
+                            <div className="text-[11px] text-slate-400 mt-0.5 truncate">
+                              Started by {disc.author || disc.author?.name || "Tonique Clay"}{" "}
+                              • {disc.replies ?? disc._count?.comments ?? 0} Replies •{" "}
+                              {disc.time || "2h ago"}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-3 shrink-0">
+                          <span className="pn-v2-badge-green">Members Only</span>
+                          <div className="flex items-center gap-1 text-slate-400 text-xs">
+                            <MessageSquare className="w-3.5 h-3.5" />
+                            <span>{disc.replies ?? disc._count?.comments ?? 0}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="pt-3 border-t border-slate-100 dark:border-white/5 text-center">
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("discussions")}
+                      className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline"
+                    >
+                      View All Discussions
+                    </button>
+                  </div>
+                </div>
+
+                {/* 3. MEDIA GALLERY CARD */}
+                <div className="pn-v2-card">
+                  <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-white/5">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-white">
+                        MEDIA GALLERY
+                      </h3>
+                      <span className="text-xs font-bold text-[#16a34a] dark:text-emerald-400">
+                        (MEMBERS ONLY)
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("media")}
+                      className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline"
+                    >
+                      View All
+                    </button>
+                  </div>
+
+                  {/* Filter pills & navigation arrows */}
+                  <div className="flex items-center justify-between py-3">
+                    <div className="flex items-center gap-1.5">
+                      {(["ALL", "PHOTOS", "VIDEOS", "FILES"] as const).map((filter) => (
+                        <button
+                          key={filter}
+                          type="button"
+                          onClick={() => setMediaFilter(filter)}
+                          className={`px-3 py-1 rounded-md text-xs font-bold capitalize transition-all ${
+                            mediaFilter === filter
+                              ? "bg-[#1a56db] text-white shadow-xs"
+                              : "bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10"
+                          }`}
+                        >
+                          {filter === "ALL"
+                            ? "All"
+                            : filter === "PHOTOS"
+                            ? "Photos"
+                            : filter === "VIDEOS"
+                            ? "Videos"
+                            : "Files"}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => scrollMedia("left")}
+                        className="pn-v2-carousel-btn"
+                        aria-label="Previous"
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => scrollMedia("right")}
+                        className="pn-v2-carousel-btn"
+                        aria-label="Next"
+                      >
+                        <ChevronRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Carousel Cards */}
+                  <div ref={mediaCarouselRef} className="pn-v2-carousel-track pt-1 pb-2">
+                    {displayMedia.map((m: any, idx: number) => (
+                      <div
+                        key={m.id || idx}
+                        onClick={() => setSelectedMediaItem(m)}
+                        className="min-w-[190px] max-w-[190px] bg-slate-900 rounded-xl overflow-hidden cursor-pointer group shadow-sm hover:shadow-md transition-all shrink-0"
+                      >
+                        <div className="relative aspect-video bg-slate-800 overflow-hidden">
+                          <img
+                            src={m.thumbnailUrl || m.url || "/pros/tonique-clay.jpg"}
+                            alt={m.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = "/pros/tonique-clay.jpg";
+                            }}
+                          />
+                          <div className="absolute inset-0 bg-black/35 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                            <div className="w-8 h-8 rounded-full bg-white/40 backdrop-blur-md flex items-center justify-center text-white">
+                              <Play className="w-4 h-4 fill-white" />
+                            </div>
+                          </div>
+                          {m.duration && (
+                            <span className="absolute bottom-1.5 right-1.5 bg-black/80 text-white text-[10px] font-bold px-1.5 py-0.2 rounded">
+                              {m.duration}
+                            </span>
+                          )}
+                        </div>
+                        <div className="p-2.5">
+                          <h5 className="text-[11px] font-bold text-white truncate">
+                            {m.title}
+                          </h5>
+                          <div className="text-[10px] text-slate-400 mt-0.5">
+                            {m.date ||
+                              (m.createdAt
+                                ? new Date(m.createdAt).toLocaleDateString()
+                                : "May 2026")}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
-              <aside className="np-details">
-                <section className="np-card np-info"><h3>About this network</h3><p>{network.description}</p><div className="np-info-line"><Lock size={17} /> Private member conversations</div><button className="np-info-line" onClick={() => setActiveTab("members")}><Users size={17} /> {network._count.members} members <ChevronRight size={15} /></button></section>
-                {announcements.length > 0 && <section className="np-card np-info"><h3><Bell size={18} /> Network announcement</h3><strong>{announcements[0].title}</strong><p className="np-announcement">{announcements[0].content}</p></section>}
-                <section className="np-card np-info"><h3><Calendar size={18} /> Events & Pro Talks</h3><p>Make time to connect, learn, and share with your network.</p><button className="pn-button pn-secondary" onClick={() => setActiveTab("events")}>Open calendar <ArrowRight size={16} /></button></section>
-                <section className="np-card np-info"><h3><FolderDown size={18} /> Resource library</h3><p>{network._count.resources} resources shared with this network.</p><button className="np-text-button" onClick={() => setActiveTab("resources")}>Browse resources <ChevronRight size={16} /></button></section>
-              </aside>
+
+              {/* ── RIGHT COLUMN (4 cols / ~34%) ── */}
+              <div className="lg:col-span-4 space-y-6">
+                {/* 1. UPCOMING PRO TALKS CARD */}
+                <div className="pn-v2-card">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-white/5">
+                    <div className="flex items-center gap-1.5">
+                      <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-white">
+                        UPCOMING PRO TALKS
+                      </h3>
+                      <span className="text-xs font-bold text-[#16a34a] dark:text-emerald-400">
+                        (MEMBERS ONLY)
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("protalks")}
+                      className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline"
+                    >
+                      View All
+                    </button>
+                  </div>
+
+                  <div className="space-y-4 pt-3">
+                    {displayProTalks.map((talk: any, idx: number) => (
+                      <div
+                        key={talk.id || idx}
+                        className="p-3.5 rounded-xl border border-slate-100 dark:border-white/5 bg-slate-50/60 dark:bg-white/[0.02] space-y-2.5"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="space-y-1">
+                            {talk.isLive || idx === 0 ? (
+                              <span className="pn-v2-badge-live">
+                                <span className="pn-v2-pulse-dot" /> LIVE
+                              </span>
+                            ) : (
+                              <div className="w-7 h-7 rounded-lg bg-blue-600 text-white flex items-center justify-center">
+                                <Video className="w-4 h-4" />
+                              </div>
+                            )}
+                            <h4 className="text-xs font-bold text-slate-900 dark:text-white leading-snug">
+                              {talk.title}
+                            </h4>
+                          </div>
+                          <img
+                            src={talk.speakerImage || "/pros/tonique-clay.jpg"}
+                            alt=""
+                            className="w-10 h-10 rounded-lg object-cover shrink-0"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src =
+                                "/pros/tonique-clay.jpg";
+                            }}
+                          />
+                        </div>
+
+                        <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400">
+                          <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                          <span>{talk.date}</span>
+                        </div>
+
+                        <div className="flex items-center justify-between pt-1 border-t border-slate-200/50 dark:border-white/5">
+                          <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                            Live on TCP
+                          </span>
+                          <div className="flex items-center gap-2">
+                            {talk.isRegistered || idx === 0 ? (
+                              <span className="inline-flex items-center gap-1 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-500/20">
+                                <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                                <span>You're Registered</span>
+                              </span>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => handleToggleEventRsvp(talk.id)}
+                                className="border border-[#1a56db] text-[#1a56db] hover:bg-blue-50 dark:hover:bg-blue-500/10 text-[11px] font-bold px-3 py-1 rounded-lg transition-colors"
+                              >
+                                Register
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              className="p-1 rounded-lg border border-slate-200 dark:border-white/10 text-slate-500 hover:text-slate-900 dark:hover:text-white"
+                              title="Add to Calendar"
+                            >
+                              <Calendar className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 2. RECENT RESOURCES CARD */}
+                <div className="pn-v2-card">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-white/5">
+                    <div className="flex items-center gap-1.5">
+                      <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-white">
+                        RECENT RESOURCES
+                      </h3>
+                      <span className="text-xs font-bold text-[#16a34a] dark:text-emerald-400">
+                        (MEMBERS ONLY)
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("resources")}
+                      className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline"
+                    >
+                      View All
+                    </button>
+                  </div>
+
+                  <div className="divide-y divide-slate-100 dark:divide-white/5 pt-1">
+                    {displayResources.map((res: any, idx: number) => {
+                      const isRed =
+                        res.color === "red" || (res.fileType === "PDF" && idx === 0);
+                      const isGreen = res.color === "green" || res.fileType === "DOCX";
+                      const isPurple = res.color === "purple" || res.fileType === "VIDEO";
+                      return (
+                        <div
+                          key={res.id || idx}
+                          className="py-3 flex items-center justify-between gap-3 hover:bg-slate-50/80 dark:hover:bg-white/[0.02] px-2 -mx-2 rounded-xl transition-colors"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div
+                              className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-[9px] shrink-0 ${
+                                isRed
+                                  ? "bg-red-50 text-red-600 border border-red-200"
+                                  : isGreen
+                                  ? "bg-emerald-50 text-emerald-600 border border-emerald-200"
+                                  : isPurple
+                                  ? "bg-blue-50 text-blue-600 border border-blue-200"
+                                  : "bg-sky-50 text-sky-600 border border-sky-200"
+                              }`}
+                            >
+                              {res.type || res.fileType || "PDF"}
+                            </div>
+                            <div className="min-w-0">
+                              <h5 className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                                {res.title}
+                              </h5>
+                              <div className="text-[10px] text-slate-400 uppercase font-semibold">
+                                {res.type || res.fileType || "PDF"}
+                              </div>
+                            </div>
+                          </div>
+
+                          <a
+                            href={res.fileUrl || "#"}
+                            download
+                            className="p-1.5 rounded-lg border border-slate-200 dark:border-white/10 text-slate-500 hover:text-blue-600 hover:border-blue-500 transition-colors shrink-0"
+                            title="Download Resource"
+                          >
+                            <Download className="w-3.5 h-3.5" />
+                          </a>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* 3. NETWORK MEMBERS CARD */}
+                <div className="pn-v2-card">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-white/5">
+                    <div className="flex items-center gap-1.5">
+                      <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-white">
+                        NETWORK MEMBERS ({(network.memberCount || 1246).toLocaleString()})
+                      </h3>
+                      <span className="text-xs font-bold text-[#16a34a] dark:text-emerald-400">
+                        (MEMBERS ONLY)
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("members")}
+                      className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline"
+                    >
+                      View All
+                    </button>
+                  </div>
+
+                  <div className="divide-y divide-slate-100 dark:divide-white/5 pt-1">
+                    {displayMembers.map((m: any, idx: number) => (
+                      <div
+                        key={m.id || idx}
+                        className="py-2.5 flex items-center justify-between gap-3 hover:bg-slate-50/80 dark:hover:bg-white/[0.02] px-2 -mx-2 rounded-xl transition-colors"
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <img
+                            src={m.image || m.user?.image || "/pros/tonique-clay.jpg"}
+                            alt=""
+                            className="w-8 h-8 rounded-full object-cover shrink-0"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src =
+                                "/pros/tonique-clay.jpg";
+                            }}
+                          />
+                          <div className="min-w-0">
+                            <h5 className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                              {m.name || m.user?.name || "Member"}
+                            </h5>
+                            <div className="text-[10px] text-slate-400 truncate">
+                              {m.location || m.user?.location || "Houston, TX"}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-500/20">
+                            Active
+                          </span>
+                          <Link
+                            href={`/messages?userId=${m.user?.id || m.id}`}
+                            className="p-1.5 rounded-lg border border-slate-200 dark:border-white/10 text-slate-500 hover:text-blue-600 hover:border-blue-500 transition-colors"
+                            title="Send Message"
+                          >
+                            <MessageSquare className="w-3.5 h-3.5" />
+                          </Link>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="pt-3 border-t border-slate-100 dark:border-white/5 text-center">
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("members")}
+                      className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline"
+                    >
+                      See All Members
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
+          {/* ═════════ TAB 2: DISCUSSIONS FULL TAB ═════════ */}
+          {currentTab === "discussions" &&
+            (!network.isMember && !network.isOwner ? (
+              renderPaywall(
+                "Discussions & Audit Strategy Board",
+                "Join to participate in client review discussions, case questions, and audit strategies.",
+              )
+            ) : (
+              <div className="pn-v2-card">
+                <NetworkPosts
+                  slug={slug}
+                  posts={filteredDiscussions}
+                  user={session?.user}
+                  loading={postsLoading}
+                  loadError={postsError}
+                  onRetry={fetchPosts}
+                  canPost={network.isMember || network.isOwner}
+                  searching={Boolean(searchQuery)}
+                  onCreated={(post) => {
+                    setDiscussions((prev) => [post, ...prev]);
+                    setNetwork((prev) =>
+                      prev
+                        ? {
+                            ...prev,
+                            _count: {
+                              ...prev._count,
+                              discussions: prev._count.discussions + 1,
+                            },
+                          }
+                        : prev,
+                    );
+                  }}
+                />
+              </div>
+            ))}
+
+          {/* ═════════ TAB 3: MEDIA FULL TAB ═════════ */}
           {currentTab === "media" &&
             (!network.isMember && !network.isOwner ? (
               renderPaywall(
@@ -1205,15 +1954,14 @@ export default function ProNetworkHubPage({
                 "Recorded workshops, backstage recaps, and video breakdowns.",
               )
             ) : (
-              <div className="bg-white dark:bg-[#121e33] border border-slate-200 dark:border-white/10 rounded-3xl p-6 shadow-sm space-y-6">
+              <div className="pn-v2-card space-y-6">
                 <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-4">
                   <div>
                     <h3 className="text-lg font-black text-slate-900 dark:text-white">
                       Media &amp; Video Recordings
                     </h3>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                      Recorded workshops, backstage recaps, and video
-                      breakdowns.
+                      Recorded workshops, backstage recaps, and video breakdowns.
                     </p>
                   </div>
 
@@ -1221,7 +1969,7 @@ export default function ProNetworkHubPage({
                     <button
                       type="button"
                       onClick={() => setShowUploadMediaModal(true)}
-                      className="bg-blue-600 hover:bg-blue-500 text-white font-black text-xs px-4 py-2.5 rounded-full shadow-md flex items-center gap-1.5"
+                      className="bg-[#1a56db] hover:bg-blue-700 text-white font-black text-xs px-4 py-2.5 rounded-full shadow-md flex items-center gap-1.5"
                     >
                       <Plus className="w-4 h-4" />
                       <span>Upload Media</span>
@@ -1241,7 +1989,7 @@ export default function ProNetworkHubPage({
                       <button
                         type="button"
                         onClick={() => setShowUploadMediaModal(true)}
-                        className="px-5 py-2.5 rounded-full bg-blue-600 text-white font-bold text-xs"
+                        className="px-5 py-2.5 rounded-full bg-[#1a56db] text-white font-bold text-xs"
                       >
                         Upload First Video / Photo
                       </button>
@@ -1256,8 +2004,7 @@ export default function ProNetworkHubPage({
                         className="group rounded-2xl overflow-hidden bg-slate-900 cursor-pointer shadow-md hover:shadow-xl transition-all"
                       >
                         <div className="relative h-44 bg-slate-800">
-                          {item.thumbnailUrl ||
-                          (item.type === "PHOTO" && item.url) ? (
+                          {item.thumbnailUrl || (item.type === "PHOTO" && item.url) ? (
                             <img
                               src={item.thumbnailUrl || item.url}
                               alt={item.title}
@@ -1282,9 +2029,7 @@ export default function ProNetworkHubPage({
                           )}
                         </div>
                         <div className="p-4 bg-slate-900 text-white">
-                          <h4 className="text-xs font-black truncate">
-                            {item.title}
-                          </h4>
+                          <h4 className="text-xs font-black truncate">{item.title}</h4>
                           <p className="text-[10px] text-slate-400 mt-1">
                             {new Date(item.createdAt).toLocaleDateString()}
                           </p>
@@ -1296,7 +2041,7 @@ export default function ProNetworkHubPage({
               </div>
             ))}
 
-          {/* ── TAB 4: RESOURCES FULL TAB ── */}
+          {/* ═════════ TAB 4: RESOURCES FULL TAB ═════════ */}
           {currentTab === "resources" &&
             (!network.isMember && !network.isOwner ? (
               renderPaywall(
@@ -1304,15 +2049,15 @@ export default function ProNetworkHubPage({
                 "Download proprietary guides, questionnaires, checklists, and templates.",
               )
             ) : (
-              <div className="bg-white dark:bg-[#121e33] border border-slate-200 dark:border-white/10 rounded-3xl p-6 shadow-sm space-y-6">
+              <div className="pn-v2-card space-y-6">
                 <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-4">
                   <div>
                     <h3 className="text-lg font-black text-slate-900 dark:text-white">
                       Exclusive Resource Vault
                     </h3>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                      Download proprietary guides, questionnaires, checklists,
-                      and templates.
+                      Download proprietary guides, questionnaires, checklists, and
+                      templates.
                     </p>
                   </div>
 
@@ -1320,7 +2065,7 @@ export default function ProNetworkHubPage({
                     <button
                       type="button"
                       onClick={() => setShowUploadResourceModal(true)}
-                      className="bg-blue-600 hover:bg-blue-500 text-white font-black text-xs px-4 py-2.5 rounded-full shadow-md flex items-center gap-1.5"
+                      className="bg-[#1a56db] hover:bg-blue-700 text-white font-black text-xs px-4 py-2.5 rounded-full shadow-md flex items-center gap-1.5"
                     >
                       <Plus className="w-4 h-4" />
                       <span>Upload Resource File</span>
@@ -1340,7 +2085,7 @@ export default function ProNetworkHubPage({
                       <button
                         type="button"
                         onClick={() => setShowUploadResourceModal(true)}
-                        className="px-5 py-2.5 rounded-full bg-blue-600 text-white font-bold text-xs"
+                        className="px-5 py-2.5 rounded-full bg-[#1a56db] text-white font-bold text-xs"
                       >
                         Upload First Resource File
                       </button>
@@ -1359,8 +2104,7 @@ export default function ProNetworkHubPage({
                         <div>
                           <div className="flex items-center justify-between mb-2">
                             <span className="text-[10px] font-black uppercase px-2.5 py-1 rounded-lg bg-blue-600/10 text-blue-600 dark:text-blue-400">
-                              {item.fileType}{" "}
-                              {item.fileSize ? `• ${item.fileSize}` : ""}
+                              {item.fileType} {item.fileSize ? `• ${item.fileSize}` : ""}
                             </span>
                             <Download className="w-4 h-4 text-slate-400 group-hover:text-blue-500 transition-colors" />
                           </div>
@@ -1385,11 +2129,21 @@ export default function ProNetworkHubPage({
               </div>
             ))}
 
+          {/* ═════════ TAB 5: EVENTS / PRO TALKS ═════════ */}
           {(currentTab === "events" || currentTab === "protalks") &&
-            (!network.isMember && !network.isOwner ? renderPaywall("Network events", "Join to attend live events and workshops.") :
-              <NetworkEvents slug={slug} isOwner={canManage} onEventsChange={setEventsList} />)}
+            (!network.isMember && !network.isOwner ? (
+              renderPaywall("Network events", "Join to attend live events and workshops.")
+            ) : (
+              <div className="pn-v2-card">
+                <NetworkEvents
+                  slug={slug}
+                  isOwner={canManage}
+                  onEventsChange={setEventsList}
+                />
+              </div>
+            ))}
 
-          {/* ── TAB 6: MEMBERS CHAT ── */}
+          {/* ═════════ TAB 6: MEMBERS CHAT ═════════ */}
           {currentTab === "chat" &&
             (!network.isMember && !network.isOwner ? (
               renderPaywall(
@@ -1397,7 +2151,7 @@ export default function ProNetworkHubPage({
                 "Chat in real-time with verified network members.",
               )
             ) : (
-              <div className="pn-member-chat bg-white dark:bg-[#121e33] border border-slate-200 dark:border-white/10 rounded-3xl overflow-hidden shadow-sm flex flex-col h-[650px]">
+              <div className="pn-v2-card overflow-hidden flex flex-col h-[650px] p-0">
                 {/* Channel Header Bar */}
                 <div className="p-4 bg-slate-100 dark:bg-slate-900/60 border-b border-slate-200 dark:border-white/10 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2 overflow-x-auto">
@@ -1414,7 +2168,7 @@ export default function ProNetworkHubPage({
                         onClick={() => setChatChannel(ch.id)}
                         className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
                           chatChannel === ch.id
-                            ? "bg-blue-600 text-white font-black"
+                            ? "bg-[#1a56db] text-white font-black"
                             : "text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10"
                         }`}
                       >
@@ -1433,9 +2187,7 @@ export default function ProNetworkHubPage({
                   {filteredChat.length === 0 ? (
                     <div className="text-center py-16 text-xs text-slate-400 space-y-2">
                       <MessagesSquare className="w-8 h-8 text-slate-400 mx-auto" />
-                      <p className="font-bold">
-                        Welcome to the #{chatChannel} channel!
-                      </p>
+                      <p className="font-bold">Welcome to the #{chatChannel} channel!</p>
                       <p>Be the first member to say hello.</p>
                     </div>
                   ) : (
@@ -1489,7 +2241,7 @@ export default function ProNetworkHubPage({
                   />
                   <button
                     type="submit"
-                    className="p-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white shadow-md transition-all shrink-0"
+                    className="p-2.5 rounded-xl bg-[#1a56db] hover:bg-blue-700 text-white shadow-md transition-all shrink-0"
                   >
                     <Send className="w-4 h-4" />
                   </button>
@@ -1497,7 +2249,7 @@ export default function ProNetworkHubPage({
               </div>
             ))}
 
-          {/* ── TAB 7: MEMBERS DIRECTORY ── */}
+          {/* ═════════ TAB 7: MEMBERS DIRECTORY ═════════ */}
           {currentTab === "members" &&
             (!network.isMember && !network.isOwner ? (
               renderPaywall(
@@ -1505,23 +2257,22 @@ export default function ProNetworkHubPage({
                 "Connect and collaborate directly with fellow network members.",
               )
             ) : (
-              <div className="bg-white dark:bg-[#121e33] border border-slate-200 dark:border-white/10 rounded-3xl p-6 shadow-sm space-y-6">
+              <div className="pn-v2-card space-y-6">
                 <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-4 flex-wrap gap-3">
                   <div>
                     <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
                       <Users className="w-5 h-5 text-amber-500" />
                       <span>
-                        Network Member Directory (
-                        {network.memberCount.toLocaleString()})
+                        Network Member Directory ({network.memberCount.toLocaleString()})
                       </span>
                     </h3>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                      Connect, hover, and collaborate directly with fellow
-                      network members.
+                      Connect, hover, and collaborate directly with fellow network
+                      members.
                     </p>
                   </div>
 
-                  {/* View Switcher: Bubble Galaxy vs Directory Grid */}
+                  {/* View Switcher */}
                   <div className="flex items-center p-1 rounded-xl bg-slate-100 dark:bg-white/10 text-xs font-bold">
                     <button
                       type="button"
@@ -1550,8 +2301,15 @@ export default function ProNetworkHubPage({
                   </div>
                 </div>
 
-                <ProfessionalTitleEditor onSaved={() => { fetch(`/api/pro-networks/${slug}/members`).then(r => r.json()).then(data => setMembersList(data.members || [])).catch(() => {}); }} />
-                {/* ── BUBBLE GALAXY VIEW ── */}
+                <ProfessionalTitleEditor
+                  onSaved={() => {
+                    fetch(`/api/pro-networks/${slug}/members`)
+                      .then((r) => r.json())
+                      .then((data) => setMembersList(data.members || []))
+                      .catch(() => {});
+                  }}
+                />
+
                 {memberViewMode === "bubble" ? (
                   <MemberBubbleCloud
                     members={filteredMembers}
@@ -1560,7 +2318,6 @@ export default function ProNetworkHubPage({
                     onInviteClick={() => setShowInviteModal(true)}
                   />
                 ) : (
-                  /* ── TRADITIONAL DIRECTORY GRID VIEW ── */
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                     {filteredMembers.map((m) => (
                       <div
@@ -1577,9 +2334,7 @@ export default function ProNetworkHubPage({
                               />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center font-black text-sm text-amber-400">
-                                {m.user.name
-                                  ? m.user.name[0].toUpperCase()
-                                  : "?"}
+                                {m.user.name ? m.user.name[0].toUpperCase() : "?"}
                               </div>
                             )}
                           </div>
@@ -1591,7 +2346,8 @@ export default function ProNetworkHubPage({
                               )}
                             </h4>
                             <p className="text-[10px] text-slate-400 truncate">
-                              {m.user.professionalTitle || m.user.headline ||
+                              {m.user.professionalTitle ||
+                                m.user.headline ||
                                 m.user.location ||
                                 "Tax Professional"}
                             </p>
@@ -1623,17 +2379,17 @@ export default function ProNetworkHubPage({
               </div>
             ))}
 
-          {/* ── TAB 8: OWNER MANAGEMENT DASHBOARD ── */}
+          {/* ═════════ TAB 8: OWNER MANAGEMENT DASHBOARD ═════════ */}
           {currentTab === "manage" && canManage && (
-            <div className="bg-white dark:bg-[#121e33] border border-slate-200 dark:border-white/10 rounded-3xl p-6 shadow-sm space-y-6">
+            <div className="pn-v2-card space-y-6">
               <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-4">
                 <div>
                   <h3 className="text-lg font-black text-slate-900 dark:text-white">
                     Network Owner Management Dashboard
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                    Track members, subscription earnings (0% TCP fee), and
-                    upload exclusive content.
+                    Track members, subscription earnings (0% TCP fee), and upload exclusive
+                    content.
                   </p>
                 </div>
               </div>
@@ -1641,23 +2397,17 @@ export default function ProNetworkHubPage({
               {/* Key Metrics Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/5 space-y-1">
-                  <span className="text-xs text-slate-400 font-bold">
-                    Total Members
-                  </span>
+                  <span className="text-xs text-slate-400 font-bold">Total Members</span>
                   <div className="text-2xl font-black text-slate-900 dark:text-white">
                     {network.memberCount.toLocaleString()}
                   </div>
                 </div>
 
                 <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/5 space-y-1">
-                  <span className="text-xs text-slate-400 font-bold">
-                    Monthly Revenue
-                  </span>
+                  <span className="text-xs text-slate-400 font-bold">Monthly Revenue</span>
                   <div className="text-2xl font-black text-emerald-500">
                     $
-                    {(
-                      network.memberCount * network.monthlyPrice
-                    ).toLocaleString("en-US", {
+                    {(network.memberCount * network.monthlyPrice).toLocaleString("en-US", {
                       minimumFractionDigits: 2,
                     })}
                   </div>
@@ -1667,9 +2417,7 @@ export default function ProNetworkHubPage({
                 </div>
 
                 <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/5 space-y-1">
-                  <span className="text-xs text-slate-400 font-bold">
-                    Total Followers
-                  </span>
+                  <span className="text-xs text-slate-400 font-bold">Total Followers</span>
                   <div className="text-2xl font-black text-slate-900 dark:text-white">
                     {network.followerCount.toLocaleString()}
                   </div>
@@ -1677,9 +2425,7 @@ export default function ProNetworkHubPage({
 
                 <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/5 space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-slate-400 font-bold">
-                      Monthly Price
-                    </span>
+                    <span className="text-xs text-slate-400 font-bold">Monthly Price</span>
                     <button
                       type="button"
                       onClick={openEditPricingModal}
@@ -1697,7 +2443,7 @@ export default function ProNetworkHubPage({
                 </div>
               </div>
 
-              {/* Pricing Update Success Alert */}
+              {/* Pricing Success Alert */}
               {pricingSuccessMsg && (
                 <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs font-bold flex items-center justify-between">
                   <span className="flex items-center gap-2">
@@ -1714,10 +2460,33 @@ export default function ProNetworkHubPage({
                 </div>
               )}
 
-              <NetworkDetailsSettings slug={slug} initial={{name:network.name,tagline:network.tagline,description:network.description,rules:network.rules,welcomeMessage:network.welcomeMessage}} onSaved={details => setNetwork(previous => previous ? {...previous,...details} : previous)} />
-              <NetworkBranding slug={slug} initial={{accentColor:network.accentColor || "#65a832", logoImage:network.logoImage, coverImage:network.coverImage}} onSaved={branding => setNetwork(previous => previous ? {...previous,...branding} : previous)} />
-              <section className="pn-settings-card"><h3>Bots &amp; integrations</h3><p>Network-specific bots are not available yet. You can open Atlas AI from the site navigation for personal assistance.</p></section>
-              {/* ── Network Pricing & Subscription Model Settings ── */}
+              <NetworkDetailsSettings
+                slug={slug}
+                initial={{
+                  name: network.name,
+                  tagline: network.tagline,
+                  description: network.description,
+                  rules: network.rules,
+                  welcomeMessage: network.welcomeMessage,
+                }}
+                onSaved={(details) =>
+                  setNetwork((prev) => (prev ? { ...prev, ...details } : prev))
+                }
+              />
+
+              <NetworkBranding
+                slug={slug}
+                initial={{
+                  accentColor: network.accentColor || "#1a56db",
+                  logoImage: network.logoImage,
+                  coverImage: network.coverImage,
+                }}
+                onSaved={(branding) =>
+                  setNetwork((prev) => (prev ? { ...prev, ...branding } : prev))
+                }
+              />
+
+              {/* Pricing Model Settings */}
               <div className="bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-6 space-y-4">
                 <div className="flex items-start sm:items-center justify-between gap-4 flex-col sm:flex-row border-b border-slate-200/60 dark:border-white/10 pb-4">
                   <div className="flex items-center gap-3">
@@ -1742,8 +2511,8 @@ export default function ProNetworkHubPage({
                         </span>
                       </div>
                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                        Set your membership dues or make this Pro Network free
-                        to join anytime. Changes apply to new signups; existing subscriptions retain their current billing terms.
+                        Set your membership dues or make this Pro Network free to join
+                        anytime.
                       </p>
                     </div>
                   </div>
@@ -1751,61 +2520,20 @@ export default function ProNetworkHubPage({
                   <button
                     type="button"
                     onClick={openEditPricingModal}
-                    className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-[#0a1628] font-black text-xs px-5 py-2.5 rounded-xl transition-all shadow-md hover:scale-105 active:scale-95 shrink-0"
+                    className="inline-flex items-center gap-2 bg-[#1a56db] hover:bg-blue-700 text-white font-black text-xs px-5 py-2.5 rounded-xl transition-all shadow-md shrink-0"
                   >
                     <Pencil className="w-4 h-4" />
                     <span>Change Network Pricing</span>
                   </button>
                 </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
-                  <div className="p-4 rounded-xl bg-white dark:bg-black/20 border border-slate-200/60 dark:border-white/5 space-y-1">
-                    <div className="text-[10px] uppercase tracking-wider text-slate-400 font-black">
-                      Current Access Mode
-                    </div>
-                    <div className="text-sm font-black text-slate-900 dark:text-white">
-                      {network.monthlyPrice <= 0
-                        ? "Free Network ($0.00/mo)"
-                        : `$${network.monthlyPrice.toFixed(2)} USD / month`}
-                    </div>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                      {network.monthlyPrice <= 0
-                        ? "Members can join immediately with zero payment or credit card entry."
-                        : "Subscribers pay via Stripe. Dues are charged directly to your connected account; Stripe deducts its processing fees and the platform takes 0%."}
-                    </p>
-                  </div>
-
-                  <div className="p-4 rounded-xl bg-white dark:bg-black/20 border border-slate-200/60 dark:border-white/5 space-y-1">
-                    <div className="text-[10px] uppercase tracking-wider text-slate-400 font-black">
-                      Projected Monthly Earnings
-                    </div>
-                    <div className="text-sm font-black text-emerald-500">
-                      $
-                      {(
-                        network.memberCount * network.monthlyPrice
-                      ).toLocaleString("en-US", {
-                        minimumFractionDigits: 2,
-                      })}
-                      /mo
-                    </div>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                      Based on {network.memberCount} active member
-                      {network.memberCount === 1 ? "" : "s"} with 0% platform
-                      commission taken by TCP.
-                    </p>
-                  </div>
-                </div>
               </div>
 
-              {/* ── Host Stripe Connect Integration Card (0% Platform Fee) ── */}
+              {/* Host Stripe Connect Card */}
               <div className="bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-6 space-y-5">
                 <div className="flex items-start sm:items-center justify-between gap-4 flex-col sm:flex-row border-b border-slate-200/60 dark:border-white/10 pb-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-[#6772e5]/15 flex items-center justify-center shrink-0">
-                      <svg
-                        viewBox="0 0 24 24"
-                        className="w-5 h-5 fill-[#6772e5]"
-                      >
+                      <svg viewBox="0 0 24 24" className="w-5 h-5 fill-[#6772e5]">
                         <path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.667 0 7.589.654 6.104 1.872 4.56 3.147 3.757 4.992 3.757 7.218c0 4.039 2.467 5.76 6.476 7.219 2.585.92 3.445 1.574 3.445 2.583 0 .98-.84 1.545-2.354 1.545-1.875 0-4.965-.921-6.99-2.109l-.9 5.555C5.175 22.99 8.385 24 11.714 24c2.641 0 4.843-.624 6.328-1.813 1.664-1.305 2.525-3.236 2.525-5.732 0-4.128-2.524-5.851-6.591-7.305z" />
                       </svg>
                     </div>
@@ -1816,14 +2544,11 @@ export default function ProNetworkHubPage({
                         </h4>
                         {stripeStatus?.connected && stripeStatus?.onboarded ? (
                           <span className="flex items-center gap-1 text-[11px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-0.5 rounded-full">
-                            <CheckCircle2 className="w-3 h-3" /> Connected &amp;
-                            Active
+                            <CheckCircle2 className="w-3 h-3" /> Connected &amp; Active
                           </span>
-                        ) : stripeStatus?.connected &&
-                          !stripeStatus?.onboarded ? (
+                        ) : stripeStatus?.connected && !stripeStatus?.onboarded ? (
                           <span className="flex items-center gap-1 text-[11px] font-bold text-amber-600 bg-amber-50 dark:bg-amber-500/10 px-2.5 py-0.5 rounded-full">
-                            <AlertCircle className="w-3 h-3" /> Incomplete
-                            Onboarding
+                            <AlertCircle className="w-3 h-3" /> Incomplete Onboarding
                           </span>
                         ) : (
                           <span className="flex items-center gap-1 text-[11px] font-bold text-rose-600 bg-rose-50 dark:bg-rose-500/10 px-2.5 py-0.5 rounded-full">
@@ -1832,74 +2557,13 @@ export default function ProNetworkHubPage({
                         )}
                       </div>
                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                        Receive member subscription payments directly; Stripe processing fees are deducted from your account
-                        into your bank account (0% TCP platform cut).
+                        Receive member subscription payments directly; Stripe processing
+                        fees are deducted from your account (0% TCP platform cut).
                       </p>
                     </div>
                   </div>
                 </div>
 
-                {/* Warning if not connected */}
-                {(!stripeStatus?.connected || !stripeStatus?.onboarded) && (
-                  <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-300 text-xs font-semibold flex items-start gap-3">
-                    <AlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
-                    <div>
-                      <div className="font-bold text-sm text-amber-900 dark:text-amber-200">
-                        Connect your Stripe account to receive direct member
-                        payouts
-                      </div>
-                      <p className="mt-0.5 text-xs text-slate-600 dark:text-slate-300">
-                        When members pay ${network.monthlyPrice.toFixed(2)}/mo
-                        to join your Pro Network, Stripe routes 100% of the
-                        recurring membership revenue directly into your
-                        connected bank account.
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Account Details if connected */}
-                {stripeStatus?.connected && stripeStatus?.accountDetails && (
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    {[
-                      {
-                        label: "Stripe Email",
-                        value: stripeStatus.accountDetails.email ?? "—",
-                      },
-                      {
-                        label: "Charges",
-                        value: stripeStatus.accountDetails.chargesEnabled
-                          ? "Enabled"
-                          : "Disabled",
-                      },
-                      {
-                        label: "Payouts",
-                        value: stripeStatus.accountDetails.payoutsEnabled
-                          ? "Enabled"
-                          : "Disabled",
-                      },
-                      {
-                        label: "Account ID",
-                        value:
-                          (stripeStatus.accountId?.slice(0, 16) ?? "—") + "…",
-                      },
-                    ].map((s) => (
-                      <div
-                        key={s.label}
-                        className="bg-white dark:bg-black/20 rounded-xl px-3.5 py-2.5 border border-slate-200/60 dark:border-white/5"
-                      >
-                        <div className="text-[10px] text-slate-400 font-semibold">
-                          {s.label}
-                        </div>
-                        <div className="text-xs font-bold text-slate-900 dark:text-white truncate">
-                          {s.value}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Action Buttons */}
                 <div className="flex items-center gap-3 flex-wrap pt-1">
                   {!stripeStatus?.connected ? (
                     <button
@@ -1914,111 +2578,125 @@ export default function ProNetworkHubPage({
                         <ExternalLink className="w-4 h-4" />
                       )}
                       <span>
-                        {connectingStripe
-                          ? "Connecting..."
-                          : "Connect Stripe Account"}
+                        {connectingStripe ? "Connecting..." : "Connect Stripe Account"}
                       </span>
                     </button>
                   ) : (
                     <>
-                      {!stripeStatus?.onboarded && (
-                        <button
-                          type="button"
-                          onClick={handleConnectStripe}
-                          disabled={connectingStripe}
-                          className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs px-5 py-2.5 rounded-xl transition-all disabled:opacity-60"
-                        >
-                          {connectingStripe ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <AlertCircle className="w-4 h-4" />
-                          )}
-                          <span>
-                            {connectingStripe
-                              ? "Loading..."
-                              : "Complete Stripe Onboarding"}
-                          </span>
-                        </button>
-                      )}
                       <button
                         type="button"
                         onClick={handleDisconnectStripe}
                         disabled={disconnectingStripe}
-                        className="inline-flex items-center gap-2 text-rose-500 bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20 font-bold text-xs px-4 py-2.5 rounded-xl transition-all disabled:opacity-60"
+                        className="inline-flex items-center gap-2 text-rose-500 bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 font-bold text-xs px-4 py-2.5 rounded-xl transition-all disabled:opacity-60"
                       >
-                        {disconnectingStripe ? (
+                        {disconnectingStripe && (
                           <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : null}
-                        <span>
-                          {disconnectingStripe
-                            ? "Disconnecting..."
-                            : "Disconnect Stripe"}
-                        </span>
+                        )}
+                        <span>Disconnect Stripe</span>
                       </button>
                     </>
                   )}
                 </div>
               </div>
-
-              {/* Direct Actions Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowUploadMediaModal(true)}
-                  className="p-5 rounded-2xl border border-slate-200 dark:border-white/10 hover:border-blue-500 bg-slate-50 dark:bg-white/5 transition-all text-left space-y-2 group"
-                >
-                  <Video className="w-6 h-6 text-blue-500" />
-                  <h4 className="text-xs font-black text-slate-900 dark:text-white group-hover:text-blue-500">
-                    Upload Video / Media
-                  </h4>
-                  <p className="text-[11px] text-slate-400">
-                    Upload masterclass recordings and training clips via
-                    Cloudinary.
-                  </p>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setShowUploadResourceModal(true)}
-                  className="p-5 rounded-2xl border border-slate-200 dark:border-white/10 hover:border-emerald-500 bg-slate-50 dark:bg-white/5 transition-all text-left space-y-2 group"
-                >
-                  <FolderDown className="w-6 h-6 text-emerald-500" />
-                  <h4 className="text-xs font-black text-slate-900 dark:text-white group-hover:text-emerald-500">
-                    Upload Resource File
-                  </h4>
-                  <p className="text-[11px] text-slate-400">
-                    Add PDFs, checklists, and templates to the members vault.
-                  </p>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("events")}
-                  className="p-5 rounded-2xl border border-slate-200 dark:border-white/10 hover:border-rose-500 bg-slate-50 dark:bg-white/5 transition-all text-left space-y-2 group"
-                >
-                  <Radio className="w-6 h-6 text-rose-500" />
-                  <h4 className="text-xs font-black text-slate-900 dark:text-white group-hover:text-rose-500">
-                    Host Live Pro Talk
-                  </h4>
-                  <p className="text-[11px] text-slate-400">
-                    Go live instantly or schedule an exclusive workshop on TCP.
-                  </p>
-                </button>
-              </div>
             </div>
           )}
 
-          {/* ── BOTTOM ACCESS STATUS BANNER ── */}
-          <div className="bg-white dark:bg-[#121e33] border border-slate-200 dark:border-white/10 rounded-2xl p-4 text-center text-xs font-bold text-slate-500 dark:text-slate-400 shadow-sm flex items-center justify-center gap-2">
+          {/* ── BOTTOM ACCESS BANNER ── */}
+          <div className="mt-8 bg-white dark:bg-[#0e172a] border border-slate-200 dark:border-white/10 rounded-2xl p-4 text-center text-xs font-semibold text-slate-600 dark:text-slate-300 shadow-sm flex items-center justify-center gap-2">
             <Lock className="w-3.5 h-3.5 text-blue-500" />
             <span>
-              {network.isMember
+              {network.isMember || network.isOwner
                 ? `You have full access as an active member of ${network.name}. Thank you for being part of our community!`
                 : `Join ${network.name} (${network.monthlyPrice > 0 ? `$${network.monthlyPrice.toFixed(2)}/mo` : "FREE"}) to unlock full access to all private feeds, resources, and live Pro Talks.`}
             </span>
           </div>
-        </main>
+        </div>
       </div>
+
+      {/* ── FLOATING ACTION BUTTON (+ New Post) ── */}
+      <button
+        type="button"
+        onClick={() => setShowNewDiscussionModal(true)}
+        className="pn-v2-fab"
+        title="Create New Post"
+      >
+        <Pencil className="w-4 h-4" />
+        <span>+ New Post</span>
+      </button>
+
+      {/* ── MODAL: Create New Discussion / Post ── */}
+      {showNewDiscussionModal && (
+        <div className="pn-modal fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <div className="bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-3">
+              <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+                <MessageSquare className="w-5 h-5 text-blue-500" />
+                <span>Start a New Discussion</span>
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowNewDiscussionModal(false)}
+                className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateDiscussion} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Discussion Topic / Title *
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. IRS Appeals: What tax pros need to know"
+                  value={newDiscussionTitle}
+                  onChange={(e) => setNewDiscussionTitle(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold bg-slate-50 dark:bg-black/20"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Details &amp; Context
+                </label>
+                <textarea
+                  rows={4}
+                  placeholder="Share your thoughts, ask a question, or provide audit insights..."
+                  value={newDiscussionContent}
+                  onChange={(e) => setNewDiscussionContent(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-medium bg-slate-50 dark:bg-black/20"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowNewDiscussionModal(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-white/5"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={creatingDiscussion}
+                  className="px-5 py-2.5 rounded-xl bg-[#1a56db] text-white text-xs font-black hover:bg-blue-600 disabled:opacity-50 flex items-center gap-2 shadow-md"
+                >
+                  {creatingDiscussion ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Posting...</span>
+                    </>
+                  ) : (
+                    <span>Post Discussion</span>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* ── MODAL: Upload Media (Cloudinary) ── */}
       {showUploadMediaModal && (
@@ -2032,7 +2710,7 @@ export default function ProNetworkHubPage({
               <button
                 type="button"
                 onClick={() => setShowUploadMediaModal(false)}
-                className="p-1 text-slate-400 hover:text-slate-600"
+                className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-white"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -2104,9 +2782,7 @@ export default function ProNetworkHubPage({
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={(e) =>
-                    setMediaThumbnailFile(e.target.files?.[0] || null)
-                  }
+                  onChange={(e) => setMediaThumbnailFile(e.target.files?.[0] || null)}
                   className="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200"
                 />
               </div>
@@ -2115,14 +2791,14 @@ export default function ProNetworkHubPage({
                 <button
                   type="button"
                   onClick={() => setShowUploadMediaModal(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100"
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 dark:text-slate-400"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={uploadingMedia}
-                  className="px-5 py-2.5 rounded-xl bg-blue-600 text-white text-xs font-black hover:bg-blue-500 disabled:opacity-50 flex items-center gap-2"
+                  className="px-5 py-2.5 rounded-xl bg-[#1a56db] text-white text-xs font-black hover:bg-blue-600 disabled:opacity-50 flex items-center gap-2"
                 >
                   {uploadingMedia ? (
                     <>
@@ -2151,7 +2827,7 @@ export default function ProNetworkHubPage({
               <button
                 type="button"
                 onClick={() => setShowUploadResourceModal(false)}
-                className="p-1 text-slate-400 hover:text-slate-600"
+                className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-white"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -2218,7 +2894,7 @@ export default function ProNetworkHubPage({
                 <button
                   type="button"
                   onClick={() => setShowUploadResourceModal(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100"
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 dark:text-slate-400"
                 >
                   Cancel
                 </button>
@@ -2242,7 +2918,7 @@ export default function ProNetworkHubPage({
         </div>
       )}
 
-      {/* ── MODAL: Host / Schedule Pro Talk (TCP Pro Talks Integration) ── */}
+      {/* ── MODAL: Host / Schedule Pro Talk ── */}
       {showHostProTalkModal && (
         <div className="pn-modal fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
           <div className="bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-4">
@@ -2254,7 +2930,7 @@ export default function ProNetworkHubPage({
               <button
                 type="button"
                 onClick={() => setShowHostProTalkModal(false)}
-                className="p-1 text-slate-400 hover:text-slate-600"
+                className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-white"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -2335,7 +3011,7 @@ export default function ProNetworkHubPage({
                 <button
                   type="button"
                   onClick={() => setShowHostProTalkModal(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100"
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 dark:text-slate-400"
                 >
                   Cancel
                 </button>
@@ -2351,9 +3027,7 @@ export default function ProNetworkHubPage({
                     </>
                   ) : (
                     <span>
-                      {isGoLiveImmediate
-                        ? "Launch Live Room Now"
-                        : "Schedule Pro Talk"}
+                      {isGoLiveImmediate ? "Launch Live Room Now" : "Schedule Pro Talk"}
                     </span>
                   )}
                 </button>
@@ -2376,23 +3050,20 @@ export default function ProNetworkHubPage({
             </h3>
 
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Share your direct network link to enroll colleagues and
-              practitioners.
+              Share your direct network link to enroll colleagues and practitioners.
             </p>
 
             <div className="flex gap-2">
               <input
                 type="text"
                 readOnly
-                value={
-                  typeof window !== "undefined" ? window.location.href : ""
-                }
+                value={typeof window !== "undefined" ? window.location.href : ""}
                 className="flex-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-300 select-all"
               />
               <button
                 type="button"
                 onClick={handleCopyInviteLink}
-                className="px-4 py-2 rounded-xl bg-blue-600 text-white font-black text-xs shrink-0 hover:bg-blue-500"
+                className="px-4 py-2 rounded-xl bg-[#1a56db] text-white font-black text-xs shrink-0 hover:bg-blue-600"
               >
                 {copiedLink ? "Copied!" : "Copy Link"}
               </button>
@@ -2414,9 +3085,7 @@ export default function ProNetworkHubPage({
         <div className="pn-modal fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
           <div className="bg-[#0f1a2e] border border-white/15 rounded-3xl p-6 max-w-3xl w-full shadow-2xl space-y-4 text-white">
             <div className="flex items-center justify-between border-b border-white/10 pb-3">
-              <h3 className="text-base font-black truncate">
-                {selectedMediaItem.title}
-              </h3>
+              <h3 className="text-base font-black truncate">{selectedMediaItem.title}</h3>
               <button
                 type="button"
                 onClick={() => setSelectedMediaItem(null)}
@@ -2482,8 +3151,7 @@ export default function ProNetworkHubPage({
                   <span>Update Network Pricing</span>
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  Change your monthly dues or make your Pro Network completely
-                  free.
+                  Change your monthly dues or make your Pro Network completely free.
                 </p>
               </div>
               <button
@@ -2495,13 +3163,11 @@ export default function ProNetworkHubPage({
               </button>
             </div>
 
-            {/* Model Selector */}
             <div className="space-y-3">
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
                 Choose Access &amp; Pricing Model
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {/* Free Option */}
                 <button
                   type="button"
                   onClick={() => {
@@ -2524,12 +3190,10 @@ export default function ProNetworkHubPage({
                     </span>
                   </div>
                   <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
-                    100% free. Members join instantly without entering payment
-                    information.
+                    100% free. Members join instantly without entering payment information.
                   </p>
                 </button>
 
-                {/* Paid Option */}
                 <button
                   type="button"
                   onClick={() => {
@@ -2554,37 +3218,32 @@ export default function ProNetworkHubPage({
                     </span>
                   </div>
                   <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
-                    Set recurring dues. 0% platform fee — 100% direct payouts
-                    via Stripe.
+                    Set recurring dues. 0% platform fee — 100% direct payouts via Stripe.
                   </p>
                 </button>
               </div>
 
-              {/* Price Details if Paid */}
               {editPriceType === "paid" ? (
                 <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#121e33] border border-slate-200 dark:border-slate-700 space-y-3">
                   <div className="flex items-center justify-between flex-wrap gap-2">
                     <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
                       Monthly Member Dues ($ USD / month)
                     </label>
-                    {/* Presets */}
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      {["9.99", "19.99", "29.99", "49.99", "99.00"].map(
-                        (preset) => (
-                          <button
-                            key={preset}
-                            type="button"
-                            onClick={() => setEditMonthlyPrice(preset)}
-                            className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-all ${
-                              editMonthlyPrice === preset
-                                ? "bg-amber-400 text-[#0a1628] font-black shadow-xs"
-                                : "bg-white dark:bg-white/5 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100"
-                            }`}
-                          >
-                            ${preset}
-                          </button>
-                        ),
-                      )}
+                      {["9.99", "19.99", "29.99", "49.99", "99.00"].map((preset) => (
+                        <button
+                          key={preset}
+                          type="button"
+                          onClick={() => setEditMonthlyPrice(preset)}
+                          className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-all ${
+                            editMonthlyPrice === preset
+                              ? "bg-amber-400 text-[#0a1628] font-black shadow-xs"
+                              : "bg-white dark:bg-white/5 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100"
+                          }`}
+                        >
+                          ${preset}
+                        </button>
+                      ))}
                     </div>
                   </div>
 
@@ -2619,14 +3278,13 @@ export default function ProNetworkHubPage({
                     <span>Free Network Membership ($0.00 / month)</span>
                   </div>
                   <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
-                    Existing and new members will have instant access to your
-                    private board and resources without requiring payment.
+                    Existing and new members will have instant access to your private
+                    board and resources without requiring payment.
                   </p>
                 </div>
               )}
             </div>
 
-            {/* Actions */}
             <div className="flex items-center justify-end gap-3 pt-2 border-t border-slate-100 dark:border-white/10">
               <button
                 type="button"
