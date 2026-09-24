@@ -147,7 +147,7 @@ interface StripeStatus {
 
 // Fallback high-fidelity seed data matching reference screenshot
 const DEFAULT_ANNOUNCEMENT = {
-  title: "Welcome to RedLine1 Tax Network! 👋",
+  title: "Welcome to the Pro Network! 👋",
   content:
     "Introduce yourself in the #introduce-yourself discussion and let us know what you'd like to learn more about.",
   author: "Tonique Clay",
@@ -331,37 +331,31 @@ const DEFAULT_MEMBERS = [
   },
 ];
 
-function RedLineLogo({
+const DEFAULT_NETWORK_COVER =
+  "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1200&auto=format&fit=crop&q=80";
+
+function NetworkHeaderLogo({
   customLogo,
+  coverImage,
   networkName,
 }: {
   customLogo?: string | null;
+  coverImage?: string | null;
   networkName?: string;
 }) {
-  if (customLogo) {
-    return (
-      <img
-        src={customLogo}
-        alt={networkName || "Network"}
-        className="h-8 max-w-[150px] object-contain"
-      />
-    );
-  }
+  const displayImage = customLogo || coverImage || DEFAULT_NETWORK_COVER;
+
   return (
-    <div className="flex items-center gap-2 select-none group">
-      {/* Red Speed Streaks */}
-      <div className="flex items-center space-x-[2.5px]">
-        <span className="block w-1.5 h-6 bg-red-600 transform -skew-x-[24deg] rounded-[1px] opacity-75" />
-        <span className="block w-1.5 h-6 bg-red-600 transform -skew-x-[24deg] rounded-[1px] opacity-90" />
-        <span className="block w-2 h-6 bg-red-600 transform -skew-x-[24deg] rounded-[1px]" />
-      </div>
-      {/* REDLINE 1 */}
-      <div className="flex items-center italic font-black tracking-tight text-xl font-sans">
-        <span className="text-red-600">RED</span>
-        <span className="text-white">LINE</span>
-        <span className="ml-1 text-2xl text-red-500 font-extrabold not-italic -skew-x-12 inline-block">
-          1
-        </span>
+    <div className="flex items-center gap-2">
+      <div className="w-10 h-10 rounded-xl overflow-hidden ring-1 ring-white/20 bg-white/10 shadow-sm shrink-0 flex items-center justify-center">
+        <img
+          src={displayImage}
+          alt={networkName || "Network"}
+          className="w-full h-full object-cover"
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = DEFAULT_NETWORK_COVER;
+          }}
+        />
       </div>
     </div>
   );
@@ -1232,9 +1226,6 @@ export default function ProNetworkHubPage({
               <div className="text-sm font-bold text-white truncate group-hover:text-amber-400 transition-colors">
                 {currentUser?.name || "My Profile"}
               </div>
-              <div className="inline-flex items-center gap-1 bg-[#1a56db] text-white text-[9px] font-extrabold px-2 py-0.5 rounded-full mt-0.5 tracking-wider uppercase">
-                <span>✔</span> {(currentUser as any)?.role === "ADMIN" ? "ADMIN PRO" : "VERIFIED PRO"}
-              </div>
               <div className="text-[11px] text-slate-400 mt-0.5 truncate">
                 {network.isOwner ? "Network Owner" : network.isMember ? "Network Member" : "Active Member"}
               </div>
@@ -1350,19 +1341,18 @@ export default function ProNetworkHubPage({
         {/* ── TOP HEADER BAR (WITH COVER IMAGE BACKGROUND) ── */}
         <header className="relative overflow-hidden min-h-[125px] sm:min-h-[145px] px-4 sm:px-7 py-5 flex items-center justify-between gap-4 border-b border-white/10 bg-[#08101e]">
           {/* Cover Image Backdrop */}
-          {network.coverImage ? (
-            <img
-              src={network.coverImage}
-              alt=""
-              className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none"
-            />
-          ) : (
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-900/30 via-purple-900/20 to-slate-900/40 pointer-events-none" />
-          )}
+          <img
+            src={network.coverImage || DEFAULT_NETWORK_COVER}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none opacity-40"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = DEFAULT_NETWORK_COVER;
+            }}
+          />
           {/* Dark Overlay for readability */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#08101e]/95 via-[#08101e]/85 to-[#08101e]/95 backdrop-blur-[2px] pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#08101e]/90 via-[#08101e]/75 to-[#08101e]/90 backdrop-blur-[2px] pointer-events-none" />
 
-          {/* Left: Back to Networks & RedLine Logo */}
+          {/* Left: Back to Networks & Network Logo / Cover */}
           <div className="flex items-center gap-2.5 sm:gap-3.5 z-10 relative shrink-0">
             <Link
               href="/pro-networks"
@@ -1372,7 +1362,11 @@ export default function ProNetworkHubPage({
               <ChevronLeft className="w-4 h-4 text-slate-300" />
               <span className="hidden sm:inline">Networks</span>
             </Link>
-            <RedLineLogo customLogo={network.logoImage} networkName={network.name} />
+            <NetworkHeaderLogo
+              customLogo={network.logoImage}
+              coverImage={network.coverImage}
+              networkName={network.name}
+            />
           </div>
 
           {/* Center: Network Name, Count & Tagline */}
@@ -1595,9 +1589,6 @@ export default function ProNetworkHubPage({
                       <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-white">
                         DISCUSSIONS FEED
                       </h3>
-                      <span className="text-xs font-bold text-[#16a34a] dark:text-emerald-400">
-                        (MEMBERS ONLY)
-                      </span>
                     </div>
                     <button
                       type="button"
@@ -1663,7 +1654,6 @@ export default function ProNetworkHubPage({
                           </div>
 
                           <div className="flex items-center gap-3 shrink-0">
-                            <span className="pn-v2-badge-green">Members Only</span>
                             <div className="flex items-center gap-1 text-slate-400 text-xs">
                               <MessageSquare className="w-3.5 h-3.5" />
                               <span>{disc.replies ?? disc._count?.comments ?? 0}</span>
@@ -1692,9 +1682,6 @@ export default function ProNetworkHubPage({
                       <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-white">
                         MEDIA GALLERY
                       </h3>
-                      <span className="text-xs font-bold text-[#16a34a] dark:text-emerald-400">
-                        (MEMBERS ONLY)
-                      </span>
                     </div>
                     <button
                       type="button"
@@ -1826,9 +1813,6 @@ export default function ProNetworkHubPage({
                       <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-white">
                         UPCOMING PRO TALKS
                       </h3>
-                      <span className="text-xs font-bold text-[#16a34a] dark:text-emerald-400">
-                        (MEMBERS ONLY)
-                      </span>
                     </div>
                     <button
                       type="button"
@@ -1938,9 +1922,6 @@ export default function ProNetworkHubPage({
                       <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-white">
                         RECENT RESOURCES
                       </h3>
-                      <span className="text-xs font-bold text-[#16a34a] dark:text-emerald-400">
-                        (MEMBERS ONLY)
-                      </span>
                     </div>
                     <button
                       type="button"
@@ -2029,9 +2010,6 @@ export default function ProNetworkHubPage({
                       <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-white">
                         NETWORK MEMBERS ({(network.memberCount || 1246).toLocaleString()})
                       </h3>
-                      <span className="text-xs font-bold text-[#16a34a] dark:text-emerald-400">
-                        (MEMBERS ONLY)
-                      </span>
                     </div>
                     <button
                       type="button"

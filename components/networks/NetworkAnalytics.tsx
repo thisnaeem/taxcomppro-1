@@ -356,7 +356,7 @@ export default function NetworkAnalytics({
             </div>
           </div>
           <div className="pt-2 border-t border-white/5 flex items-center justify-between text-[11px] text-slate-400">
-            <span>Avg {Math.max((totalComments / Math.max(totalDiscussions, 1)).toFixed(1), "1.0")} replies/post</span>
+            <span>Avg {(Math.max(totalComments / Math.max(totalDiscussions, 1), 1)).toFixed(1)} replies/post</span>
             <span className="text-purple-400 font-semibold">High Resonance</span>
           </div>
         </div>
