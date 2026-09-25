@@ -48,6 +48,14 @@ export async function POST(req: NextRequest) {
     if(session.payment_status === "unpaid") return NextResponse.json({received:true});
     const membershipBonus = await grantAcademyMembershipBonus(session);
 
+    // Save customer phone number to User if collected during checkout
+    if (userId && session.customer_details?.phone) {
+      await prisma.user.update({
+        where: { id: userId },
+        data: { phone: session.customer_details.phone },
+      }).catch(() => {});
+    }
+
     // ── Toolkits, Courses & Bundles (Centralized Robust Fulfillment) ──────
     if (userId && (type === "toolkit" || type === "course" || type === "bundle" || session.metadata?.productKey)) {
       await fulfillStripePurchase({

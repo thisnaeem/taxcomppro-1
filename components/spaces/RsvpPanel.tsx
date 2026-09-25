@@ -9,7 +9,14 @@ interface RsvpEntry {
   name: string;
   email: string | null;
   createdAt: string;
-  user?: { id: string; name: string; image: string | null; headline: string | null } | null;
+  user?: {
+    id: string;
+    name: string;
+    image: string | null;
+    headline: string | null;
+    phone?: string | null;
+    email?: string | null;
+  } | null;
 }
 
 interface RsvpPanelProps {
@@ -47,16 +54,17 @@ export default function RsvpPanel({ spaceId, pollMs = 30_000 }: RsvpPanelProps) 
   // Build & download CSV
   const downloadCsv = () => {
     const rows = [
-      ["Name", "Email", "Member?", "RSVP Time"],
+      ["Name", "Email", "Phone Number", "Member?", "RSVP Time"],
       ...rsvps.map(r => [
         r.name,
-        r.email ?? "",
+        r.email || r.user?.email || "",
+        r.user?.phone || "",
         r.user ? "Yes" : "No",
         new Date(r.createdAt).toLocaleString(),
       ]),
     ];
-    const csv  = rows.map(r => r.map(c => `"${c}"`).join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
+    const csv  = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement("a");
     a.href     = url;
@@ -126,7 +134,14 @@ export default function RsvpPanel({ spaceId, pollMs = 30_000 }: RsvpPanelProps) 
                     </span>
                   )}
                 </div>
-                {r.email && <p className="text-slate-400 text-xs truncate">{r.email}</p>}
+                <div className="flex items-center gap-1.5 flex-wrap text-slate-400 text-xs mt-0.5">
+                  {(r.email || r.user?.email) && <span className="truncate">{r.email || r.user?.email}</span>}
+                  {r.user?.phone && (
+                    <span className="text-slate-400/90 truncate">
+                      {(r.email || r.user?.email) ? "· " : ""}{r.user.phone}
+                    </span>
+                  )}
+                </div>
               </div>
               {/* Time */}
               <span className="shrink-0 text-slate-500 text-xs">{timeAgo(r.createdAt)}</span>

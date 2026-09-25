@@ -129,6 +129,7 @@ export async function POST(req: NextRequest) {
     customer: customerId,
     mode: "subscription",
     allow_promotion_codes: true,
+    phone_number_collection: { enabled: true },
     payment_method_types: ["card"],
     ...(dub.clientReferenceId ? { client_reference_id: dub.clientReferenceId } : {}),
     line_items: [{ price: priceId, quantity: 1 }],

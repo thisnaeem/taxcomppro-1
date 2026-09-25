@@ -407,7 +407,7 @@ function UpcomingCard({
               }`}
             >
               <Users className="w-3 h-3" />
-              <span>{rsvped ? "Reminding You ✓" : `Remind Me (${rsvpCount})`}</span>
+              <span>{rsvped ? "Reminding You ✓" : "Remind Me"}</span>
             </button>
           )}
         </div>

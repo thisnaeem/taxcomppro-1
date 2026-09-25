@@ -214,6 +214,7 @@ export async function POST(req: NextRequest) {
       {
         mode: "payment",
         payment_method_types: ["card"],
+        phone_number_collection: { enabled: true },
         customer_email: user.email ?? undefined,
         ...(dub?.clientReferenceId ? { client_reference_id: dub.clientReferenceId } : {}),
         line_items: lineItems,
@@ -235,6 +236,7 @@ export async function POST(req: NextRequest) {
       customer: customerId,
       mode: "payment",
       payment_method_types: ["card"],
+      phone_number_collection: { enabled: true },
       ...(dub?.clientReferenceId ? { client_reference_id: dub.clientReferenceId } : {}),
       line_items: lineItems,
       success_url: `${appUrl}/courses/${slug}?session_id={CHECKOUT_SESSION_ID}`,

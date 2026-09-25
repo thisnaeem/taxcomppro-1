@@ -277,7 +277,7 @@ function ScheduledScreen({
         <span>Hosted by <strong>{space.host.name}</strong></span>
         {space.category && <span>{space.category}</span>}
         {space.scheduledAt && <span><Clock className="w-4 h-4" /> {formatScheduled(space.scheduledAt)}</span>}
-        <span><Users className="w-4 h-4" /> {rsvpCount} {rsvpCount === 1 ? "person" : "people"} going</span>
+        {isHost && <span><Users className="w-4 h-4" /> {rsvpCount} {rsvpCount === 1 ? "person" : "people"} going</span>}
       </div>
 
       <Countdown target={space.scheduledAt} />
@@ -424,20 +424,29 @@ export default function ProTalkPage() {
   const handleStartNow = async () => {
     if (starting || !space) return;
     setStarting(true);
-    const res = await fetch(`/api/spaces/${id}`, { method: "PATCH" });
-    if (res.ok) {
-      const updated = (await res.json()) as Space;
-      setSpace(updated);
-      const tokenRes = await fetch(`/api/spaces/${id}/token`, { method: "POST" });
-      if (tokenRes.ok) {
-        const tokenData = await tokenRes.json();
-        if (tokenData.token) {
-          setToken(tokenData.token);
-          fetch(`/api/spaces/${id}/attendance`, { method: "POST" }).catch(() => {});
+    try {
+      const res = await fetch(`/api/spaces/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isLive: true }),
+      });
+      if (res.ok) {
+        const updated = (await res.json()) as Space;
+        setSpace(updated);
+        const tokenRes = await fetch(`/api/spaces/${id}/token`, { method: "POST" });
+        if (tokenRes.ok) {
+          const tokenData = await tokenRes.json();
+          if (tokenData.token) {
+            setToken(tokenData.token);
+            fetch(`/api/spaces/${id}/attendance`, { method: "POST" }).catch(() => {});
+          }
         }
       }
+    } catch {
+      // ignore
+    } finally {
+      setStarting(false);
     }
-    setStarting(false);
   };
 
   if (loading) {

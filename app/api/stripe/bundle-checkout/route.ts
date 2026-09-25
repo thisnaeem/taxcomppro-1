@@ -34,6 +34,7 @@ export async function POST(req: NextRequest) {
   const checkoutSession = await stripe.checkout.sessions.create({
     customer: customerId,
     mode: "payment",
+    phone_number_collection: { enabled: true },
     payment_method_types: ["card"],
     ...(dub.clientReferenceId ? { client_reference_id: dub.clientReferenceId } : {}),
     line_items: [{

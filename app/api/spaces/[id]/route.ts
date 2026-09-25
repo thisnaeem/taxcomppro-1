@@ -85,14 +85,6 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     dataToUpdate.isLive = true;
   }
 
-  // Scheduled Pro Talks cannot be started before their scheduled time
-  if (dataToUpdate.isLive === true && space.scheduledAt && new Date(space.scheduledAt).getTime() > Date.now()) {
-    return NextResponse.json(
-      { error: "Scheduled Pro Talks cannot be started before their scheduled time." },
-      { status: 400 }
-    );
-  }
-
   if (typeof body.replayUrl === "string") {
     dataToUpdate.replayUrl = body.replayUrl.trim() || null;
     dataToUpdate.isReplay = true;
