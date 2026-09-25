@@ -20,6 +20,7 @@ import {
 } from "hugeicons-react";
 import { PRO_TALK_CATEGORIES } from "@/lib/proTalks";
 import EditTalkDialog from "@/components/spaces/EditTalkDialog";
+import { accountUrl } from "@/lib/auth-navigation";
 import "./pro-talks-directory.css";
 
 interface SpaceHost {
@@ -280,7 +281,11 @@ function UpcomingCard({
   const toggleRsvp = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (rsvping || !currentUserId) return;
+    if (rsvping) return;
+    if (!currentUserId) {
+      router.push(accountUrl("/register", `/pro-talks/${space.id}`));
+      return;
+    }
     setRsvping(true);
     if (rsvped) {
       await fetch(`/api/spaces/${space.id}/rsvp`, { method: "DELETE" });
