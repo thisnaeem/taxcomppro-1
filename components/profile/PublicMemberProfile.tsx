@@ -367,12 +367,9 @@ export default function PublicMemberProfile({memberId: id, specialist}: {memberI
             </div>
           </div>
           <div className="flex items-center gap-2.5">
-            <div className="flex flex-col items-center gap-1">
-              <div className="w-[100px] h-[46px] rounded-xl profile-skeleton" />
-              <div className="w-16 h-3 rounded-full profile-skeleton" />
-            </div>
-            <div className="w-[110px] h-[46px] rounded-xl profile-skeleton" />
-            <div className="w-[120px] h-[46px] rounded-xl profile-skeleton" />
+            <div className="w-[110px] h-[46px] rounded-xl profile-skeleton shrink-0" />
+            <div className="w-[110px] h-[46px] rounded-xl profile-skeleton shrink-0" />
+            <div className="w-[120px] h-[46px] rounded-xl profile-skeleton shrink-0" />
           </div>
         </div>
       </div>
