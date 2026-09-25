@@ -31,6 +31,15 @@ export default function FollowButton({ memberId }: { memberId: string }) {
     } catch (e) { setError(e instanceof Error ? e.message : "Couldn’t save. Try again."); }
     finally { setBusy(false); }
   }
+  if (data === null && me?.id !== memberId) {
+    return (
+      <div className="flex flex-col items-center gap-1">
+        <div className="w-[100px] h-[46px] rounded-xl profile-skeleton" />
+        <div className="w-16 h-3 rounded-full profile-skeleton" />
+      </div>
+    );
+  }
+
   return <div className="flex flex-col items-center gap-1">
     {me?.id !== memberId && <button type="button" onClick={toggle} disabled={busy || !data} aria-pressed={data?.following ?? false}
       title={data?.following ? "Unfollow this member" : "Follow public posts without sending a connection request"}

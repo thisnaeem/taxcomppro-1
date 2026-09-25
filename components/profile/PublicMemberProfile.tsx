@@ -221,6 +221,7 @@ export default function PublicMemberProfile({memberId: id, specialist}: {memberI
   const [loading, setLoading] = useState(true);
   const [isNotFound, setIsNotFound] = useState(false);
   const [connState, setConnState] = useState<"idle" | "pending" | "connected" | "sending">("idle");
+  const [connLoading, setConnLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"overview" | "posts" | "services" | "courses" | "reviews">("overview");
   const [lightboxImg, setLightboxImg] = useState<string | null>(null);
   const [copiedLink, setCopiedLink] = useState(false);
@@ -243,7 +244,10 @@ export default function PublicMemberProfile({memberId: id, specialist}: {memberI
             setConnState("connected");
           } else if (d.viewerConnectionStatus === "PENDING") {
             setConnState("pending");
+          } else {
+            setConnState("idle");
           }
+          setConnLoading(false);
           setProfile({
             ...d,
             specialties: d.specialties ?? [],
@@ -349,7 +353,35 @@ export default function PublicMemberProfile({memberId: id, specialist}: {memberI
     return () => window.removeEventListener("keydown", close);
   }, [lightboxImg]);
 
-  if (loading) return <div className="member-profile profile-loading" role="status" aria-label="Loading member profile"><div className="profile-skeleton profile-loading-cover" /><div className="profile-skeleton profile-loading-identity" /><div className="profile-loading-grid"><div className="profile-skeleton" /><div className="profile-skeleton" /></div></div>;
+  if (loading) return (
+    <div className="member-profile profile-loading" role="status" aria-label="Loading member profile">
+      <div className="profile-skeleton profile-loading-cover" />
+      <div className="member-profile-identity" style={{ marginTop: 0 }}>
+        <div className="flex flex-col lg:flex-row gap-6 items-start lg:items-center justify-between">
+          <div className="flex flex-col sm:flex-row gap-5 sm:gap-6 items-start sm:items-center w-full lg:w-auto">
+            <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-3xl profile-skeleton -mt-12 sm:-mt-16 shrink-0" />
+            <div className="space-y-2 flex-1">
+              <div className="w-48 h-7 rounded-xl profile-skeleton" />
+              <div className="w-64 h-4 rounded-lg profile-skeleton" />
+              <div className="w-40 h-3 rounded-lg profile-skeleton" />
+            </div>
+          </div>
+          <div className="flex items-center gap-2.5">
+            <div className="flex flex-col items-center gap-1">
+              <div className="w-[100px] h-[46px] rounded-xl profile-skeleton" />
+              <div className="w-16 h-3 rounded-full profile-skeleton" />
+            </div>
+            <div className="w-[110px] h-[46px] rounded-xl profile-skeleton" />
+            <div className="w-[120px] h-[46px] rounded-xl profile-skeleton" />
+          </div>
+        </div>
+      </div>
+      <div className="profile-loading-grid">
+        <div className="profile-skeleton" />
+        <div className="profile-skeleton" />
+      </div>
+    </div>
+  );
   if (loadError) return <div className="member-profile profile-error"><h1>We couldn’t load this profile</h1><p>Please try again in a moment.</p><button className="profile-primary" onClick={() => window.location.reload()}>Try again</button></div>;
 
   if (isNotFound || !profile) {
@@ -586,7 +618,16 @@ export default function PublicMemberProfile({memberId: id, specialist}: {memberI
             {/* Right: Action Buttons */}
             <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto shrink-0 pt-2 lg:pt-0">
               <FollowButton key={profile.id} memberId={profile.id} />
-              {specialist ? <a href="#ask-specialist" className="profile-primary px-5 py-3 rounded-xl font-bold text-sm">Ask this AI specialist</a> : me && me.id !== profile.id ? (
+              {specialist ? (
+                <a href="#ask-specialist" className="profile-primary px-5 py-3 rounded-xl font-bold text-sm">
+                  Ask this AI specialist
+                </a>
+              ) : connLoading ? (
+                <div className="flex items-center gap-2.5">
+                  <div className="w-[110px] h-[46px] rounded-xl profile-skeleton shrink-0" />
+                  <div className="w-[120px] h-[46px] rounded-xl profile-skeleton shrink-0" />
+                </div>
+              ) : me && me.id !== profile.id ? (
                 <>
                   {connState === "connected" && (
                     <Link
