@@ -5,7 +5,7 @@ import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { ensureProfileSlug } from "@/lib/profileSlug";
 import { prisma } from "@/lib/prisma";
-import { sendPasswordResetEmail, sendWelcomeEmail } from "@/lib/email";
+import { sendPasswordResetEmail, sendWelcomeEmail, notifyAdminNewSignup } from "@/lib/email";
 
 const appUrl = process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
@@ -25,6 +25,19 @@ export const auth = betterAuth({
             await sendWelcomeEmail({ to: user.email, userName: user.name });
           } catch (emailErr) {
             console.error("[Auth Hook] Failed to send welcome email:", emailErr);
+          }
+          try {
+            await notifyAdminNewSignup({
+              id: user.id,
+              email: user.email,
+              name: user.name,
+              role: (user as any).role || "MEMBER",
+              tier: (user as any).tier || "FREE",
+              phone: (user as any).phone,
+              professionalTitle: (user as any).professionalTitle,
+            });
+          } catch (adminErr) {
+            console.error("[Auth Hook] Failed to send admin signup notification:", adminErr);
           }
         },
       },

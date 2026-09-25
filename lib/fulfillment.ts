@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import type { SubscriptionTier } from "@prisma/client";
 import { DEFAULT_SEATS, LICENSE_MONTHS } from "@/lib/training";
 import { ensureActiveTrainingVersion } from "@/lib/trainingServer";
+import { notifyAdminPurchase } from "@/lib/email";
 
 export interface FulfillOptions {
   userId: string;
@@ -169,6 +170,20 @@ export async function fulfillStripePurchase({
       },
     }).catch(() => {});
 
+    await notifyAdminPurchase({
+      userId,
+      itemType: "bundle",
+      itemName: isUltimatePlus
+        ? "Ultimate Bundle PLUS (All 6 Toolkits + 10 Seats + 24 Mo)"
+        : "Ultimate Bundle (All 6 Toolkits + 5 Seats + 12 Mo)",
+      amountTotal: session.amount_total,
+      currency: session.currency,
+      stripeSessionId: session.id,
+      metadata: session.metadata,
+      customerEmail: session.customer_details?.email,
+      customerName: session.customer_details?.name,
+    }).catch((err) => console.error("[Fulfillment] Admin purchase notify error:", err));
+
     return { enrolledCourseSlug: "schedule-c-reconstruction" };
   }
 
@@ -223,6 +238,18 @@ export async function fulfillStripePurchase({
       }
     }
 
+    await notifyAdminPurchase({
+      userId,
+      itemType: "bundle",
+      itemName: domain?.defaultTitle ? `${domain.defaultTitle} Bundle` : `Bundle: ${resolvedTkId}`,
+      amountTotal: session.amount_total,
+      currency: session.currency,
+      stripeSessionId: session.id,
+      metadata: session.metadata,
+      customerEmail: session.customer_details?.email,
+      customerName: session.customer_details?.name,
+    }).catch((err) => console.error("[Fulfillment] Admin purchase alert error:", err));
+
     return { enrolledCourseSlug: enrolledCourseSlug || domain?.courseSlugs?.[0] || null };
   }
 
@@ -261,6 +288,18 @@ export async function fulfillStripePurchase({
         console.error(`[Fulfillment] Training license error for toolkit ${resolvedTkId}:`, e);
       }
     }
+
+    await notifyAdminPurchase({
+      userId,
+      itemType: "toolkit",
+      itemName: domain?.defaultTitle ? `${domain.defaultTitle} Toolkit` : `Toolkit: ${resolvedTkId}`,
+      amountTotal: session.amount_total,
+      currency: session.currency,
+      stripeSessionId: session.id,
+      metadata: session.metadata,
+      customerEmail: session.customer_details?.email,
+      customerName: session.customer_details?.name,
+    }).catch((err) => console.error("[Fulfillment] Admin purchase alert error:", err));
 
     return { enrolledCourseSlug: null };
   }
@@ -357,6 +396,18 @@ export async function fulfillStripePurchase({
         },
       }).catch(() => {});
     }
+
+    await notifyAdminPurchase({
+      userId,
+      itemType: "course",
+      itemName: targetCourse?.title || domain?.defaultTitle || `Course: ${domainKey || resolvedTkId}`,
+      amountTotal: session.amount_total,
+      currency: session.currency,
+      stripeSessionId: session.id,
+      metadata: session.metadata,
+      customerEmail: session.customer_details?.email,
+      customerName: session.customer_details?.name,
+    }).catch((err) => console.error("[Fulfillment] Admin purchase alert error:", err));
 
     return { enrolledCourseSlug: enrolledCourseSlug || domain?.courseSlugs?.[0] || null };
   }

@@ -5,8 +5,12 @@ import { prisma } from "@/lib/prisma";
 import type { SubscriptionTier } from "@prisma/client";
 import { TRAINING_TOOLKIT_IDS, DEFAULT_SEATS, LICENSE_MONTHS } from "@/lib/training";
 import { ensureActiveTrainingVersion } from "@/lib/trainingServer";
-import { sendMembershipUpgradedEmail } from "@/lib/email";
 import { fulfillStripePurchase } from "@/lib/fulfillment";
+import {
+  sendMembershipUpgradedEmail,
+  notifyAdminUpgrade,
+  notifyAdminPurchase,
+} from "@/lib/email";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
@@ -79,6 +83,18 @@ export async function POST(req: NextRequest) {
           await prisma.notification.create({
             data: { userId, type: "SYSTEM", title: "✅ Training Seats Added", message: `${seatCount} additional staff training seat(s) have been added to your license.`, link: "/training-center" },
           }).catch(() => {});
+
+          await notifyAdminPurchase({
+            userId,
+            itemType: "training_seats",
+            itemName: `${seatCount} Staff Training Seat(s)`,
+            amountTotal: session.amount_total,
+            currency: session.currency,
+            stripeSessionId: session.id,
+            metadata: session.metadata,
+            customerEmail: session.customer_details?.email,
+            customerName: session.customer_details?.name,
+          }).catch(err => console.error("[Stripe Webhook] Admin purchase alert error:", err));
         }
       }
     }
@@ -94,6 +110,18 @@ export async function POST(req: NextRequest) {
           link: "/pro-talks",
         },
       });
+
+      await notifyAdminPurchase({
+        userId,
+        itemType: "pro_talk_host",
+        itemName: "Pro Talk Host Seat ($99.99)",
+        amountTotal: session.amount_total || 9999,
+        currency: session.currency || "usd",
+        stripeSessionId: session.id,
+        metadata: session.metadata,
+        customerEmail: session.customer_details?.email,
+        customerName: session.customer_details?.name,
+      }).catch(err => console.error("[Stripe Webhook] Admin purchase alert error:", err));
     }
 
     // ── Marketplace item purchase ──────────────────────────
@@ -127,6 +155,18 @@ export async function POST(req: NextRequest) {
               link: `/${listing.slug ?? id}`,
             },
           }).catch(() => {});
+
+          await notifyAdminPurchase({
+            userId,
+            itemType: "marketplace",
+            itemName: `Marketplace: ${listing.title}`,
+            amountTotal: session.amount_total,
+            currency: session.currency,
+            stripeSessionId: session.id,
+            metadata: session.metadata,
+            customerEmail: session.customer_details?.email,
+            customerName: session.customer_details?.name,
+          }).catch(err => console.error("[Stripe Webhook] Admin purchase alert error:", err));
         }
       }
     }
@@ -158,6 +198,18 @@ export async function POST(req: NextRequest) {
           link: "/connect",
         },
       }).catch(() => {});
+
+      await notifyAdminPurchase({
+        userId,
+        itemType: "proconnect_card",
+        itemName: "ProConnect Digital Card ($29)",
+        amountTotal: session.amount_total || 2900,
+        currency: session.currency || "usd",
+        stripeSessionId: session.id,
+        metadata: session.metadata,
+        customerEmail: session.customer_details?.email,
+        customerName: session.customer_details?.name,
+      }).catch(err => console.error("[Stripe Webhook] Admin purchase alert error:", err));
     }
 
     // ── Pro Network Monthly Membership Subscription ──────
@@ -211,6 +263,18 @@ export async function POST(req: NextRequest) {
             },
           }).catch(() => {});
         }
+
+        await notifyAdminPurchase({
+          userId,
+          itemType: "pro_network_sub",
+          itemName: `Pro Network: ${updatedNetwork.name}`,
+          amountTotal: session.amount_total,
+          currency: session.currency,
+          stripeSessionId: session.id,
+          metadata: session.metadata,
+          customerEmail: session.customer_details?.email,
+          customerName: session.customer_details?.name,
+        }).catch(err => console.error("[Stripe Webhook] Admin purchase alert error:", err));
       }
     }
 
@@ -248,6 +312,16 @@ export async function POST(req: NextRequest) {
           }).catch(err => console.error("[Stripe Webhook] Failed to send upgrade email:", err));
         }
       }
+
+      await notifyAdminUpgrade({
+        userId,
+        tier: t,
+        stripeSessionId: session.id,
+        amountTotal: session.amount_total,
+        currency: session.currency,
+        customerEmail: session.customer_details?.email,
+        customerName: session.customer_details?.name,
+      }).catch(err => console.error("[Stripe Webhook] Failed to send admin upgrade alert:", err));
     }
   }
 

@@ -6,7 +6,11 @@ import { prisma } from "@/lib/prisma";
 import type { SubscriptionTier } from "@prisma/client";
 import { TRAINING_TOOLKIT_IDS, DEFAULT_SEATS, LICENSE_MONTHS } from "@/lib/training";
 import { ensureActiveTrainingVersion } from "@/lib/trainingServer";
-import { sendMembershipUpgradedEmail } from "@/lib/email";
+import {
+  sendMembershipUpgradedEmail,
+  notifyAdminUpgrade,
+  notifyAdminPurchase,
+} from "@/lib/email";
 import { fulfillStripePurchase } from "@/lib/fulfillment";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
@@ -84,6 +88,16 @@ export async function POST(req: NextRequest) {
           }).catch(err => console.error("[Verify Session] Failed to send upgrade email:", err));
         }
       }
+
+      notifyAdminUpgrade({
+        userId,
+        tier: resolvedTier,
+        stripeSessionId: stripeSession.id,
+        amountTotal: stripeSession.amount_total,
+        currency: stripeSession.currency,
+        customerEmail: stripeSession.customer_details?.email,
+        customerName: stripeSession.customer_details?.name,
+      }).catch(err => console.error("[Verify Session] Failed to send admin upgrade alert:", err));
     }
   }
 
@@ -113,6 +127,21 @@ export async function POST(req: NextRequest) {
         },
         update: { stripeSessionId: stripeSession.id },
       }).catch(() => {});
+
+      const listing = await prisma.marketplaceListing.findUnique({ where: { id }, select: { title: true } });
+      if (listing) {
+        notifyAdminPurchase({
+          userId,
+          itemType: "marketplace",
+          itemName: `Marketplace: ${listing.title}`,
+          amountTotal: stripeSession.amount_total,
+          currency: stripeSession.currency,
+          stripeSessionId: stripeSession.id,
+          metadata: stripeSession.metadata,
+          customerEmail: stripeSession.customer_details?.email,
+          customerName: stripeSession.customer_details?.name,
+        }).catch(err => console.error("[Verify Session] Admin marketplace alert error:", err));
+      }
     }
   }
 

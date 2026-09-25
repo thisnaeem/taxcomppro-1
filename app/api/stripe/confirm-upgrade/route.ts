@@ -4,6 +4,7 @@ import Stripe from "stripe";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import type { SubscriptionTier } from "@prisma/client";
+import { notifyAdminUpgrade } from "@/lib/email";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
@@ -66,6 +67,16 @@ export async function POST(req: NextRequest) {
   await reconcileAcademyMembershipBonus(userId);
   const effective = await prisma.user.findUniqueOrThrow({where:{id:userId},select:{tier:true}});
   updated.tier = effective.tier;
+
+  notifyAdminUpgrade({
+    userId,
+    tier,
+    stripeSessionId: sessionId,
+    amountTotal: checkoutSession.amount_total,
+    currency: checkoutSession.currency,
+    customerEmail: checkoutSession.customer_details?.email,
+    customerName: checkoutSession.customer_details?.name,
+  }).catch(err => console.error("[Confirm Upgrade] Failed to send admin upgrade alert:", err));
 
   // ── Credit affiliate referral ───────────────────────────────
   const referralCode = checkoutSession.metadata?.referralCode;

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { notifyAdminPurchase } from "@/lib/email";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
@@ -42,6 +43,18 @@ export async function POST(req: NextRequest) {
     })),
     skipDuplicates: true,
   });
+
+  notifyAdminPurchase({
+    userId: session.user.id,
+    itemType: "message_blast",
+    itemName: `Message Blast: "${blast.subject}" (${blast.recipientCount.toLocaleString()} recipients)`,
+    amountTotal: stripeSession.amount_total,
+    currency: stripeSession.currency,
+    stripeSessionId: sessionId,
+    metadata: stripeSession.metadata,
+    customerEmail: stripeSession.customer_details?.email,
+    customerName: stripeSession.customer_details?.name,
+  }).catch(err => console.error("[Message Blast Verify] Admin alert error:", err));
 
   return NextResponse.json({ ok: true, status: "PENDING_APPROVAL" });
 }

@@ -4,7 +4,7 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { normalizeEmail, verifyOtp } from "@/lib/otp";
-import { sendWelcomeEmail } from "@/lib/email";
+import { sendWelcomeEmail, notifyAdminNewSignup } from "@/lib/email";
 
 /**
  * Verifies the emailed code and, on success, creates the account server-side.
@@ -118,6 +118,19 @@ export async function POST(request: NextRequest) {
     await sendWelcomeEmail({ to: email, userName: name });
   } catch (emailErr) {
     console.error("[OTP Verify] Could not send welcome email:", emailErr);
+  }
+
+  // Alert admin of the new sign-up
+  try {
+    const createdUser = await prisma.user.findUnique({
+      where: { email },
+      select: { id: true, name: true, email: true, phone: true, role: true, tier: true, professionalTitle: true },
+    });
+    if (createdUser) {
+      await notifyAdminNewSignup(createdUser);
+    }
+  } catch (adminErr) {
+    console.error("[OTP Verify] Could not send admin signup notification:", adminErr);
   }
 
   // Returned as-is so better-auth's session Set-Cookie headers reach the browser.

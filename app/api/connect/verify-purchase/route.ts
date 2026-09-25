@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { notifyAdminPurchase } from "@/lib/email";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
@@ -51,6 +52,18 @@ export async function GET(req: NextRequest) {
             stripeSessionId: checkoutSession.id,
           },
         });
+
+        notifyAdminPurchase({
+          userId: session.user.id,
+          itemType: "proconnect_card",
+          itemName: "ProConnect Digital Card ($29)",
+          amountTotal: checkoutSession.amount_total || 2900,
+          currency: checkoutSession.currency || "usd",
+          stripeSessionId: checkoutSession.id,
+          metadata: checkoutSession.metadata,
+          customerEmail: checkoutSession.customer_details?.email || session.user.email,
+          customerName: checkoutSession.customer_details?.name || session.user.name,
+        }).catch(err => console.error("[Connect Verify] Admin alert error:", err));
 
         return NextResponse.json({
           hasPurchased: true,

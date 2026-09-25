@@ -779,3 +779,16 @@ export {
   extractFirstName,
 } from "@/lib/welcome-email";
 export type { WelcomeEmailOptions } from "@/lib/welcome-email";
+
+export {
+  notifyAdminNewSignup,
+  notifyAdminUpgrade,
+  notifyAdminPurchase,
+  ADMIN_NOTIFICATION_EMAIL,
+} from "@/lib/admin-notifications";
+export type {
+  AdminSignupNotificationParams,
+  AdminUpgradeNotificationParams,
+  AdminPurchaseNotificationParams,
+} from "@/lib/admin-notifications";
+
