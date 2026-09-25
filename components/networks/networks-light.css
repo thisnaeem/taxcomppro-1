@@ -1,10 +1,10 @@
 html:not(.dark) .pn-page {
-  --pn-text: #293c24;
-  --pn-muted: #637756;
-  --pn-line: #38552222;
+  --pn-text: #0f172a;
+  --pn-muted: #64748b;
+  --pn-line: #e2e8f0;
   --pn-panel: #fff;
-  background: #f5f7f0 !important;
-  color: #293c24;
+  background: #f8fafc !important;
+  color: #0f172a;
   color-scheme: light;
 }
 html:not(.dark)
@@ -26,130 +26,130 @@ html:not(.dark)
     .pn-network-body footer > span,
     .pn-create-banner p
   ) {
-  color: #607b4c;
+  color: #64748b;
 }
 html:not(.dark) .pn-hero h1 {
-  color: #25391f;
+  color: #0f172a;
 }
 html:not(.dark) .pn-hero h1 em {
-  color: #5b7f3d;
+  color: #d97706;
 }
 html:not(.dark) .pn-hero-art {
-  background: #e8efdf;
-  border-color: #335a2226;
+  background: #f8fafc;
+  border-color: #e2e8f0;
 }
 html:not(.dark) .pn-view-tabs {
-  background: #eaf0e1;
-  border-color: #38552224;
+  background: #f1f5f9;
+  border-color: #e2e8f0;
 }
 html:not(.dark) .pn-view-tabs button {
-  color: #5c7549;
+  color: #64748b;
 }
 html:not(.dark) .pn-view-tabs button[aria-pressed="true"] {
-  background: #d2f58a;
-  color: #2c4620;
+  background: #ffbe24;
+  color: #0a1628;
 }
 html:not(.dark) .pn-search {
   background: #fff;
-  border-color: #335a2226;
-  color: #688650;
+  border-color: #e2e8f0;
+  color: #64748b;
 }
 html:not(.dark)
   .pn-page
   .pn-search
   input:not([type="checkbox"]):not([type="radio"]) {
-  color: #2d4720 !important;
+  color: #0f172a !important;
   background: transparent !important;
 }
 html:not(.dark) .pn-page .pn-search input::placeholder {
-  color: #718764 !important;
+  color: #94a3b8 !important;
 }
 html:not(.dark) .pn-categories button {
-  background: #edf2e7;
-  border-color: #3b5a2122;
-  color: #667e53;
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+  color: #64748b;
 }
 html:not(.dark) .pn-categories button[aria-pressed="true"] {
-  background: #dfedcc;
-  border-color: #89a965;
-  color: #36561e;
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #0a1628;
 }
 html:not(.dark) .pn-network-card {
-  background: #e9efe2;
-  border-color: #385a2126;
+  background: #f8fafc;
+  border-color: #e2e8f0;
 }
 html:not(.dark) .pn-network-body {
   background: #fff;
   border-radius: 0 0 18px 18px;
 }
 html:not(.dark) .pn-network-body h3 {
-  color: #2e4623;
+  color: #0f172a;
 }
 html:not(.dark) .pn-network-body footer > a {
-  color: #4b7130;
+  color: #2563eb;
 }
 html:not(.dark) .pn-network-body footer > a > span {
-  background: #e9f2df;
-  border-color: #bad49d;
+  background: #f1f5f9;
+  border-color: #cbd5e1;
 }
 html:not(.dark) .pn-network-owner > span:first-child {
-  background: #e3ecd7;
-  color: #55713e;
+  background: #f1f5f9;
+  color: #475569;
 }
 html:not(.dark) .pn-member-tag {
-  background: #e4f0d5;
-  color: #4b712f;
+  background: #f8fafc;
+  color: #2563eb;
 }
 html:not(.dark) .pn-benefits > span {
-  background: #f0f4e9;
-  border-color: #3e5b2620;
-  color: #627c50;
+  background: #f8fafc;
+  border-color: #e2e8f0;
+  color: #475569;
 }
 html:not(.dark) .pn-empty,
 html:not(.dark) .pn-loading {
   background: #fff;
-  border-color: #385a2126;
-  color: #2e4623;
+  border-color: #e2e8f0;
+  color: #0f172a;
 }
 html:not(.dark) .pn-empty p {
-  color: #698359;
+  color: #64748b;
 }
 html:not(.dark) .pn-create-banner {
-  background: #e9f0df;
-  border-color: #385a2126;
+  background: #f8fafc;
+  border-color: #e2e8f0;
 }
 html:not(.dark) .pn-create-icon {
-  background: #dce9cd;
-  border-color: #a8c28b;
-  color: #5b793f;
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #2563eb;
 }
 html:not(.dark) .pn-secondary {
   background: #fff;
-  border-color: #385a2126;
-  color: #4b6836;
+  border-color: #e2e8f0;
+  color: #475569;
 }
 html:not(.dark) .pn-secondary:hover {
-  background: #e9f1dd;
+  background: #f1f5f9;
 }
 html:not(.dark) .pn-network-header {
-  background: #edf2e7;
+  background: #f1f5f9;
 }
 html:not(.dark) .pn-back {
-  color: #607b4c;
+  color: #64748b;
 }
 html:not(.dark) .pn-header-identity > span {
-  color: #5d7b42;
-  background: #e0ebd3;
-  border-color: #b7cda0;
+  color: #ffbe24;
+  background: #f8fafc;
+  border-color: #cbd5e1;
 }
 html:not(.dark) .pn-icon-button {
   background: #fff;
-  color: #587741;
-  border-color: #b7cda0;
+  color: #475569;
+  border-color: #cbd5e1;
 }
 html:not(.dark) .pn-icon-button[aria-pressed="true"] {
-  background: #d2f58a;
-  color: #2d461c;
+  background: #ffbe24;
+  color: #0a1628;
 }
 html:not(.dark) .pn-hub .bg-white,
 html:not(.dark) .pn-hub [class*="dark:bg-[#121e33]"],
@@ -158,114 +158,101 @@ html:not(.dark) .pn-hub [class*="dark:bg-[#172135]"] {
 }
 html:not(.dark) .pn-hub :is(.bg-slate-50, .bg-slate-100),
 html:not(.dark) .pn-hub [class*="dark:bg-white/5"] {
-  background: #eff4e9 !important;
+  background: #f8fafc !important;
 }
 html:not(.dark) .pn-hub :is(.bg-slate-200, .bg-slate-300) {
-  background: #dfe8d5;
+  background: #f1f5f9;
 }
 html:not(.dark) .pn-hub [class*="dark:bg-slate-900"] {
-  background: #e9f0df !important;
+  background: #f8fafc !important;
 }
 html:not(.dark)
   .pn-hub
   :is(.text-slate-900, .text-slate-800, .text-slate-700, .text-white) {
-  color: #2e4523 !important;
+  color: #0f172a !important;
 }
 html:not(.dark) .pn-hub :is(.text-slate-600, .text-slate-500, .text-slate-400) {
-  color: #697d5d !important;
+  color: #64748b !important;
 }
 html:not(.dark) .pn-hub :is(.text-slate-300, .text-slate-200) {
-  color: #4f6742 !important;
+  color: #64748b !important;
 }
-html:not(.dark)
-  .pn-hub
-  :is(
-    .text-amber-300,
-    .text-amber-400,
-    .text-amber-500,
-    .text-blue-400,
-    .text-blue-500,
-    .text-blue-600,
-    .text-emerald-400,
-    .text-emerald-500
-  ) {
-  color: #5e823b !important;
-}
+/* preserved semantic text colors */
 html:not(.dark) .pn-hub .pn-hub-sidebar > div {
   background: transparent !important;
 }
 html:not(.dark) .pn-hub-sidebar button {
-  color: #526c43;
+  color: #64748b;
 }
 html:not(.dark) .pn-hub-sidebar button[aria-pressed="true"] {
-  color: #2d4620 !important;
+  color: #0a1628 !important;
 }
 html:not(.dark) .pn-mobile-navigation {
-  background: #eaf1e1;
+  background: #f8fafc;
 }
 html:not(.dark) .pn-mobile-navigation label {
-  color: #667d54;
+  color: #64748b;
 }
 html:not(.dark)
   .pn-hub
   input:not([type="checkbox"]):not([type="radio"]):not([type="color"]),
 html:not(.dark) .pn-hub textarea,
 html:not(.dark) .pn-hub select {
-  background: #fbfdf7 !important;
-  color: #2d4522 !important;
-  border-color: #36592035 !important;
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
 }
 html:not(.dark) .pn-hub input::placeholder,
 html:not(.dark) .pn-hub textarea::placeholder {
-  color: #798e6e !important;
+  color: #94a3b8 !important;
 }
 html:not(.dark) .pn-hub .pn-search input {
   background: transparent !important;
 }
 html:not(.dark) .pn-search-summary {
-  background: #edf3e6;
-  color: #5c774a;
+  background: #f8fafc;
+  color: #64748b;
 }
 html:not(.dark) .pn-search-summary button {
-  color: #416525;
+  color: #1e293b;
 }
 html:not(.dark) .pn-network-welcome {
-  background: #e8efdf;
-  border-color: #335a2226;
+  background: #f8fafc;
+  border-color: #e2e8f0;
 }
 html:not(.dark) .pn-hub-stats button {
   background: #fff;
-  color: #6d8d50;
+  color: #475569;
 }
 html:not(.dark) .pn-hub-stats button > span {
-  color: #728764;
+  color: #64748b;
 }
 html:not(.dark) .pn-hub-stats strong {
-  color: #314d23;
+  color: #0f172a;
 }
 html:not(.dark) .pn-hub-main .py-8.text-center > svg,
 html:not(.dark) .pn-hub-main .py-16.text-center > svg {
-  background: #e9f1de;
-  border-color: #b6cca140;
+  background: #f8fafc;
+  border-color: #e2e8f0;
 }
 html:not(.dark) .pn-paywall {
-  background: #edf4e3;
-  border-color: #b0c68f;
+  background: #f8fafc;
+  border-color: #cbd5e1;
 }
 html:not(.dark) .pn-paywall .bg-white\/5 {
   background: #fff9;
 }
 html:not(.dark) .pn-paywall .border-white\/10,
 html:not(.dark) .pn-paywall .border-white\/5 {
-  border-color: #38552220;
+  border-color: #e2e8f0;
 }
 html:not(.dark) .pn-paywall-intro h2 {
-  color: #2d4522;
+  color: #0f172a;
 }
 html:not(.dark) .pn-paywall-intro > div {
-  background: #dfedcf;
-  border-color: #bfd2a4;
-  color: #5b7b3d;
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #2563eb;
 }
 html:not(.dark) .pn-page.pn-create {
   background: #f8fafc !important;

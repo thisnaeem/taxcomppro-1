@@ -6,7 +6,6 @@ import Link from "next/link";
 import { useSession } from "@/lib/auth-client";
 import "@/components/networks/networks.css";
 import "@/components/networks/network-create.css";
-import "@/components/networks/networks-light.css";
 import NetworkBadge from "@/components/networks/NetworkBadge";
 import BadgeCreator, { BadgeConfig } from "@/components/networks/BadgeCreator";
 import {
@@ -263,7 +262,7 @@ export default function CreateProNetworkPage() {
 
   if (isPending) {
     return (
-      <div className="pn-page pn-hub pn-create min-h-screen flex items-center justify-center bg-[#f4f6fb] dark:bg-[#0c1527]">
+      <div className="pn-page pn-create min-h-screen flex items-center justify-center bg-[#f4f6fb] dark:bg-[#0c1527]">
         <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
       </div>
     );
@@ -271,7 +270,7 @@ export default function CreateProNetworkPage() {
 
   if (!session?.user) {
     return (
-      <div className="pn-page pn-hub pn-create min-h-screen flex items-center justify-center bg-[#f4f6fb] dark:bg-[#0c1527] p-4">
+      <div className="pn-page pn-create min-h-screen flex items-center justify-center bg-[#f4f6fb] dark:bg-[#0c1527] p-4">
         <div className="bg-white dark:bg-[#172135] border border-slate-200 dark:border-slate-800 rounded-3xl p-8 max-w-md w-full text-center space-y-5 shadow-2xl">
           <div className="w-14 h-14 rounded-2xl bg-amber-400/20 text-amber-500 mx-auto flex items-center justify-center">
             <Crown className="w-7 h-7" />
@@ -294,7 +293,7 @@ export default function CreateProNetworkPage() {
   }
 
   return (
-    <div className="pn-page pn-hub pn-create">
+    <div className="pn-page pn-create">
       {/* Top Sub-Header */}
       <header className="bg-white dark:bg-[#0c1527] border-b border-slate-200 dark:border-[#243550] relative z-10 shadow-sm">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
@@ -433,7 +432,7 @@ export default function CreateProNetworkPage() {
 
                 {/* Name */}
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                  <label className="block text-xs font-bold text-slate-300 mb-1.5">
                     Pro Network Name *
                   </label>
                   <input
@@ -442,13 +441,13 @@ export default function CreateProNetworkPage() {
                     aria-label="Network name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 font-bold text-sm text-slate-900 dark:text-white"
+                    className="w-full px-4 py-3 rounded-2xl border border-[#243550] font-bold text-sm text-white bg-[#0f172a] placeholder:text-slate-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                   />
                 </div>
 
                 {/* Tagline */}
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                  <label className="block text-xs font-bold text-slate-300 mb-1.5">
                     Short Tagline
                   </label>
                   <input
@@ -457,23 +456,23 @@ export default function CreateProNetworkPage() {
                     aria-label="Short tagline"
                     value={tagline}
                     onChange={(e) => setTagline(e.target.value)}
-                    className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 font-medium text-sm text-slate-900 dark:text-white"
+                    className="w-full px-4 py-3 rounded-2xl border border-[#243550] font-medium text-sm text-white bg-[#0f172a] placeholder:text-slate-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                   />
                 </div>
 
                 {/* Category */}
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                  <label className="block text-xs font-bold text-slate-300 mb-1.5">
                     Category
                   </label>
                   <select
                     aria-label="Network category"
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
-                    className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 font-bold text-sm text-slate-900 dark:text-white"
+                    className="w-full px-4 py-3 rounded-2xl border border-[#243550] font-bold text-sm text-white bg-[#0f172a] focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                   >
                     {categories.map((c) => (
-                      <option key={c} value={c}>
+                      <option key={c} value={c} className="bg-[#0f172a] text-white">
                         {c}
                       </option>
                     ))}
@@ -482,7 +481,7 @@ export default function CreateProNetworkPage() {
 
                 {/* Monthly Subscription Price & Network Model */}
                 <div className="space-y-3">
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                  <label className="block text-xs font-bold text-slate-300">
                     Network Access &amp; Pricing Model *
                   </label>
 
@@ -496,20 +495,20 @@ export default function CreateProNetworkPage() {
                       }}
                       className={`p-4 rounded-2xl border text-left transition-all relative ${
                         pricingType === "free"
-                          ? "border-blue-500/60 dark:border-blue-400/50 bg-blue-500/10 dark:bg-[#0c1a2e] ring-2 ring-blue-500/30"
-                          : "border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 bg-white dark:bg-[#1a263d]"
+                          ? "border-blue-500 bg-blue-500/10 ring-2 ring-blue-500/30"
+                          : "border-[#243550] hover:border-slate-600 bg-[#0f172a]"
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1.5">
-                        <span className="inline-flex items-center gap-1.5 text-xs font-black text-blue-600 dark:text-blue-400">
-                          <Sparkles className="w-4 h-4 text-blue-500 dark:text-blue-400" />
+                        <span className="inline-flex items-center gap-1.5 text-xs font-black text-blue-400">
+                          <Sparkles className="w-4 h-4 text-blue-400" />
                           <span>Free Pro Network</span>
                         </span>
-                        <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-700 dark:text-blue-300 border border-blue-500/20">
+                        <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-300 border border-blue-500/20">
                           $0 / month
                         </span>
                       </div>
-                      <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                      <p className="text-[11px] text-slate-400 leading-relaxed">
                         100% free for members to join. Perfect for building an
                         audience, masterclass discussions, and rapid community
                         growth.
@@ -527,20 +526,20 @@ export default function CreateProNetworkPage() {
                       }}
                       className={`p-4 rounded-2xl border text-left transition-all relative ${
                         pricingType === "paid"
-                          ? "border-amber-400 bg-amber-400/10 dark:bg-amber-400/15 ring-2 ring-amber-400/30"
-                          : "border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 bg-white dark:bg-[#1a263d]"
+                          ? "border-[#ffbe24] bg-[#ffbe24]/10 ring-2 ring-[#ffbe24]/30"
+                          : "border-[#243550] hover:border-slate-600 bg-[#0f172a]"
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1.5">
-                        <span className="inline-flex items-center gap-1.5 text-xs font-black text-amber-500 dark:text-amber-400">
-                          <Crown className="w-4 h-4 text-amber-400" />
+                        <span className="inline-flex items-center gap-1.5 text-xs font-black text-[#ffbe24]">
+                          <Crown className="w-4 h-4 text-[#ffbe24]" />
                           <span>Paid Membership</span>
                         </span>
-                        <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-800 dark:text-amber-300">
+                        <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-[#ffbe24]/15 text-[#ffbe24] border border-[#ffbe24]/30">
                           Custom Price
                         </span>
                       </div>
-                      <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                      <p className="text-[11px] text-slate-400 leading-relaxed">
                         Charge recurring monthly dues. 0% TCP fee — you keep
                         100% of subscriber revenue via direct Stripe payouts.
                       </p>
@@ -684,7 +683,7 @@ export default function CreateProNetworkPage() {
                     aria-label="Network description"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-900 dark:text-white"
+                    className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-[#243550] text-xs font-medium text-slate-900 dark:text-white bg-white dark:bg-[#0f172a] placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                   />
                 </div>
               </div>
