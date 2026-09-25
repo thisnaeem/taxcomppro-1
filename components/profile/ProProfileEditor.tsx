@@ -549,6 +549,7 @@ export default function ProProfileEditor() {
                 <button
                   onClick={() => coverInputRef.current?.click()}
                   disabled={coverUploading}
+                  title="Recommended: 1400 × 400 px (3.5:1 ratio) • JPG, PNG, WebP up to 5 MB"
                   className="absolute top-3 right-3 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-black/50 hover:bg-black/70 backdrop-blur-sm text-white text-xs font-bold border border-white/20 transition-all"
                 >
                   {coverUploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Camera className="w-3.5 h-3.5" />}
@@ -556,7 +557,7 @@ export default function ProProfileEditor() {
                 </button>
               </div>
             ) : (
-              <div className="relative h-28 sm:h-32 w-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+              <div className="relative h-28 sm:h-32 w-full bg-slate-100 dark:bg-slate-800 flex flex-col items-center justify-center gap-1.5">
                 <button
                   onClick={() => coverInputRef.current?.click()}
                   disabled={coverUploading}
@@ -565,6 +566,7 @@ export default function ProProfileEditor() {
                   {coverUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
                   Add Cover Photo
                 </button>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Recommended: 1400 × 400 px (3.5:1 ratio) • up to 5 MB</span>
               </div>
             )}
 
@@ -583,8 +585,8 @@ export default function ProProfileEditor() {
                   <button
                     onClick={() => avatarInputRef.current?.click()}
                     disabled={avatarUploading}
-                    className="absolute inset-0 rounded-2xl bg-black/40 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer z-10"
-                    title="Change photo"
+                    className="absolute inset-0 rounded-2xl bg-black/40 text-white flex flex-col items-center justify-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer z-10"
+                    title="Change photo (Recommended: 400 × 400 px square • JPG, PNG, WebP up to 5 MB)"
                   >
                     {avatarUploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Camera className="w-5 h-5" />}
                   </button>

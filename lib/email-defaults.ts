@@ -23,6 +23,28 @@ export interface DefaultEmailTemplateDef {
 }
 
 export const DEFAULT_EMAIL_TEMPLATES: DefaultEmailTemplateDef[] = [
+  {
+    key: "WELCOME",
+    name: "Welcome to Tax Comp Pro",
+    category: "AUTH",
+    description: "Sent automatically to every new member upon signing up / registration.",
+    subject: "Welcome to Tax Comp Pro",
+    preheader: "You're in. Here's everything waiting for you inside Tax Comp Pro — and 4 quick steps to get started.",
+    heading: "Welcome to the Network.",
+    bodyHtml: `<p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#475569;">Hi {{first_name}},</p>
+<p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#475569;">We're so glad you're here. Tax Comp Pro was built for professionals like you — the people who power this industry — to <strong style="color:#0f172a;">connect, learn, sell, and grow</strong> in one place.</p>
+<p style="margin:0 0 20px 0;font-size:15px;line-height:1.6;color:#475569;">This isn't just a platform. It's a community designed to <strong style="color:#10b981;">grow you and your business</strong>. Here's a look at everything waiting for you inside.</p>`,
+    buttonLabel: "Go to My Dashboard",
+    buttonUrl: "https://www.taxcomppro.com/login",
+    footerNote: "You're receiving this email because you created a Tax Comp Pro account.",
+    variables: ["first_name", "userName", "email", "siteUrl"],
+    sampleVariables: {
+      first_name: "Alex",
+      userName: "Alex Johnson",
+      email: "alex@example.com",
+      siteUrl: "https://www.taxcomppro.com",
+    },
+  },
 {
   "key": "CONNECTION_REQUEST",
   "name": "New connection request",

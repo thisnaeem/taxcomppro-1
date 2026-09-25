@@ -69,7 +69,7 @@ export default function GroupSettingsPanel({ group, onSaved, onCancel }: { group
         {coverImage && <div className="gd-settings-cover"><Image src={coverImage} fill unoptimized alt="Group cover preview" /></div>}
         <div className="gd-cover-controls"><label className="gd-secondary" htmlFor="group-cover"><ImageUploadIcon size={18} />{coverImage ? "Change cover" : "Upload cover"}</label>{coverImage && <button className="gd-secondary" type="button" onClick={() => { setCoverImage(null); setSaved(false); }}>Remove cover</button>}</div>
         <input className="sr-only" id="group-cover" type="file" accept="image/jpeg,image/png,image/webp" onChange={e => { void upload(e.target.files?.[0]); e.target.value = ""; }} />
-        <p className="gd-muted">JPG, PNG, or WebP · Up to 10 MB. A wide image works best.</p>
+        <p className="gd-muted">Recommended: 1200 × 400 px (3:1 aspect ratio) • JPG, PNG, or WebP up to 10 MB.</p>
       </fieldset>
       <footer><button type="button" className="gd-secondary" disabled={busy} onClick={onCancel}>Back to discussions</button><button type="submit" className="gp-join" disabled={busy}>{busy ? "Please wait…" : "Save changes"}</button></footer>
     </form>

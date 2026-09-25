@@ -208,7 +208,7 @@ export default function CreateCoursePage() {
                     ? <Loader2 className="w-6 h-6 animate-spin" />
                     : <Upload className="w-6 h-6" />}
                   <span className="text-sm font-medium">{thumbUploading ? "Uploading…" : "Click to upload thumbnail"}</span>
-                  <span className="text-xs text-slate-300">PNG, JPG, WEBP — max 5 MB</span>
+                  <span className="text-xs text-slate-400">Recommended: 1280 × 720 px (16:9 ratio) • PNG, JPG, WebP up to 5 MB</span>
                 </button>
               )}
             </div>

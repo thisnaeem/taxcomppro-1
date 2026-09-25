@@ -790,6 +790,7 @@ function ConnectWizard({ onBack }: { onBack: () => void }) {
                     <div className="absolute bottom-2 right-2 w-8 h-8 rounded-full bg-[#0a1628] dark:bg-amber-500 text-white dark:text-[#0a1628] flex items-center justify-center shadow-lg"><Upload className="w-4 h-4" /></div>
                   </div>
                   <button type="button" onClick={() => document.getElementById("connect-avatar-input")?.click()} className="text-xs font-extrabold text-[#0a1628] dark:text-amber-400 hover:underline">{imagePreview ? "Change Photo" : "Upload Profile Photo"}</button>
+                  <p className="text-[11px] text-slate-400 mt-1.5">Recommended: 400 × 400 px (1:1 square) • PNG, JPG, or WebP up to 5 MB</p>
                   <input id="connect-avatar-input" type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (!f) return; setImageFile(f); setImagePreview(URL.createObjectURL(f)); }} />
                 </div>
                 <Nav back={() => setStep(4)} next={() => setStep(6)} showSkip />
@@ -809,6 +810,7 @@ function ConnectWizard({ onBack }: { onBack: () => void }) {
                     <div className="absolute bottom-2 right-2 w-8 h-8 rounded-full bg-[#0a1628] dark:bg-amber-500 text-white dark:text-[#0a1628] flex items-center justify-center shadow-lg"><Upload className="w-4 h-4" /></div>
                   </div>
                   <button type="button" onClick={() => document.getElementById("connect-logo-input")?.click()} className="text-xs font-extrabold text-[#0a1628] dark:text-amber-400 hover:underline">{logoPreview ? "Change Logo" : "Upload Company Logo"}</button>
+                  <p className="text-[11px] text-slate-400 mt-1.5">Recommended: 400 × 400 px (1:1 square) • Transparent PNG, JPG, or SVG up to 5 MB</p>
                   <input id="connect-logo-input" type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (!f) return; setLogoFile(f); setLogoPreview(URL.createObjectURL(f)); }} />
                 </div>
                 <Nav back={() => setStep(5)} next={() => setStep(7)} nextLabel={logoPreview ? "Continue" : "Skip for Now"} showSkip />

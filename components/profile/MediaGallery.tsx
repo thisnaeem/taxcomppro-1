@@ -78,7 +78,7 @@ export default function MediaGallery({ photos, onChange }: MediaGalleryProps) {
           className="p-8 rounded-xl border-2 border-dashed border-slate-200 flex flex-col items-center gap-2 cursor-pointer hover:border-[#0a1628] hover:bg-slate-50 transition-all">
           {uploading ? <Loader2 className="w-8 h-8 text-slate-300 animate-spin" /> : <ImageIcon className="w-8 h-8 text-slate-300" />}
           <p className="text-xs font-semibold text-slate-400">{uploading ? "Uploading…" : "Click to upload photos, videos or PDFs"}</p>
-          <p className="text-[10px] text-slate-300">Up to 12 files</p>
+          <p className="text-[10px] text-slate-400">Photos (up to 1920 × 1080 px), videos, or PDFs • Up to 12 files, max 10 MB each</p>
         </div>
       )}
       {error && <p role="alert" className="mt-3 text-xs font-semibold text-red-500">{error}</p>}

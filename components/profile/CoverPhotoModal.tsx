@@ -343,7 +343,7 @@ export default function CoverPhotoModal({
               </div>
 
               <div className="text-[11px] text-slate-400">
-                1400 × 400 recommended • PNG, JPG, or WebP up to 5MB
+                Recommended: 1400 × 400 px (3.5:1 ratio) • PNG, JPG, or WebP up to 5MB
               </div>
 
               {selectedFile && (

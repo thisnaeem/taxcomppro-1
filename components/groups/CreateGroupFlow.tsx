@@ -112,11 +112,12 @@ export default function CreateGroupFlow() {
               <p className="gp-field-hint">A specific name and a welcoming description help the right people find you.</p>
             </div>}
             {step === 1 && <div className="gp-form-fields">
-              <div><h3>Group cover</h3><p className="gp-field-hint">Choose a wide image that represents your group. JPG, PNG, or WebP, up to 10 MB. Optional.</p></div>
+              <div><h3>Group cover</h3><p className="gp-field-hint">Recommended size: 1200 × 400 px (3:1 aspect ratio) • JPG, PNG, or WebP up to 10 MB. Optional.</p></div>
               <label className="gp-upload">
-                <input type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} aria-label="Upload group cover" onChange={e => { void upload(e.target.files?.[0]); e.target.value = ""; }} />
+                <input type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} aria-label="Upload group cover (Recommended: 1200 × 400 px)" onChange={e => { void upload(e.target.files?.[0]); e.target.value = ""; }} />
                 {coverImage ? <Image src={coverImage} alt="Selected cover" fill unoptimized sizes="650px" /> : <ImageUploadIcon size={36} />}
                 <span>{uploading ? "Uploading your cover…" : coverImage ? "Change cover image" : "Choose a cover image"}</span>
+                <small className="text-[11px] text-slate-400 font-normal">1200 × 400 px recommended</small>
               </label>
               <div aria-live="polite">{uploading && <p className="gp-upload-status"><Loading03Icon size={18} className="animate-spin" /> Uploading…</p>}</div>
               {coverImage && <button className="gp-remove-cover" type="button" disabled={busy} onClick={() => setCoverImage(null)}><Delete02Icon size={16} /> Remove cover</button>}

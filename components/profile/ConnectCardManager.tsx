@@ -242,7 +242,7 @@ export default function ConnectCardManager() {
             onClick={() => logoInputRef.current?.click()}>
             {card.logoUrl ? <img src={card.logoUrl} alt="" className="w-full h-full object-contain" /> : (logoUploading ? <Loader2 className="w-4 h-4 animate-spin text-slate-400" /> : <Camera className="w-4 h-4 text-slate-400" />)}
           </div>
-          <div className="text-xs text-slate-400">Business logo<br /><span className="text-[10px]">Click the square to upload</span></div>
+          <div className="text-xs text-slate-600 dark:text-slate-300 font-bold">Business logo<br /><span className="text-[10px] text-slate-400 font-normal">Recommended: 400 × 400 px (1:1 square) • PNG, JPG, or SVG up to 5 MB</span></div>
           <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) uploadLogo(f); }} />
         </div>
         <div className="grid sm:grid-cols-2 gap-4">

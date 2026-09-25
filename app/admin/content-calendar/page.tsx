@@ -308,6 +308,7 @@ function CreatePostModal({ defaultDate, onClose, onCreated }: {
             <input ref={videoRef} type="file" accept="video/*" className="hidden"
               onChange={e => { handleVideo(e.target.files); e.target.value = ""; }} />
             <button onClick={() => imageRef.current?.click()} disabled={!!video || previews.length >= 4}
+              title="Add images (up to 4) • Recommended: up to 1920 × 1080 px • Max 10 MB each"
               className="flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-[#0a1628] hover:bg-slate-100 px-3 py-2 rounded-xl transition-all disabled:opacity-30 disabled:cursor-not-allowed">
               <ImageIcon className="w-4 h-4 text-blue-500" />
               {previews.length > 0 ? `${previews.length}/4 images` : "Add Images"}
@@ -317,7 +318,7 @@ function CreatePostModal({ defaultDate, onClose, onCreated }: {
               <Video className="w-4 h-4 text-purple-500" />
               {video ? "1 video" : "Add Video"}
             </button>
-            <span className="text-[10px] text-slate-300 ml-1">Images and video are mutually exclusive</span>
+            <span className="text-[10px] text-slate-400 ml-1">Images (up to 1920×1080, max 10MB) & video are mutually exclusive</span>
           </div>
 
           {/* Time picker */}

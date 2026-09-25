@@ -772,3 +772,10 @@ export async function sendMembershipUpgradedEmail({
     metadata: { tier, currentPeriodEnd, isComplimentary },
   });
 }
+
+export {
+  sendWelcomeEmail,
+  renderWelcomeEmailHtml,
+  extractFirstName,
+} from "@/lib/welcome-email";
+export type { WelcomeEmailOptions } from "@/lib/welcome-email";

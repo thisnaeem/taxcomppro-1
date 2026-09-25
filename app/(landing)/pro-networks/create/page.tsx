@@ -772,7 +772,7 @@ export default function CreateProNetworkPage() {
                       />
                     </label>
                     <span className="text-[11px] text-slate-400">
-                      Ideal size: 1200 × 400 px • PNG, JPG, or WebP up to 10MB
+                      Recommended: 1200 × 400 px (3:1 aspect ratio) • PNG, JPG, or WebP up to 10MB
                     </span>
                   </div>
                 </div>
@@ -837,7 +837,7 @@ export default function CreateProNetworkPage() {
                       />
                     </label>
                     <span className="text-[11px] text-slate-400">
-                      Transparent PNG recommended
+                      Recommended: 400 × 400 px (1:1 square) • Transparent PNG, JPG, or WebP up to 5MB
                     </span>
                   </div>
                 </div>

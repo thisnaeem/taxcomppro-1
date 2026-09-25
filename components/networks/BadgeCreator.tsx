@@ -151,7 +151,7 @@ export default function BadgeCreator({ value, onChange }: BadgeCreatorProps) {
                 onChange={handleCustomUpload}
               />
             </label>
-            <p className="text-xs text-slate-400 mt-1">Recommended size: 128x128px transparent PNG</p>
+            <p className="text-xs text-slate-400 mt-1">Recommended size: 128 × 128 px (1:1 square) • Transparent PNG or SVG up to 2 MB</p>
           </div>
           {value.badgeCustomImage && (
             <button

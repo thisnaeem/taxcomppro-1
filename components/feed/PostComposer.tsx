@@ -284,6 +284,7 @@ export default function PostComposer({ onPostCreated, onScheduled }: Props) {
                     onChange={e => handleFiles(e.target.files)} />
                   <button onClick={() => { setVideo(null); fileRef.current?.click(); }}
                     disabled={!!video || previews.length >= 4}
+                    title="Upload up to 4 photos • Recommended: up to 1920 × 1080 px • Max 10 MB each"
                     className="flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-emerald-600 px-3 py-2 rounded-lg hover:bg-emerald-50 transition-all disabled:opacity-40 disabled:cursor-not-allowed">
                     <Image01Icon className="w-4 h-4 text-emerald-500" />
                     Photo{previews.length > 0 ? ` (${previews.length}/4)` : ""}

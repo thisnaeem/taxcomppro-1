@@ -1369,7 +1369,7 @@ export default function CreateListingPage() {
                                 Click to upload course cover
                               </span>
                               <span className="text-xs text-slate-400 mt-1">
-                                JPG, PNG, WEBP — Any size (auto-optimized)
+                                Recommended: 1280 × 720 px (16:9 ratio) • JPG, PNG, WebP up to 10 MB
                               </span>
                             </>
                           )}
@@ -1936,7 +1936,7 @@ export default function CreateListingPage() {
                             {category === "COURSE" ? "Click to upload course banner" : "Click to upload banner"}
                           </span>
                           <span className="text-xs text-slate-400 mt-1">
-                            JPG, PNG, WEBP — max 10 MB
+                            Recommended: 1200 × 630 px (1.91:1 ratio) • JPG, PNG, WebP up to 10 MB
                           </span>
                         </>
                       )}

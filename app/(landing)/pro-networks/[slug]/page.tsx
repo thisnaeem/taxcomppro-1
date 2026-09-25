@@ -3041,6 +3041,7 @@ export default function ProNetworkHubPage({
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                   Select Video or Media File (Cloudinary) *
                 </label>
+                <p className="text-[11px] text-slate-400 mb-1.5">Images: up to 1920 × 1080 px • Videos: MP4, WebM up to 100 MB</p>
                 <input
                   type="file"
                   accept="video/*,image/*,audio/*"
@@ -3060,6 +3061,7 @@ export default function ProNetworkHubPage({
                   onChange={(e) => setMediaThumbnailFile(e.target.files?.[0] || null)}
                   className="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200"
                 />
+                <p className="text-[11px] text-slate-400 mt-1">Recommended: 1280 × 720 px (16:9 ratio) • JPG, PNG, or WebP up to 5 MB</p>
               </div>
 
               <div className="flex justify-end gap-2 pt-2">

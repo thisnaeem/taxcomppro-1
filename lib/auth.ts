@@ -5,7 +5,7 @@ import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { ensureProfileSlug } from "@/lib/profileSlug";
 import { prisma } from "@/lib/prisma";
-import { sendPasswordResetEmail } from "@/lib/email";
+import { sendPasswordResetEmail, sendWelcomeEmail } from "@/lib/email";
 
 const appUrl = process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
@@ -16,7 +16,20 @@ export const auth = betterAuth({
     return {user:{...user,...fresh},session};
   })],
   database: prismaAdapter(prisma, { provider: "postgresql" }),
-  databaseHooks: { user: { create: { after: async user => { await ensureProfileSlug(user.id, user.name); } } } },
+  databaseHooks: {
+    user: {
+      create: {
+        after: async (user) => {
+          await ensureProfileSlug(user.id, user.name);
+          try {
+            await sendWelcomeEmail({ to: user.email, userName: user.name });
+          } catch (emailErr) {
+            console.error("[Auth Hook] Failed to send welcome email:", emailErr);
+          }
+        },
+      },
+    },
+  },
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: false,

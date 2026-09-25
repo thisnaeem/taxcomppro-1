@@ -285,6 +285,7 @@ export default function EditProfileModal({
                   <div>
                     <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1.5">
                       Profile Avatar
+                      <span className="text-[10px] text-slate-400 font-normal ml-1.5">(400 × 400 px, 1:1 square)</span>
                     </label>
                     <ImageUpload
                       current={form.image}
@@ -297,6 +298,7 @@ export default function EditProfileModal({
                   <div>
                     <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1.5">
                       Cover Banner Photo
+                      <span className="text-[10px] text-slate-400 font-normal ml-1.5">(1400 × 400 px, 3.5:1 ratio)</span>
                     </label>
                     <ImageUpload
                       current={form.coverImage}

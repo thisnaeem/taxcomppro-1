@@ -4,6 +4,7 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { normalizeEmail, verifyOtp } from "@/lib/otp";
+import { sendWelcomeEmail } from "@/lib/email";
 
 /**
  * Verifies the emailed code and, on success, creates the account server-side.
@@ -110,6 +111,13 @@ export async function POST(request: NextRequest) {
     await prisma.user.update({ where: { email }, data: { emailVerified: true } });
   } catch (err) {
     console.error("[OTP] Could not set emailVerified flag:", err);
+  }
+
+  // Send the official welcome email to the newly verified member
+  try {
+    await sendWelcomeEmail({ to: email, userName: name });
+  } catch (emailErr) {
+    console.error("[OTP Verify] Could not send welcome email:", emailErr);
   }
 
   // Returned as-is so better-auth's session Set-Cookie headers reach the browser.
