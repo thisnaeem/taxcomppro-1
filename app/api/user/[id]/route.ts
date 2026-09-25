@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 type Params = { params: Promise<{ id: string }> };
 
 export async function GET(_req: NextRequest, { params }: Params) {
   const { id } = await params;
+  const session = await auth.api.getSession({ headers: _req.headers }).catch(() => null);
 
   const networkCardSelect = {
     id: true, name: true, slug: true, tagline: true, logoImage: true, memberCount: true,
@@ -114,6 +116,21 @@ export async function GET(_req: NextRequest, { params }: Params) {
 
   if (!user) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
+  let viewerConnectionStatus: "NONE" | "PENDING" | "ACCEPTED" = "NONE";
+  if (session?.user?.id && session.user.id !== user.id) {
+    const conn = await prisma.connection.findFirst({
+      where: {
+        OR: [
+          { requesterId: session.user.id, receiverId: user.id },
+          { requesterId: user.id, receiverId: session.user.id },
+        ],
+      },
+      select: { status: true },
+    });
+    if (conn?.status === "ACCEPTED") viewerConnectionStatus = "ACCEPTED";
+    else if (conn?.status === "PENDING") viewerConnectionStatus = "PENDING";
+  }
+
   type NetworkRow = (typeof ownedNetworks)[number];
   const toBadge = (n: NetworkRow, role: string) => ({
     id: n.id,
@@ -132,6 +149,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
 
   return NextResponse.json({
     ...user,
+    viewerConnectionStatus,
     networks: [
       ...ownedNetworks.map((n) => toBadge(n, "OWNER")),
       ...memberships.map((m) => toBadge(m.network, m.role === "OWNER" ? "MEMBER" : m.role || "MEMBER")),

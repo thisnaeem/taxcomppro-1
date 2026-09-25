@@ -132,6 +132,7 @@ interface PublicUser {
   createdAt: string;
   connectionCount: number;
   hasDueDiligenceBadge: boolean;
+  viewerConnectionStatus?: "NONE" | "PENDING" | "ACCEPTED";
   networks?: PublicNetwork[];
   networkStats?: { proNetworks: number; discussionsStarted: number; proTalksHosted: number };
   feedMedia?: FeedMedia[];
@@ -238,6 +239,11 @@ export default function PublicMemberProfile({memberId: id, specialist}: {memberI
       })
       .then((d) => {
         if (d) {
+          if (d.viewerConnectionStatus === "ACCEPTED") {
+            setConnState("connected");
+          } else if (d.viewerConnectionStatus === "PENDING") {
+            setConnState("pending");
+          }
           setProfile({
             ...d,
             specialties: d.specialties ?? [],
@@ -263,16 +269,41 @@ export default function PublicMemberProfile({memberId: id, specialist}: {memberI
     if (!me || !id || me.id === id) return;
     fetch("/api/connections")
       .then((r) => r.json())
-      .then((data: { id: string; status: string; requesterId: string; receiverId: string }[]) => {
-        if (!Array.isArray(data)) return;
-        const match = data.find(
-          (c) =>
-            (c.requesterId === me.id && c.receiverId === id) ||
-            (c.receiverId === me.id && c.requesterId === id)
-        );
-        if (!match) return;
-        if (match.status === "ACCEPTED") setConnState("connected");
-        else if (match.status === "PENDING") setConnState("pending");
+      .then((data: { connections?: any[]; received?: any[]; sent?: any[] } | any[]) => {
+        if (!data) return;
+        const connections = Array.isArray(data) ? data : (data.connections || []);
+        const received = Array.isArray(data) ? [] : (data.received || []);
+        const sent = Array.isArray(data) ? [] : (data.sent || []);
+
+        const isAccepted = connections.some((c: any) => {
+          const reqId = c.requesterId || c.requester?.id;
+          const recId = c.receiverId || c.receiver?.id;
+          return (
+            (reqId === me.id && recId === id) ||
+            (recId === me.id && reqId === id)
+          );
+        });
+
+        if (isAccepted) {
+          setConnState("connected");
+          return;
+        }
+
+        const isPending = [...received, ...sent].some((c: any) => {
+          const reqId = c.requesterId || c.requester?.id;
+          const recId = c.receiverId || c.receiver?.id;
+          return (
+            (reqId === me.id && recId === id) ||
+            (recId === me.id && reqId === id)
+          );
+        });
+
+        if (isPending) {
+          setConnState("pending");
+          return;
+        }
+
+        setConnState("idle");
       })
       .catch(() => {});
   }, [me, id]);
@@ -286,8 +317,18 @@ export default function PublicMemberProfile({memberId: id, specialist}: {memberI
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ receiverId: id }),
       });
-      if (res.ok) setConnState("pending");
-      else setConnState("idle");
+      if (res.ok) {
+        setConnState("pending");
+      } else {
+        const body = await res.json().catch(() => ({}));
+        if (body.existing) {
+          if (body.existing.status === "ACCEPTED") setConnState("connected");
+          else if (body.existing.status === "PENDING") setConnState("pending");
+          else setConnState("idle");
+        } else {
+          setConnState("idle");
+        }
+      }
     } catch {
       setConnState("idle");
     }
