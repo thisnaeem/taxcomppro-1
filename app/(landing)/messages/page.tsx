@@ -12,7 +12,45 @@ import "./messages.css";
 type Person = { id: string; profileSlug?: string | null; name: string; image: string | null; headline?: string | null };
 type Message = { id: string; senderId: string; receiverId: string; content: string; fileUrl?: string | null; fileName?: string | null; fileType?: string | null; isRead: boolean; isSponsored?: boolean; createdAt: string };
 type Thread = Message & { partner: Person; unreadCount: number };
-function Avatar({ person }: { person: Person }) { const [failed, setFailed] = useState(false); return <span className="ms-avatar">{person.image && !failed ? <img src={person.image} alt="" loading="lazy" onError={() => setFailed(true)} /> : person.name.split(" ").filter(Boolean).slice(0, 2).map(v => v[0]).join("")}</span>; }
+const AVATAR_GRADIENTS = [
+  "linear-gradient(135deg, #6366f1 0%, #4338ca 100%)",
+  "linear-gradient(135deg, #06b6d4 0%, #0e7490 100%)",
+  "linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)",
+  "linear-gradient(135deg, #ec4899 0%, #be185d 100%)",
+  "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
+  "linear-gradient(135deg, #10b981 0%, #047857 100%)",
+  "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)",
+  "linear-gradient(135deg, #14b8a6 0%, #0f766e 100%)",
+  "linear-gradient(135deg, #f43f5e 0%, #be123c 100%)",
+  "linear-gradient(135deg, #84cc16 0%, #4d7c0f 100%)",
+  "linear-gradient(135deg, #a855f7 0%, #7e22ce 100%)",
+  "linear-gradient(135deg, #0284c7 0%, #0369a1 100%)",
+];
+
+function getAvatarGradient(seed: string) {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) hash = seed.charCodeAt(i) + ((hash << 5) - hash);
+  return AVATAR_GRADIENTS[Math.abs(hash) % AVATAR_GRADIENTS.length];
+}
+
+function Avatar({ person }: { person: Person }) {
+  const [failed, setFailed] = useState(false);
+  const hasImage = Boolean(person.image && !failed);
+  const initial = (person.name.trim().charAt(0) || "U").toUpperCase();
+  const avatarBg = getAvatarGradient(person.id || person.name);
+  return (
+    <span
+      className="ms-avatar"
+      style={!hasImage ? { background: avatarBg, color: "#ffffff", display: "inline-flex", alignItems: "center", justifyContent: "center", fontWeight: 700 } : undefined}
+    >
+      {hasImage ? (
+        <img src={person.image!} alt="" loading="lazy" onError={() => setFailed(true)} />
+      ) : (
+        initial
+      )}
+    </span>
+  );
+}
 function time(value: string) { const d = new Date(value); return d.toDateString() === new Date().toDateString() ? d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : d.toLocaleDateString([], { month: "short", day: "numeric" }); }
 function Empty({ title, text }: { title: string; text: string }) { return <div className="ms-empty"><span><Message01Icon size={30} /></span><h2>{title}</h2><p>{text}</p></div>; }
 function Loading() { return <div className="ms-loading" role="status" aria-label="Loading messages">{[0, 1, 2, 3].map(i => <div key={i}><span /><span /></div>)}</div>; }

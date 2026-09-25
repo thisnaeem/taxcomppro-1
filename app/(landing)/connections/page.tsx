@@ -13,12 +13,57 @@ interface Data { connections: Connection[]; received: Connection[]; sent: Connec
 type Tab = "home" | "requests" | "suggestions" | "connected" | "sent";
 const labels: Record<Tab, string> = { home: "Your connections", requests: "Connection requests", suggestions: "People you may know", connected: "All connections", sent: "Sent requests" };
 
+const AVATAR_GRADIENTS = [
+  "linear-gradient(135deg, #6366f1 0%, #4338ca 100%)", // Indigo
+  "linear-gradient(135deg, #06b6d4 0%, #0e7490 100%)", // Cyan
+  "linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)", // Purple/Violet
+  "linear-gradient(135deg, #ec4899 0%, #be185d 100%)", // Pink
+  "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)", // Amber/Gold
+  "linear-gradient(135deg, #10b981 0%, #047857 100%)", // Emerald
+  "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)", // Blue
+  "linear-gradient(135deg, #14b8a6 0%, #0f766e 100%)", // Teal
+  "linear-gradient(135deg, #f43f5e 0%, #be123c 100%)", // Rose
+  "linear-gradient(135deg, #84cc16 0%, #4d7c0f 100%)", // Lime
+  "linear-gradient(135deg, #a855f7 0%, #7e22ce 100%)", // Fuchsia
+  "linear-gradient(135deg, #0284c7 0%, #0369a1 100%)", // Sky
+];
+
+function getAvatarGradient(seed: string) {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = seed.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const index = Math.abs(hash) % AVATAR_GRADIENTS.length;
+  return AVATAR_GRADIENTS[index];
+}
+
 function PersonCard({ person, children }: { person: Person; children: ReactNode }) {
   const [failed, setFailed] = useState(false);
   const href = `/member/${person.profileSlug || person.id}`;
+  const hasImage = Boolean(person.image && !failed);
+  const initial = (person.name.trim().charAt(0) || "U").toUpperCase();
+  const avatarBg = getAvatarGradient(person.id || person.name);
+
   return <article className="cn-card">
-    <Link href={href} className="cn-photo" aria-label={`View ${person.name}'s profile`}>
-      {person.image && !failed ? <img src={person.image} alt="" loading="lazy" referrerPolicy="no-referrer" onError={() => setFailed(true)} /> : <span>{person.name.split(" ").filter(Boolean).slice(0, 2).map(n => n[0]).join("")}</span>}
+    <Link
+      href={href}
+      className="cn-photo"
+      style={!hasImage ? { background: avatarBg, color: "#ffffff" } : undefined}
+      aria-label={`View ${person.name}'s profile`}
+    >
+      {hasImage ? (
+        <img
+          src={person.image!}
+          alt=""
+          loading="lazy"
+          referrerPolicy="no-referrer"
+          onError={() => setFailed(true)}
+        />
+      ) : (
+        <span style={{ color: "#ffffff", fontWeight: 800, textShadow: "0 2px 10px rgba(0,0,0,0.25)" }}>
+          {initial}
+        </span>
+      )}
     </Link>
     <div className="cn-card-body"><Link href={href} className="cn-name">{person.name}</Link>
       <p className="cn-role">{person.professionalTitle || person.headline || "Community member"}</p>
