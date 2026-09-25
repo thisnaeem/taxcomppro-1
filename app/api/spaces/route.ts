@@ -33,34 +33,40 @@ export async function GET(req: NextRequest) {
       }))
       .filter(c => !!c.id && !!c.token);
 
-    // Build visibility OR conditions
-    const visibilityOrConditions: Prisma.SpaceWhereInput[] = [
-      { visibility: "PUBLIC" },
-    ];
+    const publicOnly = searchParams.get("publicOnly") === "true";
 
-    if (userId) {
-      if (session?.user?.role === "ADMIN") {
-        visibilityOrConditions.push({ visibility: "PRIVATE" });
-      } else {
-        visibilityOrConditions.push(
-          { hostId: userId },
-          { coHostIds: { has: userId } },
-          { rsvps: { some: { userId } } },
-          { attendances: { some: { userId } } }
-        );
+    const andConditions: Prisma.SpaceWhereInput[] = [];
+
+    if (publicOnly) {
+      andConditions.push({ visibility: "PUBLIC" });
+    } else {
+      // Build visibility OR conditions
+      const visibilityOrConditions: Prisma.SpaceWhereInput[] = [
+        { visibility: "PUBLIC" },
+      ];
+
+      if (userId) {
+        if (session?.user?.role === "ADMIN") {
+          visibilityOrConditions.push({ visibility: "PRIVATE" });
+        } else {
+          visibilityOrConditions.push(
+            { hostId: userId },
+            { coHostIds: { has: userId } },
+            { rsvps: { some: { userId } } },
+            { attendances: { some: { userId } } }
+          );
+        }
       }
-    }
 
-    for (const ic of inviteCookies) {
-      visibilityOrConditions.push({
-        id: ic.id,
-        shareToken: ic.token,
-      });
-    }
+      for (const ic of inviteCookies) {
+        visibilityOrConditions.push({
+          id: ic.id,
+          shareToken: ic.token,
+        });
+      }
 
-    const andConditions: Prisma.SpaceWhereInput[] = [
-      { OR: visibilityOrConditions },
-    ];
+      andConditions.push({ OR: visibilityOrConditions });
+    }
 
     // Category filter
     if (category && category !== "all") {

@@ -8,6 +8,14 @@ import { Check } from "lucide-react";
 import { PricingPlan, PlanTier } from "@/lib/pricing-plans";
 import "@/components/landing/member-pages.css";
 
+export interface DiscountInfo {
+  code: string;
+  discountType: "PERCENT" | "FIXED";
+  discountValue: number;
+  label?: string;
+  savings?: number;
+}
+
 export interface PricingCardProps {
   plan: PricingPlan;
   mode?: "select" | "landing" | "upgrade";
@@ -23,6 +31,7 @@ export interface PricingCardProps {
   // Optional features expansion 
   expanded?: boolean;
   className?: string;
+  discountInfo?: DiscountInfo | null;
 }
 
 export function PricingCard({
@@ -38,6 +47,7 @@ export function PricingCard({
   onUpgrade,
   expanded = false,
   className = "",
+  discountInfo = null,
 }: PricingCardProps) {
   const isSelected = mode === "select" && selected;
   const isSelectable = mode === "select";
@@ -55,6 +65,21 @@ export function PricingCard({
     }
   };
 
+  // Calculate discount if applicable
+  let finalPrice = plan.priceAmount;
+  let discountSavings = 0;
+  const hasDiscount = Boolean(discountInfo && plan.priceAmount > 0);
+
+  if (hasDiscount && discountInfo) {
+    if (discountInfo.discountType === "PERCENT") {
+      discountSavings = (plan.priceAmount * discountInfo.discountValue) / 100;
+    } else {
+      discountSavings = Math.min(plan.priceAmount, discountInfo.discountValue);
+    }
+    discountSavings = Math.round(discountSavings * 100) / 100;
+    finalPrice = Math.max(0, Math.round((plan.priceAmount - discountSavings) * 100) / 100);
+  }
+
   // Determine features to display
   const displayedFeatures = expanded
     ? plan.features
@@ -67,6 +92,7 @@ export function PricingCard({
     plan.popular ? "pricing-featured" : "",
     isSelected ? "pricing-selected" : "",
     isSelectable ? "pricing-selectable" : "",
+    hasDiscount ? "border-emerald-500/40" : "",
     className,
   ]
     .filter(Boolean)
@@ -125,21 +151,52 @@ export function PricingCard({
 
       {/* Card Content Body */}
       <div className="pricing-body">
-        <h2>{plan.name}</h2>
+        <div className="flex items-center justify-between gap-2 min-h-[52px]">
+          <h2 className="!min-h-0">{plan.name}</h2>
+          {hasDiscount && discountInfo && (
+            <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 shrink-0">
+              {discountInfo.discountType === "PERCENT"
+                ? `${discountInfo.discountValue}% OFF`
+                : `$${discountInfo.discountValue} OFF`}
+            </span>
+          )}
+        </div>
         <p className="pricing-description">{plan.description}</p>
 
         {/* Price & Period */}
         <div className="pricing-price">
-          <strong>{plan.price}</strong>
-          <span>{plan.period || "Forever"}</span>
+          {hasDiscount && discountInfo ? (
+            <div className="flex items-baseline gap-2 flex-wrap">
+              <del className="text-slate-400 dark:text-slate-500 text-lg font-normal line-through opacity-70">
+                ${plan.priceAmount.toFixed(2)}
+              </del>
+              <strong className="text-emerald-500 dark:text-emerald-400 font-black text-4xl">
+                {finalPrice === 0 ? "$0" : `$${finalPrice.toFixed(2)}`}
+              </strong>
+              <span>{plan.period || "Forever"}</span>
+            </div>
+          ) : (
+            <>
+              <strong>{plan.price}</strong>
+              <span>{plan.period || "Forever"}</span>
+            </>
+          )}
         </div>
 
         {/* Savings / Value Subtitle */}
         <p className="pricing-savings">
-          {plan.savings ||
+          {hasDiscount && discountInfo ? (
+            <span className="text-emerald-500 dark:text-emerald-400 font-bold">
+              {finalPrice === 0
+                ? "🎉 100% Free with code " + discountInfo.code
+                : `Save $${discountSavings.toFixed(2)} with code ${discountInfo.code}`}
+            </span>
+          ) : (
+            plan.savings ||
             (plan.priceAmount === 0
               ? "Start with the essentials"
-              : "Invest in your professional growth")}
+              : "Invest in your professional growth")
+          )}
         </p>
 
         {/* Action Button Area */}

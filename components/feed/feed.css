@@ -218,6 +218,10 @@
 .feed-page .feed-talks [class~="text-white"],.dark .feed-page .feed-talks [class~="text-white"] { color:var(--feed-text) !important; }
 .feed-page .feed-talks [class*="text-white/"],.dark .feed-page .feed-talks [class*="text-white/"] { color:var(--feed-muted) !important; }
 .feed-page .feed-talks .bg-white\/5 { background:var(--feed-inner); }
+.dark .feed-page .feed-discovery .text-\[\#0a1628\] { color: var(--feed-text) !important; }
+.dark .feed-page .feed-discovery h3 { color: #ffffff !important; }
+.dark .feed-page .feed-discovery a { color: inherit; }
+.dark .feed-page .feed-discovery a:hover { text-decoration: none; }
 .feed-filter-tabs{display:flex;gap:6px;padding:6px;border:1px solid var(--feed-border,#e2e8f0);border-radius:16px;background:var(--feed-card,#fff);margin:16px 0}
 .feed-filter-tabs a{flex:1;text-align:center;padding:11px 12px;border-radius:11px;font-weight:700;font-size:14px;color:#58677d;transition:background .15s}
 .feed-filter-tabs a:hover{background:#e6bd4520}.feed-filter-tabs a[aria-current=page]{background:#e7c54c;color:#172137}

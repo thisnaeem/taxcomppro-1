@@ -14,13 +14,13 @@ import { z } from "zod";
 import {
   Mail, Lock, User, Phone, ArrowRight, Eye, EyeOff, ChevronDown, Check,
   Search, CheckCircle2, Crown, Sparkles, ShieldCheck, Tag, Loader2, Zap,
-  MailCheck, ArrowLeft, RefreshCw, AlertCircle,
+  MailCheck, ArrowLeft, RefreshCw, AlertCircle, X,
 } from "lucide-react";
 import OtpInput from "@/components/auth/OtpInput";
 import GoogleMark from "@/components/auth/GoogleMark";
 import AuthShell, { StepRail } from "@/components/auth/AuthShell";
 import { PRICING_PLANS, PlanTier } from "@/lib/pricing-plans";
-import PricingCard from "@/components/pricing/PricingCard";
+import PricingCard, { DiscountInfo } from "@/components/pricing/PricingCard";
 
 interface Country {
   code: string;
@@ -123,6 +123,64 @@ function RegisterForm() {
 
   const [selectedTier, setSelectedTier] = useState<PlanTier>(initialTier);
   const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<DiscountInfo | null>(null);
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponError, setCouponError] = useState("");
+  const [couponSuccess, setCouponSuccess] = useState("");
+
+  const handleApplyCoupon = async (codeToTry?: string) => {
+    const raw = (codeToTry ?? couponCode).trim().toUpperCase();
+    if (!raw) {
+      setCouponError("Please enter a promo code");
+      setCouponSuccess("");
+      setAppliedCoupon(null);
+      return;
+    }
+    setCouponLoading(true);
+    setCouponError("");
+    setCouponSuccess("");
+    try {
+      const res = await fetch("/api/coupons/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code: raw,
+          tier: selectedTier !== "FREE" ? selectedTier : "VIP",
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.valid) {
+        const info: DiscountInfo = {
+          code: data.code,
+          discountType: data.discountType,
+          discountValue: data.discountValue,
+          label: data.label,
+          savings: data.savings,
+        };
+        setAppliedCoupon(info);
+        setCouponCode(data.code);
+        setCouponSuccess(`✓ Promo code "${data.code}" applied: ${data.label}!`);
+        setCouponError("");
+      } else {
+        setAppliedCoupon(null);
+        setCouponError(data.error || "Invalid or expired promo code");
+        setCouponSuccess("");
+      }
+    } catch {
+      setAppliedCoupon(null);
+      setCouponError("Failed to validate promo code. Please try again.");
+      setCouponSuccess("");
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode("");
+    setCouponError("");
+    setCouponSuccess("");
+  };
 
   const [serverError, setServerError] = useState(searchParams.has("error") ? "Sign-up was not completed. Please try again." : "");
   const [loading, setLoading] = useState(false);
@@ -407,6 +465,7 @@ function RegisterForm() {
                 plan={p}
                 mode="select"
                 selected={selectedTier === p.id}
+                discountInfo={appliedCoupon}
                 onSelect={(tier) => setSelectedTier(tier)}
               />
             ))}
@@ -416,40 +475,128 @@ function RegisterForm() {
           <div className="mx-auto mt-9 max-w-lg">
             {selectedTier !== "FREE" ? (
               <>
-                <div className="mb-4">
+                <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-5 dark:border-white/10 dark:bg-white/[0.04]">
                   <label htmlFor="coupon" className={`${fieldLabel} mb-2`}>
                     Promo or referral code{" "}
                     <span className="font-normal text-slate-600 dark:text-slate-400">(optional)</span>
                   </label>
-                  <div className="relative">
-                    <Tag className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 dark:text-slate-400" />
-                    <input
-                      id="coupon"
-                      type="text"
-                      placeholder="Enter your code"
-                      value={couponCode}
-                      onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                      className={`${inputBase} ${inputOk} py-3 pl-11 pr-4 uppercase tracking-wider placeholder:normal-case placeholder:tracking-normal`}
-                    />
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <Tag className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 dark:text-slate-400" />
+                      <input
+                        id="coupon"
+                        type="text"
+                        placeholder="Enter your code"
+                        value={couponCode}
+                        onChange={(e) => {
+                          setCouponCode(e.target.value.toUpperCase());
+                          if (couponError) setCouponError("");
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            handleApplyCoupon();
+                          }
+                        }}
+                        className={`${inputBase} ${inputOk} py-3 pl-11 pr-4 uppercase tracking-wider placeholder:normal-case placeholder:tracking-normal font-mono`}
+                      />
+                    </div>
+                    {appliedCoupon ? (
+                      <button
+                        type="button"
+                        onClick={handleRemoveCoupon}
+                        className="px-4 py-3 rounded-xl border border-red-300 dark:border-red-900/50 bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 text-xs font-bold hover:bg-red-100 dark:hover:bg-red-900/60 transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                        <span>Remove</span>
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        disabled={couponLoading || !couponCode.trim()}
+                        onClick={() => handleApplyCoupon()}
+                        className="px-5 py-3 rounded-xl bg-[#0a1628] dark:bg-amber-500 text-white dark:text-slate-950 text-xs font-bold hover:opacity-90 transition-all flex items-center gap-1.5 disabled:opacity-50 cursor-pointer shrink-0 shadow-sm"
+                      >
+                        {couponLoading ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <Sparkles className="h-3.5 w-3.5" />
+                        )}
+                        <span>Apply</span>
+                      </button>
+                    )}
                   </div>
-                  <p className="mt-2 text-xs text-slate-600 dark:text-slate-400">
-                    Codes are validated and applied at checkout.
-                  </p>
+
+                  {couponSuccess && (
+                    <div className="mt-3 flex items-center gap-2 text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 rounded-xl px-3.5 py-2.5 animate-in fade-in duration-150">
+                      <Check className="h-4 w-4 shrink-0 text-emerald-500" />
+                      <span>{couponSuccess}</span>
+                    </div>
+                  )}
+
+                  {couponError && (
+                    <div className="mt-3 flex items-center gap-2 text-xs font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 rounded-xl px-3.5 py-2.5 animate-in fade-in duration-150">
+                      <AlertCircle className="h-4 w-4 shrink-0 text-red-500" />
+                      <span>{couponError}</span>
+                    </div>
+                  )}
+
+                  {!couponSuccess && !couponError && (
+                    <p className="mt-2 text-xs text-slate-600 dark:text-slate-400">
+                      Enter code and click Apply to see instant discount on plan prices.
+                    </p>
+                  )}
                 </div>
 
-                <button type="button" disabled={checkoutLoading} onClick={handleProceedToCheckout} className={goldCta}>
-                  {checkoutLoading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span>Connecting to Stripe…</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>Continue to checkout{selected ? ` (${selected.price}${selected.period})` : ""}</span>
-                      <ArrowRight className="h-4 w-4" />
-                    </>
-                  )}
-                </button>
+                {(() => {
+                  let effectivePrice = selected ? selected.priceAmount : 0;
+                  if (appliedCoupon && selected && selected.priceAmount > 0) {
+                    let discountSavings = 0;
+                    if (appliedCoupon.discountType === "PERCENT") {
+                      discountSavings = (selected.priceAmount * appliedCoupon.discountValue) / 100;
+                    } else {
+                      discountSavings = Math.min(selected.priceAmount, appliedCoupon.discountValue);
+                    }
+                    effectivePrice = Math.max(0, Math.round((selected.priceAmount - discountSavings) * 100) / 100);
+                  }
+
+                  const isFreeAfterDiscount = effectivePrice === 0;
+
+                  return (
+                    <button
+                      type="button"
+                      disabled={checkoutLoading}
+                      onClick={handleProceedToCheckout}
+                      className={goldCta}
+                    >
+                      {checkoutLoading ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <span>{isFreeAfterDiscount ? "Activating free plan…" : "Connecting to Stripe…"}</span>
+                        </>
+                      ) : (
+                        <>
+                          {isFreeAfterDiscount ? (
+                            <>
+                              <Sparkles className="h-4 w-4" />
+                              <span>Claim Free {selected?.name || "Membership"} ($0.00)</span>
+                            </>
+                          ) : (
+                            <>
+                              <span>
+                                Continue to checkout
+                                {selected
+                                  ? ` ($${effectivePrice.toFixed(2)}${selected.period})`
+                                  : ""}
+                              </span>
+                              <ArrowRight className="h-4 w-4" />
+                            </>
+                          )}
+                        </>
+                      )}
+                    </button>
+                  );
+                })()}
 
                 <p className="mt-4 flex items-center justify-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
                   <ShieldCheck className="h-3.5 w-3.5 shrink-0" />

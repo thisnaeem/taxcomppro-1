@@ -460,7 +460,7 @@ export default function ProTalkPage() {
 
   // Scheduled screen
   if (space && !space.isLive && !space.endedAt) {
-    const isHostUser = space.hostId === userId || isAdmin;
+    const isHostUser = Boolean(userId && (space.hostId === userId || space.host?.id === userId));
     return (
       <ScheduledScreen
         space={space}

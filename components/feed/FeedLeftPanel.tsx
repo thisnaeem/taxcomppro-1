@@ -130,7 +130,7 @@ export default function FeedLeftPanel() {
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="font-extrabold text-[#0a1628] text-lg leading-tight truncate">{user.name}</span>
+              <span className="font-extrabold text-[#0a1628] dark:text-white text-lg leading-tight truncate">{user.name}</span>
               {user.hasDueDiligenceBadge && <DueDiligenceBadge size={22} />}
             </div>
               <div className="mt-1.5">
@@ -142,7 +142,7 @@ export default function FeedLeftPanel() {
             {/* Edit toggle */}
             <button
               onClick={() => setEditing(e => !e)}
-              className="shrink-0 p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-[#0a1628] transition-all mt-0.5"
+              className="shrink-0 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 hover:text-[#0a1628] dark:hover:text-white transition-all mt-0.5"
               title="Edit headline & bio">
               <Edit01Icon className="w-4 h-4" />
             </button>
@@ -157,7 +157,7 @@ export default function FeedLeftPanel() {
                 onChange={e => setHeadline(e.target.value)}
                 placeholder="e.g. CPA | Tax Attorney | Enrolled Agent"
                 maxLength={100}
-                className="w-full text-xs font-[inherit] border border-slate-200 rounded-lg px-3 py-2 outline-none focus:border-[#0a1628] focus:ring-2 focus:ring-[#0a1628]/10 transition-all"
+                className="w-full text-xs font-[inherit] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 outline-none focus:border-[#0a1628] focus:ring-2 focus:ring-[#0a1628]/10 transition-all"
               />
               <textarea
                 value={bio}
@@ -165,19 +165,19 @@ export default function FeedLeftPanel() {
                 placeholder="Tell the community about yourself…"
                 rows={3}
                 maxLength={300}
-                className="w-full text-xs font-[inherit] border border-slate-200 rounded-lg px-3 py-2 outline-none focus:border-[#0a1628] focus:ring-2 focus:ring-[#0a1628]/10 transition-all resize-none"
+                className="w-full text-xs font-[inherit] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 outline-none focus:border-[#0a1628] focus:ring-2 focus:ring-[#0a1628]/10 transition-all resize-none"
               />
               <div className="flex gap-2">
                 <button
                   onClick={handleSave}
                   disabled={saving}
-                  className="flex-1 flex items-center justify-center gap-1.5 text-xs font-bold bg-[#0a1628] text-white py-2 rounded-lg hover:bg-[#1a3a6b] transition-all disabled:opacity-50">
+                  className="flex-1 flex items-center justify-center gap-1.5 text-xs font-bold bg-[#0a1628] dark:bg-white dark:text-[#0a1628] text-white py-2 rounded-lg hover:bg-[#1a3a6b] transition-all disabled:opacity-50">
                   <Tick01Icon className="w-3.5 h-3.5" />
                   {saving ? "Saving…" : "Save"}
                 </button>
                 <button
                   onClick={handleCancel}
-                  className="flex items-center justify-center gap-1.5 px-3 text-xs font-bold text-slate-500 border border-slate-200 py-2 rounded-lg hover:bg-slate-50 transition-all">
+                  className="flex items-center justify-center gap-1.5 px-3 text-xs font-bold text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-white/10 py-2 rounded-lg hover:bg-slate-50 dark:hover:bg-white/5 transition-all">
                   <Cancel01Icon className="w-3.5 h-3.5" />
                   Cancel
                 </button>
@@ -186,15 +186,15 @@ export default function FeedLeftPanel() {
           ) : (
             <div className="mt-2.5 space-y-1">
               {user.headline
-                ? <p className="text-sm font-semibold text-slate-600 leading-snug">{user.headline}</p>
-                : <p className="text-sm text-slate-400 italic">Add a headline to introduce yourself.</p>}
-              {user.bio && <p className="text-sm text-slate-500 leading-relaxed line-clamp-3">{user.bio}</p>}
+                ? <p className="text-sm font-semibold text-slate-600 dark:text-slate-300 leading-snug">{user.headline}</p>
+                : <p className="text-sm text-slate-400 dark:text-slate-500 italic">Add a headline to introduce yourself.</p>}
+              {user.bio && <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-3">{user.bio}</p>}
             </div>
           )}
 
           {/* View profile link */}
           <Link href="/profile"
-            className="feed-sidebar-button feed-profile-button mt-3 block text-center text-xs font-bold text-[#0a1628] border border-[#0a1628]/20 rounded-lg py-2 hover:bg-[#0a1628] hover:text-white transition-all">
+            className="feed-sidebar-button feed-profile-button mt-3 block text-center text-xs font-bold text-[#0a1628] dark:text-white border border-[#0a1628]/20 dark:border-white/20 rounded-lg py-2 hover:bg-[#0a1628] hover:text-white dark:hover:bg-white/10 transition-all">
             View & edit profile
           </Link>
         </div>
@@ -216,8 +216,8 @@ export default function FeedLeftPanel() {
           ].map(l => (
             <Link key={l.href} href={l.href}
               aria-current={l.href === "/feed" ? "page" : undefined}
-              className="flex items-center gap-3 px-3 py-3 rounded-xl text-slate-600 text-base font-medium hover:bg-slate-50 hover:text-[#0a1628] transition-all group">
-              <l.icon className="w-5 h-5 text-slate-400 group-hover:text-[#0a1628] transition-colors" />
+              className="flex items-center gap-3 px-3 py-3 rounded-xl text-slate-600 dark:text-slate-300 text-base font-medium hover:bg-slate-50 dark:hover:bg-white/5 hover:text-[#0a1628] dark:hover:text-white transition-all group">
+              <l.icon className="w-5 h-5 text-slate-400 dark:text-slate-400 group-hover:text-[#0a1628] dark:group-hover:text-white transition-colors" />
               {l.label}
             </Link>
           ))}
@@ -227,7 +227,7 @@ export default function FeedLeftPanel() {
             href="https://academy.taxcomppro.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-3 px-3 py-3 rounded-xl text-slate-600 text-base font-medium hover:bg-slate-50 hover:text-[#0a1628] transition-all group"
+            className="flex items-center gap-3 px-3 py-3 rounded-xl text-slate-600 dark:text-slate-300 text-base font-medium hover:bg-slate-50 dark:hover:bg-white/5 hover:text-[#0a1628] dark:hover:text-white transition-all group"
           >
             <div className="w-7 h-7 flex items-center justify-center flex-shrink-0">
               <img 

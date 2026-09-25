@@ -249,16 +249,15 @@ function LiveCard({ space }: { space: Space }) {
 function UpcomingCard({
   space,
   currentUserId,
-  isAdmin = false,
   onSpaceUpdated,
   onSpaceCancelled,
 }: {
   space: Space;
   currentUserId: string;
-  isAdmin?: boolean;
   onSpaceUpdated?: (updated: Space) => void;
   onSpaceCancelled?: (spaceId: string) => void;
 }) {
+  const router = useRouter();
   const [showEdit, setShowEdit] = useState(false);
   const [rsvped, setRsvped] = useState(Boolean(space.isRsvped));
   const [rsvping, setRsvping] = useState(false);
@@ -269,7 +268,8 @@ function UpcomingCard({
     setRsvpCount(space._count?.rsvps ?? 0);
   }, [space.isRsvped, space._count?.rsvps]);
 
-  const isHost = (!!currentUserId && space.hostId === currentUserId) || isAdmin;
+  // Only the actual host of the talk can edit it
+  const isHost = Boolean(currentUserId && (space.hostId === currentUserId || space.host?.id === currentUserId));
 
   const shareUrl = space.shareToken
     ? typeof window !== "undefined"
@@ -300,8 +300,19 @@ function UpcomingCard({
     setRsvping(false);
   };
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.closest("button") || target.closest("a") || target.closest(".dialog-content")) {
+      return;
+    }
+    router.push(`/pro-talks/${space.id}`);
+  };
+
   return (
-    <div className="ptd-card group relative bg-gradient-to-br from-[#061426]/75 to-[#040a14]/75 hover:from-[#091b35]/90 hover:to-[#061224]/90 border border-emerald-500/20 hover:border-emerald-400/50 rounded-3xl p-5 transition-all duration-200 backdrop-blur-sm overflow-hidden flex flex-col">
+    <div
+      onClick={handleCardClick}
+      className="ptd-card group relative bg-gradient-to-br from-[#061426]/75 to-[#040a14]/75 hover:from-[#091b35]/90 hover:to-[#061224]/90 border border-emerald-500/20 hover:border-emerald-400/50 rounded-3xl p-5 transition-all duration-200 backdrop-blur-sm overflow-hidden flex flex-col cursor-pointer hover:shadow-[0_0_30px_rgba(16,185,129,0.15)] hover:-translate-y-0.5"
+    >
       {/* Top row */}
       <div className="flex items-start justify-between gap-2 mb-3">
         <div className="flex items-center gap-2">
@@ -336,7 +347,7 @@ function UpcomingCard({
       </div>
 
       {/* Title */}
-      <h3 className="text-white font-black text-xl mb-1.5 leading-snug">
+      <h3 className="text-white font-black text-xl mb-1.5 leading-snug group-hover:text-lime-300 transition-colors">
         {space.name}
       </h3>
       {space.description && (
@@ -373,8 +384,8 @@ function UpcomingCard({
           <div className="text-white text-xs font-semibold truncate">{space.host.name}</div>
         </div>
 
-        {isHost ? (
-          <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2">
+          {isHost ? (
             <button
               onClick={(e) => {
                 e.preventDefault();
@@ -385,27 +396,21 @@ function UpcomingCard({
             >
               <Pencil className="w-3.5 h-3.5" /> Edit
             </button>
-            <Link
-              href={`/pro-talks/${space.id}`}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs font-bold transition-all"
+          ) : (
+            <button
+              onClick={toggleRsvp}
+              disabled={rsvping}
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-black transition-all ${
+                rsvped
+                  ? "bg-emerald-500/25 border border-emerald-400 text-lime-300"
+                  : "bg-white/10 hover:bg-white/18 text-white border border-white/10 hover:border-emerald-400/40"
+              }`}
             >
-              Stage Room <ArrowRight className="w-3 h-3" />
-            </Link>
-          </div>
-        ) : (
-          <button
-            onClick={toggleRsvp}
-            disabled={rsvping}
-            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-black transition-all ${
-              rsvped
-                ? "bg-emerald-500/25 border border-emerald-400 text-lime-300"
-                : "bg-white/10 hover:bg-white/18 text-white border border-white/10 hover:border-emerald-400/40"
-            }`}
-          >
-            <Users className="w-3 h-3" />
-            <span>{rsvped ? "Reminding You ✓" : `Remind Me (${rsvpCount})`}</span>
-          </button>
-        )}
+              <Users className="w-3 h-3" />
+              <span>{rsvped ? "Reminding You ✓" : `Remind Me (${rsvpCount})`}</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {isHost && (
@@ -563,7 +568,6 @@ function ProTalksInner() {
           key={space.id}
           space={space}
           currentUserId={user?.id ?? ""}
-          isAdmin={user?.role === "ADMIN"}
           onSpaceUpdated={handleSpaceUpdated}
           onSpaceCancelled={handleSpaceCancelled}
         />
@@ -703,7 +707,6 @@ function ProTalksInner() {
                         key={space.id}
                         space={space}
                         currentUserId={user?.id ?? ""}
-                        isAdmin={user?.role === "ADMIN"}
                         onSpaceUpdated={handleSpaceUpdated}
                         onSpaceCancelled={handleSpaceCancelled}
                       />
@@ -720,7 +723,6 @@ function ProTalksInner() {
                     key={space.id}
                     space={space}
                     currentUserId={user?.id ?? ""}
-                    isAdmin={user?.role === "ADMIN"}
                     onSpaceUpdated={handleSpaceUpdated}
                     onSpaceCancelled={handleSpaceCancelled}
                   />
