@@ -547,12 +547,14 @@ export default function PublicMemberProfile({memberId: id, specialist}: {memberI
               <FollowButton key={profile.id} memberId={profile.id} />
               {specialist ? <a href="#ask-specialist" className="profile-primary px-5 py-3 rounded-xl font-bold text-sm">Ask this AI specialist</a> : me && me.id !== profile.id ? (
                 <>
-                  <Link
-                    href={`/messages?user=${profile.id}`}
-                    className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-3 rounded-xl profile-primary font-bold text-sm transition-all active:scale-[0.98]"
-                  >
-                    <MessageSquare className="w-4 h-4" /> Message
-                  </Link>
+                  {connState === "connected" && (
+                    <Link
+                      href={`/messages?user=${profile.id}`}
+                      className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-3 rounded-xl profile-primary font-bold text-sm transition-all active:scale-[0.98]"
+                    >
+                      <MessageSquare className="w-4 h-4" /> Message
+                    </Link>
+                  )}
 
                   <button
                     onClick={sendConnect}
@@ -987,8 +989,8 @@ export default function PublicMemberProfile({memberId: id, specialist}: {memberI
                 </div>
               )}
 
-              {/* Quick Connect Card */}
-              {!specialist && me && me.id !== profile.id && (
+              {/* Quick Connect Card - only shown when connected */}
+              {!specialist && me && me.id !== profile.id && connState === "connected" && (
                 <div className="rounded-2xl bg-gradient-to-br from-[#0a1628] to-[#1a3a6b] p-6 text-white shadow-md space-y-3">
                   <h4 className="text-sm font-extrabold text-white">Direct Connect</h4>
                   <p className="text-xs text-slate-300 leading-relaxed">
@@ -1145,12 +1147,29 @@ export default function PublicMemberProfile({memberId: id, specialist}: {memberI
                         <span className="text-sm font-black text-emerald-600 dark:text-emerald-400">
                           {s.price || "Contact for rate"}
                         </span>
-                        <Link
-                          href={`/messages?user=${profile.id}`}
-                          className="text-xs font-bold profile-accent hover:underline flex items-center gap-1"
-                        >
-                          Inquire <ChevronRight className="w-3.5 h-3.5" />
-                        </Link>
+                        {connState === "connected" ? (
+                          <Link
+                            href={`/messages?user=${profile.id}`}
+                            className="text-xs font-bold profile-accent hover:underline flex items-center gap-1"
+                          >
+                            Inquire <ChevronRight className="w-3.5 h-3.5" />
+                          </Link>
+                        ) : me && me.id !== profile.id ? (
+                          <button
+                            onClick={sendConnect}
+                            disabled={connState !== "idle"}
+                            className="text-xs font-bold profile-accent hover:underline flex items-center gap-1 cursor-pointer bg-transparent border-0 p-0"
+                          >
+                            {connState === "pending" ? "Request Sent" : "Connect to Inquire"} <ChevronRight className="w-3.5 h-3.5" />
+                          </button>
+                        ) : (
+                          <Link
+                            href="/login"
+                            className="text-xs font-bold profile-accent hover:underline flex items-center gap-1"
+                          >
+                            Inquire <ChevronRight className="w-3.5 h-3.5" />
+                          </Link>
+                        )}
                       </div>
                     </div>
                   ))}
