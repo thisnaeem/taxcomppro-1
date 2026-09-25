@@ -103,7 +103,15 @@ function RegisterForm() {
   const nextPath = safeAuthReturn(searchParams.get("next") || searchParams.get("redirect"), "");
   const { data: session } = useSession();
 
-  const [step, setStep] = useState<"account" | "verify" | "membership">("account");
+  const isProTalkFlow = Boolean(
+    (nextPath && nextPath.includes("/pro-talks")) ||
+    searchParams.get("from") === "pro-talk"
+  );
+
+  const [step, setStep] = useState<"account" | "verify" | "membership">(
+    searchParams.get("step") === "membership" ? "membership" : "account"
+  );
+  const [showAllPlans, setShowAllPlans] = useState(false);
 
   // Email verification (OTP) state. The account is only created once the code checks out.
   const [pendingSignup, setPendingSignup] = useState<{
@@ -119,6 +127,8 @@ function RegisterForm() {
   const initialTier: PlanTier =
     urlPlan && (["FREE", "VIP", "MARKETPLACE", "MARKETPLACE_PLUS"] as PlanTier[]).includes(urlPlan)
       ? urlPlan
+      : isProTalkFlow
+      ? "FREE"
       : "MARKETPLACE";
 
   const [selectedTier, setSelectedTier] = useState<PlanTier>(initialTier);
@@ -197,14 +207,14 @@ function RegisterForm() {
 
   // If user signed in via Google or has an active session, auto-advance to membership plan choice
   useEffect(() => {
-    if (session?.user && nextPath) {
+    if (session?.user && nextPath && !isProTalkFlow) {
       window.location.replace(nextPath);
       return;
     }
     if (session?.user) {
       setStep("membership");
     }
-  }, [searchParams, session, nextPath]);
+  }, [searchParams, session, nextPath, isProTalkFlow]);
 
   const {
     register, handleSubmit, setValue, watch, setError, clearErrors,
@@ -325,6 +335,12 @@ function RegisterForm() {
         return;
       }
 
+      if (isProTalkFlow) {
+        setSelectedTier("FREE");
+        setStep("membership");
+        return;
+      }
+
       if (nextPath) { window.location.assign(nextPath); return; }
       // Verified and signed in. Continue to plan selection.
       setStep("membership");
@@ -363,7 +379,14 @@ function RegisterForm() {
   const handleGoogle = async () => {
     setGoogleLoading(true);
     try {
-      const result = await signIn.social({ provider: "google", callbackURL: nextPath || "/register?step=membership", errorCallbackURL: accountUrl("/register", nextPath) });
+      const callbackURL = isProTalkFlow
+        ? accountUrl("/register?step=membership", nextPath)
+        : (nextPath || "/register?step=membership");
+      const result = await signIn.social({
+        provider: "google",
+        callbackURL,
+        errorCallbackURL: accountUrl("/register", nextPath),
+      });
       if (result.error) throw new Error(result.error.message);
     } catch {
       setServerError("Google sign-in failed.");
@@ -411,8 +434,9 @@ function RegisterForm() {
       c.code.toLowerCase().includes(countrySearch.toLowerCase())
   );
 
-  /* ─────────────────────────── STEP 3: MEMBERSHIP ───────────────────────────
-     Full width, clean 4-tier cards mirroring the /pricing page design. */
+  const totalSteps = isProTalkFlow ? 3 : (nextPath ? 2 : 3);
+
+  /* ─────────────────────────── STEP 3: MEMBERSHIP ─────────────────────────── */
   if (step === "membership") {
     const selected = PRICING_PLANS.find((p) => p.id === selectedTier);
 
@@ -428,199 +452,364 @@ function RegisterForm() {
             </Link>
           </div>
 
-          <div className="mx-auto mb-10 max-w-2xl text-center">
-            <div className="mx-auto mb-5 max-w-xs">
-              <StepRail current={3} />
-            </div>
-            <h1 className="text-[28px] font-black leading-tight tracking-tight text-[#0a1628] sm:text-[34px] dark:text-white">
-              Choose your membership
-            </h1>
-            <p className="mx-auto mt-3 max-w-lg text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-              Every account needs an active plan to reach the tools, feed and directory.
-              You can change or cancel it later.
-            </p>
-          </div>
-
-          {serverError && (
-            <div className="mx-auto mb-6 max-w-lg">
-              <ErrorBanner message={serverError} />
-            </div>
-          )}
-
-          {!pendingSignup && (
-            <div className="mx-auto mb-8 max-w-xl">
-              <ProfessionalTitleEditor />
-            </div>
-          )}
-
-          {/* 4-tier Pricing Grid matching /pricing */}
-          <div
-            role="radiogroup"
-            aria-label="Membership plan"
-            className="pricing-grid mb-10"
-          >
-            {PRICING_PLANS.map((p) => (
-              <PricingCard
-                key={p.id}
-                plan={p}
-                mode="select"
-                selected={selectedTier === p.id}
-                discountInfo={appliedCoupon}
-                onSelect={(tier) => setSelectedTier(tier)}
-              />
-            ))}
-          </div>
-
-          {/* Checkout / Free Continuation CTA */}
-          <div className="mx-auto mt-9 max-w-lg">
-            {selectedTier !== "FREE" ? (
-              <>
-                <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-5 dark:border-white/10 dark:bg-white/[0.04]">
-                  <label htmlFor="coupon" className={`${fieldLabel} mb-2`}>
-                    Promo or referral code{" "}
-                    <span className="font-normal text-slate-600 dark:text-slate-400">(optional)</span>
-                  </label>
-                  <div className="flex gap-2">
-                    <div className="relative flex-1">
-                      <Tag className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 dark:text-slate-400" />
-                      <input
-                        id="coupon"
-                        type="text"
-                        placeholder="Enter your code"
-                        value={couponCode}
-                        onChange={(e) => {
-                          setCouponCode(e.target.value.toUpperCase());
-                          if (couponError) setCouponError("");
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                            handleApplyCoupon();
-                          }
-                        }}
-                        className={`${inputBase} ${inputOk} py-3 pl-11 pr-4 uppercase tracking-wider placeholder:normal-case placeholder:tracking-normal font-mono`}
-                      />
-                    </div>
-                    {appliedCoupon ? (
-                      <button
-                        type="button"
-                        onClick={handleRemoveCoupon}
-                        className="px-4 py-3 rounded-xl border border-red-300 dark:border-red-900/50 bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 text-xs font-bold hover:bg-red-100 dark:hover:bg-red-900/60 transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
-                      >
-                        <X className="h-3.5 w-3.5" />
-                        <span>Remove</span>
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        disabled={couponLoading || !couponCode.trim()}
-                        onClick={() => handleApplyCoupon()}
-                        className="px-5 py-3 rounded-xl bg-[#0a1628] dark:bg-amber-500 text-white dark:text-slate-950 text-xs font-bold hover:opacity-90 transition-all flex items-center gap-1.5 disabled:opacity-50 cursor-pointer shrink-0 shadow-sm"
-                      >
-                        {couponLoading ? (
-                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        ) : (
-                          <Sparkles className="h-3.5 w-3.5" />
-                        )}
-                        <span>Apply</span>
-                      </button>
-                    )}
-                  </div>
-
-                  {couponSuccess && (
-                    <div className="mt-3 flex items-center gap-2 text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 rounded-xl px-3.5 py-2.5 animate-in fade-in duration-150">
-                      <Check className="h-4 w-4 shrink-0 text-emerald-500" />
-                      <span>{couponSuccess}</span>
-                    </div>
-                  )}
-
-                  {couponError && (
-                    <div className="mt-3 flex items-center gap-2 text-xs font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 rounded-xl px-3.5 py-2.5 animate-in fade-in duration-150">
-                      <AlertCircle className="h-4 w-4 shrink-0 text-red-500" />
-                      <span>{couponError}</span>
-                    </div>
-                  )}
-
-                  {!couponSuccess && !couponError && (
-                    <p className="mt-2 text-xs text-slate-600 dark:text-slate-400">
-                      Enter code and click Apply to see instant discount on plan prices.
-                    </p>
-                  )}
+          {isProTalkFlow && !showAllPlans ? (
+            /* ─── PRO TALK FOCUSED FREE ACCESS VIEW ─── */
+            <div className="mx-auto max-w-2xl animate-in fade-in duration-300">
+              <div className="mb-8 text-center">
+                <div className="mx-auto mb-5 max-w-xs">
+                  <StepRail current={3} total={3} />
                 </div>
 
-                {(() => {
-                  let effectivePrice = selected ? selected.priceAmount : 0;
-                  if (appliedCoupon && selected && selected.priceAmount > 0) {
-                    let discountSavings = 0;
-                    if (appliedCoupon.discountType === "PERCENT") {
-                      discountSavings = (selected.priceAmount * appliedCoupon.discountValue) / 100;
-                    } else {
-                      discountSavings = Math.min(selected.priceAmount, appliedCoupon.discountValue);
-                    }
-                    effectivePrice = Math.max(0, Math.round((selected.priceAmount - discountSavings) * 100) / 100);
-                  }
+                <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                  <Sparkles className="h-3.5 w-3.5" />
+                  <span>Pro Talk Guest Invitation</span>
+                </div>
 
-                  const isFreeAfterDiscount = effectivePrice === 0;
+                <h1 className="text-[28px] font-black leading-tight tracking-tight text-[#0a1628] sm:text-[36px] dark:text-white">
+                  Your Free Pro Talk Access
+                </h1>
+                <p className="mx-auto mt-3 max-w-lg text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                  Your account is verified! Your invitation includes Free Basic Membership so you can join the live stage, participate in chat &amp; Q&amp;A, and connect with attendees.
+                </p>
+              </div>
 
-                  return (
-                    <button
-                      type="button"
-                      disabled={checkoutLoading}
-                      onClick={handleProceedToCheckout}
-                      className={goldCta}
-                    >
-                      {checkoutLoading ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          <span>{isFreeAfterDiscount ? "Activating free plan…" : "Connecting to Stripe…"}</span>
-                        </>
-                      ) : (
-                        <>
-                          {isFreeAfterDiscount ? (
+              {serverError && (
+                <div className="mb-6">
+                  <ErrorBanner message={serverError} />
+                </div>
+              )}
+
+              {!pendingSignup && (
+                <div className="mb-8">
+                  <ProfessionalTitleEditor />
+                </div>
+              )}
+
+              {/* Focused Free Plan Card */}
+              <div className="relative overflow-hidden rounded-3xl border-2 border-emerald-500/40 bg-white p-6 shadow-2xl shadow-emerald-500/5 sm:p-8 dark:border-emerald-500/40 dark:bg-[#0c1a2e]">
+                <div className="pointer-events-none absolute right-0 top-0 h-40 w-40 rounded-full bg-emerald-500/10 blur-3xl" />
+                <div className="pointer-events-none absolute bottom-0 left-0 h-32 w-32 rounded-full bg-amber-500/10 blur-3xl" />
+
+                <div className="relative flex flex-col justify-between gap-4 border-b border-slate-100 pb-6 sm:flex-row sm:items-center dark:border-white/10">
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-500/15 font-black text-emerald-600 dark:text-emerald-400">
+                      <CheckCircle2 className="h-6 w-6" />
+                    </span>
+                    <div>
+                      <h2 className="text-xl font-black text-[#0a1628] dark:text-white">
+                        Basic Member Plan
+                      </h2>
+                      <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                        Included with your invitation
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-baseline gap-1 self-start rounded-2xl border border-emerald-200/60 bg-emerald-50 px-4 py-2 sm:self-auto dark:border-emerald-800/40 dark:bg-emerald-950/40">
+                    <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400">$0</span>
+                    <span className="text-xs font-bold text-emerald-700/80 dark:text-emerald-300/80">/ Free Forever</span>
+                  </div>
+                </div>
+
+                {/* Pro Talk included features list */}
+                <div className="my-6 space-y-3.5">
+                  <p className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                    What&apos;s included in this free plan:
+                  </p>
+
+                  <div className="grid gap-2.5 sm:grid-cols-2">
+                    <div className="flex items-start gap-2.5 rounded-xl bg-slate-50 p-3 dark:bg-white/[0.03]">
+                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                      <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                        Live Pro Talk Stage Access (Listen &amp; Speak)
+                      </span>
+                    </div>
+                    <div className="flex items-start gap-2.5 rounded-xl bg-slate-50 p-3 dark:bg-white/[0.03]">
+                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                      <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                        Live Chat, Q&amp;A &amp; Host Reactions
+                      </span>
+                    </div>
+                    <div className="flex items-start gap-2.5 rounded-xl bg-slate-50 p-3 dark:bg-white/[0.03]">
+                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                      <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                        Pro Talk RSVPs &amp; Calendar Reminders
+                      </span>
+                    </div>
+                    <div className="flex items-start gap-2.5 rounded-xl bg-slate-50 p-3 dark:bg-white/[0.03]">
+                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                      <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                        Community Feed &amp; Member Directory
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-1 text-xs text-slate-600 dark:text-slate-400">
+                    <ShieldCheck className="h-4 w-4 text-slate-500" />
+                    <span>No credit card required. No hidden fees or automatic billing.</span>
+                  </div>
+                </div>
+
+                {/* Primary Continue Button */}
+                <button
+                  type="button"
+                  disabled={checkoutLoading}
+                  onClick={handleProceedToCheckout}
+                  className={`${goldCta} text-base py-4 shadow-lg shadow-amber-500/20`}
+                >
+                  {checkoutLoading ? (
+                    <>
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      <span>Entering Pro Talk…</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Continue to Pro Talk (Free)</span>
+                      <ArrowRight className="h-5 w-5" />
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* Option to view full upgrade pricing */}
+              <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 text-center shadow-sm dark:border-white/10 dark:bg-white/[0.03]">
+                <div className="mx-auto mb-2 flex h-9 w-9 items-center justify-center rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                  <Crown className="h-5 w-5" />
+                </div>
+                <h3 className="text-sm font-bold text-[#0a1628] dark:text-white">
+                  Want 1-on-1 messaging, practice listing, or VIP networking?
+                </h3>
+                <p className="mx-auto mt-1 max-w-md text-xs text-slate-600 dark:text-slate-400">
+                  You can optionally upgrade to VIP, Marketplace, or Marketplace Plus to unlock private DMs, host your own Pro Talks, and access the ATLAS AI Tax Bot.
+                </p>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAllPlans(true);
+                    setSelectedTier("VIP");
+                  }}
+                  className="mt-4 inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-5 py-2.5 text-xs font-bold text-[#0a1628] transition-all hover:border-amber-400 hover:bg-amber-50 dark:border-white/15 dark:bg-white/5 dark:text-white dark:hover:border-amber-400/50 dark:hover:bg-amber-400/10 cursor-pointer"
+                >
+                  <span>Explore Upgrade Plans (VIP &amp; Marketplace)</span>
+                  <ChevronDown className="h-4 w-4 text-amber-500" />
+                </button>
+              </div>
+            </div>
+          ) : (
+            /* ─── FULL 4-TIER PRICING GRID VIEW ─── */
+            <>
+              {isProTalkFlow && (
+                <div className="mb-6 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAllPlans(false);
+                      setSelectedTier("FREE");
+                    }}
+                    className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 shadow-sm transition-colors hover:bg-slate-50 dark:border-white/15 dark:bg-[#0c1a2e] dark:text-slate-200 dark:hover:bg-white/5 cursor-pointer"
+                  >
+                    <ArrowLeft className="h-3.5 w-3.5" />
+                    <span>Return to Free Pro Talk plan</span>
+                  </button>
+                </div>
+              )}
+
+              <div className="mx-auto mb-10 max-w-2xl text-center">
+                <div className="mx-auto mb-5 max-w-xs">
+                  <StepRail current={3} total={3} />
+                </div>
+                <h1 className="text-[28px] font-black leading-tight tracking-tight text-[#0a1628] sm:text-[34px] dark:text-white">
+                  Choose your membership
+                </h1>
+                <p className="mx-auto mt-3 max-w-lg text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                  Every account needs an active plan to reach the tools, feed and directory.
+                  You can change or cancel it later.
+                </p>
+              </div>
+
+              {serverError && (
+                <div className="mx-auto mb-6 max-w-lg">
+                  <ErrorBanner message={serverError} />
+                </div>
+              )}
+
+              {!pendingSignup && (
+                <div className="mx-auto mb-8 max-w-xl">
+                  <ProfessionalTitleEditor />
+                </div>
+              )}
+
+              {/* 4-tier Pricing Grid matching /pricing */}
+              <div
+                role="radiogroup"
+                aria-label="Membership plan"
+                className="pricing-grid mb-10"
+              >
+                {PRICING_PLANS.map((p) => (
+                  <PricingCard
+                    key={p.id}
+                    plan={p}
+                    mode="select"
+                    selected={selectedTier === p.id}
+                    discountInfo={appliedCoupon}
+                    onSelect={(tier) => setSelectedTier(tier)}
+                  />
+                ))}
+              </div>
+
+              {/* Checkout / Free Continuation CTA */}
+              <div className="mx-auto mt-9 max-w-lg">
+                {selectedTier !== "FREE" ? (
+                  <>
+                    <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-5 dark:border-white/10 dark:bg-white/[0.04]">
+                      <label htmlFor="coupon" className={`${fieldLabel} mb-2`}>
+                        Promo or referral code{" "}
+                        <span className="font-normal text-slate-600 dark:text-slate-400">(optional)</span>
+                      </label>
+                      <div className="flex gap-2">
+                        <div className="relative flex-1">
+                          <Tag className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 dark:text-slate-400" />
+                          <input
+                            id="coupon"
+                            type="text"
+                            placeholder="Enter your code"
+                            value={couponCode}
+                            onChange={(e) => {
+                              setCouponCode(e.target.value.toUpperCase());
+                              if (couponError) setCouponError("");
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                handleApplyCoupon();
+                              }
+                            }}
+                            className={`${inputBase} ${inputOk} py-3 pl-11 pr-4 uppercase tracking-wider placeholder:normal-case placeholder:tracking-normal font-mono`}
+                          />
+                        </div>
+                        {appliedCoupon ? (
+                          <button
+                            type="button"
+                            onClick={handleRemoveCoupon}
+                            className="px-4 py-3 rounded-xl border border-red-300 dark:border-red-900/50 bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 text-xs font-bold hover:bg-red-100 dark:hover:bg-red-900/60 transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                            <span>Remove</span>
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            disabled={couponLoading || !couponCode.trim()}
+                            onClick={() => handleApplyCoupon()}
+                            className="px-5 py-3 rounded-xl bg-[#0a1628] dark:bg-amber-500 text-white dark:text-slate-950 text-xs font-bold hover:opacity-90 transition-all flex items-center gap-1.5 disabled:opacity-50 cursor-pointer shrink-0 shadow-sm"
+                          >
+                            {couponLoading ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <Sparkles className="h-3.5 w-3.5" />
+                            )}
+                            <span>Apply</span>
+                          </button>
+                        )}
+                      </div>
+
+                      {couponSuccess && (
+                        <div className="mt-3 flex items-center gap-2 text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 rounded-xl px-3.5 py-2.5 animate-in fade-in duration-150">
+                          <Check className="h-4 w-4 shrink-0 text-emerald-500" />
+                          <span>{couponSuccess}</span>
+                        </div>
+                      )}
+
+                      {couponError && (
+                        <div className="mt-3 flex items-center gap-2 text-xs font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 rounded-xl px-3.5 py-2.5 animate-in fade-in duration-150">
+                          <AlertCircle className="h-4 w-4 shrink-0 text-red-500" />
+                          <span>{couponError}</span>
+                        </div>
+                      )}
+
+                      {!couponSuccess && !couponError && (
+                        <p className="mt-2 text-xs text-slate-600 dark:text-slate-400">
+                          Enter code and click Apply to see instant discount on plan prices.
+                        </p>
+                      )}
+                    </div>
+
+                    {(() => {
+                      let effectivePrice = selected ? selected.priceAmount : 0;
+                      if (appliedCoupon && selected && selected.priceAmount > 0) {
+                        let discountSavings = 0;
+                        if (appliedCoupon.discountType === "PERCENT") {
+                          discountSavings = (selected.priceAmount * appliedCoupon.discountValue) / 100;
+                        } else {
+                          discountSavings = Math.min(selected.priceAmount, appliedCoupon.discountValue);
+                        }
+                        effectivePrice = Math.max(0, Math.round((selected.priceAmount - discountSavings) * 100) / 100);
+                      }
+
+                      const isFreeAfterDiscount = effectivePrice === 0;
+
+                      return (
+                        <button
+                          type="button"
+                          disabled={checkoutLoading}
+                          onClick={handleProceedToCheckout}
+                          className={goldCta}
+                        >
+                          {checkoutLoading ? (
                             <>
-                              <Sparkles className="h-4 w-4" />
-                              <span>Claim Free {selected?.name || "Membership"} ($0.00)</span>
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              <span>{isFreeAfterDiscount ? "Activating free plan…" : "Connecting to Stripe…"}</span>
                             </>
                           ) : (
                             <>
-                              <span>
-                                Continue to checkout
-                                {selected
-                                  ? ` ($${effectivePrice.toFixed(2)}${selected.period})`
-                                  : ""}
-                              </span>
-                              <ArrowRight className="h-4 w-4" />
+                              {isFreeAfterDiscount ? (
+                                <>
+                                  <Sparkles className="h-4 w-4" />
+                                  <span>Claim Free {selected?.name || "Membership"} ($0.00)</span>
+                                </>
+                              ) : (
+                                <>
+                                  <span>
+                                    Continue to checkout
+                                    {selected
+                                      ? ` ($${effectivePrice.toFixed(2)}${selected.period})`
+                                      : ""}
+                                  </span>
+                                  <ArrowRight className="h-4 w-4" />
+                                </>
+                              )}
                             </>
                           )}
-                        </>
-                      )}
+                        </button>
+                      );
+                    })()}
+
+                    <p className="mt-4 flex items-center justify-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
+                      <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
+                      Secure 256-bit encrypted checkout on Stripe.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <div className="mb-5 rounded-2xl border border-slate-200 bg-white p-5 text-center dark:border-white/10 dark:bg-white/[0.04]">
+                      <p className="text-sm font-bold text-[#0a1628] dark:text-white">
+                        You selected Basic Members Only (Free Forever)
+                      </p>
+                      <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
+                        No credit card required. You can explore the community and upgrade anytime from your settings.
+                      </p>
+                    </div>
+
+                    <button type="button" onClick={handleProceedToCheckout} className={goldCta}>
+                      <span>{isProTalkFlow ? "Continue to Pro Talk (Free)" : "Get started for free"}</span>
+                      <ArrowRight className="h-4 w-4" />
                     </button>
-                  );
-                })()}
-
-                <p className="mt-4 flex items-center justify-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
-                  <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
-                  Secure 256-bit encrypted checkout on Stripe.
-                </p>
-              </>
-            ) : (
-              <>
-                <div className="mb-5 rounded-2xl border border-slate-200 bg-white p-5 text-center dark:border-white/10 dark:bg-white/[0.04]">
-                  <p className="text-sm font-bold text-[#0a1628] dark:text-white">
-                    You selected Basic Members Only (Free Forever)
-                  </p>
-                  <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
-                    No credit card required. You can explore the community and upgrade anytime from your settings.
-                  </p>
-                </div>
-
-                <button type="button" onClick={handleProceedToCheckout} className={goldCta}>
-                  <span>Get started for free</span>
-                  <ArrowRight className="h-4 w-4" />
-                </button>
-              </>
-            )}
-          </div>
+                  </>
+                )}
+              </div>
+            </>
+          )}
         </div>
       </div>
     );
@@ -630,7 +819,7 @@ function RegisterForm() {
   if (step === "verify") {
     return (
       <AuthShell>
-        <StepRail current={2} total={nextPath ? 2 : 3} />
+        <StepRail current={2} total={totalSteps} />
 
         <header className="mb-7">
           <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-[#0a1628] dark:bg-amber-400/15">
@@ -711,7 +900,7 @@ function RegisterForm() {
   /* ─────────────────────────── STEP 1: ACCOUNT ─────────────────────────── */
   return (
     <AuthShell>
-      <StepRail current={1} total={nextPath ? 2 : 3} />
+      <StepRail current={1} total={totalSteps} />
 
       <header className="mb-7">
         <h1 className="text-[28px] font-black leading-tight tracking-tight text-[#0a1628] sm:text-[32px] dark:text-white">
