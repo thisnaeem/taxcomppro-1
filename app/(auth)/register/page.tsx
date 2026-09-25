@@ -13,7 +13,7 @@ import { signIn, useSession } from "@/lib/auth-client";
 import { z } from "zod";
 import {
   Mail, Lock, User, Phone, ArrowRight, Eye, EyeOff, ChevronDown, Check,
-  Search, CheckCircle2, Crown, Sparkles, ShieldCheck, Tag, Loader2, Zap,
+  Search, Crown, Sparkles, ShieldCheck, Tag, Loader2, Zap,
   MailCheck, ArrowLeft, RefreshCw, AlertCircle, X,
 } from "lucide-react";
 import OtpInput from "@/components/auth/OtpInput";
@@ -44,6 +44,20 @@ const COUNTRIES: Country[] = [
   { code: "PK", name: "Pakistan", flag: "🇵🇰", dialCode: "+92", format: "### #######", minDigits: 10, maxDigits: 10 },
   { code: "AE", name: "United Arab Emirates", flag: "🇦🇪", dialCode: "+971", format: "## ### ####", minDigits: 9, maxDigits: 9 },
 ];
+
+function CountryFlag({ code, size = 20 }: { code: string; size?: number }) {
+  return (
+    <img
+      src={`https://flagcdn.com/${code.toLowerCase()}.svg`}
+      alt={code}
+      width={size}
+      height={Math.round(size * 0.75)}
+      className="inline-block shrink-0 rounded-[3px] object-cover"
+      style={{ width: size, height: Math.round(size * 0.75) }}
+      loading="eager"
+    />
+  );
+}
 
 function formatUSPhone(value: string) {
   const digits = value.replace(/\D/g, "").slice(0, 10);
@@ -380,12 +394,15 @@ function RegisterForm() {
     setGoogleLoading(true);
     try {
       const callbackURL = isProTalkFlow
-        ? accountUrl("/register?step=membership", nextPath)
+        ? `/register?step=membership&next=${encodeURIComponent(nextPath)}`
         : (nextPath || "/register?step=membership");
+      const errorURL = nextPath
+        ? `/register?next=${encodeURIComponent(nextPath)}`
+        : "/register";
       const result = await signIn.social({
         provider: "google",
         callbackURL,
-        errorCallbackURL: accountUrl("/register", nextPath),
+        errorCallbackURL: errorURL,
       });
       if (result.error) throw new Error(result.error.message);
     } catch {
@@ -454,7 +471,7 @@ function RegisterForm() {
 
           {isProTalkFlow && !showAllPlans ? (
             /* ─── PRO TALK FOCUSED FREE ACCESS VIEW ─── */
-            <div className="mx-auto max-w-2xl animate-in fade-in duration-300">
+            <div className="mx-auto max-w-5xl animate-in fade-in duration-300">
               <div className="mb-8 text-center">
                 <div className="mx-auto mb-5 max-w-xs">
                   <StepRail current={3} total={3} />
@@ -469,132 +486,110 @@ function RegisterForm() {
                   Your Free Pro Talk Access
                 </h1>
                 <p className="mx-auto mt-3 max-w-lg text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-                  Your account is verified! Your invitation includes Free Basic Membership so you can join the live stage, participate in chat &amp; Q&amp;A, and connect with attendees.
+                  Your account is verified! Continue with Free Basic Membership to join the live stage, chat &amp; Q&amp;A, and connect with attendees.
                 </p>
               </div>
 
               {serverError && (
-                <div className="mb-6">
+                <div className="mx-auto mb-6 max-w-lg">
                   <ErrorBanner message={serverError} />
                 </div>
               )}
 
-              {!pendingSignup && (
-                <div className="mb-8">
-                  <ProfessionalTitleEditor />
+              {/* Two-column: Free PricingCard + Upgrade Card — equal height */}
+              <div className="flex flex-col items-stretch gap-5 lg:flex-row">
+                {/* Left: Free Plan Card */}
+                <div className="flex-1 w-full lg:w-1/2">
+                  <PricingCard
+                    plan={PRICING_PLANS[0]}
+                    mode="select"
+                    selected={true}
+                    onSelect={() => {}}
+                    expanded
+                  />
                 </div>
-              )}
 
-              {/* Focused Free Plan Card */}
-              <div className="relative overflow-hidden rounded-3xl border-2 border-emerald-500/40 bg-white p-6 shadow-2xl shadow-emerald-500/5 sm:p-8 dark:border-emerald-500/40 dark:bg-[#0c1a2e]">
-                <div className="pointer-events-none absolute right-0 top-0 h-40 w-40 rounded-full bg-emerald-500/10 blur-3xl" />
-                <div className="pointer-events-none absolute bottom-0 left-0 h-32 w-32 rounded-full bg-amber-500/10 blur-3xl" />
-
-                <div className="relative flex flex-col justify-between gap-4 border-b border-slate-100 pb-6 sm:flex-row sm:items-center dark:border-white/10">
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-500/15 font-black text-emerald-600 dark:text-emerald-400">
-                      <CheckCircle2 className="h-6 w-6" />
-                    </span>
+                {/* Right: Upgrade Card — matching style */}
+                <div className="flex flex-1 w-full flex-col rounded-2xl border border-amber-400/30 bg-white p-6 shadow-sm dark:border-amber-400/20 dark:bg-[#0c1a2e] lg:w-1/2">
+                  <div className="mb-5 flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                      <Crown className="h-5 w-5" />
+                    </div>
                     <div>
-                      <h2 className="text-xl font-black text-[#0a1628] dark:text-white">
-                        Basic Member Plan
-                      </h2>
-                      <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                        Included with your invitation
+                      <h3 className="text-base font-black text-[#0a1628] dark:text-white">
+                        Upgrade Options
+                      </h3>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                        Optional premium plans
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-baseline gap-1 self-start rounded-2xl border border-emerald-200/60 bg-emerald-50 px-4 py-2 sm:self-auto dark:border-emerald-800/40 dark:bg-emerald-950/40">
-                    <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400">$0</span>
-                    <span className="text-xs font-bold text-emerald-700/80 dark:text-emerald-300/80">/ Free Forever</span>
-                  </div>
-                </div>
+                  <ul className="flex-1 space-y-3.5 mb-6">
+                    <li className="flex items-start gap-2.5 rounded-xl bg-slate-50 p-3 dark:bg-white/[0.03]">
+                      <Zap className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+                      <div>
+                        <span className="text-xs font-bold text-slate-800 dark:text-white">VIP</span>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400">Private DMs, ATLAS AI Tax Bot, Pro Training</p>
+                      </div>
+                    </li>
+                    <li className="flex items-start gap-2.5 rounded-xl bg-slate-50 p-3 dark:bg-white/[0.03]">
+                      <Zap className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+                      <div>
+                        <span className="text-xs font-bold text-slate-800 dark:text-white">Marketplace</span>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400">Sell services, custom profile, directory listing</p>
+                      </div>
+                    </li>
+                    <li className="flex items-start gap-2.5 rounded-xl bg-slate-50 p-3 dark:bg-white/[0.03]">
+                      <Zap className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+                      <div>
+                        <span className="text-xs font-bold text-slate-800 dark:text-white">Marketplace Plus</span>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400">Host live audio/video, post ads &amp; products</p>
+                      </div>
+                    </li>
+                  </ul>
 
-                {/* Pro Talk included features list */}
-                <div className="my-6 space-y-3.5">
-                  <p className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
-                    What&apos;s included in this free plan:
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAllPlans(true);
+                      setSelectedTier("VIP");
+                    }}
+                    className="flex w-full items-center justify-center gap-2 rounded-full border border-amber-400/40 bg-amber-50 px-4 py-2.5 text-xs font-bold text-amber-800 transition-all hover:bg-amber-100 dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-300 dark:hover:bg-amber-400/20 cursor-pointer"
+                  >
+                    <span>View All Upgrade Plans</span>
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </button>
+
+                  <p className="mt-2.5 text-center text-[11px] text-slate-500 dark:text-slate-400">
+                    You can always upgrade later from Settings.
                   </p>
-
-                  <div className="grid gap-2.5 sm:grid-cols-2">
-                    <div className="flex items-start gap-2.5 rounded-xl bg-slate-50 p-3 dark:bg-white/[0.03]">
-                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
-                      <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
-                        Live Pro Talk Stage Access (Listen &amp; Speak)
-                      </span>
-                    </div>
-                    <div className="flex items-start gap-2.5 rounded-xl bg-slate-50 p-3 dark:bg-white/[0.03]">
-                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
-                      <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
-                        Live Chat, Q&amp;A &amp; Host Reactions
-                      </span>
-                    </div>
-                    <div className="flex items-start gap-2.5 rounded-xl bg-slate-50 p-3 dark:bg-white/[0.03]">
-                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
-                      <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
-                        Pro Talk RSVPs &amp; Calendar Reminders
-                      </span>
-                    </div>
-                    <div className="flex items-start gap-2.5 rounded-xl bg-slate-50 p-3 dark:bg-white/[0.03]">
-                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
-                      <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
-                        Community Feed &amp; Member Directory
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 pt-1 text-xs text-slate-600 dark:text-slate-400">
-                    <ShieldCheck className="h-4 w-4 text-slate-500" />
-                    <span>No credit card required. No hidden fees or automatic billing.</span>
-                  </div>
                 </div>
-
-                {/* Primary Continue Button */}
-                <button
-                  type="button"
-                  disabled={checkoutLoading}
-                  onClick={handleProceedToCheckout}
-                  className={`${goldCta} text-base py-4 shadow-lg shadow-amber-500/20`}
-                >
-                  {checkoutLoading ? (
-                    <>
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                      <span>Entering Pro Talk…</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>Continue to Pro Talk (Free)</span>
-                      <ArrowRight className="h-5 w-5" />
-                    </>
-                  )}
-                </button>
               </div>
 
-              {/* Option to view full upgrade pricing */}
-              <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 text-center shadow-sm dark:border-white/10 dark:bg-white/[0.03]">
-                <div className="mx-auto mb-2 flex h-9 w-9 items-center justify-center rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400">
-                  <Crown className="h-5 w-5" />
-                </div>
-                <h3 className="text-sm font-bold text-[#0a1628] dark:text-white">
-                  Want 1-on-1 messaging, practice listing, or VIP networking?
-                </h3>
-                <p className="mx-auto mt-1 max-w-md text-xs text-slate-600 dark:text-slate-400">
-                  You can optionally upgrade to VIP, Marketplace, or Marketplace Plus to unlock private DMs, host your own Pro Talks, and access the ATLAS AI Tax Bot.
-                </p>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowAllPlans(true);
-                    setSelectedTier("VIP");
-                  }}
-                  className="mt-4 inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-5 py-2.5 text-xs font-bold text-[#0a1628] transition-all hover:border-amber-400 hover:bg-amber-50 dark:border-white/15 dark:bg-white/5 dark:text-white dark:hover:border-amber-400/50 dark:hover:bg-amber-400/10 cursor-pointer"
-                >
-                  <span>Explore Upgrade Plans (VIP &amp; Marketplace)</span>
-                  <ChevronDown className="h-4 w-4 text-amber-500" />
-                </button>
-              </div>
+              {/* Continue CTA below both cards */}
+              <button
+                type="button"
+                disabled={checkoutLoading}
+                onClick={handleProceedToCheckout}
+                className={`${goldCta} mt-6 text-sm py-3.5 shadow-lg shadow-amber-500/20`}
+              >
+                {checkoutLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Entering Pro Talk…</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Continue to Pro Talk (Free)</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </>
+                )}
+              </button>
+              <p className="mt-2.5 flex items-center justify-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
+                <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
+                No credit card required. No hidden fees.
+              </p>
             </div>
           ) : (
             /* ─── FULL 4-TIER PRICING GRID VIEW ─── */
@@ -985,7 +980,7 @@ function RegisterForm() {
                 aria-label={`Country code, currently ${selectedCountry.name} ${selectedCountry.dialCode}`}
                 className="flex shrink-0 items-center gap-1.5 rounded-l-xl border-r border-slate-200 px-3 py-3 text-sm font-semibold text-slate-800 transition-colors hover:bg-slate-50 dark:border-white/10 dark:text-white dark:hover:bg-white/5"
               >
-                <span className="select-none text-base leading-none">{selectedCountry.flag}</span>
+                <CountryFlag code={selectedCountry.code} size={22} />
                 <span className="font-mono text-xs font-bold text-slate-700 dark:text-slate-300">
                   {selectedCountry.dialCode}
                 </span>
@@ -1028,7 +1023,7 @@ function RegisterForm() {
                         }`}
                       >
                         <span className="flex items-center gap-2">
-                          <span className="text-base leading-none">{c.flag}</span>
+                          <CountryFlag code={c.code} size={18} />
                           <span>{c.name}</span>
                         </span>
                         <span className="flex items-center gap-1.5">

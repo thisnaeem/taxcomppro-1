@@ -206,16 +206,26 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
             }`}
           >
             <div className="w-7 h-7 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center overflow-hidden shrink-0 ring-1 ring-amber-400/30">
-              {user?.image ? (
+              {user?.image && user.image.length > 1 ? (
                 <img
                   src={user.image}
                   alt={user?.name ?? ""}
                   referrerPolicy="no-referrer"
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = "none";
+                    const parent = (e.target as HTMLImageElement).parentElement;
+                    if (parent && !parent.querySelector("span")) {
+                      const span = document.createElement("span");
+                      span.className = "text-[#0a1628] font-black text-xs";
+                      span.textContent = user?.name?.[0]?.toUpperCase() || "?";
+                      parent.appendChild(span);
+                    }
+                  }}
                 />
               ) : (
                 <span className="text-[#0a1628] font-black text-xs">
-                  {user?.name?.[0]?.toUpperCase()}
+                  {user?.name?.[0]?.toUpperCase() || "?"}
                 </span>
               )}
             </div>

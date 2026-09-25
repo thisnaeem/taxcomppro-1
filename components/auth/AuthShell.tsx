@@ -9,10 +9,10 @@ import AuthBrandPanel from "@/components/auth/AuthBrandPanel";
  */
 export default function AuthShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-[100dvh] bg-[#f8fafc] font-[var(--font-urbanist,Urbanist),sans-serif] dark:bg-[#0a1220]">
+    <div className="flex h-[100dvh] bg-[#f8fafc] font-[var(--font-urbanist,Urbanist),sans-serif] dark:bg-[#0a1220]">
       <AuthBrandPanel />
 
-      <main className="flex flex-1 items-center justify-center px-5 py-12 sm:px-8">
+      <main className="flex flex-1 items-center justify-center overflow-y-auto px-5 py-12 sm:px-8">
         <div className="w-full max-w-[440px]">
           <div className="mb-9 flex justify-center lg:hidden">
             <Link href="/">
