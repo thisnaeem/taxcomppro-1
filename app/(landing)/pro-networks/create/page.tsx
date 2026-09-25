@@ -674,7 +674,7 @@ export default function CreateProNetworkPage() {
 
                 {/* Description */}
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                  <label className="block text-xs font-bold text-slate-300 mb-1.5">
                     About Your Network (Description &amp; Public Preview)
                   </label>
                   <textarea
@@ -683,7 +683,7 @@ export default function CreateProNetworkPage() {
                     aria-label="Network description"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-[#243550] text-xs font-medium text-slate-900 dark:text-white bg-white dark:bg-[#0f172a] placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    className="w-full px-4 py-3 rounded-2xl border border-[#243550] text-xs font-medium text-white bg-[#0f172a] placeholder:text-slate-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                   />
                 </div>
               </div>

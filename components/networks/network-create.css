@@ -225,16 +225,19 @@
 .pn-create-form .ring-amber-400\/20 {
   --tw-ring-color: rgba(255, 190, 36, 0.2);
 }
+.pn-create-form button.border-\[\#243550\],
 .pn-create-form button.border-slate-200,
 .pn-create-form button.dark\:border-slate-700,
-.pn-create-form button.dark\:border-\[\#243550\] {
+.pn-create-form button[class*="border-[#243550]"],
+.pn-create-form button[class*="bg-[#0f172a]"] {
   background: #0f172a !important;
   border-color: #243550 !important;
   color: #f8fafc !important;
 }
+.pn-create-form button.border-\[\#243550\]:hover,
 .pn-create-form button.border-slate-200:hover,
-.pn-create-form button.dark\:border-slate-700:hover,
-.pn-create-form button.dark\:border-\[\#243550\]:hover {
+.pn-create-form button[class*="border-[#243550]"]:hover,
+.pn-create-form button[class*="bg-[#0f172a]"]:hover {
   border-color: #334155 !important;
   background: #131f37 !important;
 }
