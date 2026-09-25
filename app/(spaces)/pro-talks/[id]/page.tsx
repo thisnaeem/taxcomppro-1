@@ -243,13 +243,6 @@ function ScheduledScreen({
   const [rsvpCount, setRsvpCount] = useState(space._count?.rsvps ?? 0);
   const [copied, setCopied] = useState(false);
 
-  // Guest RSVP states for unauthenticated users
-  const [guestName, setGuestName] = useState("");
-  const [guestEmail, setGuestEmail] = useState("");
-  const [showGuestForm, setShowGuestForm] = useState(false);
-  const [guestRsvped, setGuestRsvped] = useState(false);
-  const [guestError, setGuestError] = useState<string | null>(null);
-
   const shareUrl = space.shareToken
     ? typeof window !== "undefined"
       ? `${window.location.origin}/pro-talks/invite/${space.shareToken}`
@@ -284,32 +277,6 @@ function ScheduledScreen({
     setRsvping(false);
   };
 
-  const handleGuestRsvp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!guestName.trim() || rsvping) return;
-    setRsvping(true);
-    setGuestError(null);
-    try {
-      const res = await fetch(`/api/spaces/${space.id}/rsvp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: guestName.trim(), email: guestEmail.trim() || undefined }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setGuestError(data.error || "Failed to RSVP. Please try again.");
-        return;
-      }
-      setGuestRsvped(true);
-      setRsvpCount(c => c + 1);
-      setShowGuestForm(false);
-    } catch {
-      setGuestError("Failed to save RSVP. Please check your connection.");
-    } finally {
-      setRsvping(false);
-    }
-  };
-
   return (
     <main className="ptr-screen">
       <Link href="/pro-talks" className="ptr-back">← Pro Talks</Link>
@@ -325,102 +292,6 @@ function ScheduledScreen({
       </div>
 
       <Countdown target={space.scheduledAt} />
-
-      {/* Guest RSVP Success Notice */}
-      {!currentUserId && guestRsvped && (
-        <div className="bg-emerald-500/10 border border-emerald-400/30 rounded-2xl p-4 max-w-md w-full text-center space-y-2">
-          <div className="flex items-center justify-center gap-2 text-lime-300 font-bold text-sm">
-            <CheckCheck className="w-5 h-5 text-lime-400" />
-            <span>You&apos;re on the RSVP list!</span>
-          </div>
-          <p className="text-slate-300 text-xs leading-relaxed">
-            We&apos;ve reserved your spot for <strong>{space.name}</strong>. {guestEmail ? `We'll send updates to ${guestEmail}.` : "Save this link and come back when the talk starts."}
-          </p>
-          <div className="pt-2 flex flex-wrap items-center justify-center gap-2">
-            <Link href={accountUrl("/register", `/pro-talks/${space.id}`)} className="text-xs text-lime-400 hover:underline font-bold">
-              Create an account for full live stage speaking access →
-            </Link>
-          </div>
-        </div>
-      )}
-
-      {/* Guest RSVP Form */}
-      {!currentUserId && showGuestForm && !guestRsvped && (
-        <form
-          onSubmit={handleGuestRsvp}
-          className="bg-[#04111f]/95 border border-emerald-500/30 rounded-3xl p-5 max-w-md w-full text-left space-y-3 shadow-2xl backdrop-blur-md"
-        >
-          <div className="flex items-center justify-between">
-            <h3 className="text-white font-bold text-sm flex items-center gap-2">
-              <Users className="w-4 h-4 text-lime-400" /> Quick Guest RSVP
-            </h3>
-            <button
-              type="button"
-              onClick={() => setShowGuestForm(false)}
-              className="text-xs text-slate-400 hover:text-white"
-            >
-              Cancel
-            </button>
-          </div>
-          <p className="text-slate-300 text-xs">
-            Enter your name &amp; email to get reminded and join when the stage goes live.
-          </p>
-          {guestError && (
-            <div className="p-2.5 rounded-xl bg-red-500/20 border border-red-500/40 text-red-300 text-xs">
-              {guestError}
-            </div>
-          )}
-          <div>
-            <label className="block text-[11px] font-bold uppercase tracking-wider text-emerald-300 mb-1">
-              Your Name *
-            </label>
-            <input
-              type="text"
-              required
-              placeholder="e.g. Alex Morgan"
-              value={guestName}
-              onChange={(e) => setGuestName(e.target.value)}
-              className="w-full min-h-[44px] px-3.5 rounded-xl bg-black/40 text-white border border-emerald-500/30 focus:border-emerald-400 focus:outline-none text-sm placeholder:text-slate-500"
-            />
-          </div>
-          <div>
-            <label className="block text-[11px] font-bold uppercase tracking-wider text-emerald-300 mb-1">
-              Email (for reminder)
-            </label>
-            <input
-              type="email"
-              placeholder="alex@example.com"
-              value={guestEmail}
-              onChange={(e) => setGuestEmail(e.target.value)}
-              className="w-full min-h-[44px] px-3.5 rounded-xl bg-black/40 text-white border border-emerald-500/30 focus:border-emerald-400 focus:outline-none text-sm placeholder:text-slate-500"
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={!guestName.trim() || rsvping}
-            className="w-full ptr-btn ptr-btn--primary !min-h-[46px] text-sm mt-2"
-          >
-            {rsvping ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" /> Saving RSVP…
-              </>
-            ) : (
-              <>
-                <Check className="w-4 h-4" /> Confirm RSVP
-              </>
-            )}
-          </button>
-          <div className="text-center pt-1">
-            <span className="text-slate-400 text-xs">Already have an account? </span>
-            <Link
-              href={accountUrl("/login", `/pro-talks/${space.id}`)}
-              className="text-lime-400 hover:underline text-xs font-bold"
-            >
-              Sign In
-            </Link>
-          </div>
-        </form>
-      )}
 
       <div className="ptr-actions">
         {isHost && (
@@ -439,7 +310,7 @@ function ScheduledScreen({
             {rsvping ? <Loader2 className="w-4 h-4 animate-spin" /> : rsvped ? <><CheckCheck className="w-4 h-4" /> Reminder set</> : <><Check className="w-4 h-4" /> Remind me</>}
           </button>
         )}
-        {!currentUserId && !showGuestForm && !guestRsvped && (
+        {!currentUserId && (
           <>
             <Link
               id="unauth-signup-rsvp-btn"
@@ -455,14 +326,6 @@ function ScheduledScreen({
             >
               Sign In
             </Link>
-            <button
-              id="unauth-guest-rsvp-btn"
-              type="button"
-              onClick={() => setShowGuestForm(true)}
-              className="ptr-btn ptr-btn--ghost border border-emerald-500/30 text-emerald-300 hover:text-white"
-            >
-              <Users className="w-4 h-4" /> Quick Guest RSVP
-            </button>
           </>
         )}
         {shareUrl && (
