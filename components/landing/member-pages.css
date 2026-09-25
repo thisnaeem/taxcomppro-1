@@ -29,6 +29,20 @@
 .pricing-toolbar span { font-size:14px; color:var(--mp-muted); }
 .pricing-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:20px; align-items:stretch; }
 .pricing-card { position:relative; min-width:0; background:var(--mp-panel); border:1px solid var(--mp-line); border-radius:24px; padding:5px; overflow:hidden; display:flex; flex-direction:column; transition:transform .25s ease, border-color .25s ease, box-shadow .25s ease; }
+.pricing-card-compact { border-radius:18px !important; }
+.pricing-card-compact .pricing-art { height:95px !important; padding:10px 14px !important; border-radius:14px !important; }
+.pricing-card-compact .pricing-art img { width:68px !important; height:68px !important; }
+.pricing-card-compact .pricing-body { padding:14px 14px 16px !important; }
+.pricing-card-compact .pricing-body h2 { font-size:16px !important; min-height:0 !important; }
+.pricing-card-compact .pricing-description { font-size:12px !important; line-height:1.45 !important; min-height:0 !important; margin:3px 0 8px !important; }
+.pricing-card-compact .pricing-price strong { font-size:26px !important; }
+.pricing-card-compact .pricing-price span { font-size:12px !important; }
+.pricing-card-compact .pricing-savings { font-size:11px !important; margin:3px 0 8px !important; min-height:0 !important; }
+.pricing-card-compact .pricing-action .mp-button { min-height:36px !important; padding:7px 14px !important; font-size:12px !important; }
+.pricing-card-compact .pricing-list-label { font-size:12px !important; padding-top:8px !important; margin:10px 0 6px !important; }
+.pricing-card-compact .pricing-features { gap:6px !important; }
+.pricing-card-compact .pricing-features li { font-size:12px !important; gap:7px !important; line-height:1.35 !important; }
+.pricing-card-compact .pricing-features svg { width:13px !important; height:13px !important; }
 .pricing-card:hover { transform:translateY(-4px); box-shadow:0 16px 36px rgba(0,0,0,.08); }
 .dark .pricing-card:hover { box-shadow:0 16px 36px rgba(0,0,0,.35); }
 .pricing-featured { border-color:var(--mp-gold); }

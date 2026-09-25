@@ -95,9 +95,9 @@ const inputErr = "border-red-400 focus:border-red-500 focus:ring-4 focus:ring-re
 const fieldLabel = "block text-sm font-semibold text-[#0a1628] dark:text-white";
 const fieldError = "text-xs font-medium text-red-600 dark:text-red-400";
 const goldCta =
-  "flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#ffbe24] to-[#ffbe24] py-3.5 text-sm font-bold text-[#0a1628] transition-all " +
-  "hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(255, 190, 36,0.35)] active:translate-y-0 active:scale-[0.99] " +
-  "disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:shadow-none";
+  "flex w-full items-center justify-center gap-2 rounded-full bg-[#ffbe24] py-3.5 text-sm font-black !text-black transition-all " +
+  "hover:bg-[#ffcb4d] hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(255,190,36,0.35)] active:translate-y-0 active:scale-[0.99] " +
+  "disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:shadow-none cursor-pointer";
 
 function ErrorBanner({ message }: { message: string }) {
   return (
@@ -458,46 +458,46 @@ function RegisterForm() {
     const selected = PRICING_PLANS.find((p) => p.id === selectedTier);
 
     return (
-      <div className="min-h-[100dvh] bg-[#f8fafc] px-4 py-12 font-[var(--font-urbanist,Urbanist),sans-serif] dark:bg-[#0a1220] sm:px-6">
+      <div className="min-h-[100dvh] bg-[#f8fafc] px-4 py-4 sm:py-6 lg:py-8 font-[var(--font-urbanist,Urbanist),sans-serif] dark:bg-[#0a1220] sm:px-6">
         <div className="mx-auto w-full max-w-7xl">
-          <div className="mb-9 flex justify-center">
+          <div className="mb-4 sm:mb-6 flex justify-center">
             <Link href="/">
-              <Image src="/logo.webp" alt="TaxCompPro" width={150} height={52}
-                className="object-contain dark:hidden" style={{ width: "150px", height: "auto" }} priority />
-              <Image src="/logo_dark.webp" alt="TaxCompPro" width={150} height={52}
-                className="hidden object-contain dark:block" style={{ width: "150px", height: "auto" }} priority />
+              <Image src="/logo.webp" alt="TaxCompPro" width={135} height={46}
+                className="object-contain dark:hidden" style={{ width: "135px", height: "auto" }} priority />
+              <Image src="/logo_dark.webp" alt="TaxCompPro" width={135} height={46}
+                className="hidden object-contain dark:block" style={{ width: "135px", height: "auto" }} priority />
             </Link>
           </div>
 
           {isProTalkFlow && !showAllPlans ? (
             /* ─── PRO TALK FOCUSED FREE ACCESS VIEW ─── */
-            <div className="mx-auto max-w-5xl animate-in fade-in duration-300">
-              <div className="mb-8 text-center">
-                <div className="mx-auto mb-5 max-w-xs">
+            <div className="mx-auto max-w-3xl lg:max-w-4xl animate-in fade-in duration-300">
+              <div className="mb-4 sm:mb-6 text-center">
+                <div className="mx-auto mb-3 sm:mb-4 max-w-xs">
                   <StepRail current={3} total={3} />
                 </div>
 
-                <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-                  <Sparkles className="h-3.5 w-3.5" />
+                <div className="mb-2 inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-0.5 text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                  <Sparkles className="h-3 w-3" />
                   <span>Pro Talk Guest Invitation</span>
                 </div>
 
-                <h1 className="text-[28px] font-black leading-tight tracking-tight text-[#0a1628] sm:text-[36px] dark:text-white">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-black leading-tight tracking-tight text-[#0a1628] dark:text-white">
                   Your Free Pro Talk Access
                 </h1>
-                <p className="mx-auto mt-3 max-w-lg text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                <p className="mx-auto mt-1 max-w-md text-xs sm:text-sm leading-relaxed text-slate-600 dark:text-slate-300">
                   Your account is verified! Continue with Free Basic Membership to join the live stage, chat &amp; Q&amp;A, and connect with attendees.
                 </p>
               </div>
 
               {serverError && (
-                <div className="mx-auto mb-6 max-w-lg">
+                <div className="mx-auto mb-4 max-w-lg">
                   <ErrorBanner message={serverError} />
                 </div>
               )}
 
-              {/* Two-column: Free PricingCard + Upgrade Card — equal height */}
-              <div className="flex flex-col items-stretch gap-5 lg:flex-row">
+              {/* Two-column: Free PricingCard + Upgrade Card — equal height & compact */}
+              <div className="flex flex-col items-stretch gap-4 sm:gap-5 lg:flex-row">
                 {/* Left: Free Plan Card */}
                 <div className="flex-1 w-full lg:w-1/2">
                   <PricingCard
@@ -505,65 +505,71 @@ function RegisterForm() {
                     mode="select"
                     selected={true}
                     onSelect={() => {}}
+                    compact={true}
                     expanded
                   />
                 </div>
 
-                {/* Right: Upgrade Card — matching style */}
-                <div className="flex flex-1 w-full flex-col rounded-2xl border border-amber-400/30 bg-white p-6 shadow-sm dark:border-amber-400/20 dark:bg-[#0c1a2e] lg:w-1/2">
-                  <div className="mb-5 flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
-                      <Crown className="h-5 w-5" />
+                {/* Right: Upgrade Card — matching compact style */}
+                <div className="flex flex-1 w-full flex-col justify-between rounded-[18px] border border-amber-400/30 bg-white p-4 sm:p-5 shadow-sm dark:border-amber-400/20 dark:bg-[#0c1a2e] lg:w-1/2">
+                  <div>
+                    <div className="mb-3 sm:mb-4 flex items-center gap-2.5">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                        <Crown className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm sm:text-base font-black text-[#0a1628] dark:text-white leading-tight">
+                          Upgrade Options
+                        </h3>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                          Optional premium plans
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="text-base font-black text-[#0a1628] dark:text-white">
-                        Upgrade Options
-                      </h3>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                        Optional premium plans
-                      </p>
-                    </div>
+
+                    <ul className="space-y-2 mb-4">
+                      <li className="flex items-start gap-2 rounded-xl bg-slate-50 p-2.5 dark:bg-white/[0.03]">
+                        <Zap className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500" />
+                        <div>
+                          <span className="text-xs font-bold text-slate-800 dark:text-white">VIP</span>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">Private DMs, ATLAS AI Tax Bot, Pro Training</p>
+                        </div>
+                      </li>
+                      <li className="flex items-start gap-2 rounded-xl bg-slate-50 p-2.5 dark:bg-white/[0.03]">
+                        <Zap className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500" />
+                        <div>
+                          <span className="text-xs font-bold text-slate-800 dark:text-white">Marketplace</span>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">Sell services, custom profile, directory listing</p>
+                        </div>
+                      </li>
+                      <li className="flex items-start gap-2 rounded-xl bg-slate-50 p-2.5 dark:bg-white/[0.03]">
+                        <Zap className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500" />
+                        <div>
+                          <span className="text-xs font-bold text-slate-800 dark:text-white">Marketplace Plus</span>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">Host live audio/video, post ads &amp; products</p>
+                        </div>
+                      </li>
+                    </ul>
                   </div>
 
-                  <ul className="flex-1 space-y-3.5 mb-6">
-                    <li className="flex items-start gap-2.5 rounded-xl bg-slate-50 p-3 dark:bg-white/[0.03]">
-                      <Zap className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
-                      <div>
-                        <span className="text-xs font-bold text-slate-800 dark:text-white">VIP</span>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400">Private DMs, ATLAS AI Tax Bot, Pro Training</p>
-                      </div>
-                    </li>
-                    <li className="flex items-start gap-2.5 rounded-xl bg-slate-50 p-3 dark:bg-white/[0.03]">
-                      <Zap className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
-                      <div>
-                        <span className="text-xs font-bold text-slate-800 dark:text-white">Marketplace</span>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400">Sell services, custom profile, directory listing</p>
-                      </div>
-                    </li>
-                    <li className="flex items-start gap-2.5 rounded-xl bg-slate-50 p-3 dark:bg-white/[0.03]">
-                      <Zap className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
-                      <div>
-                        <span className="text-xs font-bold text-slate-800 dark:text-white">Marketplace Plus</span>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400">Host live audio/video, post ads &amp; products</p>
-                      </div>
-                    </li>
-                  </ul>
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowAllPlans(true);
+                        setSelectedTier("VIP");
+                      }}
+                      className="flex w-full items-center justify-center gap-2 rounded-full bg-[#ffbe24] px-4 py-2 text-xs font-bold text-black transition-all hover:bg-[#ffcb4d] active:scale-[0.99] cursor-pointer shadow-sm"
+                      style={{ color: "#000000" }}
+                    >
+                      <span className="text-black font-bold" style={{ color: "#000000" }}>View All Upgrade Plans</span>
+                      <ArrowRight className="h-3.5 w-3.5 text-black" style={{ color: "#000000" }} />
+                    </button>
 
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowAllPlans(true);
-                      setSelectedTier("VIP");
-                    }}
-                    className="flex w-full items-center justify-center gap-2 rounded-full border border-amber-400/40 bg-amber-50 px-4 py-2.5 text-xs font-bold text-amber-800 transition-all hover:bg-amber-100 dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-300 dark:hover:bg-amber-400/20 cursor-pointer"
-                  >
-                    <span>View All Upgrade Plans</span>
-                    <ArrowRight className="h-3.5 w-3.5" />
-                  </button>
-
-                  <p className="mt-2.5 text-center text-[11px] text-slate-500 dark:text-slate-400">
-                    You can always upgrade later from Settings.
-                  </p>
+                    <p className="mt-2 text-center text-[10px] text-slate-500 dark:text-slate-400">
+                      You can always upgrade later from Settings.
+                    </p>
+                  </div>
                 </div>
               </div>
 
@@ -572,21 +578,22 @@ function RegisterForm() {
                 type="button"
                 disabled={checkoutLoading}
                 onClick={handleProceedToCheckout}
-                className={`${goldCta} mt-6 text-sm py-3.5 shadow-lg shadow-amber-500/20`}
+                className="mt-4 sm:mt-5 flex w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-[#ffbe24] py-3 text-sm font-black !text-black shadow-lg shadow-amber-500/20 transition-all hover:bg-[#ffcb4d] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
+                style={{ color: "#000000" }}
               >
                 {checkoutLoading ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Entering Pro Talk…</span>
+                    <Loader2 className="h-4 w-4 animate-spin !text-black" style={{ color: "#000000" }} />
+                    <span className="font-black !text-black" style={{ color: "#000000" }}>Entering Pro Talk…</span>
                   </>
                 ) : (
                   <>
-                    <span>Continue to Pro Talk (Free)</span>
-                    <ArrowRight className="h-4 w-4" />
+                    <span className="font-black !text-black" style={{ color: "#000000" }}>Continue to Pro Talk (Free)</span>
+                    <ArrowRight className="h-4 w-4 !text-black" style={{ color: "#000000" }} />
                   </>
                 )}
               </button>
-              <p className="mt-2.5 flex items-center justify-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
+              <p className="mt-2 flex items-center justify-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
                 <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
                 No credit card required. No hidden fees.
               </p>
@@ -796,9 +803,9 @@ function RegisterForm() {
                       </p>
                     </div>
 
-                    <button type="button" onClick={handleProceedToCheckout} className={goldCta}>
-                      <span>{isProTalkFlow ? "Continue to Pro Talk (Free)" : "Get started for free"}</span>
-                      <ArrowRight className="h-4 w-4" />
+                    <button type="button" onClick={handleProceedToCheckout} className={goldCta} style={{ color: "#000000" }}>
+                      <span className="!text-black font-black" style={{ color: "#000000" }}>{isProTalkFlow ? "Continue to Pro Talk (Free)" : "Get started for free"}</span>
+                      <ArrowRight className="h-4 w-4 !text-black" style={{ color: "#000000" }} />
                     </button>
                   </>
                 )}
@@ -854,16 +861,17 @@ function RegisterForm() {
           onClick={() => handleVerifyOtp()}
           disabled={otpLoading || otpCode.replace(/\D/g, "").length !== 6}
           className={`${goldCta} mt-6`}
+          style={{ color: "#000000" }}
         >
           {otpLoading ? (
             <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <span>Verifying…</span>
+              <Loader2 className="h-4 w-4 animate-spin !text-black" style={{ color: "#000000" }} />
+              <span className="!text-black font-black" style={{ color: "#000000" }}>Verifying…</span>
             </>
           ) : (
             <>
-              <span>Verify and continue</span>
-              <ArrowRight className="h-4 w-4" />
+              <span className="!text-black font-black" style={{ color: "#000000" }}>Verify and continue</span>
+              <ArrowRight className="h-4 w-4 !text-black" style={{ color: "#000000" }} />
             </>
           )}
         </button>
@@ -1142,16 +1150,16 @@ function RegisterForm() {
           {errors.agreeTerms && <p className={fieldError}>{errors.agreeTerms.message}</p>}
         </div>
 
-        <button type="submit" disabled={loading || googleLoading} className={goldCta}>
+        <button type="submit" disabled={loading || googleLoading} className={goldCta} style={{ color: "#000000" }}>
           {loading ? (
             <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <span>Sending code…</span>
+              <Loader2 className="h-4 w-4 animate-spin !text-black" style={{ color: "#000000" }} />
+              <span className="!text-black font-black" style={{ color: "#000000" }}>Sending code…</span>
             </>
           ) : (
             <>
-              <span>Continue</span>
-              <ArrowRight className="h-4 w-4" />
+              <span className="!text-black font-black" style={{ color: "#000000" }}>Continue</span>
+              <ArrowRight className="h-4 w-4 !text-black" style={{ color: "#000000" }} />
             </>
           )}
         </button>

@@ -30,6 +30,7 @@ export interface PricingCardProps {
   onUpgrade?: (tier: PlanTier) => void;
   // Optional features expansion 
   expanded?: boolean;
+  compact?: boolean;
   className?: string;
   discountInfo?: DiscountInfo | null;
 }
@@ -46,6 +47,7 @@ export function PricingCard({
   upgradeLoadingTier = null,
   onUpgrade,
   expanded = false,
+  compact = false,
   className = "",
   discountInfo = null,
 }: PricingCardProps) {
@@ -89,6 +91,7 @@ export function PricingCard({
 
   const cardClasses = [
     "pricing-card",
+    compact ? "pricing-card-compact" : "",
     plan.popular ? "pricing-featured" : "",
     isSelected ? "pricing-selected" : "",
     isSelectable ? "pricing-selectable" : "",

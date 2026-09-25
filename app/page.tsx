@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -7,6 +8,7 @@ import {
   ArrowRight, CheckCircle2, TrendingUp, Star, Shield,
   Radio, Sparkles, Mic, Calendar, Volume2, Play
 } from "lucide-react";
+import { ArrowDown01Icon } from "hugeicons-react";
 import Navbar from "@/components/landing/Navbar";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import { PRICING_PLANS } from "@/lib/pricing-plans";
@@ -89,6 +91,8 @@ const sampleMarketplace = [
 ];
 
 export default function LandingPage() {
+  const [expanded, setExpanded] = useState(false);
+
   return (
     <div className="min-h-screen flex flex-col bg-[#f8fafc] dark:bg-[#070f1e] text-slate-900 dark:text-white font-[var(--font-urbanist,Urbanist),sans-serif] selection:bg-[#ffbe24] selection:text-[#0a1628]">
 
@@ -545,8 +549,21 @@ export default function LandingPage() {
                 key={plan.id}
                 plan={plan}
                 mode="landing"
+                expanded={expanded}
               />
             ))}
+          </div>
+
+          <div className="pricing-compare">
+            <button
+              type="button"
+              onClick={() => setExpanded(!expanded)}
+              aria-expanded={expanded}
+              aria-controls={PRICING_PLANS.map((p) => `features-${p.tier}`).join(" ")}
+            >
+              {expanded ? "Show key features" : "Compare all plan features"}
+              <ArrowDown01Icon size={18} className={expanded ? "mp-rotate" : ""} />
+            </button>
           </div>
 
         </div>

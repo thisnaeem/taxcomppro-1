@@ -1223,10 +1223,6 @@
   font-weight: 500;
   letter-spacing: -1px;
 }
-.pn-create .bg-gradient-to-r {
-  background-image: none;
-  background-color: #d2f58a;
-}
 @media (max-width: 1250px) {
   .pn-hero {
     gap: 45px;

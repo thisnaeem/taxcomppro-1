@@ -155,7 +155,7 @@ export default function CreateProNetworkPage() {
   const [coverImage, setCoverImage] = useState(coverPresets[0]);
   const [customCoverUrl, setCustomCoverUrl] = useState("");
   const [logoImage, setLogoImage] = useState("");
-  const [accentColor, setAccentColor] = useState("#65a832");
+  const [accentColor, setAccentColor] = useState("#0a1628");
 
   // Badge Config
   const [badge, setBadge] = useState<BadgeConfig>({
@@ -396,9 +396,9 @@ export default function CreateProNetworkPage() {
             ))}
           </div>
           {stripeJustConnected && (
-            <div className="mb-6 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-bold flex items-center justify-between gap-2">
+            <div className="mb-6 p-4 rounded-2xl bg-blue-950/40 dark:bg-[#0c1a2e] border border-blue-500/30 text-blue-600 dark:text-blue-300 text-xs font-bold flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                <CheckCircle2 className="w-4 h-4 text-blue-500 dark:text-blue-400 shrink-0" />
                 <span>Stripe account connected successfully! You are now set up to charge for memberships.</span>
               </div>
               <button
@@ -496,16 +496,16 @@ export default function CreateProNetworkPage() {
                       }}
                       className={`p-4 rounded-2xl border text-left transition-all relative ${
                         pricingType === "free"
-                          ? "border-emerald-500 bg-emerald-500/10 dark:bg-emerald-500/15 ring-2 ring-emerald-500/30"
+                          ? "border-blue-500/60 dark:border-blue-400/50 bg-blue-500/10 dark:bg-[#0c1a2e] ring-2 ring-blue-500/30"
                           : "border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 bg-white dark:bg-[#1a263d]"
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1.5">
-                        <span className="inline-flex items-center gap-1.5 text-xs font-black text-emerald-600 dark:text-emerald-400">
-                          <Sparkles className="w-4 h-4 text-emerald-500" />
+                        <span className="inline-flex items-center gap-1.5 text-xs font-black text-blue-600 dark:text-blue-400">
+                          <Sparkles className="w-4 h-4 text-blue-500 dark:text-blue-400" />
                           <span>Free Pro Network</span>
                         </span>
-                        <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300">
+                        <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-700 dark:text-blue-300 border border-blue-500/20">
                           $0 / month
                         </span>
                       </div>
@@ -638,9 +638,9 @@ export default function CreateProNetworkPage() {
                           </div>
                         </div>
                       ) : (
-                        <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-xs space-y-1">
-                          <div className="flex items-center gap-2 font-bold">
-                            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                        <div className="p-3.5 rounded-xl bg-blue-950/40 dark:bg-[#0c1a2e] border border-blue-500/30 text-blue-200 dark:text-blue-200 text-xs space-y-1">
+                          <div className="flex items-center gap-2 font-bold text-blue-600 dark:text-blue-300">
+                            <CheckCircle2 className="w-4 h-4 text-blue-500 dark:text-blue-400 shrink-0" />
                             <span>
                               Stripe Payouts Connected • 0% TCP Platform Fee
                             </span>
@@ -656,14 +656,14 @@ export default function CreateProNetworkPage() {
                       )}
                     </div>
                   ) : (
-                    <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-xs space-y-1.5">
-                      <div className="flex items-center gap-2 font-bold">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                    <div className="p-4 rounded-2xl bg-blue-950/40 dark:bg-[#0c1a2e] border border-blue-500/30 text-blue-200 dark:text-blue-200 text-xs space-y-1.5">
+                      <div className="flex items-center gap-2 font-bold text-blue-600 dark:text-blue-300">
+                        <CheckCircle2 className="w-4 h-4 text-blue-500 dark:text-blue-400 shrink-0" />
                         <span>
                           Free Community Network Selected ($0.00 / month)
                         </span>
                       </div>
-                      <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                      <p className="text-[11px] text-slate-300 dark:text-slate-300 leading-relaxed">
                         Members can join your Pro Network instantly with zero
                         payment hurdles or credit card entry. You can update
                         your network&apos;s pricing at any time in your Network
@@ -841,6 +841,43 @@ export default function CreateProNetworkPage() {
                     </span>
                   </div>
                 </div>
+
+                {/* Network Accent Color */}
+                <div className="space-y-3 pt-2 border-t border-slate-100 dark:border-slate-800">
+                  <div className="flex flex-wrap items-center justify-between gap-1">
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                      Network Accent Color
+                    </label>
+                    <span className="text-[11px] font-bold text-slate-400">
+                      Primary brand accent (default: Navy)
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="color"
+                      value={accentColor}
+                      onChange={(e) => setAccentColor(e.target.value)}
+                      aria-label="Network accent color"
+                      className="h-10 w-16 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer bg-transparent p-0.5"
+                    />
+                    <div className="flex items-center gap-2">
+                      {["#0a1628", "#1e3a8a", "#0f172a", "#1b365d", "#ffbe24"].map((preset) => (
+                        <button
+                          key={preset}
+                          type="button"
+                          onClick={() => setAccentColor(preset)}
+                          className={`w-7 h-7 rounded-lg border transition-all ${
+                            accentColor.toLowerCase() === preset.toLowerCase()
+                              ? "ring-2 ring-blue-500 scale-110 border-white"
+                              : "border-slate-300 dark:border-slate-600 hover:scale-105"
+                          }`}
+                          style={{ backgroundColor: preset }}
+                          aria-label={`Select accent color ${preset}`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -886,7 +923,7 @@ export default function CreateProNetworkPage() {
                         className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-800 dark:text-slate-200"
                       >
                         <div className="flex items-center gap-2">
-                          <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                          <CheckCircle2 className="w-4 h-4 text-blue-500 dark:text-blue-400 shrink-0" />
                           <span>{b}</span>
                         </div>
                         <button
@@ -953,7 +990,6 @@ export default function CreateProNetworkPage() {
               </div>
             )}
 
-            <label className="block p-4">Network accent color <input type="color" value={accentColor} onChange={e => setAccentColor(e.target.value)} aria-label="Network accent color" className="ml-3 h-10 w-16 cursor-pointer" /></label>
             {/* STEP 5: Direct Access & Privacy Settings */}
             {step === 5 && (
               <div className="space-y-6">

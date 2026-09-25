@@ -226,7 +226,7 @@ export async function POST(req: NextRequest) {
         coverImage: coverImage || null,
         logoImage: logoImage || null,
         monthlyPrice: Math.round(price * 100) / 100,
-        accentColor: accentColor || "#65a832",
+        accentColor: accentColor || "#0a1628",
         rules: rules?.trim() || null,
         welcomeMessage: welcomeMessage?.trim() || null,
         previewContent: previewContent?.trim() || null,
